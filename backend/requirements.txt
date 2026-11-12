@@ -1,0 +1,9 @@
+fastapi==0.121.1
+uvicorn==0.38.0
+SQLAlchemy==2.0.44
+PyMySQL==1.1.2
+cryptography==46.0.3
+alembic==1.17.2
+celery[redis]==5.5.3
+httpx==0.28.1
+pytest==9.0.1

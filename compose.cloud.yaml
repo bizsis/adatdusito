@@ -1,0 +1,18 @@
+services:
+  testmysql:
+    image: mysql:8.0
+    env_file: /workspace/adatdusito/.cloud-state/mysql.env
+    volumes: [/workspace/adatdusito/.cloud-state/init.sql:/docker-entrypoint-initdb.d/init.sql:ro]
+    healthcheck:
+      test: [CMD, mysqladmin, ping, -h, 127.0.0.1]
+      interval: 5s
+      timeout: 3s
+      retries: 30
+  migrate:
+    env_file: !override [/workspace/adatdusito/.cloud-state/app.env]
+    depends_on:
+      testmysql: {condition: service_healthy}
+  backend:
+    env_file: !override [/workspace/adatdusito/.cloud-state/app.env]
+  worker:
+    env_file: !override [/workspace/adatdusito/.cloud-state/app.env]
