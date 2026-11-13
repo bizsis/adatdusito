@@ -1,18 +1,46 @@
+name: adatdusito-cloud
+x-cloud-backend-build: &cloud-backend-build
+  context: ./backend
+  secrets: [proxy_ca]
 services:
   testmysql:
     image: mysql:8.0
-    env_file: /workspace/adatdusito/.cloud-state/mysql.env
-    volumes: [/workspace/adatdusito/.cloud-state/init.sql:/docker-entrypoint-initdb.d/init.sql:ro]
+    env_file: /workspace/adatdusito/.cloud-state/codex02/mysql.env
+    volumes: [cloud_mysql_data:/var/lib/mysql, /workspace/adatdusito/.cloud-state/codex02/init.sql:/docker-entrypoint-initdb.d/init.sql:ro]
     healthcheck:
       test: [CMD, mysqladmin, ping, -h, 127.0.0.1]
       interval: 5s
       timeout: 3s
       retries: 30
   migrate:
-    env_file: !override [/workspace/adatdusito/.cloud-state/app.env]
+    build: *cloud-backend-build
+    env_file: !override [/workspace/adatdusito/.cloud-state/codex02/app.env]
     depends_on:
       testmysql: {condition: service_healthy}
   backend:
-    env_file: !override [/workspace/adatdusito/.cloud-state/app.env]
+    build: *cloud-backend-build
+    environment:
+      COOKIE_SECURE: "false"
+      APP_ORIGIN: http://127.0.0.1:18080
+    env_file: !override [/workspace/adatdusito/.cloud-state/codex02/app.env]
   worker:
-    env_file: !override [/workspace/adatdusito/.cloud-state/app.env]
+    build: *cloud-backend-build
+    env_file: !override [/workspace/adatdusito/.cloud-state/codex02/app.env]
+
+  frontend:
+    build:
+      context: ./frontend
+      secrets: [proxy_ca]
+    ports: !override ["127.0.0.1:18080:8080"]
+
+volumes:
+  cloud_mysql_data:
+
+networks:
+  default:
+    external: false
+    name: adatdusito-cloud-net
+
+secrets:
+  proxy_ca:
+    file: ${CLOUD_CA_BUNDLE:-/etc/ssl/certs/ca-certificates.crt}

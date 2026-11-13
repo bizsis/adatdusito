@@ -5,7 +5,8 @@ python3 -m venv .venv
 .venv/bin/pip install -r backend/requirements.lock
 (cd frontend && npm --cache /tmp/adatdusito-npm ci && npm run build)
 PYTHONPATH=backend .venv/bin/pytest -q backend/tests
-docker build --secret id=proxy_ca,src=/etc/ssl/certs/ca-certificates.crt -t adatdusito-dev-backend backend
-docker build --secret id=proxy_ca,src=/etc/ssl/certs/ca-certificates.crt -t adatdusito-dev-frontend frontend
+python3 scripts/cloud-fixture.py
+if [ ! -e .env ]; then (umask 077; cp .env.example .env); fi
+docker compose -f compose.yaml -f compose.cloud.yaml build
 docker pull mysql:8.0
 docker pull redis:7.4-alpine

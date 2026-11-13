@@ -1,74 +1,93 @@
-# VPS telepítési terv – kizárólag fejlesztői környezet
+# CODEX 02 – meglévő fejlesztői VPS kézi frissítése
 
-## 1. Kötelező felmérés, változtatás nélkül
+Ez dokumentált átadás, **nem automatikus telepítés**. A meglévő MySQL-, UFW-, Docker-hálózat-, Nginx- és HTTPS-konfigurációhoz nem szükséges módosítás. A pinfo.hu és az éles környezet érintetlen marad.
 
-SSH: root@167.86.70.129, 22-es port. Előbb ellenőrizd a szerver hostkulcsát megbízható csatornán.
-Jelszó és privát kulcs csak biztonságos hozzáférési beállításba kerülhet.
+## 1. Változtatás előtti ellenőrzés
 
-A szerveren: `cat /etc/os-release`, `free -h`, `df -h`, `ss -lntup`,
-`systemctl --no-pager status nginx mysql docker`, `docker ps`, `docker compose version`,
-`nginx -t`, `nginx -T`, `certbot certificates`.
-A teljes Nginx-konfigurációt helyben vizsgáld meg; érzékeny részeket ne másolj naplóba.
-Ellenőrizd a dev.pinfo.hu A/AAAA rekordját, a 80/443 és a 8080 port foglaltságát,
-a tűzfalat, a MySQL bind-address értékét, és a Docker-hálózatot.
-MySQL-adminnal: `SELECT VERSION(); SHOW DATABASES;` és a három referencia-tábla
-`SHOW CREATE TABLE` eredménye, valamint a meglévő jogosultságok ellenőrzése.
-A pinfo.hu aktuális HTTP/HTTPS működéséről készüljön változtatás előtti ellenőrzés.
+PuTTY-ban, a már működő VPS-en:
 
-## 2. Adatbázis és hozzáférés
-
-A meglévő MySQL-t ne telepítsd újra, ne indítsd újra felmérés és szükség esetén jóváhagyás nélkül.
-Készíts mentést a releváns konfigurációkról; a referencia-adatokat ne módosítsd.
-Az admin hozza létre az `adatdusito_dev` adatbázist utf8mb4 karakterkészlettel.
-Külön felhasználók szükségesek; az alábbi jogosultságok csak a felmért Docker-forráshostról:
-
-```sql
-GRANT ALL PRIVILEGES ON adatdusito_dev.* TO 'adatdusito_app'@'<ellenőrzött forráshost>';
-GRANT SELECT ON pinfo_db.emag_categories TO 'adatdusito_ref'@'<ellenőrzött forráshost>';
-GRANT SELECT ON pinfo_db.emag_category_parameters TO 'adatdusito_ref'@'<ellenőrzött forráshost>';
-GRANT SELECT ON pinfo_db.emag_parameter_values TO 'adatdusito_ref'@'<ellenőrzött forráshost>';
+```bash
+cd /opt/adatdusito
+git status -sb
+git remote -v
+git diff -- compose.yaml
+docker compose ps -a
+docker network inspect adatdusito-dev-net --format '{{json .IPAM.Config}}'
+curl --fail --silent --show-error https://dev.pinfo.hu/api/health/ready
 ```
 
-Ezek sablonok, nem automatikusan futó SQL-ek. A CREATE USER parancshoz egyedi, biztonságosan
-kezelt jelszó kell; ne használd a '%' hostot. Ellenőrizd a SHOW GRANTS eredményét:
-a referenciafelhasználó ne kapjon globális jogot, szerepkört vagy írási jogosultságot.
-Írással ne teszteld a referencia-hozzáférést. Az alkalmazás olvasási tranzakciót is használ,
-de az elsődleges védelem a MySQL-jogosultság.
-A migráció ugyanazt a fejlesztői DB-felhasználót használja; később külön migrátori jogosultság javasolt.
-Ne használj admin/root DB-hitelesítést az alkalmazáshoz.
+A `.env` fájlt ne jelenítsd meg, ne másold naplóba vagy Gitbe. Ellenőrizd helyben, hogy mindkét DB-URL a `172.28.10.1:3306` címet, a megfelelő külön felhasználót és adatbázist használja. A referenciafelhasználó joga továbbra is csak SELECT legyen a három megadott táblára. A meglévő referenciaadatbázis-menetés `/root/backups/pinfo_db_before_adatdusito.sql.gz` nem helyettesíti az alkalmazás-adatbázis friss mentését.
 
-A host.docker.internal a Docker bridge gatewayre mutat. Ha a MySQL csak 127.0.0.1-en figyel,
-a konténerek nem érik el: a felmérés alapján külön megoldás és a meglévő MySQL-konfiguráció
-módosítása előtt jóváhagyás szükséges. A 3306 portot ne nyisd ki az internetre.
+**Állj meg, ha nem várt Git-eltérés vagy szolgáltatásprobléma van.** Meglévő szolgáltatás leállításához vagy konfiguráció felülírásához előbb a konkrét eltérés alapján kérj jóváhagyást.
 
-## 3. Alkalmazás
+A VPS eredeti, helyi Compose-változása az external hálózat blokkja volt; ez most a GitHubon is szerepel. Ha emiatt a pull megtagadná a frissítést, előbb ellenőrizd, hogy valóban csak ez a titokmentes változás van a fájlban. Megőrzéshez használható:
 
-Telepíts külön könyvtárba. Hozd létre a `.env` fájlt 0600 jogosultsággal,
-a mintában szereplő jelszavakat cseréld; URL-kódold a speciális karaktereket.
-A REDIS_URL maradjon redis://redis:6379/0.
-`docker compose config --quiet`, majd `docker compose up -d --build`.
-Ellenőrizd: `docker compose ps -a`, `docker compose logs --tail=100`,
-`bash scripts/smoke.sh`. A migrációs konténer 0 kóddal álljon le.
-A smoke teszt valódi Celery-feladatot küld és ellenőrzi a pong eredményt.
+```bash
+git stash push -m "VPS external network before CODEX 02" -- compose.yaml
+git rev-parse stash@{0}
+```
 
-## 4. Nginx és HTTPS – aktiválás csak felmérés után
+Jegyezd fel a stash azonosítóját. A frissítés után hasonlítsd össze a megőrzött verziót az új fájllal. Ne alkalmazd vissza vakon a stash-t, és ne töröld, amíg az eltéréseket nem ellenőrizted. Ne használd a `git reset --hard` parancsot.
 
-A deploy/nginx fájlok előkészített sablonok. Nem kerültek a VPS-re.
-Meglévő fájlt ne írj felül. Meglévő szolgáltatás konfigurációjának módosítása,
-leállítása vagy Nginx reload előtt kérj jóváhagyást a konkrét diff és nginx -t alapján.
+## 2. Mentés és kódfrissítés
 
-Először csak az új HTTP-vhost kerüljön külön fájlba, az ACME-webroot
-/var/www/letsencrypt legyen létrehozva. Sikeres `nginx -t` és jóváhagyott reload után
-ellenőrizd a challenge fájl kiszolgálását. A tanúsítványt webroot módban igényeld:
-`certbot certonly --webroot -w /var/www/letsencrypt -d dev.pinfo.hu`.
-A szükséges kapcsolattartási emailt az üzemeltető adja meg; az ÁSZF-et az üzemeltető fogadja el.
-Ezután aktiválható a külön HTTPS-vhost, új nginx -t és jóváhagyott reload után.
-Ne használd a meglévő pinfo.hu vhostot vagy a certbot automatikus Nginx-átírását.
-Ellenőrizd a megújítás időzítőjét, a `certbot renew --dry-run` eredményét és a
-megújítás utáni jóváhagyott Nginx reload mechanizmusát.
+Készíts jogosultságvédett mentést a `.env` fájlról és az `adatdusito_dev` adatbázisról; a mentés kerüljön a checkouton kívülre. Példa a DBA számára, interaktív jelszóbekéréssel:
 
-Végső ellenőrzés: HTTPS-tanúsítvány és átirányítás, frontend, /api/health/live,
-/api/health/ready, Celery smoke, valamint pinfo.hu előtte/utána ellenőrzése.
-Hiba esetén csak az új projekt konténereit állítsd le; a MySQL-hez és a meglévő
-pinfo.hu-konfigurációhoz ne nyúlj. Adatbázist visszaállításkor se törölj automatikusan.
-Éles adatbázist és éles alkalmazást ez az eljárás nem telepít.
+```bash
+set -o pipefail
+umask 077
+mysqldump -u root -p --single-transaction adatdusito_dev | gzip > /root/backups/adatdusito_dev_before_codex02.sql.gz
+```
+
+A fájlnév ne írjon felül korábbi mentést; szükség esetén válassz új nevet. Ellenőrizd a parancs sikerét és a tömörített mentés épségét (`gzip -t`). A referencia-adatbázishoz ne futtass író SQL-t vagy migrációt.
+
+```bash
+git pull --ff-only origin main
+docker compose config --quiet
+```
+
+Ellenőrizd az external hálózat és a port változatlanságát. Az új `.env.example` csak minta: a működő `.env` fájlt ne másold felül vele. A biztonsági alapértékek HTTPS-hez megfelelőek; szükség esetén az alábbi **nem titkos** beállításokat kézzel, a meglévő értékeket megőrizve add meg:
+
+```text
+APP_ORIGIN=https://dev.pinfo.hu
+COOKIE_SECURE=true
+```
+
+## 3. Build, migráció, új alkalmazásverzió
+
+Az alábbi parancsok az új alkalmazáskonténerekre hatnak; ne futtasd őket a működő környezet felmérése és az üzemeltető jóváhagyása nélkül:
+
+```bash
+docker compose build
+docker compose run --rm --no-deps migrate alembic upgrade head
+docker compose run --rm --no-deps migrate alembic current
+docker compose up -d --no-build
+docker compose ps -a
+```
+
+Elvárt Alembic-verzió: **0002**. A 0001 változatlan. A 0002 létrehozza a users, tenants, roles, permissions, role_permissions, memberships, login_sessions, audit_events és system_settings táblákat, valamint a szerepkörök és jogosultságok kezdőadatait. Nem hoz létre alapértelmezett felhasználót. Ismételt upgrade nem módosít már alkalmazott migrációt.
+
+Nincs szükség `docker compose down`, volume-törlés, új Docker-hálózat, MySQL-újratelepítés vagy Nginx-reload végrehajtására. A `compose.cloud.yaml` fájlt a VPS-en ne használd.
+
+## 4. Első Superadmin és ellenőrzés
+
+```bash
+docker compose exec backend python -m app.bootstrap --email SAJAT_ADMIN_EMAIL --name "Rendszergazda"
+bash scripts/smoke.sh https://dev.pinfo.hu
+```
+
+A program a jelszót kétszer, rejtetten kéri be, legalább 12 karakterrel. Nincs alapértelmezett jelszó, jelszó-argumentum vagy jelszó-kiírás. Már létező Superadmin esetén a parancs megtagadja az ismételt inicializálást.
+
+Böngészőből ellenőrizd:
+
+1. Sikeres és sikertelen belépés; kijelentkezés után védett adatok elutasítása.
+2. Új ügyfél, ügyféladmin és második ügyfél létrehozása, elkülönült felhasználólistákkal.
+3. Kategóriakeresés, alkategóriák, hiányzó szülő figyelmeztetés, kötelező/opcionális paraméterek és értéklapozás.
+4. Adminisztrációs napló, szolgáltatásállapot és `/api/v1/docs` elérhetősége.
+5. Cookie: Secure, HttpOnly, SameSite=Strict. A pinfo.hu szolgáltatása változatlanul működjön.
+
+A referenciák kizárólag SELECT lekérdezéssel kerülnek olvasásra; író próbát ne végezz a valódi pinfo_db-n.
+
+## Visszaállítás
+
+Ne futtass automatikus downgrade-et: az eltávolítaná az új identitástáblákat. Sikertelen kiadásnál az üzemeltető a korábban feljegyzett commit/image és az alkalmazás-adatbázis mentése alapján készítsen konkrét visszaállítási tervet. A referencia-adatbázist és a meglévő hálózatot ne módosítsa. A GitHubra feltöltött kód nem jelenti a VPS telepítését vagy ottani ellenőrzését.

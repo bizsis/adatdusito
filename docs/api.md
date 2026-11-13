@@ -1,0 +1,67 @@
+# API és hozzáférési modell
+
+Alapútvonal: `/api/v1`. OpenAPI JSON: `/api/v1/openapi.json`, Swagger UI: `/api/v1/docs` – mindkettő bejelentkezéshez kötött. A régi `/api/health/live` és `/api/health/ready` útvonal változatlan.
+
+## Hitelesítés
+
+A `POST /auth/login` JSON email/password mezőkkel lép be; a válasz `csrf_token` értéket és HttpOnly, Secure, SameSite=Strict, hosthoz kötött cookie-t ad. A véletlen munkamenettokennek csak SHA-256 kivonata kerül az alkalmazás-adatbázisba. Abszolút élettartama 8 óra; új belépés tokenforgatást végez. Jelszavakhoz scrypt N=131072, r=8, p=1, egyedi 16 bájtos só, állandó idejű összehasonlítás használatos.
+
+Minden bejelentkezett módosító kéréshez `X-CSRF-Token` kell; ez a login vagy a `GET /auth/me` válaszából olvasható. A token a titkos session-cookie-hoz kötött, kliensoldali tartós tárolás nincs. Más Originről érkező módosítás tiltott; CORS nincs engedélyezve. A bejelentkezés JSON-t fogad, idegen Originről elutasított. Éles/HTTPS-szerű fejlesztői domainen `COOKIE_SECURE` maradjon true.
+
+A belépési kísérleteket Redisben, atomikusan korlátozzuk: 10/account/15 perc és 300 socket-peer/15 perc. A továbbított IP-fejlécek nem megbízhatóak, ezért a közös frontendproxy peer-limitje szándékosan tágabb. Redis-hibánál a bejelentkezés 503-mal leáll. Több API-folyamat közös korlátot használ.
+
+Kijelentkezéskor, jelszócserénél és globális adminisztrátori jogosultságmódosításnál a munkamenetek visszavonhatók. Az aktív user-, tenant- és tagságállapot minden kérésnél újra ellenőrzött, nem kliensoldali szerepkörből származik. Visszavont tagság után másik ügyfél kiválasztható, vagy ki lehet lépni.
+
+## Jogosultságok
+
+| Funkció | Superadmin | Ügyféladminisztrátor | Adatfeldolgozó / Ellenőrző |
+| --- | --- | --- | --- |
+| Saját munkamenet, jelszó, tenantválasztás | Igen | Igen | Igen |
+| Ügyféllista | Összes | Saját tagságai | Saját tagságai |
+| Ügyfél létrehozása, állapotkezelése | Igen | Nem | Nem |
+| Ügyfél nevének szerkesztése | Igen | Aktív saját ügyfél | Nem |
+| Globális felhasználók, Superadmin-jog, hozzárendelés | Igen | Nem | Nem |
+| Új ügyfélfelhasználó, saját tagságok szerepe/állapota | Igen | Aktív saját ügyfél | Nem |
+| Felhasználó neve, jelszó-visszaállítás | Igen | Csak kizárólag saját ügyfélhez tartozó, nem Superadmin-fiók | Nem |
+| Referenciaadatok olvasása | Igen | Igen | Igen |
+| Műveleti napló | Összes | Csak aktív saját ügyfél | Nem |
+| Rendszerkonfiguráció | Igen | Nem | Nem |
+
+A tagság ügyfelenkénti szerepkörrel rendelkezik, globális Superadmin-jog kizárólag a felhasználóhoz tartozik. Az utolsó aktív Superadmin és az utolsó aktív ügyféladmin eltávolítása tiltott; adminváltásokat tranzakciós zárolás védi. Egy megosztott felhasználó globális jelszavát és nevét tenantadmin nem módosíthatja. Saját jelszóhoz a régi jelszó megadása szükséges. Nem várt tenant-hozzáférés 404-et vagy 403-at ad, idegen ügyfél adatait nem listázza.
+
+## Végpontok
+
+| Módszer | Útvonal | Rendeltetés |
+| --- | --- | --- |
+| POST | /auth/login, /auth/logout | Belépés / kilépés |
+| GET | /auth/me | Saját fiók, tagságok, jogosultságok, CSRF-token |
+| POST | /auth/tenant | Aktív tenant választása (`tenant_id`); rendszerszint csak Superadminnak |
+| POST | /auth/password | Saját jelszócsere (`current_password`, `password`) |
+| GET, POST | /tenants | Lapozott ügyféllista / létrehozás |
+| PATCH | /tenants/{tenant_id} | Ügyfél szerkesztése |
+| GET, POST | /users | Globális lapozott felhasználók / létrehozás |
+| PATCH | /users/{user_id} | Név, aktivitás, Superadmin-jog, jelszó |
+| GET, POST | /tenants/{tenant_id}/members | Tagságok / meglévő user hozzárendelése |
+| PATCH | /tenants/{tenant_id}/members/{user_id} | Szerepkör, tagság aktív állapota |
+| POST | /tenants/{tenant_id}/users | Új fiók és tagság egy tranzakcióban |
+| PATCH | /tenants/{tenant_id}/users/{user_id} | Kizárólagos ügyfélfiók neve / jelszava |
+| GET | /audit | Lapozott, jogosultság szerint szűrt napló |
+| GET | /settings | Rendszerbeállítások |
+| PUT | /settings/{key} | Csak display_name és admin_notice, titkok nélkül |
+| GET | /system/status | Hitelesített részletes szolgáltatásállapot |
+| GET | /reference/categories | Gyökerek, alkategóriák, név-/eMAG-ID-keresés |
+| GET | /reference/categories/{id} | Belső ID szerinti adatlap és feloldott szülőlánc |
+| GET | /reference/parameters | category_id (belső), q, mandatory szerinti paraméterkeresés |
+| GET | /reference/parameters/{id}/values | Belső paraméter-ID szerinti értéklista |
+
+Általános lapozás: `offset=0&limit=25`, maximum 100 elem. Referenciák offsetje legfeljebb 10000. Értékekhez keyset-lapozás: `after=0&limit=50`, majd a `next_cursor` értékét add az `after` paraméterbe, amíg `has_more=false`. Nincs több millió soros COUNT az értéklistákhoz. A név és szöveg keresése escaped részszövegkeresés; egy nagy paraméterhalmaz keresése költségesebb lehet. A meglévő referenciaindexeket nem módosítjuk.
+
+A kategóriáknál `parent_id` a feloldott **belső** szülőazonosító; `parent_emag_id` az eredeti referenciaérték. Az API `parent_id` szűrője belső kategória-ID-t vár, és a lekérdezés alakítja át eMAG-ID-ra. A `missing_parent` és `hierarchy_error` nem hallgatja el a hiányos/körkörös referenciákat. A numerikus `type_id` értékeknek nem találunk ki szöveges típust: az adatbázisban tárolt érték és a beállítási flag-ek jelennek meg.
+
+Hibaformátum: `{"error":{"code":"403","message":"…"}}`. Validációs hibánál mezőhely és hibatípus szerepel, a beküldött jelszó és request body nem. 401: nincs érvényes munkamenet; 403: jog/CSRF/Origin; 404: nincs hozzáférhető erőforrás; 409: ütközés/védett utolsó admin; 422: bemenet; 429: belépési limit; 503: infrastruktúrahiba. Az API-válaszok no-store fejléccel készülnek.
+
+## Adatbiztonság és határok
+
+Az alkalmazás-metaadat csak az adatdusito_dev tábláit tartalmazza. A referencia-Core metadata különálló; nincs migrációs, INSERT/UPDATE/DELETE referenciaútvonal. A referencia-engine nem SELECT jellegű utasítást megtagad, a tranzakció read-only, és a legfontosabb védelem a külön SELECT-only MySQL-felhasználó. Adminmódosítás és audit ugyanabban az alkalmazás-tranzakcióban történik; jelszó és sessiontoken nem kerül auditadatba.
+
+Ez a fázis nem tartalmaz regisztrációs/jelszó-visszaállító emailt, MFA-t, importot, AI-t, kreditet vagy szinkronizálót. A JSON API csak azonos originről támogatott; a termék HTTPS reverse proxy mögött működik. A display_name/admin_notice jelenleg adminisztrációs konfigurációs rekord, nem globális felületfelülírás.
