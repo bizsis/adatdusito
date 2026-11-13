@@ -8,6 +8,7 @@ from collections import Counter
 from functools import lru_cache
 import json
 from pathlib import Path
+from typing import Literal
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy import select
 from sqlalchemy.orm import Session
@@ -26,10 +27,61 @@ class Navigation:
         self.nodes = {n["id"]: n for n in data["nodes"]}
         if len(self.nodes) != len(data["nodes"]):
             raise ValueError("Duplicate navigation identity")
+        # Roots are a versioned list of observed identities, never every row
+        # whose parent happens to be null. Do not repair the source graph here.
+        self.roots = list(data["verified_root_ids"])
+        if (
+            len(self.roots) != 13
+            or len(set(self.roots)) != 13
+            or any(
+                key not in self.nodes
+                or self.nodes[key]["kind"] != "department"
+                or self.nodes[key]["parent_id"] is not None
+                or self.nodes[key]["hierarchy_status"] != "verified_dom"
+                for key in self.roots
+            )
+        ):
+            raise ValueError("Expected 13 explicitly verified navigation roots")
         self.children = {}
         for n in data["nodes"]:
             self.children.setdefault(n["parent_id"], []).append(n["id"])
         self.visible = {n["id"] for n in data["nodes"] if n["kind"] in TREE_KINDS}
+
+        self.placement = {key: "verified_tree" for key in self.roots}
+        for key in self.nodes:
+            trail = []
+            current = key
+            seen = set()
+            while current not in self.placement:
+                if current in seen:
+                    status = "cycle"
+                    break
+                if current not in self.nodes:
+                    status = "missing_parent"
+                    break
+                seen.add(current)
+                trail.append(current)
+                node = self.nodes[current]
+                if node["parent_id"] is None:
+                    status = "unclassified"
+                    break
+                current = node["parent_id"]
+            else:
+                status = self.placement[current]
+            for ancestor in reversed(trail):
+                if (
+                    status == "verified_tree"
+                    and self.nodes[ancestor]["hierarchy_status"] != "verified_dom"
+                ):
+                    status = "needs_review"
+                self.placement[ancestor] = status
+
+    def tree_children(self, id):
+        return [
+            key
+            for key in self.children.get(id, [])
+            if key in self.visible and self.placement[key] == "verified_tree"
+        ]
 
     def proof_key(self, id):
         return id + "@" + self.data["archive_sha256"]
@@ -39,7 +91,7 @@ class Navigation:
         seen = set()
         while id:
             if id in seen or id not in self.nodes:
-                raise ValueError("Invalid navigation path")
+                break
             seen.add(id)
             result.append(id)
             id = self.nodes[id]["parent_id"]
@@ -52,7 +104,11 @@ class Navigation:
     def related(self, id):
         result = []
         pending = list(self.children.get(id, []))
+        seen = set()
         for key in pending:
+            if key in seen:
+                continue
+            seen.add(key)
             node = self.nodes[key]
             if key not in self.visible:
                 result.append(node)
@@ -121,7 +177,8 @@ def dto(nav, id, latest, tree):
     )
     return {
         **node,
-        "children_count": sum(k in nav.visible for k in nav.children.get(id, [])),
+        "children_count": len(nav.tree_children(id)),
+        "placement_status": nav.placement[id],
         "path": [nav.summary(k) for k in nav.path(id)],
         "ancestors": [nav.summary(k) for k in nav.path(id)[:-1]],
         "related_links": nav.related(id),
@@ -159,6 +216,7 @@ router = APIRouter(
 def nodes(
     parent_id: str | None = Query(None, max_length=160),
     q: str = Query("", max_length=120),
+    scope: Literal["tree", "unclassified"] = "tree",
     offset: int = Query(0, ge=0, le=100000),
     limit: int = Query(50, ge=1, le=100),
     db: Session = Depends(database),
@@ -166,7 +224,14 @@ def nodes(
     nav = navigation()
     if parent_id:
         require_node(nav, parent_id)
-    ids = nav.children.get(parent_id, []) if not q else list(nav.nodes)
+    if q:
+        ids = list(nav.nodes)  # Search covers unresolved/disconnected categories too.
+    elif scope == "unclassified":
+        ids = [key for key in nav.nodes if nav.placement[key] != "verified_tree"]
+    elif parent_id:
+        ids = nav.tree_children(parent_id)
+    else:
+        ids = nav.roots
     ids = [
         id
         for id in ids
@@ -191,7 +256,11 @@ def coverage(db: Session = Depends(database)):
     latest = observations(db, nav)
     tree = mapping_tree(latest)
     return {
-        "root_count": len(nav.children.get(None, [])),
+        "root_count": len(nav.roots),
+        "unclassified_count": sum(
+            key in nav.visible and status != "verified_tree"
+            for key, status in nav.placement.items()
+        ),
         "manifest_link_count": nav.data["manifest_link_count"],
         "kind_counts": dict(Counter(n["kind"] for n in nav.nodes.values())),
         "hierarchy_needs_review": len(nav.data["issues"]),

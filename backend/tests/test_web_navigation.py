@@ -250,3 +250,87 @@ def test_mapping_approval_is_bound_to_source_snapshot(environment, monkeypatch):
         ).status_code
         == 409
     )
+
+
+def test_root_registry_and_separate_unclassified_list_preserve_source_graph(
+    environment, monkeypatch
+):
+    from copy import deepcopy
+    from app import web_navigation
+
+    client, *_ = environment
+    login(client)
+    data = deepcopy(navigation().data)
+    template = deepcopy(next(n for n in data["nodes"] if n["kind"] == "category"))
+    for key, parent in [
+        ("unplaced", None),
+        ("orphan", "missing-parent"),
+        ("cycle-a", "cycle-b"),
+        ("cycle-b", "cycle-a"),
+    ]:
+        data["nodes"].append(
+            {**template, "id": key, "name": "Teszt " + key, "parent_id": parent}
+        )
+    before = deepcopy(data)
+    nav = web_navigation.Navigation(data)
+    monkeypatch.setattr(web_navigation, "navigation", lambda: nav)
+    response = client.get("/api/v1/reference/navigation").json()
+    assert response["total"] == 13
+    assert [n["id"] for n in response["items"]] == data["verified_root_ids"]
+    listed = client.get(
+        "/api/v1/reference/navigation?scope=unclassified&limit=100"
+    ).json()
+    assert {"unplaced", "orphan", "cycle-a", "cycle-b"} <= {
+        n["id"] for n in listed["items"]
+    }
+    assert nav.placement["unplaced"] == "unclassified"
+    assert nav.placement["orphan"] == "missing_parent"
+    assert nav.placement["cycle-a"] == "cycle"
+    found = client.get("/api/v1/reference/navigation?q=Teszt&limit=100").json()
+    assert found["total"] == 4
+    assert client.get("/api/v1/reference/navigation/orphan").status_code == 200
+    assert data == before  # Indexing/search never repairs identities or parents.
+
+
+def test_uncertain_children_are_separate_but_remain_globally_searchable(environment):
+    client, *_ = environment
+    login(client)
+    nav = navigation()
+    pending = next(
+        n
+        for n in nav.nodes.values()
+        if n["kind"] == "category" and n["hierarchy_status"] == "needs_review"
+    )
+    children = client.get(
+        "/api/v1/reference/navigation",
+        params={"parent_id": pending["parent_id"], "limit": 100},
+    ).json()
+    assert pending["id"] not in {n["id"] for n in children["items"]}
+    assert all(n["placement_status"] == "verified_tree" for n in children["items"])
+    review = client.get(
+        "/api/v1/reference/navigation?scope=unclassified&limit=100"
+    ).json()
+    assert pending["id"] in {n["id"] for n in review["items"]}
+    found = client.get(
+        "/api/v1/reference/navigation",
+        params={"q": pending["name"], "parent_id": "web-dept-43"},
+    ).json()
+    assert pending["id"] in {n["id"] for n in found["items"]}
+    # Requesting one branch returns only immediate verified children, not descendants.
+    root = client.get("/api/v1/reference/navigation/web-dept-114").json()
+    branch = client.get(
+        "/api/v1/reference/navigation?parent_id=web-dept-114&limit=100"
+    ).json()
+    assert root["children_count"] == branch["total"]
+    assert all(n["parent_id"] == "web-dept-114" for n in branch["items"])
+    assert "web-item-114-3490" not in {n["id"] for n in branch["items"]}
+
+
+def test_unverified_department_cannot_enter_root_registry():
+    from copy import deepcopy
+    from app.web_navigation import Navigation
+
+    data = deepcopy(navigation().data)
+    data["verified_root_ids"].append("web-item-43-3730")
+    with pytest.raises(ValueError, match="13 explicitly verified"):
+        Navigation(data)

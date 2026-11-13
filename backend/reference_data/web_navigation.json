@@ -15201,5 +15201,20 @@
       }
     ],
     "network_menu_evidence_count": 0
-  }
+  },
+  "verified_root_ids": [
+    "web-dept-114",
+    "web-dept-43",
+    "web-dept-1",
+    "web-dept-7",
+    "web-dept-29",
+    "web-dept-615",
+    "web-dept-173",
+    "web-dept-199",
+    "web-dept-1023",
+    "web-dept-83",
+    "web-dept-165",
+    "web-dept-79",
+    "web-dept-512"
+  ]
 }

@@ -150,3 +150,17 @@ A 2026-11-13 15:19:44 UTC kézi export hash-e ellenőrzött. A 13 főcsoport és
 **14 sikeres gyűjtő-/exportálóteszt** szintetikus Chromium-oldalakon. Élő eMAG- vagy VPS-kapcsolatot ez a feldolgozás nem igényelt. Frontendkód, `.env`, Docker Compose és adatbázisséma nem változott; a `pinfo_db` adatbázist nem értük el és nem módosítottuk. VPS-telepítés nem történt.
 
 [Részletes, főcsoportonkénti összesítés és reprodukáló parancs](menu-details-verification.md).
+
+## Gyökérelemek és ellenőrzendő besorolások elkülönítése
+
+A közös navigáció gyökérlistája a verziózott `verified_root_ids` mező 13 hitelesített főcsoportja, eredeti sorrendben. A `parent_id = null` önmagában nem jogosít gyökérszintű megjelenésre. Hibás vagy nem hitelesített gyökérregiszter esetén a betöltés hibával leáll; nincs visszaesés a Marketplace-gyökérlistára.
+
+Az alapértelmezett `/api/v1/reference/navigation` a 13 gyökeret adja, `parent_id` mellett csak az adott szülő közvetlen, igazoltan besorolt gyermekeit. A bizonytalan, besorolatlan, hiányzó szülőjű vagy ciklikus elemek a `scope=unclassified` külön listában érhetők el. A keresés (`q`) minden navigálható kategóriaelemben keres, a külön kezelt elemekben is, függetlenül az aktuális ágtól és nézettől. Márka- és kampánylinkek továbbra is kapcsolódó linkek, nem termékkategóriák.
+
+A felület „Nézet” választója külön kezeli a hitelesített fát és az ellenőrzendő elemeket. A gyermeklista csak a szülő plusz gombjára töltődik és jelenik meg. A jelenlegi adatokban 75 navigálható elem kerül az ellenőrzendő listába; az összesített 79 bizonytalan menüelem további 4 kapcsolódó linket is tartalmaz. Új gyökér, kategóriaazonosító vagy szülőkapcsolat nem keletkezett: csak a lekérdezési és megjelenítési szabály változott. A hiányos útvonalak a meglévő elemekig jelennek meg, kitalált szülő nélkül.
+
+A korábbi `/reference/categories` végpont a Marketplace-adatok kompatibilitási API-ja marad; az egységes felület kizárólag a `/reference/navigation` API-t használja. A `pinfo_db`, `.env`, Compose és migrációk változatlanok; VPS-telepítés nem történt.
+
+Ellenőrzés: **72 sikeres backendteszt**, 1 meglévő függőségi deprecation warning; **2 sikeres asztali/mobil Chromium-próba** (1440 és 390 pixel), helyi production builddel és szintetikus API-válaszokkal; TypeScript/Vite-build sikeres. A böngészőpróba a 13 főcsoport sorrendjét, a kezdeti gyermeklekérések hiányát, kibontást/összecsukást, a külön ellenőrzendő listát, a globális keresést és a keresés törlése utáni gyökérnézetet ellenőrzi. A backendtesztek kiegészített gráfon is ellenőrzik a szülő nélküli, hiányzó szülőjű és ciklikus elemek elkülönítését, a lapozható listát és a forrásadatok változatlanságát.
+
+A böngészőpróba futtatása: előbb `npm --prefix frontend run build`, majd `PYTHONPATH=backend .venv/bin/pytest -q scripts/tests/test_navigation_browser.py`. Ez nem kapcsolódik a VPS-hez.

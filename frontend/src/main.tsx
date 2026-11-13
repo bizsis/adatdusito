@@ -31,6 +31,7 @@ type NavLink = {
   path?: NavLink[];
 };
 type NavCategory = NavLink & {
+  placement_status: string;
   source_item_id: string | null;
   source_department_id: string;
   url: string | null;
@@ -1068,6 +1069,9 @@ function ShopNode({
               : node.mapping_status === "confirmed"
                 ? `Igazolt eMAG #${node.canonical_emag_id}`
                 : "Marketplace-megfeleltetésre vár"}
+            {node.placement_status !== "verified_tree" && (
+              <span> · Besorolás ellenőrzendő</span>
+            )}
             {node.hierarchy_status === "needs_review"
               ? " · Belső szekció ellenőrzendő"
               : ""}
@@ -1380,10 +1384,11 @@ function Categories() {
     [offset, setOffset] = useState(0),
     [selected, setSelected] = useState<NavLink | null>(null),
     [focus, setFocus] = useState<NavCategory | null>(null),
-    [mappingRevision, setMappingRevision] = useState(0);
+    [mappingRevision, setMappingRevision] = useState(0),
+    [scope, setScope] = useState("tree");
   const query = useDebounce(q);
   const result = useLoad<Page<NavCategory>>(
-    `/reference/navigation?q=${encodeURIComponent(query)}&offset=${offset}${focus && !query ? `&parent_id=${encodeURIComponent(focus.id)}` : ""}`,
+    `/reference/navigation?scope=${scope}&q=${encodeURIComponent(query)}&offset=${offset}${focus && !query ? `&parent_id=${encodeURIComponent(focus.id)}` : ""}`,
     mappingRevision,
   );
   const coverage = useLoad<{
@@ -1435,10 +1440,31 @@ function Categories() {
             </div>
           )}
           <label>
+            Nézet
+            <select
+              aria-label="Nézet"
+              value={scope}
+              onChange={(e) => {
+                setScope(e.target.value);
+                setFocus(null);
+                setOffset(0);
+              }}
+            >
+              <option value="tree">Hitelesített kategóriafa</option>
+              <option value="unclassified">Ellenőrzendő besorolású elemek</option>
+            </select>
+          </label>
+          {scope === "unclassified" && !query && (
+            <p>
+              A bizonytalan vagy hiányzó szülőkapcsolatú elemek külön listája.
+              Nem főkategóriák.
+            </p>
+          )}
+          <label>
             Kategóriakeresés
             <input
               value={q}
-              placeholder="Keresés a webshop navigációjában"
+              placeholder="Keresés a teljes kategóriaállományban"
               onChange={(e) => {
                 setQ(e.target.value);
                 setOffset(0);
@@ -1449,7 +1475,7 @@ function Categories() {
           <ul>
             {result.data?.items.map((n) => (
               <ShopNode
-                key={n.id}
+                key={`${scope}:${query}:${focus?.id || ""}:${n.id}`}
                 node={n}
                 selected={selected?.id}
                 onSelect={setSelected}
@@ -1467,6 +1493,7 @@ function Categories() {
               onMappingUpdated={() => setMappingRevision((r) => r + 1)}
               onSelect={setSelected}
               onChildren={(n) => {
+                setScope("tree");
                 setFocus(n);
                 setOffset(0);
                 setQ("");

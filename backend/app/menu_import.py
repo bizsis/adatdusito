@@ -319,6 +319,7 @@ def process_archive(path):
             "html_checksums": hashes,
             "manifest_link_count": manifest_links,
             "nodes": nodes,
+            "verified_root_ids": [n["id"] for n in nodes if n["kind"] == "department"],
             "issues": issues,
             "html_url_disagreements": url_conflicts,
             "mapping_policy": "explicit_reviewed_identity_only",
