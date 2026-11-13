@@ -187,7 +187,7 @@ def test_tv_46_parameters_values_search_and_original_flags_without_manual_approv
         detail["mandatory_parameter_count"] == 15
         and detail["optional_parameter_count"] == 31
     )
-    assert detail["selectable"] and detail["mapping_method"] == "automatic_exact"
+    assert detail["selectable"] and detail["mapping_method"] == "reviewed_semantic"
     params = client.get(
         f"/api/v1/reference/navigation/{TV}/parameters?limit=100"
     ).json()

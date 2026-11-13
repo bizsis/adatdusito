@@ -1,6 +1,6 @@
 {
   "format": "adatdusito.curated-taxonomy.v1",
-  "version": "04B.1",
+  "version": "05.1",
   "source": "Felhasználó által megadott, 13 menüképből átírt hierarchia; nem új webes adatgyűjtés.",
   "input_sha256": "a2dc1e30897a5aa484f13c0bcf411cdf72ac0647b5e8bc883be3ba8c2d9006a5",
   "roots": [
@@ -269,11 +269,6 @@
               "name": "Távirányítók",
               "children": [],
               "id": "web-item-43-3549"
-            },
-            {
-              "name": "TV antennák és kiegészítők",
-              "children": [],
-              "id": "web-item-43-3550"
             },
             {
               "name": "Kábelek és adapterek",
@@ -3057,5 +3052,12 @@
     "8K"
   ],
   "issues": [],
-  "structural_filter_policy": "A név szerint előírt, szűrőeredetű menüpontok csak strukturális navigációk; automatikus pontos paraméterazonosság és termékbesorolás nélkül. Felhasználó megerősítette."
+  "structural_filter_policy": "A név szerint előírt, szűrőeredetű menüpontok csak strukturális navigációk; automatikus pontos paraméterazonosság és termékbesorolás nélkül. Felhasználó megerősítette.",
+  "retired_nodes": [
+    {
+      "id": "web-item-43-3550",
+      "name": "TV antennák és kiegészítők",
+      "reason": "A felhasználó kifejezett utasítása: TV antennák és kiegészítők nem szükséges, legyen törölt."
+    }
+  ]
 }

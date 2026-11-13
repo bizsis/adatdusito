@@ -62,7 +62,7 @@ def find(nav, *path):
     return keys[0]
 
 
-def test_declared_584_nodes_preserve_13_roots_order_and_all_parent_edges():
+def test_declared_583_nodes_preserve_13_roots_order_and_all_parent_edges():
     base = navigation()
     before = deepcopy(base.data)
     curated = apply_taxonomy(base)
@@ -70,7 +70,7 @@ def test_declared_584_nodes_preserve_13_roots_order_and_all_parent_edges():
     assert base.data == before
     assert nav.roots == base.roots
     declared = [n for n in curated.nodes.values() if n.get("taxonomy_version")]
-    assert len(declared) == 584
+    assert len(declared) == 583
     assert max(len(curated.path(n["id"])) for n in declared) == 4
     assert curated.data["curated_taxonomy_issues"] == []
     for n in declared:

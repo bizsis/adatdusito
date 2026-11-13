@@ -28,7 +28,13 @@ def resolve_fixed(base, tree, latest=None, overrides=()):
         if r.node_id in fixed
     ]
     matched = build_unified(base, tree, latest, binding_choices)
-    nav = Navigation({**base.data, "nodes": list(fixed.values())})
+    nav = Navigation(
+        {
+            **base.data,
+            "nodes": list(fixed.values()),
+            "retired_nodes": base.curated_spec.get("retired_nodes", []),
+        }
+    )
     leaves = {
         k
         for k, n in fixed.items()
@@ -38,14 +44,25 @@ def resolve_fixed(base, tree, latest=None, overrides=()):
     nav.methods = {k: v for k, v in matched.methods.items() if k in leaves}
     nav.candidates = {k: v for k, v in matched.candidates.items() if k in leaves}
     nav.blocked, nav.reference = matched.blocked, tree
-    nav.related = lambda key: [n for n in base.related(key) if n["id"] not in fixed]
+    retired = {n["id"] for n in base.curated_spec.get("retired_nodes", [])}
+    nav.related = lambda key: [
+        n for n in base.related(key) if n["id"] not in fixed and n["id"] not in retired
+    ]
+    from app.parameter_profiles import resolve_profiles
+
+    resolve_profiles(nav, tree, matched)
     nav.reference_coverage = {
         **matched.reference_coverage,
         "fixed_category_count": len(fixed),
         "structural_node_count": len(fixed) - len(leaves),
         "parameter_linked_category_count": len(nav.bindings),
         "categories_with_parameter_set": sum(
-            tree.counts.get(v, {}).get("total", 0) > 0 for v in nav.bindings.values()
+            any(tree.counts.get(v, {}).get("total", 0) > 0 for v in donors)
+            for donors in nav.parameter_donors.values()
+        ),
+        "parameter_profile_count": sum(len(v) for v in nav.parameter_donors.values()),
+        "multi_profile_category_count": sum(
+            len(v) > 1 for v in nav.parameter_donors.values()
         ),
         "ambiguous_parameter_binding_count": sum(
             k not in nav.bindings and len(nav.candidates.get(k, [])) > 1 for k in leaves

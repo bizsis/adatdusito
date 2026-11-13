@@ -165,6 +165,9 @@ def dto(nav, id, latest, tree):
     from app.fixed_navigation import binding_status
 
     status = binding_status(nav, id)
+    from app.parameter_profiles import profile_info
+
+    profiles = profile_info(nav, id)
     return {
         **node,
         "children_count": len(nav.tree_children(id)),
@@ -173,6 +176,12 @@ def dto(nav, id, latest, tree):
         "ancestors": [nav.summary(k) for k in nav.path(id)[:-1]],
         "related_links": nav.related(id),
         "mapping_status": status,
+        "parameter_profiles": profiles,
+        "parameter_profile_count": len(profiles),
+        "parameter_source_category_id": profiles[0]["source_category_id"]
+        if len(profiles) == 1
+        else None,
+        "parameter_source_category_ids": [p["source_category_id"] for p in profiles],
         "mapping_method": getattr(nav, "methods", {}).get(id),
         "reference_name": mapped["name"] if mapped else None,
         "reference_key": f"emag_marketplace:{mapped['emag_category_id']}"
@@ -193,17 +202,21 @@ def dto(nav, id, latest, tree):
         if tree
         else [],
         "mapping_evidence_id": record.id if record else None,
-        "canonical_emag_id": mapped["emag_category_id"] if mapped else None,
+        "canonical_emag_id": mapped["emag_category_id"]
+        if mapped and len(profiles) == 1
+        else None,
         "marketplace_category_id": mapped["id"] if mapped else None,
         "selectable": bool(
             node["kind"] == "category" and not node.get("structural_only")
         ),
-        "parameter_count": mapped["parameter_count"] if mapped else None,
+        "parameter_count": sum(p["parameter_count"] for p in profiles)
+        if profiles
+        else None,
         "mandatory_parameter_count": mapped["mandatory_parameter_count"]
-        if mapped
+        if mapped and len(profiles) == 1
         else None,
         "optional_parameter_count": mapped["optional_parameter_count"]
-        if mapped
+        if mapped and len(profiles) == 1
         else None,
         "snapshot_sha256": nav.data["archive_sha256"],
     }
@@ -335,29 +348,37 @@ def parameters(
     mandatory: bool | None = None,
     offset: int = Query(0, ge=0),
     limit: int = Query(25, ge=1, le=100),
+    profile_emag_id: int | None = Query(None, gt=0),
     db: Session = Depends(database),
 ):
+    from app.parameter_profiles import choose_profile
+
     version = catalog_store.active_version(db)
     if version:
-        node = catalog_store.detail(db, version, node_id)
-        if node["mapping_status"] != "confirmed":
+        nav = catalog_store.index(db, version)
+        if node_id not in nav.visible:
+            raise HTTPException(404, "A kategória nem található.")
+        internal = choose_profile(nav, node_id, profile_emag_id)
+        if internal is None:
             return {"items": [], "total": 0, "offset": offset, "limit": limit}
-        return catalog_store.parameters(
-            db,
-            version,
-            node["unified_category_id"],
-            q,
-            mandatory,
-            "archive" if node["archived"] else "all",
-            offset,
-            limit,
+        category_id = next(
+            r.target_id
+            for r in nav.owned_categories.values()
+            if r.source_id == internal
         )
-    node = confirmed(node_id, db)
+        return catalog_store.parameters(
+            db, version, category_id, q, mandatory, "all", offset, limit
+        )
+    nav, _, tree = resolved(db)
+    require_node(nav, node_id)
+    internal = choose_profile(nav, node_id, profile_emag_id)
+    if internal is None:
+        return {"items": [], "total": 0, "offset": offset, "limit": limit}
     return list_parameters(
-        category_id=node["marketplace_category_id"],
+        category_id=internal,
         q=q,
         mandatory=mandatory,
-        view="archive" if node["archived"] else "all",
+        view="all",
         offset=offset,
         limit=limit,
         db=db,
@@ -379,6 +400,8 @@ def selection(node_id: str, db: Session = Depends(database)):
             "catalog_version_id": version.id,
             "canonical_reference_key": f"fixed_category:{node_id}",
             "parameter_source_category_id": node["parameter_source_category_id"],
+            "parameter_source_category_ids": node["parameter_source_category_ids"],
+            "parameter_profile_required": node["parameter_profile_count"] > 1,
             "parameter_inheritance": False,
             "reference_writes_allowed": False,
             "new_value_policy": "proposal_requires_approval",
@@ -389,7 +412,9 @@ def selection(node_id: str, db: Session = Depends(database)):
         "snapshot_sha256": node["snapshot_sha256"],
         "mapping_evidence_id": node["mapping_evidence_id"],
         "canonical_reference_key": f"fixed_category:{node_id}",
-        "parameter_source_category_id": node["marketplace_category_id"],
+        "parameter_source_category_id": node["parameter_source_category_id"],
+        "parameter_source_category_ids": node["parameter_source_category_ids"],
+        "parameter_profile_required": node["parameter_profile_count"] > 1,
         "category_id": node["marketplace_category_id"],
         "emag_category_id": node["canonical_emag_id"],
         "parameter_inheritance": False,

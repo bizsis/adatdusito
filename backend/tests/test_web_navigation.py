@@ -81,7 +81,7 @@ def test_actual_13_roots_order_and_namespace_separation(environment):
         tv["name"] == "Televíziók"
         and tv["canonical_emag_id"] == 79
         and tv["mapping_status"] == "confirmed"
-        and tv["mapping_method"] == "automatic_exact"
+        and tv["mapping_method"] == "reviewed_semantic"
     )
     assert tv["parameter_count"] == 1  # Direct existing fixture parameter, no copy.
     assert (
@@ -261,7 +261,7 @@ def test_mapping_approval_is_bound_to_source_snapshot(environment, monkeypatch):
         client.get("/api/v1/reference/navigation/web-item-43-3730").json()[
             "mapping_method"
         ]
-        == "automatic_exact"
+        == "reviewed_semantic"
     )
 
 

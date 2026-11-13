@@ -1,6 +1,7 @@
 """Production UI against the real FastAPI test app and synthetic read-only DB."""
 
 import mimetypes
+import re
 from pathlib import Path
 from urllib.parse import urlparse
 import pytest
@@ -20,17 +21,65 @@ from test_fixed_category_catalog import (
 
 @pytest.fixture
 def extra_reference_categories():
-    return tv_categories.__wrapped__() + desktop_categories.__wrapped__()
+    return (
+        tv_categories.__wrapped__()
+        + desktop_categories.__wrapped__()
+        + [
+            dict(
+                id=700,
+                emag_category_id=371,
+                name="Switch kezelőszoftverrel",
+                parent_id=670,
+                is_allowed=False,
+            ),
+            dict(
+                id=701,
+                emag_category_id=372,
+                name="Switch kezelőszoftver nélkül",
+                parent_id=670,
+                is_allowed=True,
+            ),
+        ]
+    )
 
 
 @pytest.fixture
 def extra_reference_parameters():
-    return tv_parameters.__wrapped__() + desktop_parameters.__wrapped__()
+    return (
+        tv_parameters.__wrapped__()
+        + desktop_parameters.__wrapped__()
+        + [
+            dict(
+                id=12000 + i,
+                category_id=700 + i,
+                emag_parameter_id=60000,
+                name="Profiltípus",
+                type_id=2,
+                display_order=0,
+                is_mandatory=i == 0,
+                is_filter=True,
+                allow_new_value=False,
+            )
+            for i in range(2)
+        ]
+    )
 
 
 @pytest.fixture
 def extra_reference_values():
-    return tv_values.__wrapped__() + desktop_values.__wrapped__()
+    return (
+        tv_values.__wrapped__()
+        + desktop_values.__wrapped__()
+        + [
+            dict(
+                id=120000 + i,
+                parameter_id=12000 + i,
+                value_text="managed" if i == 0 else "unmanaged",
+                value_order=0,
+            )
+            for i in range(2)
+        ]
+    )
 
 
 @pytest.mark.parametrize("owned", [False, True])
@@ -149,6 +198,20 @@ def test_unified_category_ui_parameters_values_and_simple_review(
         ).to_be_visible()
         expect(page.locator(".category-full-path")).to_contain_text(
             "Számítástechnika / Asztali PC és monitorok / Asztali számítógépek"
+        )
+        page.get_by_role(
+            "button", name="Hálózatok és megfigyelő rendszerek alkategóriái", exact=True
+        ).click()
+        page.locator("button.tree-name").filter(has_text="Kapcsolók").click()
+        expect(page.get_by_label("Paraméterprofil", exact=True)).to_have_value("371")
+        expect(page.get_by_text("Kötelező: 1", exact=True)).to_be_visible()
+        page.get_by_role("button", name="Megnyitás →", exact=True).first.click()
+        expect(page.locator(".value-list li")).to_have_text([re.compile(r"^managed#")])
+        page.get_by_label("Paraméterprofil", exact=True).select_option("372")
+        expect(page.get_by_text("Kötelező: 0", exact=True)).to_be_visible()
+        page.get_by_role("button", name="Megnyitás →", exact=True).first.click()
+        expect(page.locator(".value-list li")).to_have_text(
+            [re.compile(r"^unmanaged#")]
         )
         if owned:
             # The declared filter-derived node is lazy, structural and retained.

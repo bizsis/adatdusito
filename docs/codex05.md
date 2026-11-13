@@ -1,5 +1,7 @@
 # CODEX 05 – Rögzített magyar kategóriafa, automatikus paraméterforrások
 
+> Történeti leírás a kezdeti CODEX 05 állapotról. Az aktuális, 583 pontos fa és a 412/412 termékkategória paraméter-hozzárendelése: [ellenőrzött profilok](reviewed-parameter-profiles.md).
+
 ## A jóváhagyott fa az elsődleges
 
 A `backend/reference_data/curated_taxonomy.json` **változatlan** marad: 13 főcsoport,

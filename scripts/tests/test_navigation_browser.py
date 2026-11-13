@@ -22,14 +22,14 @@ def test_verified_roots_lazy_children_and_separate_review(width, height):
         [
             dict(
                 id=1,
-                emag_category_id=79,
+                emag_category_id=90001,
                 name="Televíziók",
                 parent_id=None,
                 is_allowed=True,
             ),
             dict(
                 id=2,
-                emag_category_id=999,
+                emag_category_id=90002,
                 name="Televíziók",
                 parent_id=None,
                 is_allowed=False,

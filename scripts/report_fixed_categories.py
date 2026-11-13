@@ -10,6 +10,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "backend"))
 from app.category_export import load_category_export
 from app.fixed_navigation import resolve_fixed, binding_status
 from app.web_navigation import navigation
+from app.parameter_profiles import profile_info, reviewed_bindings
 
 parser = argparse.ArgumentParser()
 parser.add_argument("--export", type=Path, required=True)
@@ -20,8 +21,10 @@ if args.output.exists():
 tree = load_category_export(args.export)
 nav = resolve_fixed(navigation(), tree)
 entries = []
+review_notes = {r["node_id"]: r for r in reviewed_bindings()["rules"]}
 for key, node in nav.nodes.items():
     internal = nav.bindings.get(key)
+    profiles = profile_info(nav, key)
     entries.append(
         dict(
             id=key,
@@ -30,11 +33,11 @@ for key, node in nav.nodes.items():
             path=[nav.nodes[p]["name"] for p in nav.path(key)],
             status=binding_status(nav, key),
             source_emag_id=tree.rows[internal]["emag_category_id"]
-            if internal is not None
+            if internal is not None and len(profiles) == 1
             else None,
-            parameter_count=tree.counts[internal]["total"]
-            if internal is not None
-            else 0,
+            parameter_profiles=profiles,
+            reviewed_rationale=review_notes.get(key, {}).get("rationale"),
+            parameter_count=sum(p["parameter_count"] for p in profiles),
             candidates=[
                 dict(
                     emag_category_id=tree.rows[c]["emag_category_id"],
@@ -55,7 +58,14 @@ report = dict(
     maximum_depth=max(len(nav.path(k)) for k in nav.nodes),
     structural_nodes=nav.reference_coverage["structural_node_count"],
     bound_nodes=len(nav.bindings),
-    unique_parameter_donors=len(set(nav.bindings.values())),
+    unique_parameter_donors=len(
+        {v for donors in nav.parameter_donors.values() for v in donors}
+    ),
+    parameter_profile_associations=sum(len(v) for v in nav.parameter_donors.values()),
+    multi_profile_categories=sum(len(v) > 1 for v in nav.parameter_donors.values()),
+    retired_nodes=nav.data.get("retired_nodes", []),
+    reviewed_rule_count=len(review_notes),
+    source_profile_warnings=nav.profile_warnings,
     nodes_with_parameters=nav.reference_coverage["categories_with_parameter_set"],
     ambiguous_bindings=nav.reference_coverage["ambiguous_parameter_binding_count"],
     unavailable_bindings=nav.reference_coverage["unavailable_parameter_binding_count"],

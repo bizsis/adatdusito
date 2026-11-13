@@ -30,6 +30,14 @@ type NavLink = {
   ancestors?: NavLink[];
   path?: NavLink[];
 };
+type ParameterProfile = {
+  source_category_id: number;
+  emag_category_id: number;
+  name: string;
+  parameter_count: number;
+  mandatory_parameter_count: number;
+  optional_parameter_count: number;
+};
 type NavCategory = NavLink & {
   unified_category_id?: number;
   catalog_version_id?: number;
@@ -48,6 +56,8 @@ type NavCategory = NavLink & {
   canonical_emag_id: number | null;
   selectable: boolean;
   parameter_count: number | null;
+  parameter_profiles?: ParameterProfile[];
+  parameter_profile_count?: number;
   mandatory_parameter_count: number | null;
   optional_parameter_count: number | null;
   ancestors: NavLink[];
@@ -952,17 +962,19 @@ function Parameters({
   categoryId,
   view = "all",
   navigationId,
+  profileEmagId,
 }: {
   categoryId?: number;
   view?: string;
   navigationId?: string;
+  profileEmagId?: number;
 }) {
   const [q, setQ] = useState(""),
     [mandatory, setMandatory] = useState(""),
     [offset, setOffset] = useState(0),
     [selected, setSelected] = useState<Parameter | null>(null);
   const query = useDebounce(q);
-  const url = `${navigationId ? `/reference/navigation/${encodeURIComponent(navigationId)}/parameters` : "/reference/parameters"}?view=${view}&offset=${offset}&q=${encodeURIComponent(query)}${categoryId ? `&category_id=${categoryId}` : ""}${mandatory ? `&mandatory=${mandatory}` : ""}`;
+  const url = `${navigationId ? `/reference/navigation/${encodeURIComponent(navigationId)}/parameters` : "/reference/parameters"}?view=${view}&offset=${offset}&q=${encodeURIComponent(query)}${categoryId ? `&category_id=${categoryId}` : ""}${profileEmagId ? `&profile_emag_id=${profileEmagId}` : ""}${mandatory ? `&mandatory=${mandatory}` : ""}`;
   const { data, error, loading } = useLoad<Page<Parameter>>(url);
   return (
     <>
@@ -1131,7 +1143,7 @@ function ShopNode({
 function CategoryReview({ node, onSaved }: { node: NavCategory; onSaved: () => void }) {
   const [query, setQuery] = useState(""),
     [reference, setReference] = useState(
-      String(node.unified_category_id || node.canonical_emag_id || ""),
+      (node.parameter_profiles?.length || 0) > 1 ? "" : String(node.unified_category_id || node.canonical_emag_id || ""),
     ),
     [error, setError] = useState(""),
     [busy, setBusy] = useState(false);
@@ -1139,12 +1151,13 @@ function CategoryReview({ node, onSaved }: { node: NavCategory; onSaved: () => v
   const choices = useLoad<{ items: ReferenceChoice[]; total: number }>(
     `/reference/navigation/choices/reference?q=${encodeURIComponent(term)}`,
   );
-  const current: ReferenceChoice[] = node.canonical_emag_id ? [{
-    category_id: node.unified_category_id,
-    emag_category_id: node.canonical_emag_id,
-    name: node.reference_name || node.name,
-    path_names: [node.reference_name || node.name],
-  }] : [];
+  const current: ReferenceChoice[] = node.parameter_profiles?.map(p => ({
+    category_id: node.catalog_version_id ? p.source_category_id : undefined,
+    emag_category_id: p.emag_category_id, name: p.name,
+    path_names: [p.name], parameter_count: p.parameter_count,
+  })) || (node.canonical_emag_id ? [{category_id: node.unified_category_id,
+    emag_category_id: node.canonical_emag_id, name: node.reference_name || node.name,
+    path_names: [node.reference_name || node.name]}] : []);
   const candidates = [...new Map(
     [...current, ...(node.mapping_candidates || []), ...(choices.data?.items || [])]
       .map(c => [c.category_id || c.emag_category_id, c]),
@@ -1164,6 +1177,7 @@ function CategoryReview({ node, onSaved }: { node: NavCategory; onSaved: () => v
   return (
     <details>
       <summary>Paraméter-hozzárendelés szerkesztése (adminisztrátor)</summary>
+      {(node.parameter_profiles?.length || 0) > 1 && <p>A kézi forrásválasztás egyetlen profilra cseréli az automatikus hozzárendelést. Visszaállítással az összes ellenőrzött profil ismét elérhető.</p>}
       {!node.id.startsWith("ref-") && (
         <form onSubmit={e => {
           e.preventDefault();
@@ -1215,12 +1229,15 @@ function ShopDetails({
   onMappingUpdated: () => void;
 }) {
   const [rev, setRev] = useState(0);
+  const [profile, setProfile] = useState<number | null>(null);
   const result = useLoad<NavCategory>(
     `/reference/navigation/${encodeURIComponent(id)}`,
     rev,
   );
   const who = useLoad<Me>("/auth/me");
   const node = result.data;
+  const profiles = node?.parameter_profiles || [];
+  const activeProfile = profiles.find(p => p.emag_category_id === profile) || profiles[0];
   const kinds: Record<string, string> = {
     parameter_filter: "Paraméterszűrő",
     brand: "Márkaoldal",
@@ -1277,18 +1294,19 @@ function ShopDetails({
             esetén pontosíthatja az elhelyezését.
           </p>
         )}
+        {profiles.length > 1 && <p>{profiles.length} külön hozzárendelt paraméterprofil. Megjelenített profil: {activeProfile?.name}.</p>}
         <div className="facts">
           <span>Alkategóriák / szekciók: {node.children_count}</span>
           <span>
             Paraméterek:{" "}
             {node.kind === "department" || node.kind === "section" || node.structural_only
               ? "Navigációs gyűjtőpont"
-              : (node.parameter_count ?? "Még nem ellenőrzött")}
+              : (activeProfile?.parameter_count ?? node.parameter_count ?? "Még nem ellenőrzött")}
           </span>
           {node.parameter_count !== null && (
             <>
-              <span>Kötelező: {node.mandatory_parameter_count}</span>
-              <span>Opcionális: {node.optional_parameter_count}</span>
+              <span>Kötelező: {activeProfile?.mandatory_parameter_count ?? node.mandatory_parameter_count}</span>
+              <span>Opcionális: {activeProfile?.optional_parameter_count ?? node.optional_parameter_count}</span>
             </>
           )}
         </div>
@@ -1321,7 +1339,19 @@ function ShopDetails({
       </section>
       {node.mapping_status === "confirmed" &&
         ["category", "section"].includes(node.kind) && (
-          <Parameters key={id + "-" + rev} navigationId={id} view={node.archived ? "archive" : "all"} />
+          <>
+            {profiles.length > 1 && <section className="card padded">
+              <label>Paraméterprofil
+                <select aria-label="Paraméterprofil" value={activeProfile?.emag_category_id || ""}
+                  onChange={e => setProfile(Number(e.target.value))}>
+                  {profiles.map(p => <option key={p.emag_category_id} value={p.emag_category_id}>{p.name} · {p.parameter_count} paraméter</option>)}
+                </select>
+              </label>
+              <p>Minden felsorolt profil hozzá van rendelve a kategóriához. A kötelező mezőket és megengedett értékeket profilonként, külön kezeljük.</p>
+            </section>}
+            <Parameters key={`${id}-${rev}-${activeProfile?.emag_category_id || ""}`} navigationId={id}
+              profileEmagId={activeProfile?.emag_category_id} view="all" />
+          </>
         )}
       {!!node.related_parameter_filters?.length && (
         <section className="card padded">
@@ -1412,7 +1442,7 @@ function Categories() {
           {[
             [coverage.data.root_count, "Valós főcsoport"],
             [coverage.data.reference_coverage?.fixed_category_count ?? "–", "Rögzített kategóriapont"],
-            [coverage.data.reference_coverage?.parameter_linked_category_count ?? "–", "Hozzárendelt paraméterforrás"],
+            [coverage.data.reference_coverage?.parameter_linked_category_count ?? "–", "Paraméterprofillal rendelkező kategória"],
             [coverage.data.reference_coverage?.ambiguous_parameter_binding_count ?? "–", "Bizonytalan paraméter-hozzárendelés", "unclassified"],
             [coverage.data.reference_coverage?.unavailable_parameter_binding_count ?? "–", "Paraméterforrás még nem érhető el", "unavailable"],
           ].map(([v, label, filter]) => filter ? (

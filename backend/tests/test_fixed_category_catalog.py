@@ -115,7 +115,7 @@ def test_every_fixed_id_name_parent_and_order_ignores_all_source_activity_flags(
             [{**r, "is_allowed": flag} for r in original.rows.values()], original.counts
         )
         nav = resolve_fixed(navigation(), tree)
-        assert list(nav.nodes) == fixed_ids and len(nav.nodes) == 584
+        assert list(nav.nodes) == fixed_ids and len(nav.nodes) == 583
         assert all(
             nav.nodes[k]["parent_id"] == expected.nodes[k]["parent_id"]
             and nav.nodes[k]["name"] == expected.nodes[k]["name"]
@@ -230,7 +230,7 @@ def test_inactive_source_supplies_70_parameters_without_changing_fixed_taxonomy(
     stats = client.get("/api/v1/reference/navigation/coverage").json()[
         "reference_coverage"
     ]
-    assert stats["fixed_category_count"] == 584
+    assert stats["fixed_category_count"] == 583
     assert stats["ambiguous_parameter_binding_count"] == 1
     review = client.get("/api/v1/reference/navigation?scope=unclassified").json()[
         "items"

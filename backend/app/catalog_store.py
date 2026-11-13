@@ -194,10 +194,25 @@ def dto(db, version, nav, key):
         if source
         else {"total": 0, "mandatory": 0, "optional": 0}
     )
+    from app.parameter_profiles import profile_info
+
+    targets = {r.source_id: r.target_id for r in nav.owned_categories.values()}
+    profiles = profile_info(nav, key, targets)
+    if len(profiles) > 1:
+        counts = {
+            "total": sum(p["parameter_count"] for p in profiles),
+            "mandatory": 0,
+            "optional": 0,
+        }
     return {
         **node,
         "category_key": key,
-        "parameter_source_category_id": row.category_id if source else None,
+        "parameter_source_category_id": row.category_id
+        if source and len(profiles) == 1
+        else None,
+        "parameter_source_category_ids": [p["source_category_id"] for p in profiles],
+        "parameter_profiles": profiles,
+        "parameter_profile_count": len(profiles),
         "unified_category_id": row.category_id,
         "selectable": bool(
             node.get("selectable")
@@ -214,7 +229,9 @@ def dto(db, version, nav, key):
         "ancestors": [nav.summary(k) for k in nav.path(key)[:-1]],
         "related_links": nav.related(key),
         "mapping_status": binding_status(nav, key),
-        "canonical_emag_id": int(source.external_id) if source else None,
+        "canonical_emag_id": int(source.external_id)
+        if source and len(profiles) == 1
+        else None,
         "marketplace_category_id": source.source_id if source else None,
         "mapping_candidates": [
             {
@@ -225,17 +242,22 @@ def dto(db, version, nav, key):
                 ),
                 "emag_category_id": nav.reference.rows[c]["emag_category_id"],
                 "name": nav.reference.rows[c]["name"],
-                "path_names": [nav.reference.rows[c]["name"]],
+                "path_names": [
+                    nav.reference.rows[p]["name"]
+                    for p in nav.reference.path_ids(c, "archive")
+                ],
             }
             for c in nav.candidates.get(key, [])
         ],
         "mapping_evidence_id": None,
         "parameter_count": counts["total"],
-        "mandatory_parameter_count": counts["mandatory"],
-        "optional_parameter_count": counts["optional"],
-        "unknown_parameter_count": counts["total"]
-        - counts["mandatory"]
-        - counts["optional"],
+        "mandatory_parameter_count": counts["mandatory"]
+        if len(profiles) <= 1
+        else None,
+        "optional_parameter_count": counts["optional"] if len(profiles) <= 1 else None,
+        "unknown_parameter_count": sum(p["unknown_parameter_count"] for p in profiles)
+        if len(profiles) > 1
+        else counts["total"] - counts["mandatory"] - counts["optional"],
         "snapshot_sha256": nav.data["archive_sha256"],
         "parameter_source": "owned_catalog",
     }
