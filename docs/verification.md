@@ -92,3 +92,24 @@ bash scripts/smoke.sh https://dev.pinfo.hu
 ```
 
 Ellenőrizd böngészőből a bejelentkezési feliratot, az aktív kategóriák keresését és az inaktív szülő alatti aktív kategóriák elérhetőségét. A teljes gyökérlista darabszáma nem azonos az összes aktív kategória számával: a teljes aktív lista `roots=false` szűréssel kérhető. Ne futtass referenciaadatot módosító SQL-t, és ne másold felül a működő `.env` fájlt.
+
+## CODEX 03A – egységes fa, strukturális kategóriák, forrásbizonyíték
+
+2026-11-13, izolált felhőbeli fejlesztés. **50 sikeres backendteszt**, egy meglévő Starlette/AnyIO deprecation warning. A korábbi aktív-only üzleti szabály tesztjeit az új követelménynek megfelelően pontosítottuk; a jogosultság-, session-, tenantizolációs és olvasási védelmi tesztek továbbra is sikeresek.
+
+- Külön teszt a 1496 strukturális szülő → 79 besorolható televízió kategóriára, 46 közvetlen paraméterrel.
+- Hiányzó 2661 külső szülő nem keveredik az azonos számú belső ID-val; nincs kitalált kapcsolat.
+- Ciklus felismerése és jelzett, véges megjelenítése; Deleted jelölésű rekordok alapértelmezett kizárása.
+- Strukturális kategória navigálható és paraméterei olvashatók, de a besorolási végpont 409-et ad. Nincs szülőparaméter-öröklés.
+- Teljes strukturális szülőút keresési találatban és adatlapon; gyermekszám és közvetlen paraméterszámok ellenőrzöttek.
+- 10 000 szintű gráf iteratív feldolgozása tesztelt; 1 000 szintű API-szülőút és gyökérlista kérésenként pontosan két referencia-SELECT-tel készül. A gyökérlista kimenete korlátos, az értéktáblát nem tölti be.
+- Forrásmegfigyelés auditált és csak Superadmin írhatja. Pending webshop-ID nem lesz kategória, névegyezés és numerikus URL sem hoz létre automatikus megfeleltetést. Szintetikus JSON-LD-minták ellenőrzöttek.
+- MySQL 8-on az új 0003 migráció sikeres; a séma egyezik az ORM-metaadattal. A valós VPS-migrációt nem futtattuk.
+- A MySQL-integráció a forrásregisztert és a pending megfigyelést is ellenőrzi; ezek nem változtatják meg a kanonikus kategóriaszámot.
+- TypeScript/Vite- és Compose-build sikeres. A Chromium-próba asztali és mobil méretben ellenőrzi a meglévő adminfunkciókat, az új teljes útvonalat, kijelölést, felfelé/lefelé navigációt, fa-szűrőt és forrásregisztert.
+
+Az üzemeltető által ellenőrzött valós adatok: 2669 kategória, 4 igazolt gyökérszint, 2565 gyökérből elérhető rekord; 1807 kategória paraméterkészlettel, 862 paraméter nélkül; 29398 definíció, 2847054 megengedett érték. Ezek nem a háromkategóriás cloud fixture eredményei. A runtime jelentés mindig a ténylegesen csatlakoztatott adatbázist méri.
+
+Forrásvizsgálat: robots, sitemap és dokumentációs belépési cím kezdeti kérései a környezeti proxy CONNECT 403 tiltásába ütköztek. A megismételhető kutatóeszköz robots-ellenőrzés nélkül nem tölti a webshopot. Nincs sikeres új webshopfa-letöltés vagy bizonyított teljes magyar webshop-lefedettség. A forrás- és architektúrajelentés: [codex03a.md](codex03a.md).
+
+A `.env`, a Docker Compose-fájlok, a 0001/0002 migrációk és a VPS szolgáltatásbeállításai változatlanok. A referenciaadatbázishoz nem adtunk író jogosultságot. VPS-telepítés nem történt; termékimport, AI-kutatás és rendszeres szinkron nem készült.

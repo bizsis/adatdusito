@@ -1,4 +1,4 @@
-# Adatdúsító · CODEX 02
+# Adatdúsító · CODEX 03A
 
 Magyar nyelvű, többügyfeles adminfelület FastAPI, React/TypeScript, Celery/Redis és a meglévő MySQL 8.0 használatával.
 
@@ -57,3 +57,12 @@ Böngészőteszt: `pip install -r scripts/browser-requirements.txt`, majd a [tes
 A parent_id szemantikáját az üzemeltető az eredeti szinkronizáló forráskódjából ellenőrizte. A 94 hiányzó szülő a referenciaadatok tulajdonsága: a böngésző ezeket figyelmeztetéssel, gyökérszinten is megjeleníti. Ciklusnál és túl mély láncnál szintén figyelmeztet. A több millió értékből legfeljebb 100 kérhető egy API-oldalon, a felület 50-et kér; nincs teljes értéklista-betöltés vagy teljes táblás összesítésszámítás.
 
 [API és biztonsági szerződés](docs/api.md) · [Ellenőrzési jegyzőkönyv](docs/verification.md)
+
+
+## CODEX 03A – egységes referenciafa
+
+A kategóriaböngésző most megkülönbözteti a strukturális és a termékbesorolható kategóriákat. Az alapnézet a besorolható kategóriák teljes ismert szülőfája; a további nem törölt ágak ugyanannak a fának a megjelenítési szűrőjével érhetők el. A Deleted jelölésű rekordok rejtettek. A hiányzó és ciklikus szülőkapcsolatok jelzettek, kitalált pótlás nincs.
+
+A `0003` migráció globális forrásnyilvántartást ad az alkalmazásadatbázishoz; nem másolja és nem módosítja a pinfo_db kategóriáit. A 0001/0002 változatlan. A korábbi aktív-only javítás működését ez a fázis szándékosan pontosítja: nem besorolható szülő most navigálható lehet, de a `/reference/categories/{id}/selection` végpont továbbra sem enged rá termékbesorolást.
+
+[Adatmodell, forrásvizsgálat, lefedettség és korlátok](docs/codex03a.md). Az új publikus források letöltését a jelenlegi felhőbeli hálózati szabályzat tiltja; a teljes magyar webshopfa megszerzését nem állítjuk. Élő lefedettségi jelentés: `docker compose exec -T backend python -m app.reference_report`.

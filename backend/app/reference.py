@@ -5,6 +5,9 @@ This metadata is deliberately separate from application migration metadata.
 """
 
 from fastapi import APIRouter, Depends, HTTPException, Query
+from typing import Literal
+from sqlalchemy import case
+from app.category_tree import CategoryTree
 from sqlalchemy import (
     Boolean,
     Column,
@@ -64,32 +67,39 @@ def missing(detail):
     raise HTTPException(404, detail)
 
 
-def category_select():
-    parent = categories.alias("parent")
-    return (
+View = Literal["navigation", "all"]
+
+
+def load_tree(conn):
+    rows = list(conn.execute(select(categories)).mappings())
+    groups = conn.execute(
         select(
-            *[c for c in categories.c if c.name != "parent_id"],
-            categories.c.parent_id.label("parent_emag_id"),
-            parent.c.id.label("parent_id"),
-            parent.c.name.label("parent_name"),
-        )
-        .select_from(
-            categories.outerjoin(
-                parent,
-                (parent.c.emag_category_id == categories.c.parent_id)
-                & (parent.c.is_allowed == 1),
-            )
-        )
-        .where(categories.c.is_allowed == 1)
-    )
+            parameters.c.category_id,
+            func.count().label("total"),
+            func.sum(case((parameters.c.is_mandatory == 1, 1), else_=0)).label(
+                "mandatory"
+            ),
+            func.sum(case((parameters.c.is_mandatory == 0, 1), else_=0)).label(
+                "optional"
+            ),
+            func.sum(case((parameters.c.is_mandatory.is_(None), 1), else_=0)).label(
+                "unknown"
+            ),
+        ).group_by(parameters.c.category_id)
+    ).mappings()
+    counts = {
+        r["category_id"]: {
+            k: int(r[k] or 0) for k in ["total", "mandatory", "optional", "unknown"]
+        }
+        for r in groups
+    }
+    return CategoryTree(rows, counts)
 
 
-def category_json(row):
-    item = dict(row)
-    item["missing_parent"] = (
-        item["parent_emag_id"] not in (None, 0) and item["parent_id"] is None
-    )
-    return item
+def get_category(tree, id, view):
+    if id not in tree.visible(view):
+        missing("A kategória nem található.")
+    return tree.item(id, view, tree.children_counts(view))
 
 
 def paginated(conn, stmt, offset, limit):
@@ -107,93 +117,77 @@ def paginated(conn, stmt, offset, limit):
     }
 
 
+@router.get("/coverage")
+def coverage():
+    with reference_database() as conn:
+        from datetime import datetime, timezone
+
+        return load_tree(conn).coverage() | {
+            "observed_at": datetime.now(timezone.utc).isoformat()
+        }
+
+
 @router.get("/categories")
 def list_categories(
     q: str = Query("", max_length=120),
     parent_id: int | None = Query(None, gt=0),
     roots: bool = True,
-    offset: int = Query(0, ge=0, le=10000),
+    view: View = "navigation",
+    offset: int = Query(0, ge=0, le=100000),
     limit: int = Query(50, ge=1, le=100),
 ):
     with reference_database() as conn:
-        stmt = category_select()
+        tree = load_tree(conn)
+        ids = tree.visible(view)
         if parent_id is not None:
-            parent_external = conn.scalar(
-                select(categories.c.emag_category_id).where(
-                    categories.c.id == parent_id, categories.c.is_allowed == 1
-                )
-            )
-            if parent_external is None:
-                missing("A szülőkategória nem található.")
-            stmt = stmt.where(categories.c.parent_id == parent_external)
+            get_category(tree, parent_id, view)
+            ids = {id for id in ids if tree.parent(id, view) == parent_id}
         elif not q and roots:
-            stmt = stmt.where(
-                or_(
-                    categories.c.parent_id.is_(None),
-                    categories.c.parent_id == 0,
-                    stmt.selected_columns.parent_id.is_(None),
-                )
-            )
+            ids = {id for id in ids if tree.parent(id, view) is None}
         if q:
-            condition = categories.c.name.contains(q, autoescape=True)
-            if q.isdecimal() and len(q) < 11:
-                condition = or_(condition, categories.c.emag_category_id == int(q))
-            stmt = stmt.where(condition)
-        result = paginated(
-            conn, stmt.order_by(categories.c.name, categories.c.id), offset, limit
-        )
-        result["items"] = [category_json(row) for row in result["items"]]
-        return result
+            term = q.casefold()
+            ids = {
+                id
+                for id in ids
+                if term in tree.rows[id]["name"].casefold()
+                or str(tree.rows[id]["emag_category_id"]) == q
+            }
+        ordered = sorted(ids, key=lambda id: (tree.rows[id]["name"].casefold(), id))
+        counts = tree.children_counts(view)
+        return {
+            "items": [
+                tree.item(id, view, counts) for id in ordered[offset : offset + limit]
+            ],
+            "total": len(ordered),
+            "offset": offset,
+            "limit": limit,
+            "view": view,
+        }
 
 
 @router.get("/categories/{category_id}")
-def category(category_id: int):
+def category(category_id: int, view: View = "navigation"):
     with reference_database() as conn:
-        row = (
-            conn.execute(category_select().where(categories.c.id == category_id))
-            .mappings()
-            .first()
-        )
-        if not row:
-            missing("A kategória nem található.")
-        item = category_json(row)
-        # Resolve ancestry by external IDs, detect cycles and missing parents.
-        ancestors, seen = [], {category_id}
-        parent_external = item["parent_emag_id"]
-        hierarchy_error = None
-        for _ in range(50):
-            if parent_external in (None, 0):
-                break
-            parent = (
-                conn.execute(
-                    select(
-                        categories.c.id,
-                        categories.c.emag_category_id,
-                        categories.c.name,
-                        categories.c.parent_id,
-                    ).where(
-                        categories.c.emag_category_id == parent_external,
-                        categories.c.is_allowed == 1,
-                    )
-                )
-                .mappings()
-                .first()
+        return get_category(load_tree(conn), category_id, view)
+
+
+@router.get("/categories/{category_id}/selection")
+def category_selection(category_id: int):
+    """Stable reference contract for future imports; does not create any product."""
+    with reference_database() as conn:
+        tree = load_tree(conn)
+        item = get_category(tree, category_id, "all")
+        if not item["selectable"]:
+            raise HTTPException(
+                409, "Strukturális kategória termékbesoroláshoz nem választható."
             )
-            if not parent:
-                hierarchy_error = "missing_parent"
-                break
-            if parent["id"] in seen:
-                hierarchy_error = "cycle"
-                break
-            seen.add(parent["id"])
-            ancestors.append(dict(parent))
-            parent_external = parent["parent_id"]
-        else:
-            hierarchy_error = "depth_limit"
-        item.update(
-            ancestors=list(reversed(ancestors)), hierarchy_error=hierarchy_error
-        )
-        return item
+        return {
+            "category": item,
+            "parameter_source_category_id": category_id,
+            "parameter_inheritance": False,
+            "new_value_policy": "proposal_requires_approval",
+            "reference_writes_allowed": False,
+        }
 
 
 @router.get("/parameters")
@@ -201,10 +195,15 @@ def list_parameters(
     category_id: int | None = Query(None, gt=0),
     q: str = Query("", max_length=120),
     mandatory: bool | None = None,
+    view: View = "navigation",
     offset: int = Query(0, ge=0, le=10000),
     limit: int = Query(25, ge=1, le=100),
 ):
     with reference_database() as conn:
+        tree = load_tree(conn)
+        if category_id is not None:
+            get_category(tree, category_id, view)
+        visible_ids = tree.visible(view)
         stmt = (
             select(
                 parameters,
@@ -212,15 +211,9 @@ def list_parameters(
                 categories.c.emag_category_id,
             )
             .join(categories, parameters.c.category_id == categories.c.id)
-            .where(categories.c.is_allowed == 1)
+            .where(categories.c.id.in_(visible_ids))
         )
         if category_id is not None:
-            if not conn.scalar(
-                select(categories.c.id).where(
-                    categories.c.id == category_id, categories.c.is_allowed == 1
-                )
-            ):
-                missing("A kategória nem található.")
             stmt = stmt.where(parameters.c.category_id == category_id)
         if q:
             condition = parameters.c.name.contains(q, autoescape=True)
@@ -242,14 +235,19 @@ def parameter_values(
     parameter_id: int,
     q: str = Query("", max_length=120),
     after: int = Query(0, ge=0),
+    view: View = "navigation",
     limit: int = Query(50, ge=1, le=100),
 ):
     with reference_database() as conn:
+        tree = load_tree(conn)
         parameter = (
             conn.execute(
                 select(parameters)
                 .join(categories, parameters.c.category_id == categories.c.id)
-                .where(parameters.c.id == parameter_id, categories.c.is_allowed == 1)
+                .where(
+                    parameters.c.id == parameter_id,
+                    categories.c.id.in_(tree.visible(view)),
+                )
             )
             .mappings()
             .first()

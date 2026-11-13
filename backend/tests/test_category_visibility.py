@@ -56,98 +56,114 @@ def extra_reference_values():
     ]
 
 
-def test_only_explicitly_active_categories_in_all_lists_and_pagination(environment):
+def test_navigation_keeps_structural_ancestors_and_pagination(environment):
     client, *_ = environment
     login(client)
-    expected = {10, 20, 30, 40, 50, 60, 105, 106, 107, 108, 109}
-    all_rows = client.get("/api/v1/reference/categories?roots=false").json()
-    assert all_rows["total"] == len(expected)
-    assert {row["id"] for row in all_rows["items"]} == expected
+    expected = {10, 20, 30, 40, 50, 60, 101, 102, 105, 106, 107, 109}
     ids = []
     for offset in range(len(expected)):
         page = client.get(
             f"/api/v1/reference/categories?roots=false&limit=1&offset={offset}"
         ).json()
         assert page["total"] == len(expected)
-        assert len(page["items"]) == 1 and page["items"][0]["is_allowed"] is True
         ids.append(page["items"][0]["id"])
     assert set(ids) == expected and len(ids) == len(set(ids))
     assert (
-        client.get(
-            f"/api/v1/reference/categories?roots=false&offset={len(expected)}"
-        ).json()["items"]
-        == []
+        client.get("/api/v1/reference/categories/101").json()["classification"]
+        == "structural"
     )
 
 
-@pytest.mark.parametrize(
-    "query", ["Legume", "1715", "Fructe", "1749", "Peste", "1874", "1885"]
-)
-def test_inactive_categories_not_searchable_by_name_or_external_id(environment, query):
+def test_explicit_selectability_not_language_filters(environment):
     client, *_ = environment
     login(client)
-    page = client.get("/api/v1/reference/categories", params={"q": query}).json()
-    assert page["items"] == [] and page["total"] == 0
-
-
-def test_filter_depends_on_active_flag_not_language_or_deleted_word(environment):
-    client, *_ = environment
-    login(client)
-    romanian = client.get(
+    found = client.get(
         "/api/v1/reference/categories", params={"q": "Carne proaspata"}
     ).json()
-    assert [row["id"] for row in romanian["items"]] == [107]
-    deleted = client.get("/api/v1/reference/categories", params={"q": "Deleted"}).json()
-    assert [row["id"] for row in deleted["items"]] == [108]
+    assert [r["id"] for r in found["items"]] == [107]
+    assert found["items"][0]["selectable"]
+    assert (
+        client.get("/api/v1/reference/categories?q=Deleted&view=all").json()["items"]
+        == []
+    )
+    assert client.get("/api/v1/reference/categories/108/selection").status_code == 404
 
 
-def test_active_children_of_inactive_parents_are_roots_and_keep_descendants(
-    environment,
-):
+def test_structural_parent_children_and_complete_path(environment):
     client, *_ = environment
     login(client)
-    root = client.get("/api/v1/reference/categories").json()
-    assert {row["id"] for row in root["items"]} == {10, 30, 105, 107, 108, 109}
-    orphan = next(row for row in root["items"] if row["id"] == 105)
-    assert (
-        orphan["missing_parent"]
-        and orphan["parent_id"] is None
-        and orphan["parent_name"] is None
-    )
-    assert orphan["parent_emag_id"] == 1715
-    children = client.get("/api/v1/reference/categories?parent_id=105").json()
-    assert [row["id"] for row in children["items"]] == [106]
-    # The inactive child of an active parent is not exposed in its child list.
-    assert [
-        row["id"]
-        for row in client.get("/api/v1/reference/categories?parent_id=10").json()[
-            "items"
-        ]
-    ] == [20]
+    roots = client.get("/api/v1/reference/categories").json()
+    assert {r["id"] for r in roots["items"]} == {10, 30, 50, 101, 107}
+    children = client.get("/api/v1/reference/categories?parent_id=101").json()
+    assert [r["id"] for r in children["items"]] == [105]
+    assert not children["items"][0]["missing_parent"]
     detail = client.get("/api/v1/reference/categories/106").json()
-    assert [row["id"] for row in detail["ancestors"]] == [105]
-    assert detail["hierarchy_error"] == "missing_parent"
-    assert client.get("/api/v1/reference/categories/109").json()["ancestors"] == []
+    assert [r["id"] for r in detail["path"]] == [101, 105, 106]
+    assert detail["parent_id"] == 105 and detail["hierarchy_error"] is None
+    assert detail["ancestors"][0]["selectable"] is False
+    assert [
+        r["id"]
+        for r in client.get("/api/v1/reference/categories?parent_id=10").json()["items"]
+    ] == [102, 20]
 
 
-@pytest.mark.parametrize("id", [101, 102, 103, 104])
-def test_inactive_category_detail_and_parent_selection_return_404(environment, id):
+@pytest.mark.parametrize("id", [101, 102, 104])
+def test_structural_categories_never_selectable_even_in_all_view(environment, id):
     client, *_ = environment
     login(client)
-    assert client.get(f"/api/v1/reference/categories/{id}").status_code == 404
-    assert client.get(f"/api/v1/reference/categories?parent_id={id}").status_code == 404
+    detail = client.get(f"/api/v1/reference/categories/{id}?view=all")
+    assert detail.status_code == 200 and detail.json()["selectable"] is False
+    assert client.get(f"/api/v1/reference/categories/{id}/selection").status_code == 409
+
+
+@pytest.mark.parametrize("id", [103, 108])
+def test_deleted_marker_hidden_even_if_allowed_and_even_in_all_view(environment, id):
+    client, *_ = environment
+    login(client)
+    assert client.get(f"/api/v1/reference/categories/{id}?view=all").status_code == 404
     assert (
-        client.get(f"/api/v1/reference/parameters?category_id={id}").status_code == 404
+        client.get(f"/api/v1/reference/categories?parent_id={id}&view=all").status_code
+        == 404
+    )
+    assert client.get(f"/api/v1/reference/categories/{id}/selection").status_code == 404
+
+
+def test_parameter_browsing_does_not_imply_product_selection(environment):
+    client, *_ = environment
+    login(client)
+    parameters = client.get("/api/v1/reference/parameters?category_id=101").json()
+    assert parameters["items"][0]["id"] == 170
+    assert client.get("/api/v1/reference/parameters/170/values").status_code == 200
+    assert client.get("/api/v1/reference/categories/101/selection").status_code == 409
+    selection = client.get("/api/v1/reference/categories/105/selection").json()
+    assert selection["parameter_source_category_id"] == 105
+    assert (
+        selection["parameter_inheritance"] is False
+        and selection["reference_writes_allowed"] is False
+    )
+    assert (
+        client.get("/api/v1/reference/parameters?category_id=105").json()["items"][0][
+            "id"
+        ]
+        == 171
+    )
+    # No inheritance: parameter 170 belongs to structural parent 101, not child 105.
+    assert client.get("/api/v1/reference/parameters?category_id=104").status_code == 404
+    assert (
+        client.get("/api/v1/reference/parameters/172/values?view=all").status_code
+        == 200
     )
 
 
-def test_parameter_and_value_routes_cannot_bypass_category_visibility(environment):
+def test_search_returns_full_structural_path_and_counts(environment):
     client, *_ = environment
     login(client)
-    page = client.get("/api/v1/reference/parameters?q=9001").json()
-    assert [row["id"] for row in page["items"]] == [171]
-    assert page["total"] == 1
-    assert client.get("/api/v1/reference/parameters/170/values").status_code == 404
-    assert client.get("/api/v1/reference/parameters/172/values").status_code == 404
-    active = client.get("/api/v1/reference/parameters/171/values")
-    assert active.status_code == 200 and len(active.json()["items"]) == 1
+    item = client.get("/api/v1/reference/categories?q=Aktív%20unoka").json()["items"][0]
+    assert [p["id"] for p in item["path"]] == [101, 105, 106]
+    parent = client.get("/api/v1/reference/categories/101").json()
+    assert parent["children_count"] == 1 and parent["parameter_count"] == 1
+    assert (
+        parent["mandatory_parameter_count"] == 1
+        and parent["optional_parameter_count"] == 0
+    )
+    assert parent["parent_id"] is None

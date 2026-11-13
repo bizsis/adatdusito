@@ -39,6 +39,33 @@ with httpx.Client(
 ) as admin:
     login(admin, credentials["email"], credentials["password"])
     checked(admin.get("/openapi.json"))
+    stats = checked(admin.get("/reference/coverage"))
+    assert (
+        stats["reference_total"] == 3
+        and stats["max_depth"] == 2
+        and stats["categories_with_parameters"] == 2
+    )
+    assert len(checked(admin.get("/reference/sources"))["items"]) == 4
+    selection = checked(admin.get("/reference/categories/20/selection"))
+    assert (
+        selection["parameter_inheritance"] is False
+        and selection["category"]["parameter_count"] == 1
+    )
+    checked(
+        admin.post(
+            "/reference/sources/observations",
+            json={
+                "source_key": "emag_webshop",
+                "evidence_url": "https://www.emag.hu/",
+                "outcome": "partial",
+                "source_category_id": "synthetic-unmatched-" + suffix,
+                "summary": "Szintetikus integrációs megfigyelés; nem igazolt megfeleltetés.",
+            },
+        ),
+        201,
+    )
+    assert checked(admin.get("/reference/coverage"))["reference_total"] == 3
+
     tenant = checked(
         admin.post("/tenants", json={"name": "Integrációs ügyfél " + suffix}), 201
     )

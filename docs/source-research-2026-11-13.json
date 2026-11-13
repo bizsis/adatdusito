@@ -1,0 +1,34 @@
+{
+  "sources": [
+    {
+      "url": "https://www.emag.hu/robots.txt",
+      "checked_at": "2026-11-13T10:34:50.528837+00:00",
+      "webshop_completeness": "unverified",
+      "outcome": "blocked_or_unavailable",
+      "reason": "<urlopen error Tunnel connection failed: 403 Forbidden>"
+    },
+    {
+      "url": "https://www.emag.hu/sitemap.xml",
+      "checked_at": "2026-11-13T10:34:50.543147+00:00",
+      "webshop_completeness": "unverified",
+      "outcome": "not_fetched",
+      "reason": "robots_not_verified_or_disallowed"
+    },
+    {
+      "url": "https://www.emag.hu/",
+      "checked_at": "2026-11-13T10:34:50.543154+00:00",
+      "webshop_completeness": "unverified",
+      "outcome": "not_fetched",
+      "reason": "robots_not_verified_or_disallowed"
+    },
+    {
+      "url": "https://marketplace.emag.hu/infocenter/emag-api/",
+      "checked_at": "2026-11-13T10:34:50.543157+00:00",
+      "webshop_completeness": "unverified",
+      "outcome": "blocked_or_unavailable",
+      "reason": "<urlopen error Tunnel connection failed: 403 Forbidden>"
+    }
+  ],
+  "automatic_mapping": false,
+  "reference_database_writes": false
+}

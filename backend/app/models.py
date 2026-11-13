@@ -1,7 +1,7 @@
 """Application-only schema. Reference tables must never join this metadata."""
 
 from datetime import datetime, timezone
-from sqlalchemy import Boolean, DateTime, ForeignKey, JSON, String, Text
+from sqlalchemy import Integer, Boolean, DateTime, ForeignKey, JSON, String, Text
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 
 
@@ -131,3 +131,30 @@ def seed_roles(connection):
             for permission in perms
         ],
     )
+
+
+class ReferenceSource(Base):
+    __tablename__ = "reference_sources"
+    key: Mapped[str] = mapped_column(String(48), primary_key=True)
+    name: Mapped[str] = mapped_column(String(160))
+    description: Mapped[str] = mapped_column(Text)
+
+
+class ReferenceObservation(Base):
+    __tablename__ = "reference_observations"
+    id: Mapped[int] = mapped_column(primary_key=True)
+    source_key: Mapped[str] = mapped_column(
+        ForeignKey("reference_sources.key"), index=True
+    )
+    observed_at: Mapped[datetime] = mapped_column(DateTime, default=now)
+    evidence_url: Mapped[str] = mapped_column(String(1000))
+    content_sha256: Mapped[str | None] = mapped_column(String(64), nullable=True)
+    outcome: Mapped[str] = mapped_column(String(32))
+    source_category_id: Mapped[str | None] = mapped_column(String(160), nullable=True)
+    canonical_emag_id: Mapped[int | None] = mapped_column(
+        Integer, nullable=True, index=True
+    )
+    mapping_status: Mapped[str] = mapped_column(String(32), default="pending")
+    evidence_kind: Mapped[str | None] = mapped_column(String(48), nullable=True)
+    summary: Mapped[str] = mapped_column(Text)
+    actor_id: Mapped[int] = mapped_column(ForeignKey("users.id"))

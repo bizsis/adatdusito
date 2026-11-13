@@ -104,6 +104,21 @@ def environment(
         with Session(db_engine) as db:
             yield db
 
+    from app.models import ReferenceSource
+
+    with Session(db_engine) as db:
+        db.add_all(
+            [
+                ReferenceSource(key=key, name=key, description="Test source")
+                for key in [
+                    "emag_marketplace",
+                    "emag_webshop",
+                    "emag_sitemap",
+                    "emag_documentation",
+                ]
+            ]
+        )
+        db.commit()
     app.dependency_overrides[database] = get_database
     monkeypatch.setattr(api, "limit_login", lambda *args: None)
     monkeypatch.setenv("APP_ORIGIN", "https://testserver")
@@ -233,6 +248,9 @@ def environment(
             yield conn
 
     monkeypatch.setattr(reference, "reference_database", readonly)
+    from app import reference_sources
+
+    monkeypatch.setattr(reference_sources, "reference_database", readonly)
     with TestClient(app, base_url="https://testserver") as client:
         yield client, db_engine, ref_engine, statements
     app.dependency_overrides.clear()

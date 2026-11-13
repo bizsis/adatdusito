@@ -33,6 +33,14 @@ type Category = {
   is_allowed: boolean | null;
   is_ean_mandatory: boolean | null;
   is_warranty_mandatory: boolean | null;
+  selectable: boolean;
+  classification: "selectable" | "structural";
+  children_count: number;
+  parameter_count: number;
+  mandatory_parameter_count: number;
+  optional_parameter_count: number;
+  unknown_parameter_count: number;
+  path?: Category[];
   ancestors?: Category[];
   hierarchy_error?: string | null;
 };
@@ -838,37 +846,61 @@ function CategoryNode({
   category,
   onSelect,
   path = [],
+  view = "navigation",
+  selectedId,
+  expandedIds = [],
 }: {
   category: Category;
   onSelect: (c: Category) => void;
   path?: number[];
+  view?: string;
+  selectedId?: number;
+  expandedIds?: number[];
 }) {
   const [open, setOpen] = useState(false),
     [offset, setOffset] = useState(0);
+  useEffect(() => {
+    if (expandedIds.includes(category.id)) setOpen(true);
+  }, [expandedIds.join(","), category.id]);
   const cycle = path.includes(category.id);
   const { data, error, loading } = useLoad<Page<Category>>(
     open && !cycle
-      ? `/reference/categories?parent_id=${category.id}&offset=${offset}`
+      ? `/reference/categories?parent_id=${category.id}&offset=${offset}&view=${view}`
       : null,
   );
   return (
     <li>
-      <div className="tree-row">
+      <div
+        className={`tree-row ${selectedId === category.id ? "selected" : ""} ${!category.selectable ? "structural" : ""}`}
+      >
         <button
           className="tree-toggle"
-          disabled={cycle}
+          disabled={cycle || !category.children_count}
           aria-label={`${category.name} alkategóriái`}
           aria-expanded={open}
           onClick={() => setOpen(!open)}
         >
           {open ? "−" : "+"}
         </button>
-        <button className="tree-name" onClick={() => onSelect(category)}>
+        <button
+          className="tree-name"
+          aria-current={selectedId === category.id ? "true" : undefined}
+          onClick={() => onSelect(category)}
+        >
           {category.name}
           <small>
             eMAG {category.emag_category_id}
-            {category.missing_parent ? " · Hiányzó vagy inaktív szülő" : ""}
+            {category.selectable ? " · Besorolható" : " · Strukturális"}
+            {category.missing_parent ? " · Hiányzó szülő" : ""}
+            {category.hierarchy_error === "cycle"
+              ? " · Ciklikus kapcsolat"
+              : ""}
           </small>
+          {!!category.ancestors?.length && (
+            <small className="tree-path">
+              {category.ancestors.map((a) => a.name).join(" / ")}
+            </small>
+          )}
         </button>
       </div>
       {cycle && <p className="error">Körkörös hivatkozás</p>}
@@ -884,6 +916,9 @@ function CategoryNode({
                   category={c}
                   onSelect={onSelect}
                   path={[...path, category.id]}
+                  view={view}
+                  selectedId={selectedId}
+                  expandedIds={expandedIds}
                 />
               ))}
             </ul>
@@ -900,13 +935,19 @@ function CategoryNode({
     </li>
   );
 }
-function ValueBrowser({ parameter }: { parameter: Parameter }) {
+function ValueBrowser({
+  parameter,
+  view = "navigation",
+}: {
+  parameter: Parameter;
+  view?: string;
+}) {
   const [q, setQ] = useState(""),
     [after, setAfter] = useState(0),
     [history, setHistory] = useState<number[]>([]);
   const query = useDebounce(q);
   const { data, error, loading } = useLoad<Values>(
-    `/reference/parameters/${parameter.id}/values?after=${after}&q=${encodeURIComponent(query)}`,
+    `/reference/parameters/${parameter.id}/values?after=${after}&q=${encodeURIComponent(query)}&view=${view}`,
   );
   return (
     <section className="card padded">
@@ -980,13 +1021,19 @@ function ValueBrowser({ parameter }: { parameter: Parameter }) {
     </section>
   );
 }
-function Parameters({ categoryId }: { categoryId?: number }) {
+function Parameters({
+  categoryId,
+  view = "navigation",
+}: {
+  categoryId?: number;
+  view?: string;
+}) {
   const [q, setQ] = useState(""),
     [mandatory, setMandatory] = useState(""),
     [offset, setOffset] = useState(0),
     [selected, setSelected] = useState<Parameter | null>(null);
   const query = useDebounce(q);
-  const url = `/reference/parameters?offset=${offset}&q=${encodeURIComponent(query)}${categoryId ? `&category_id=${categoryId}` : ""}${mandatory ? `&mandatory=${mandatory}` : ""}`;
+  const url = `/reference/parameters?view=${view}&offset=${offset}&q=${encodeURIComponent(query)}${categoryId ? `&category_id=${categoryId}` : ""}${mandatory ? `&mandatory=${mandatory}` : ""}`;
   const { data, error, loading } = useLoad<Page<Parameter>>(url);
   return (
     <>
@@ -1060,19 +1107,25 @@ function Parameters({ categoryId }: { categoryId?: number }) {
         {!data?.items.length && <Empty loading={loading} />}{" "}
         {data && <Pager {...data} onChange={setOffset} />}
       </section>
-      {selected && <ValueBrowser key={selected.id} parameter={selected} />}
+      {selected && (
+        <ValueBrowser key={selected.id} parameter={selected} view={view} />
+      )}
     </>
   );
 }
 function CategoryDetails({
   id,
   onSelect,
+  view = "navigation",
+  onChildren,
 }: {
   id: number;
   onSelect: (c: Category) => void;
+  view?: string;
+  onChildren: (c: Category) => void;
 }) {
   const { data, error, loading } = useLoad<Category>(
-    `/reference/categories/${id}`,
+    `/reference/categories/${id}?view=${view}`,
   );
   return (
     <>
@@ -1083,22 +1136,72 @@ function CategoryDetails({
         <>
           <section className="card padded">
             <div className="breadcrumbs">
-              {data.ancestors?.map((a) => (
-                <button key={a.id} onClick={() => onSelect(a)}>
+              {data.ancestors?.map((a, index) => (
+                <button
+                  key={a.id}
+                  onClick={() =>
+                    onSelect({
+                      ...a,
+                      ancestors: data.ancestors!.slice(0, index),
+                      path: data.ancestors!.slice(0, index + 1),
+                    })
+                  }
+                >
                   {a.name} /
                 </button>
               ))}
             </div>
             <p className="eyebrow">KATEGÓRIA ADATLAPJA</p>
             <h2>{data.name}</h2>
+            <span className={"badge " + (data.selectable ? "good" : "")}>
+              {data.selectable
+                ? "Termékbesorolásra választható"
+                : "Strukturális · termékbesorolásra nem választható"}
+            </span>
+            <p className="category-full-path">
+              {data.path?.map((c) => c.name).join(" / ")}
+            </p>
+            <p>
+              Szülő:{" "}
+              {data.ancestors?.length ? (
+                <button
+                  onClick={() =>
+                    onSelect(data.ancestors![data.ancestors!.length - 1])
+                  }
+                >
+                  {data.parent_name}
+                </button>
+              ) : data.parent_emag_id ? (
+                `Nem bejárható szülő (eMAG #${data.parent_emag_id})`
+              ) : (
+                "Gyökérkategória"
+              )}
+            </p>
+            <div className="facts">
+              <span>Alkategóriák: {data.children_count}</span>
+              <span>Paraméterek: {data.parameter_count}</span>
+              <span>Kötelező: {data.mandatory_parameter_count}</span>
+              <span>Opcionális: {data.optional_parameter_count}</span>
+              <span>Nem jelölt: {data.unknown_parameter_count}</span>
+            </div>
+            {!!data.children_count && (
+              <button
+                className="browse-children"
+                onClick={() => onChildren(data)}
+              >
+                Alkategóriák megnyitása
+              </button>
+            )}
             <p className="small muted">
               eMAG #{data.emag_category_id} · Belső azonosító #{data.id}
             </p>
             {data.hierarchy_error && (
               <p className="warning">
                 {data.hierarchy_error === "missing_parent"
-                  ? "A szülőláncban inaktív vagy hiányzó kategória található."
-                  : "A hierarchia hibás vagy túl mély; a teljes szülőlánc nem jeleníthető meg."}
+                  ? "A szülőláncban hiányzó kategória található; nem rendeljük más szülőhöz."
+                  : data.hierarchy_error === "excluded_parent"
+                    ? "Töröltnek jelölt szülő miatt az ismert ág önálló gyökérként jelenik meg."
+                    : "Ciklikus szülőkapcsolat: a megjelenítés véges, az eredeti eMAG-azonosítók megmaradnak."}
               </p>
             )}
             <div className="facts">
@@ -1113,7 +1216,7 @@ function CategoryDetails({
               </span>
             </div>
           </section>
-          <Parameters key={id} categoryId={id} />
+          <Parameters key={`${view}-${id}`} categoryId={id} view={view} />
         </>
       )}
     </>
@@ -1122,19 +1225,81 @@ function CategoryDetails({
 function Categories() {
   const [q, setQ] = useState(""),
     [offset, setOffset] = useState(0),
-    [selected, setSelected] = useState<Category | null>(null);
+    [selected, setSelected] = useState<Category | null>(null),
+    [view, setView] = useState("navigation"),
+    [focus, setFocus] = useState<Category | null>(null);
   const query = useDebounce(q);
   const { data, error, loading } = useLoad<Page<Category>>(
-    `/reference/categories?q=${encodeURIComponent(query)}&offset=${offset}`,
+    `/reference/categories?view=${view}&q=${encodeURIComponent(query)}&offset=${offset}${focus && !query ? `&parent_id=${focus.id}` : ""}`,
   );
+  const coverage = useLoad<Record<string, any>>("/reference/coverage");
   return (
     <>
       <p className="notice">
-        Csak olvasható referenciaadatok. A hiányzó vagy inaktív szülőjű
-        kategóriák külön figyelmeztetéssel szerepelnek a gyökérszinten.
+        Egy közös eMAG-kategóriafa. A strukturális elemek navigációra
+        használhatók, termékbesorolásra csak a külön jelölt kategóriák
+        választhatók. A hiányzó vagy ciklikus szülőkapcsolatok jelzést kapnak.
       </p>
+      <ErrorBox message={coverage.error} />
+      {coverage.data && (
+        <div className="reference-metrics">
+          {[
+            ["reference_total", "Tárolt kategória"],
+            ["selectable_total", "Besorolható"],
+            ["structural_total", "Strukturális szülő"],
+            ["max_depth", "Igazolt gyökérmélység"],
+            ["categories_with_parameters", "Paraméterkészlettel"],
+          ].map(([key, label]) => (
+            <div className="card" key={key}>
+              <strong>{coverage.data![key]}</strong>
+              <small>{label}</small>
+            </div>
+          ))}
+        </div>
+      )}
+      <label className="tree-view-filter">
+        Megjelenítés
+        <select
+          aria-label="Kategóriafa megjelenítése"
+          value={view}
+          onChange={(e) => {
+            setView(e.target.value);
+            setOffset(0);
+            setFocus(null);
+            setSelected(null);
+          }}
+        >
+          <option value="navigation">
+            Besorolható kategóriák és teljes szülőfájuk
+          </option>
+          <option value="all">Minden nem törölt referenciaág</option>
+        </select>
+      </label>
       <div className="browser-grid">
         <section className="card padded tree">
+          {focus && (
+            <div className="tree-location">
+              <button
+                onClick={() => {
+                  setFocus(null);
+                  setOffset(0);
+                }}
+              >
+                Fa gyökere
+              </button>
+              <span>{focus.name}</span>
+              {!!focus.ancestors?.length && (
+                <button
+                  onClick={() => {
+                    setFocus(focus.ancestors![focus.ancestors!.length - 1]);
+                    setOffset(0);
+                  }}
+                >
+                  Feljebb
+                </button>
+              )}
+            </div>
+          )}
           <label>
             Kategóriakeresés
             <input
@@ -1150,8 +1315,11 @@ function Categories() {
           <ul>
             {data?.items.map((c) => (
               <CategoryNode
-                key={`${query}-${c.id}`}
+                key={`${view}-${query}-${c.id}`}
                 category={c}
+                selectedId={selected?.id}
+                expandedIds={selected?.ancestors?.map((a) => a.id) || []}
+                view={view}
                 onSelect={setSelected}
               />
             ))}
@@ -1161,7 +1329,16 @@ function Categories() {
         </section>
         <div className="detail">
           {selected ? (
-            <CategoryDetails id={selected.id} onSelect={setSelected} />
+            <CategoryDetails
+              id={selected.id}
+              view={view}
+              onSelect={setSelected}
+              onChildren={(c) => {
+                setFocus(c);
+                setQ("");
+                setOffset(0);
+              }}
+            />
           ) : (
             <section className="card padded empty-detail">
               <span>⌘</span>
@@ -1174,9 +1351,157 @@ function Categories() {
           )}
         </div>
       </div>
+      <ReferenceSources />
     </>
   );
 }
+function ReferenceSources() {
+  const [rev, setRev] = useState(0),
+    [message, setMessage] = useState("");
+  const sources = useLoad<{
+    items: { key: string; name: string; description: string }[];
+  }>("/reference/sources");
+  const observations = useLoad<
+    Page<{
+      id: number;
+      source_key: string;
+      outcome: string;
+      mapping_status: string;
+      summary: string;
+      evidence_url: string;
+      observed_at: string;
+    }>
+  >("/reference/sources/observations?limit=10", rev);
+  const who = useLoad<Me>("/auth/me");
+  return (
+    <section className="card padded">
+      <h2>Források és tényleges lefedettség</h2>
+      <p className="warning">
+        A helyi Marketplace-referencia nem bizonyítja a teljes magyar
+        webshop-kategóriafa lefedettségét. Szülőparaméter-öröklést nem
+        feltételezünk. Az ismeretlen megfeleltetések nem módosítják a
+        kategóriafát.
+      </p>
+      <ErrorBox message={sources.error || observations.error} />
+      <div className="source-grid">
+        {sources.data?.items.map((s) => (
+          <div key={s.key}>
+            <strong>{s.name}</strong>
+            <small>{s.description}</small>
+          </div>
+        ))}
+      </div>
+      <ul className="source-events">
+        {observations.data?.items.map((o) => (
+          <li key={o.id}>
+            <strong>
+              {sources.data?.items.find((s) => s.key === o.source_key)?.name ||
+                o.source_key}{" "}
+              ·{" "}
+              {(
+                {
+                  available: "Elérhető",
+                  partial: "Részleges",
+                  blocked: "Tiltott",
+                  unavailable: "Nem elérhető",
+                } as Record<string, string>
+              )[o.outcome] || o.outcome}{" "}
+              ·{" "}
+              {(
+                {
+                  pending: "Megfeleltetésre vár",
+                  confirmed: "Igazolt",
+                  rejected: "Elutasított",
+                } as Record<string, string>
+              )[o.mapping_status] || o.mapping_status}
+            </strong>
+            <p>{o.summary}</p>
+            <small>
+              {new Date(o.observed_at).toLocaleString("hu-HU")} ·{" "}
+              <a href={o.evidence_url} target="_blank" rel="noreferrer">
+                Forráshivatkozás
+              </a>
+            </small>
+          </li>
+        ))}
+      </ul>
+      {observations.data && !observations.data.total && (
+        <p className="muted">
+          Nincs rögzített forrásmegfigyelés. Ez nem igazolja a publikus forrás
+          teljességét.
+        </p>
+      )}
+      {who.data?.permissions.includes("system.manage") && (
+        <details>
+          <summary>Forrásmegfigyelés rögzítése (Superadmin)</summary>
+          <form
+            onSubmit={async (e) => {
+              e.preventDefault();
+              const fd = new FormData(e.currentTarget);
+              try {
+                await api("/reference/sources/observations", "POST", {
+                  source_key: fd.get("source_key"),
+                  evidence_url: fd.get("url"),
+                  outcome: fd.get("outcome"),
+                  summary: fd.get("summary"),
+                  ...(fd.get("source_category_id")
+                    ? { source_category_id: fd.get("source_category_id") }
+                    : {}),
+                });
+                setRev(rev + 1);
+                setMessage(
+                  "Megfigyelés rögzítve; automatikus kategória-megfeleltetés nem történt.",
+                );
+              } catch (e) {
+                setMessage((e as Error).message);
+              }
+            }}
+          >
+            <label>
+              Forrás
+              <select name="source_key">
+                {sources.data?.items.map((s) => (
+                  <option key={s.key} value={s.key}>
+                    {s.name}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <label>
+              Publikus eMAG HTTPS-hivatkozás
+              <input type="url" name="url" required maxLength={1000} />
+            </label>
+            <label>
+              Elérés
+              <select name="outcome">
+                <option value="partial">Részleges</option>
+                <option value="available">Elérhető</option>
+                <option value="blocked">Tiltott</option>
+                <option value="unavailable">Nem elérhető</option>
+              </select>
+            </label>
+            <label>
+              Forrásazonosító (opcionális, megfeleltetésre vár)
+              <input name="source_category_id" maxLength={160} />
+            </label>
+            <label>
+              Bizonyíték / korlát
+              <textarea
+                name="summary"
+                minLength={10}
+                maxLength={2000}
+                required
+              />
+            </label>
+            <button>Megfigyelés mentése</button>
+          </form>
+        </details>
+      )}
+      <p role="status">{message}</p>
+    </section>
+  );
+}
+
 function SystemStatus() {
   const [rev, setRev] = useState(0);
   const { data, error, loading } = useLoad<{
@@ -1508,7 +1833,7 @@ function App() {
         </nav>
         <div className="sidebar-bottom">
           <span className="status-dot ok" /> Fejlesztői környezet
-          <small>CODEX 02 · Adminisztráció</small>
+          <small>CODEX 03A · Referencia</small>
         </div>
       </aside>
       <div className="main">

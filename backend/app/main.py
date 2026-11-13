@@ -20,6 +20,9 @@ app = FastAPI(
 )
 app.include_router(identity_router)
 app.include_router(reference_router)
+from app.reference_sources import router as sources_router
+
+app.include_router(sources_router)
 
 
 @app.middleware("http")

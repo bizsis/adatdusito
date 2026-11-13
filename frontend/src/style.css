@@ -972,3 +972,94 @@ dialog header button {
     grid-template-columns: 1fr;
   }
 }
+.reference-metrics {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 12px;
+}
+.reference-metrics .card {
+  padding: 16px;
+}
+.reference-metrics strong {
+  display: block;
+  font-size: 25px;
+  color: #267c67;
+}
+.reference-metrics small {
+  color: #74858a;
+  font-size: 10px;
+}
+.tree-view-filter {
+  max-width: 480px;
+  margin-bottom: 20px;
+}
+.tree-row.selected {
+  background: #e2f2eb;
+  border-radius: 6px;
+  box-shadow: inset 3px 0 #228c71;
+}
+.tree-row.structural .tree-name {
+  color: #77858b;
+}
+.tree-path {
+  font-size: 9px;
+  white-space: normal;
+  color: #6a8981 !important;
+}
+.tree-location {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  margin-bottom: 12px;
+}
+.tree-location button {
+  font-size: 10px;
+  padding: 5px;
+}
+.category-full-path {
+  font-size: 12px;
+  color: #65867a;
+  margin-top: 16px;
+}
+.browse-children {
+  margin-top: 18px;
+}
+.source-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+.source-grid small {
+  color: #829391;
+  margin-top: 5px;
+}
+.source-events {
+  list-style: none;
+  padding: 0;
+}
+.source-events li {
+  padding: 15px 0;
+  border-bottom: 1px solid #e8efec;
+}
+.source-events p {
+  font-size: 12px;
+  margin: 5px 0;
+}
+details form {
+  padding: 20px 0;
+  max-width: 500px;
+}
+summary {
+  cursor: pointer;
+  color: #25846e;
+}
+@media (max-width: 800px) {
+  .reference-metrics {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .source-grid {
+    grid-template-columns: 1fr;
+  }
+}

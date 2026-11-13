@@ -67,8 +67,18 @@ Az alkalmazás-metaadat csak az adatdusito_dev tábláit tartalmazza. A referenc
 Ez a fázis nem tartalmaz regisztrációs/jelszó-visszaállító emailt, MFA-t, importot, AI-t, kreditet vagy szinkronizálót. A JSON API csak azonos originről támogatott; a termék HTTPS reverse proxy mögött működik. A display_name/admin_notice jelenleg adminisztrációs konfigurációs rekord, nem globális felületfelülírás.
 
 
-## Aktív kategóriák szűrése
+## CODEX 03A: strukturális navigáció és besorolhatóság
 
-A normál böngésző, a keresés, a lapozott lista, az adatlap, a szülőlánc és a paraméter-/értéklekérdezés kizárólag `is_allowed = 1` kategóriákból dolgozik. A 0 és NULL értékű kategóriák rejtettek; közvetlen ID-val sem választhatók ki (404). Nincs nyelvi vagy `Deleted` szóra épülő külön szűrés.
+Ez a kiadás felváltja a korábbi, kizárólag aktív rekordokat mutató szabályt. `view=navigation` az alapérték: a besorolható kategóriák teljes ismert, nem törölt szülőlánca navigálható. A `view=all` ugyanennek a fának minden nem törölt referenciaágát is megmutatja. Ez nem két kategóriarendszer. A szűrő a kategóriákon, a paramétereken és az értékeken is használható.
 
-A szülőkapcsolat változatlanul `parent.emag_category_id = child.parent_id`, de csak aktív szülő oldható fel. Az inaktív vagy hiányzó szülő alatti aktív kategória a gyökérlistában megmarad; `missing_parent=true` és a felületi figyelmeztetés ilyenkor a böngésző számára nem elérhető szülőt jelzi. Az aktív leszármazottak továbbra is bejárhatók. Inaktív szülő nevét és adatait a válaszok nem adják vissza. A referenciaadatbázis rekordjai nem változnak.
+A kategória DTO `selectable`, `classification`, `reference_key`, `in_navigation`, `path`, `ancestors`, `children_count`, `parameter_count`, `mandatory_parameter_count`, `optional_parameter_count`, `unknown_parameter_count`, `cycle_break`, `hierarchy_error` adatokat ad. A névben Deleted jelölésű rekord mindig rejtett; nem tételezünk fel új, sémában nem létező törlési flag-et. Az ismeretlen szülő eredeti eMAG-ID-ja megmarad. A strukturális szülőt a valódi eMAG-ID alapján oldjuk fel, nem dobjuk el azért, mert is_allowed=0.
+
+Új végpontok:
+
+- `GET /reference/categories/{belső_id}/selection`: kizárólag besorolható kategóriához ad előkészítő szerződést (strukturálisra 409). Nincs terméklétrehozás. Közvetlen paraméterforrás, automatikus öröklés nélkül; új érték csak későbbi jóváhagyási javaslat lehet.
+- `GET /reference/coverage`: élő, csak olvasó lefedettségi és integritási jelentés. A webshop teljessége mindaddig unverified, amíg nincs igazolt forrás.
+- `GET /reference/sources`: közös forrásregiszter.
+- `GET /reference/sources/observations`: lapozott, közös forrásmegfigyelések.
+- `POST /reference/sources/observations`: Superadmin által rögzített, auditált forrásbizonyíték. A pending forrás-ID nem lesz automatikusan kanonikus kategória; névegyezés nem elegendő megerősítéshez.
+
+Részletes szerződés és forrásvizsgálat: [codex03a.md](codex03a.md).

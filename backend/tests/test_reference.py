@@ -12,7 +12,7 @@ def test_hierarchy_external_parent_and_missing_parent(environment):
     client, *_ = environment
     login(client)
     root = client.get("/api/v1/reference/categories").json()
-    assert {c["id"] for c in root["items"]} == {10, 30}
+    assert {c["id"] for c in root["items"]} == {10, 30, 50}
     orphan = next(c for c in root["items"] if c["id"] == 30)
     assert orphan["missing_parent"] and orphan["parent_id"] is None
     children = client.get("/api/v1/reference/categories?parent_id=10").json()
@@ -42,7 +42,7 @@ def test_category_and_parameter_search(environment):
         client.get("/api/v1/reference/categories?q=2000").json()["items"][0]["id"] == 20
     )
     assert client.get("/api/v1/reference/categories?q=%25").json()["total"] == 0
-    assert client.get("/api/v1/reference/categories?limit=1").json()["total"] == 2
+    assert client.get("/api/v1/reference/categories?limit=1").json()["total"] == 3
     parameters = client.get("/api/v1/reference/parameters?category_id=20").json()
     assert parameters["total"] == 1 and parameters["items"][0]["id"] == 70
     parameter = parameters["items"][0]

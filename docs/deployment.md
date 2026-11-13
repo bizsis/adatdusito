@@ -1,4 +1,6 @@
-# CODEX 02 – meglévő fejlesztői VPS kézi frissítése
+# Fejlesztői VPS kézi frissítése
+
+**Aktuális kiadás: CODEX 03A, Alembic 0003.** A konkrét frissítési parancsok a [CODEX 03A frissítés](#codex-03a-frissítés) részben vannak. Az alábbi CODEX 02 eljárás a korábbi kiadás átadási előzménye.
 
 Ez dokumentált átadás, **nem automatikus telepítés**. A meglévő MySQL-, UFW-, Docker-hálózat-, Nginx- és HTTPS-konfigurációhoz nem szükséges módosítás. A pinfo.hu és az éles környezet érintetlen marad.
 
@@ -91,3 +93,26 @@ A referenciák kizárólag SELECT lekérdezéssel kerülnek olvasásra; író pr
 ## Visszaállítás
 
 Ne futtass automatikus downgrade-et: az eltávolítaná az új identitástáblákat. Sikertelen kiadásnál az üzemeltető a korábban feljegyzett commit/image és az alkalmazás-adatbázis mentése alapján készítsen konkrét visszaállítási tervet. A referencia-adatbázist és a meglévő hálózatot ne módosítsa. A GitHubra feltöltött kód nem jelenti a VPS telepítését vagy ottani ellenőrzését.
+
+## CODEX 03A frissítés
+
+A meglévő hálózat és a `.env` megőrzésével, a fenti Git-eltérésellenőrzés és alkalmazás-adatbázismentés után:
+
+```bash
+cd /opt/adatdusito
+git status -sb
+git pull --ff-only origin main
+docker compose config --quiet
+docker compose build
+docker compose run --rm --no-deps migrate alembic upgrade head
+docker compose run --rm --no-deps migrate alembic current
+docker compose up -d --no-build
+bash scripts/smoke.sh https://dev.pinfo.hu
+docker compose exec -T backend python -m app.reference_report
+```
+
+Elvárt verzió: **0003**. Csak a `reference_sources` és `reference_observations` alkalmazástáblák újak; a `0001` és `0002` változatlan. Új Superadmin inicializálása nem szükséges. A forrásregiszter kezdőrekordjai forrástípusokat jelölnek, nem sikeres webshopletöltést. A pinfo_db, a Compose external hálózat és a VPS szolgáltatáskonfigurációi nem változnak.
+
+Böngészőben ellenőrizd a strukturális szülők megnyitását, a termékbesorolhatóság jelölését, a teljes szülőutat, a fel/le navigációt, a keresést és a forráslefedettségi részt. A 1496 → 79 kapcsolat és a 46 televízióparaméter a valódi adatokon külön ellenőrizhető. A hiányzó 2661 szülőhöz nem készül helyettesítő rekord. A valós gyökérmélységet és a paraméterkészlettel rendelkező kategóriák számát az élő jelentésből vesd össze az átadott 4, illetve 1807 értékkel.
+
+A teljes webshopfa nem töltődött le a felhőbeli hálózati tiltás miatt. A technikai forrásvizsgálat külön, kézzel megismételhető a `scripts/research_reference_sources.py` eszközzel, megfelelő hozzáférés esetén; nem része automatikus telepítésnek vagy időzített szinkronnak. Részletek: [codex03a.md](codex03a.md).

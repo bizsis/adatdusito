@@ -46,10 +46,38 @@ with sync_playwright() as p:
     page.get_by_role("button", name="Műszaki cikkek alkategóriái", exact=True).click()
     page.get_by_role("button", name="Laptopok eMAG 2000", exact=False).click()
     expect(page.get_by_role("heading", name="Laptopok", exact=True)).to_be_visible()
+    expect(
+        page.get_by_text("Termékbesorolásra választható", exact=True)
+    ).to_be_visible()
+    expect(page.locator(".category-full-path")).to_contain_text(
+        "Műszaki cikkek / Laptopok"
+    )
+    expect(page.locator(".tree-row.selected")).to_contain_text("Laptopok")
+    expect(page.get_by_text("Paraméterek: 1", exact=True)).to_be_visible()
+    page.get_by_role("button", name="Műszaki cikkek", exact=True).click()
+    expect(
+        page.get_by_role("heading", name="Műszaki cikkek", exact=True)
+    ).to_be_visible()
+    page.get_by_role("button", name="Alkategóriák megnyitása", exact=True).click()
+    expect(page.locator(".tree-location")).to_contain_text("Műszaki cikkek")
+    page.get_by_role("button", name="Laptopok eMAG 2000", exact=False).click()
     expect(page.get_by_text("Szín", exact=True)).to_be_visible()
     page.get_by_role("button", name="Megnyitás →").click()
     expect(page.locator(".value-list li").filter(has_text="Fekete")).to_be_visible()
     page.screenshot(path=str(args.artifacts / "reference-desktop.png"), full_page=True)
+    page.get_by_label("Kategóriakeresés", exact=True).fill("Laptop")
+    expect(page.locator(".tree-path")).to_contain_text("Műszaki cikkek")
+    page.get_by_role(
+        "combobox", name="Kategóriafa megjelenítése", exact=True
+    ).select_option("all")
+    expect(
+        page.get_by_role(
+            "heading", name="Források és tényleges lefedettség", exact=True
+        )
+    ).to_be_visible()
+    expect(
+        page.locator(".source-grid").get_by_text("eMAG magyar webshop", exact=True)
+    ).to_be_visible()
     page.get_by_role("navigation").get_by_role("button", name="Felhasználók").click()
     expect(page.get_by_role("heading", name="Felhasználók", exact=True)).to_be_visible()
     page.get_by_role("button", name="+ Új felhasználó").click()
