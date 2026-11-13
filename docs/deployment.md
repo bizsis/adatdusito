@@ -116,3 +116,9 @@ Elvárt verzió: **0003**. Csak a `reference_sources` és `reference_observation
 Böngészőben ellenőrizd a strukturális szülők megnyitását, a termékbesorolhatóság jelölését, a teljes szülőutat, a fel/le navigációt, a keresést és a forráslefedettségi részt. A 1496 → 79 kapcsolat és a 46 televízióparaméter a valódi adatokon külön ellenőrizhető. A hiányzó 2661 szülőhöz nem készül helyettesítő rekord. A valós gyökérmélységet és a paraméterkészlettel rendelkező kategóriák számát az élő jelentésből vesd össze az átadott 4, illetve 1807 értékkel.
 
 A teljes webshopfa nem töltődött le a felhőbeli hálózati tiltás miatt. A technikai forrásvizsgálat külön, kézzel megismételhető a `scripts/research_reference_sources.py` eszközzel, megfelelő hozzáférés esetén; nem része automatikus telepítésnek vagy időzített szinkronnak. Részletek: [codex03a.md](codex03a.md).
+
+## Valós magyar webshop-menü beépítése
+
+A legújabb kiadás a 13 valós magyar főcsoportot jeleníti meg a kategóriaböngésző első szintjén. Az új adatforrás a repositoryban verziózott, validált menü-snapshot; a pinfo_db változatlan. Új migráció nincs (a meglévő 0003 alkalmazásadatmodell szükséges). A márka-, kampány- és szűrőhivatkozások nem kategóriák. Kezdetben nincs kitalált Marketplace-megfeleltetés: a bizonyítatlan elemek paraméterszáma ismeretlen, nem nulla.
+
+A kézi frissítés és a célzott kiegészítő gyűjtő parancsai: [verified-webshop-navigation.md](verified-webshop-navigation.md). Ne írj át eMAG-azonosítókat, ne kapcsolj össze menü-ID-t és Marketplace-ID-t pusztán számegyezésből.

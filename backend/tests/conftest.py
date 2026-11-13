@@ -251,6 +251,9 @@ def environment(
     from app import reference_sources
 
     monkeypatch.setattr(reference_sources, "reference_database", readonly)
+    from app import web_navigation
+
+    monkeypatch.setattr(web_navigation, "reference_database", readonly)
     with TestClient(app, base_url="https://testserver") as client:
         yield client, db_engine, ref_engine, statements
     app.dependency_overrides.clear()

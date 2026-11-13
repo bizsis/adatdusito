@@ -30,7 +30,7 @@ def save_report(directory, report, errors, robots, browser_name):
     for index, group in enumerate(report.get("root_groups", []), 1):
         html = group.pop("html_evidence", "")
         filename = f"{index:02}-menu.html"
-        (directory / filename).write_text(html, encoding="utf-8")
+        (directory / filename).write_bytes(html.encode("utf-8"))
         group["html_evidence_file"] = filename
         group["html_sha256"] = hashlib.sha256(html.encode()).hexdigest()
     output = directory / "emag-menu-export.json"

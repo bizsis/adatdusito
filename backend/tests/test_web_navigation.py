@@ -1,0 +1,252 @@
+import pytest
+from sqlalchemy import select
+from sqlalchemy.orm import Session
+from app.models import Audit
+from conftest import login
+from app.web_navigation import navigation
+
+ROOT_NAMES = [
+    "Háztartási gépek és klíma",
+    "TV és szórakozás",
+    "Telefon, Tablet, Laptop",
+    "Számítástechnika",
+    "Fotó-Videó, Okos eszközök",
+    "Szupermarket",
+    "Otthon, barkács, kert",
+    "Játékok, Baba, Mama",
+    "Divat, ékszerek és kiegészítők",
+    "Szépségápolás",
+    "Sport és utazás",
+    "Könyvek, Filmek és Irodaszerek",
+    "Autó- és motor felszerelések",
+]
+
+
+@pytest.fixture
+def extra_reference_categories():
+    return [
+        dict(
+            id=200,
+            emag_category_id=79,
+            parent_id=None,
+            name="Televíziók",
+            is_allowed=True,
+        )
+    ]
+
+
+@pytest.fixture
+def extra_reference_parameters():
+    return [
+        dict(
+            id=270,
+            category_id=200,
+            emag_parameter_id=9999,
+            name="TV képernyő",
+            type_id=2,
+            display_order=1,
+            is_mandatory=True,
+            is_filter=True,
+            allow_new_value=False,
+        )
+    ]
+
+
+def proof(node="web-item-43-3730", **overrides):
+    return dict(
+        source_key="emag_webshop",
+        source_category_id=node,
+        evidence_url="https://www.emag.hu/televiziok/c",
+        outcome="available",
+        mapping_status="confirmed",
+        canonical_emag_id=79,
+        evidence_kind="documented_crosswalk",
+        content_sha256="a" * 64,
+        summary="Szintetikus, explicit operátori megfeleltetési bizonyíték.",
+        **overrides,
+    )
+
+
+def test_actual_13_roots_order_and_namespace_separation(environment):
+    client, *_ = environment
+    login(client)
+    response = client.get("/api/v1/reference/navigation").json()
+    assert (
+        response["total"] == 13 and [n["name"] for n in response["items"]] == ROOT_NAMES
+    )
+    books = next(n for n in response["items"] if n["id"] == "web-dept-79")
+    assert books["canonical_emag_id"] is None and not books["selectable"]
+    tv = client.get("/api/v1/reference/navigation/web-item-43-3730").json()
+    assert (
+        tv["name"] == "Televíziók"
+        and tv["canonical_emag_id"] is None
+        and tv["mapping_status"] == "pending"
+    )
+    assert tv["parameter_count"] is None  # Unknown is not "zero parameters".
+    assert (
+        client.get(
+            "/api/v1/reference/navigation/web-item-43-3730/parameters"
+        ).status_code
+        == 409
+    )
+    assert (
+        client.get(
+            "/api/v1/reference/navigation/web-item-43-3730/selection"
+        ).status_code
+        == 409
+    )
+
+
+def test_dom_sections_facets_brands_and_reviewed_unknown_groups(environment):
+    client, *_ = environment
+    login(client)
+    washing = client.get("/api/v1/reference/navigation/web-item-114-3487").json()
+    assert (
+        washing["name"] == "Mosógépek és szárítógépek" and washing["kind"] == "section"
+    )
+    assert any(
+        n["kind"] == "parameter_filter" and n["name"] == "Elöltöltős mosógépek"
+        for n in washing["related_links"]
+    )
+    television = client.get("/api/v1/reference/navigation/web-item-43-3730").json()
+    assert any(
+        n["name"] == "LED TV" and n["kind"] == "parameter_filter"
+        for n in television["related_links"]
+    )
+    root = client.get("/api/v1/reference/navigation/web-dept-114").json()
+    assert any(n["kind"] == "brand" for n in root["related_links"])
+    for id in ["web-item-114-3490", "web-item-114-4165"]:
+        assert client.get("/api/v1/reference/navigation/" + id).status_code == 404
+    unresolved = next(
+        n
+        for n in navigation().nodes.values()
+        if n["kind"] == "category" and n["hierarchy_status"] == "needs_review"
+    )
+    assert (
+        client.get("/api/v1/reference/navigation/" + unresolved["id"]).json()[
+            "hierarchy_status"
+        ]
+        == "needs_review"
+    )
+
+
+def test_explicit_mapping_reads_correct_internal_fk_and_can_be_revoked(environment):
+    client, engine, *_ = environment
+    login(client)
+    confirmed = client.post("/api/v1/reference/sources/observations", json=proof())
+    assert confirmed.status_code == 201
+    selected = client.get(
+        "/api/v1/reference/navigation/web-item-43-3730/selection"
+    ).json()
+    assert selected["emag_category_id"] == 79 and selected["category_id"] == 200
+    assert (
+        not selected["reference_writes_allowed"]
+        and not selected["parameter_inheritance"]
+    )
+    params = client.get(
+        "/api/v1/reference/navigation/web-item-43-3730/parameters"
+    ).json()
+    assert [p["id"] for p in params["items"]] == [270]
+    assert (
+        client.get("/api/v1/reference/navigation/web-item-43-3730").json()[
+            "parameter_count"
+        ]
+        == 1
+    )
+    revoked = proof()
+    revoked.update(
+        mapping_status="pending",
+        canonical_emag_id=None,
+        evidence_kind=None,
+        content_sha256=None,
+    )
+    assert (
+        client.post("/api/v1/reference/sources/observations", json=revoked).status_code
+        == 201
+    )
+    assert (
+        client.get(
+            "/api/v1/reference/navigation/web-item-43-3730/selection"
+        ).status_code
+        == 409
+    )
+    assert (
+        client.get(
+            "/api/v1/reference/navigation/web-item-43-3730/parameters"
+        ).status_code
+        == 409
+    )
+    with Session(engine) as db:
+        assert db.scalar(
+            select(Audit).where(Audit.action == "reference.source_observation")
+        )
+
+
+def test_root_brand_filter_cannot_be_promoted_to_product_category(environment):
+    client, *_ = environment
+    login(client)
+    for id in ["web-dept-79", "web-item-114-3490", "web-item-114-4165"]:
+        assert (
+            client.post(
+                "/api/v1/reference/sources/observations", json=proof(node=id)
+            ).status_code
+            == 409
+        )
+    assert (
+        client.post(
+            "/api/v1/reference/sources/observations",
+            json=proof(node="web-item-does-not-exist"),
+        ).status_code
+        == 404
+    )
+    login(client, "admin@example.hu")
+    assert (
+        client.post("/api/v1/reference/sources/observations", json=proof()).status_code
+        == 403
+    )
+
+
+def test_shared_navigation_search_pagination_and_reference_readonly(environment):
+    client, _, _, statements = environment
+    login(client, "processor@example.hu")
+    assert client.get("/api/v1/reference/navigation").json()["total"] == 13
+    first = client.get("/api/v1/reference/navigation?limit=1&offset=0").json()
+    assert first["items"][0]["name"] == ROOT_NAMES[0] and first["total"] == 13
+    hit = client.get("/api/v1/reference/navigation?q=Televíziók").json()["items"][0]
+    assert [p["name"] for p in hit["path"]] == ["TV és szórakozás", "Televíziók"]
+    coverage = client.get("/api/v1/reference/navigation/coverage").json()
+    assert coverage["root_count"] == 13 and coverage["manifest_link_count"] == 609
+    assert (
+        coverage["confirmed_bindings"] == 0
+        and not coverage["full_category_tree_verified"]
+    )
+    assert coverage["hierarchy_needs_review"] == 79
+    assert all(s.strip().upper().startswith("SELECT ") for s in statements)
+
+
+def test_mapping_approval_is_bound_to_source_snapshot(environment, monkeypatch):
+    from app import web_navigation
+
+    client, *_ = environment
+    login(client)
+    response = client.post("/api/v1/reference/sources/observations", json=proof())
+    assert response.status_code == 201
+    assert response.json()["source_category_id"].endswith(
+        "@" + navigation().data["archive_sha256"]
+    )
+    assert (
+        client.get(
+            "/api/v1/reference/navigation/web-item-43-3730/selection"
+        ).status_code
+        == 200
+    )
+    changed = web_navigation.Navigation(
+        {**navigation().data, "archive_sha256": "b" * 64}
+    )
+    monkeypatch.setattr(web_navigation, "navigation", lambda: changed)
+    assert (
+        client.get(
+            "/api/v1/reference/navigation/web-item-43-3730/selection"
+        ).status_code
+        == 409
+    )

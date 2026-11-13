@@ -186,3 +186,50 @@ def test_zip_contains_only_generated_public_evidence(tmp_path):
             data["execution_location"] == "operator_machine"
             and not data["reference_database_writes"]
         )
+
+
+def test_details_collector_preserves_evidence_not_secret_fields(page):
+    spec = importlib.util.spec_from_file_location(
+        "menu_details", ROOT / "scripts/collect_emag_menu_details.py"
+    )
+    details = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(details)
+    clean = details.sanitized_payload(
+        {
+            "data": {
+                "id": 79,
+                "name": "Kategória",
+                "token": "not-exported",
+                "user": {"name": "Private"},
+                "url": "https://www.emag.hu/category/c?token=secret",
+            },
+            "password": "not-exported",
+        }
+    )
+    assert "token" not in json.dumps(clean) and "Private" not in json.dumps(clean)
+    page.evaluate(
+        """()=>{document.body.innerHTML='<script type="application/json">'+JSON.stringify({category:{id:79},user:{id:123,password:'not-exported'}})+'</scr'+'ipt>'; }"""
+    )
+    evidence = page.evaluate(details.IDENTITY_EVIDENCE)
+    assert evidence["identifiers"] == [
+        {"json_path": "script[0].category.id", "value": "79", "namespace": "unverified"}
+    ]
+    assert len(evidence["source_document_hashes"][0]["sha256"]) == 64
+    assert not evidence["automatic_marketplace_mapping"]
+    page.evaluate(
+        """()=>{const s=document.createElement('script');s.type='application/ld+json';s.textContent=JSON.stringify({'@type':'BreadcrumbList',itemListElement:[{name:'Forrás-URL nélkül',position:1}]});document.body.append(s)}"""
+    )
+    assert (
+        page.evaluate(details.IDENTITY_EVIDENCE)["breadcrumbs"][0]["items"][0]["url"]
+        is None
+    )
+
+
+def test_clean_html_does_not_rewrite_same_name_different_source_id(page):
+    labels = fixture(page, count=1)
+    page.evaluate(
+        "document.querySelector('.panel a:nth-of-type(2)').textContent='Alkategória 0'"
+    )
+    group = capture(page, labels[0])
+    assert "https://www.emag.hu/child-0/c/79" in group["html_evidence"]
+    assert "https://www.emag.hu/brand-0/b" in group["html_evidence"]

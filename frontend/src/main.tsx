@@ -22,27 +22,28 @@ type Me = {
   expires_at: string;
 };
 type Page<T> = { items: T[]; total: number; offset: number; limit: number };
-type Category = {
-  id: number;
-  emag_category_id: number;
+type NavLink = {
+  id: string;
   name: string;
-  parent_id: number | null;
-  parent_emag_id: number | null;
-  parent_name: string | null;
-  missing_parent: boolean;
-  is_allowed: boolean | null;
-  is_ean_mandatory: boolean | null;
-  is_warranty_mandatory: boolean | null;
-  selectable: boolean;
-  classification: "selectable" | "structural";
+  kind: string;
+  hierarchy_status: string;
+  ancestors?: NavLink[];
+  path?: NavLink[];
+};
+type NavCategory = NavLink & {
+  source_item_id: string | null;
+  source_department_id: string;
+  url: string | null;
   children_count: number;
-  parameter_count: number;
-  mandatory_parameter_count: number;
-  optional_parameter_count: number;
-  unknown_parameter_count: number;
-  path?: Category[];
-  ancestors?: Category[];
-  hierarchy_error?: string | null;
+  mapping_status: string;
+  canonical_emag_id: number | null;
+  selectable: boolean;
+  parameter_count: number | null;
+  mandatory_parameter_count: number | null;
+  optional_parameter_count: number | null;
+  ancestors: NavLink[];
+  path: NavLink[];
+  related_links: (NavLink & { url: string | null })[];
 };
 type Parameter = {
   id: number;
@@ -842,99 +843,6 @@ function Tenants({ me }: { me: Me }) {
     </>
   );
 }
-function CategoryNode({
-  category,
-  onSelect,
-  path = [],
-  view = "navigation",
-  selectedId,
-  expandedIds = [],
-}: {
-  category: Category;
-  onSelect: (c: Category) => void;
-  path?: number[];
-  view?: string;
-  selectedId?: number;
-  expandedIds?: number[];
-}) {
-  const [open, setOpen] = useState(false),
-    [offset, setOffset] = useState(0);
-  useEffect(() => {
-    if (expandedIds.includes(category.id)) setOpen(true);
-  }, [expandedIds.join(","), category.id]);
-  const cycle = path.includes(category.id);
-  const { data, error, loading } = useLoad<Page<Category>>(
-    open && !cycle
-      ? `/reference/categories?parent_id=${category.id}&offset=${offset}&view=${view}`
-      : null,
-  );
-  return (
-    <li>
-      <div
-        className={`tree-row ${selectedId === category.id ? "selected" : ""} ${!category.selectable ? "structural" : ""}`}
-      >
-        <button
-          className="tree-toggle"
-          disabled={cycle || !category.children_count}
-          aria-label={`${category.name} alkategóriái`}
-          aria-expanded={open}
-          onClick={() => setOpen(!open)}
-        >
-          {open ? "−" : "+"}
-        </button>
-        <button
-          className="tree-name"
-          aria-current={selectedId === category.id ? "true" : undefined}
-          onClick={() => onSelect(category)}
-        >
-          {category.name}
-          <small>
-            eMAG {category.emag_category_id}
-            {category.selectable ? " · Besorolható" : " · Strukturális"}
-            {category.missing_parent ? " · Hiányzó szülő" : ""}
-            {category.hierarchy_error === "cycle"
-              ? " · Ciklikus kapcsolat"
-              : ""}
-          </small>
-          {!!category.ancestors?.length && (
-            <small className="tree-path">
-              {category.ancestors.map((a) => a.name).join(" / ")}
-            </small>
-          )}
-        </button>
-      </div>
-      {cycle && <p className="error">Körkörös hivatkozás</p>}
-      {open && (
-        <>
-          <ErrorBox message={error} />
-          {loading && <Empty loading />}
-          {data?.items.length ? (
-            <ul>
-              {data.items.map((c) => (
-                <CategoryNode
-                  key={c.id}
-                  category={c}
-                  onSelect={onSelect}
-                  path={[...path, category.id]}
-                  view={view}
-                  selectedId={selectedId}
-                  expandedIds={expandedIds}
-                />
-              ))}
-            </ul>
-          ) : (
-            !loading && (
-              <p className="small muted tree-note">Nincs alkategória.</p>
-            )
-          )}
-          {data && data.total > data.limit && (
-            <Pager {...data} onChange={setOffset} />
-          )}
-        </>
-      )}
-    </li>
-  );
-}
 function ValueBrowser({
   parameter,
   view = "navigation",
@@ -1024,16 +932,18 @@ function ValueBrowser({
 function Parameters({
   categoryId,
   view = "navigation",
+  navigationId,
 }: {
   categoryId?: number;
   view?: string;
+  navigationId?: string;
 }) {
   const [q, setQ] = useState(""),
     [mandatory, setMandatory] = useState(""),
     [offset, setOffset] = useState(0),
     [selected, setSelected] = useState<Parameter | null>(null);
   const query = useDebounce(q);
-  const url = `/reference/parameters?view=${view}&offset=${offset}&q=${encodeURIComponent(query)}${categoryId ? `&category_id=${categoryId}` : ""}${mandatory ? `&mandatory=${mandatory}` : ""}`;
+  const url = `${navigationId ? `/reference/navigation/${encodeURIComponent(navigationId)}/parameters` : "/reference/parameters"}?view=${view}&offset=${offset}&q=${encodeURIComponent(query)}${categoryId ? `&category_id=${categoryId}` : ""}${mandatory ? `&mandatory=${mandatory}` : ""}`;
   const { data, error, loading } = useLoad<Page<Parameter>>(url);
   return (
     <>
@@ -1113,111 +1023,354 @@ function Parameters({
     </>
   );
 }
-function CategoryDetails({
+function ShopNode({
+  node,
+  onSelect,
+  selected,
+  parents = [],
+}: {
+  node: NavCategory;
+  onSelect: (n: NavLink) => void;
+  selected?: string;
+  parents?: string[];
+}) {
+  const [open, setOpen] = useState(false),
+    [offset, setOffset] = useState(0);
+  const result = useLoad<Page<NavCategory>>(
+    open
+      ? `/reference/navigation?parent_id=${encodeURIComponent(node.id)}&offset=${offset}`
+      : null,
+  );
+  const cycle = parents.includes(node.id);
+  return (
+    <li>
+      <div
+        className={`tree-row ${selected === node.id ? "selected" : ""} ${!node.selectable ? "structural" : ""}`}
+      >
+        <button
+          className="tree-toggle"
+          aria-label={`${node.name} alkategóriái`}
+          aria-expanded={open}
+          disabled={cycle || !node.children_count}
+          onClick={() => setOpen(!open)}
+        >
+          {open ? "−" : "+"}
+        </button>
+        <button
+          className="tree-name"
+          aria-current={selected === node.id ? "true" : undefined}
+          onClick={() => onSelect(node)}
+        >
+          {node.name}
+          <small>
+            {node.kind === "department"
+              ? "Főcsoport"
+              : node.mapping_status === "confirmed"
+                ? `Igazolt eMAG #${node.canonical_emag_id}`
+                : "Marketplace-megfeleltetésre vár"}
+            {node.hierarchy_status === "needs_review"
+              ? " · Belső szekció ellenőrzendő"
+              : ""}
+          </small>
+          {!!node.ancestors.length && (
+            <small className="tree-path">
+              {node.ancestors.map((p) => p.name).join(" / ")}
+            </small>
+          )}
+        </button>
+      </div>
+      {open && !cycle && (
+        <>
+          <ErrorBox message={result.error} />
+          {result.loading && <Empty loading />}
+          <ul>
+            {result.data?.items.map((n) => (
+              <ShopNode
+                key={n.id}
+                node={n}
+                onSelect={onSelect}
+                selected={selected}
+                parents={[...parents, node.id]}
+              />
+            ))}
+          </ul>
+          {result.data && result.data.total > result.data.limit && (
+            <Pager {...result.data} onChange={setOffset} />
+          )}
+        </>
+      )}
+    </li>
+  );
+}
+function ShopDetails({
   id,
   onSelect,
-  view = "navigation",
   onChildren,
+  onMappingUpdated,
 }: {
-  id: number;
-  onSelect: (c: Category) => void;
-  view?: string;
-  onChildren: (c: Category) => void;
+  id: string;
+  onSelect: (n: NavLink) => void;
+  onChildren: (n: NavCategory) => void;
+  onMappingUpdated: () => void;
 }) {
-  const { data, error, loading } = useLoad<Category>(
-    `/reference/categories/${id}?view=${view}`,
+  const [rev, setRev] = useState(0),
+    [error, setError] = useState(""),
+    [busy, setBusy] = useState(false);
+  const result = useLoad<NavCategory>(
+    `/reference/navigation/${encodeURIComponent(id)}`,
+    rev,
   );
+  const who = useLoad<Me>("/auth/me");
+  const node = result.data;
+  const kinds: Record<string, string> = {
+    parameter_filter: "Paraméterszűrő",
+    brand: "Márkaoldal",
+    campaign: "Kampány",
+    collection: "Gyűjtőoldal",
+    product_finder: "Termékkereső",
+    search: "Keresés",
+    related_section: "Kapcsolódó szekció",
+    department_link: "Főcsoport-hivatkozás",
+    unknown_link: "Ellenőrzendő link",
+  };
+  if (!node)
+    return (
+      <>
+        <ErrorBox message={result.error} />
+        <Empty loading={result.loading} />
+      </>
+    );
   return (
     <>
-      <ErrorBox message={error} />
-      {!data ? (
-        <Empty loading={loading} />
-      ) : (
-        <>
-          <section className="card padded">
-            <div className="breadcrumbs">
-              {data.ancestors?.map((a, index) => (
-                <button
-                  key={a.id}
-                  onClick={() =>
-                    onSelect({
-                      ...a,
-                      ancestors: data.ancestors!.slice(0, index),
-                      path: data.ancestors!.slice(0, index + 1),
-                    })
+      <section className="card padded">
+        <div className="breadcrumbs">
+          {node.ancestors.map((p, i) => (
+            <button
+              key={p.id}
+              onClick={() =>
+                onSelect({
+                  ...p,
+                  ancestors: node.ancestors.slice(0, i),
+                  path: node.path.slice(0, i + 1),
+                })
+              }
+            >
+              {p.name} /
+            </button>
+          ))}
+        </div>
+        <p className="eyebrow">EGYSÉGES KATEGÓRIANAVIGÁCIÓ</p>
+        <h2>{node.name}</h2>
+        <p className="category-full-path">
+          {node.path.map((p) => p.name).join(" / ")}
+        </p>
+        <span className={"badge " + (node.selectable ? "good" : "")}>
+          {node.selectable
+            ? "Termékbesorolásra választható"
+            : node.kind === "department" || node.kind === "section"
+              ? "Strukturális navigáció"
+              : "Besorolás előtt ellenőrzendő"}
+        </span>
+        <p className="small muted">
+          Webshop menüazonosító:{" "}
+          {node.source_item_id || node.source_department_id} · ez nem
+          Marketplace-azonosító
+        </p>
+        {node.canonical_emag_id && (
+          <p>
+            Igazolt Marketplace eMAG-ID:{" "}
+            <strong>{node.canonical_emag_id}</strong>
+          </p>
+        )}
+        {node.hierarchy_status === "needs_review" && (
+          <p className="warning">
+            A főcsoporthoz tartozás bizonyított, de a pontos belső
+            szekciókapcsolat további forrásadatot igényel.
+          </p>
+        )}
+        <div className="facts">
+          <span>Alkategóriák / szekciók: {node.children_count}</span>
+          <span>
+            Paraméterek:{" "}
+            {node.kind === "department"
+              ? "Strukturális főcsoport"
+              : (node.parameter_count ?? "Még nem ellenőrzött")}
+          </span>
+          {node.parameter_count !== null && (
+            <>
+              <span>Kötelező: {node.mandatory_parameter_count}</span>
+              <span>Opcionális: {node.optional_parameter_count}</span>
+            </>
+          )}
+        </div>
+        {!!node.children_count && (
+          <button className="browse-children" onClick={() => onChildren(node)}>
+            Alkategóriák megnyitása
+          </button>
+        )}
+        {!!node.ancestors.length && (
+          <button
+            className="browse-children"
+            onClick={() => onSelect(node.ancestors[node.ancestors.length - 1])}
+          >
+            Feljebb
+          </button>
+        )}
+        {node.mapping_status !== "confirmed" && node.kind === "category" && (
+          <p className="notice">
+            A webshop-menü bejegyzéséhez még nincs igazolt
+            Marketplace-kapcsolat. Paramétereket névegyezés vagy menüazonosító
+            alapján nem kapcsolunk hozzá.
+          </p>
+        )}
+        {who.data?.permissions.includes("system.manage") &&
+          ["category", "section"].includes(node.kind) && (
+            <details>
+              <summary>Igazolt Marketplace-megfeleltetés rögzítése</summary>
+              <form
+                onSubmit={async (e) => {
+                  e.preventDefault();
+                  const f = new FormData(e.currentTarget);
+                  setBusy(true);
+                  setError("");
+                  try {
+                    await api("/reference/sources/observations", "POST", {
+                      source_key: "emag_webshop",
+                      source_category_id: node.id,
+                      evidence_url: f.get("evidence_url"),
+                      outcome: "available",
+                      mapping_status: "confirmed",
+                      canonical_emag_id: Number(f.get("canonical_id")),
+                      evidence_kind: f.get("evidence_kind"),
+                      content_sha256: f.get("hash"),
+                      summary: f.get("summary"),
+                    });
+                    setRev(rev + 1);
+                    onMappingUpdated();
+                  } catch (e) {
+                    setError((e as Error).message);
+                  } finally {
+                    setBusy(false);
                   }
-                >
-                  {a.name} /
-                </button>
-              ))}
-            </div>
-            <p className="eyebrow">KATEGÓRIA ADATLAPJA</p>
-            <h2>{data.name}</h2>
-            <span className={"badge " + (data.selectable ? "good" : "")}>
-              {data.selectable
-                ? "Termékbesorolásra választható"
-                : "Strukturális · termékbesorolásra nem választható"}
-            </span>
-            <p className="category-full-path">
-              {data.path?.map((c) => c.name).join(" / ")}
-            </p>
-            <p>
-              Szülő:{" "}
-              {data.ancestors?.length ? (
-                <button
-                  onClick={() =>
-                    onSelect(data.ancestors![data.ancestors!.length - 1])
-                  }
-                >
-                  {data.parent_name}
-                </button>
-              ) : data.parent_emag_id ? (
-                `Nem bejárható szülő (eMAG #${data.parent_emag_id})`
-              ) : (
-                "Gyökérkategória"
-              )}
-            </p>
-            <div className="facts">
-              <span>Alkategóriák: {data.children_count}</span>
-              <span>Paraméterek: {data.parameter_count}</span>
-              <span>Kötelező: {data.mandatory_parameter_count}</span>
-              <span>Opcionális: {data.optional_parameter_count}</span>
-              <span>Nem jelölt: {data.unknown_parameter_count}</span>
-            </div>
-            {!!data.children_count && (
-              <button
-                className="browse-children"
-                onClick={() => onChildren(data)}
+                }}
               >
-                Alkategóriák megnyitása
-              </button>
-            )}
-            <p className="small muted">
-              eMAG #{data.emag_category_id} · Belső azonosító #{data.id}
-            </p>
-            {data.hierarchy_error && (
-              <p className="warning">
-                {data.hierarchy_error === "missing_parent"
-                  ? "A szülőláncban hiányzó kategória található; nem rendeljük más szülőhöz."
-                  : data.hierarchy_error === "excluded_parent"
-                    ? "Töröltnek jelölt szülő miatt az ismert ág önálló gyökérként jelenik meg."
-                    : "Ciklikus szülőkapcsolat: a megjelenítés véges, az eredeti eMAG-azonosítók megmaradnak."}
-              </p>
-            )}
-            <div className="facts">
-              <span>
-                Engedélyezett: <Flag value={data.is_allowed} />
-              </span>
-              <span>
-                EAN kötelező: <Flag value={data.is_ean_mandatory} />
-              </span>
-              <span>
-                Garancia kötelező: <Flag value={data.is_warranty_mandatory} />
-              </span>
-            </div>
-          </section>
-          <Parameters key={`${view}-${id}`} categoryId={id} view={view} />
-        </>
+                <p className="warning">
+                  A menüazonosító, a névegyezés és a numerikus URL önmagában nem
+                  bizonyít Marketplace-kapcsolatot. Csak külső bizonyítékkal
+                  igazolt megfeleltetést rögzíts.
+                </p>
+                <label>
+                  Marketplace eMAG-kategóriaazonosító
+                  <input name="canonical_id" type="number" min="1" required />
+                </label>
+                <label>
+                  Bizonyíték típusa
+                  <select name="evidence_kind">
+                    <option value="explicit_marketplace_id">
+                      Explicit Marketplace-azonosító a forrásban
+                    </option>
+                    <option value="documented_crosswalk">
+                      Dokumentált megfeleltetés
+                    </option>
+                  </select>
+                </label>
+                <label>
+                  Bizonyíték publikus eMAG HTTPS-hivatkozása
+                  <input
+                    type="url"
+                    name="evidence_url"
+                    defaultValue={node.url || ""}
+                    required
+                    maxLength={1000}
+                  />
+                </label>
+                <label>
+                  Bizonyíték SHA-256 hash-e
+                  <input
+                    name="hash"
+                    required
+                    pattern="[a-f0-9]{64}"
+                    minLength={64}
+                    maxLength={64}
+                  />
+                </label>
+                <label>
+                  Azonosság indoklása
+                  <textarea
+                    name="summary"
+                    required
+                    minLength={10}
+                    maxLength={2000}
+                  />
+                </label>
+                <label className="check">
+                  <input type="checkbox" required />
+                  Nem pusztán név- vagy számegyezés alapján erősítem meg.
+                </label>
+                <ErrorBox message={error} />
+                <button disabled={busy}>Megfeleltetés megerősítése</button>
+              </form>
+              {node.mapping_status === "confirmed" && (
+                <button
+                  disabled={busy}
+                  onClick={async () => {
+                    try {
+                      await api("/reference/sources/observations", "POST", {
+                        source_key: "emag_webshop",
+                        source_category_id: node.id,
+                        evidence_url: node.url,
+                        outcome: "partial",
+                        mapping_status: "pending",
+                        summary:
+                          "A korábbi megfeleltetés felülvizsgálatra visszavonva.",
+                      });
+                      setRev(rev + 1);
+                      onMappingUpdated();
+                    } catch (e) {
+                      setError((e as Error).message);
+                    }
+                  }}
+                >
+                  Megfeleltetés visszavonása
+                </button>
+              )}
+            </details>
+          )}
+      </section>
+      {node.mapping_status === "confirmed" &&
+        ["category", "section"].includes(node.kind) && (
+          <Parameters key={id + "-" + rev} navigationId={id} view="all" />
+        )}
+      {!!node.related_links.length && (
+        <section className="card padded">
+          <h2>Kapcsolódó linkek – nem külön termékkategóriák</h2>
+          <div className="tablewrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Név</th>
+                  <th>Típus</th>
+                </tr>
+              </thead>
+              <tbody>
+                {node.related_links.map((n) => (
+                  <tr key={n.id}>
+                    <td>
+                      {n.url ? (
+                        <a href={n.url} target="_blank" rel="noreferrer">
+                          {n.name}
+                        </a>
+                      ) : (
+                        n.name
+                      )}
+                    </td>
+                    <td>{kinds[n.kind] || n.kind}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </section>
       )}
     </>
   );
@@ -1225,56 +1378,46 @@ function CategoryDetails({
 function Categories() {
   const [q, setQ] = useState(""),
     [offset, setOffset] = useState(0),
-    [selected, setSelected] = useState<Category | null>(null),
-    [view, setView] = useState("navigation"),
-    [focus, setFocus] = useState<Category | null>(null);
+    [selected, setSelected] = useState<NavLink | null>(null),
+    [focus, setFocus] = useState<NavCategory | null>(null),
+    [mappingRevision, setMappingRevision] = useState(0);
   const query = useDebounce(q);
-  const { data, error, loading } = useLoad<Page<Category>>(
-    `/reference/categories?view=${view}&q=${encodeURIComponent(query)}&offset=${offset}${focus && !query ? `&parent_id=${focus.id}` : ""}`,
+  const result = useLoad<Page<NavCategory>>(
+    `/reference/navigation?q=${encodeURIComponent(query)}&offset=${offset}${focus && !query ? `&parent_id=${encodeURIComponent(focus.id)}` : ""}`,
+    mappingRevision,
   );
-  const coverage = useLoad<Record<string, any>>("/reference/coverage");
+  const coverage = useLoad<{
+    root_count: number;
+    manifest_link_count: number;
+    hierarchy_needs_review: number;
+    confirmed_bindings: number;
+  }>("/reference/navigation/coverage", mappingRevision);
   return (
     <>
       <p className="notice">
-        Egy közös eMAG-kategóriafa. A strukturális elemek navigációra
-        használhatók, termékbesorolásra csak a külön jelölt kategóriák
-        választhatók. A hiányzó vagy ciklikus szülőkapcsolatok jelzést kapnak.
+        A valós magyar eMAG-menü 13 főcsoportja, eredeti sorrendben. A webshop
+        menüazonosítói és a Marketplace-kategóriaazonosítók különböznek;
+        paraméter csak igazolt megfeleltetés után jelenik meg.
       </p>
       <ErrorBox message={coverage.error} />
       {coverage.data && (
         <div className="reference-metrics">
           {[
-            ["reference_total", "Tárolt kategória"],
-            ["selectable_total", "Besorolható"],
-            ["structural_total", "Strukturális szülő"],
-            ["max_depth", "Igazolt gyökérmélység"],
-            ["categories_with_parameters", "Paraméterkészlettel"],
-          ].map(([key, label]) => (
-            <div className="card" key={key}>
-              <strong>{coverage.data![key]}</strong>
+            [coverage.data.root_count, "Valós főcsoport"],
+            [coverage.data.manifest_link_count, "Rögzített menühivatkozás"],
+            [coverage.data.confirmed_bindings, "Igazolt Marketplace-kapcsolat"],
+            [
+              coverage.data.hierarchy_needs_review,
+              "Ellenőrzendő szekciókapcsolat",
+            ],
+          ].map(([v, label]) => (
+            <div className="card" key={String(label)}>
+              <strong>{v}</strong>
               <small>{label}</small>
             </div>
           ))}
         </div>
       )}
-      <label className="tree-view-filter">
-        Megjelenítés
-        <select
-          aria-label="Kategóriafa megjelenítése"
-          value={view}
-          onChange={(e) => {
-            setView(e.target.value);
-            setOffset(0);
-            setFocus(null);
-            setSelected(null);
-          }}
-        >
-          <option value="navigation">
-            Besorolható kategóriák és teljes szülőfájuk
-          </option>
-          <option value="all">Minden nem törölt referenciaág</option>
-        </select>
-      </label>
       <div className="browser-grid">
         <section className="card padded tree">
           {focus && (
@@ -1283,69 +1426,58 @@ function Categories() {
                 onClick={() => {
                   setFocus(null);
                   setOffset(0);
+                  setQ("");
                 }}
               >
-                Fa gyökere
+                Főkategóriák
               </button>
               <span>{focus.name}</span>
-              {!!focus.ancestors?.length && (
-                <button
-                  onClick={() => {
-                    setFocus(focus.ancestors![focus.ancestors!.length - 1]);
-                    setOffset(0);
-                  }}
-                >
-                  Feljebb
-                </button>
-              )}
             </div>
           )}
           <label>
             Kategóriakeresés
             <input
               value={q}
+              placeholder="Keresés a webshop navigációjában"
               onChange={(e) => {
                 setQ(e.target.value);
                 setOffset(0);
               }}
-              placeholder="Név vagy eMAG-azonosító"
             />
           </label>
-          <ErrorBox message={error} />
+          <ErrorBox message={result.error} />
           <ul>
-            {data?.items.map((c) => (
-              <CategoryNode
-                key={`${view}-${query}-${c.id}`}
-                category={c}
-                selectedId={selected?.id}
-                expandedIds={selected?.ancestors?.map((a) => a.id) || []}
-                view={view}
+            {result.data?.items.map((n) => (
+              <ShopNode
+                key={n.id}
+                node={n}
+                selected={selected?.id}
                 onSelect={setSelected}
               />
             ))}
           </ul>
-          {!data?.items.length && <Empty loading={loading} />}{" "}
-          {data && <Pager {...data} onChange={setOffset} />}
+          {!result.data?.items.length && <Empty loading={result.loading} />}{" "}
+          {result.data && <Pager {...result.data} onChange={setOffset} />}
         </section>
         <div className="detail">
           {selected ? (
-            <CategoryDetails
+            <ShopDetails
+              key={selected.id}
               id={selected.id}
-              view={view}
+              onMappingUpdated={() => setMappingRevision((r) => r + 1)}
               onSelect={setSelected}
-              onChildren={(c) => {
-                setFocus(c);
-                setQ("");
+              onChildren={(n) => {
+                setFocus(n);
                 setOffset(0);
+                setQ("");
               }}
             />
           ) : (
             <section className="card padded empty-detail">
-              <span>⌘</span>
-              <h2>Válassz egy kategóriát</h2>
+              <h2>Válassz egy főcsoportot</h2>
               <p>
-                A kategória adatai, paraméterei és megengedett értékei itt
-                jelennek meg.
+                A plusz gombbal nyisd meg az almenüt. A szekciók és
+                kategóriahivatkozások a bizonyított HTML-kapcsolatot követik.
               </p>
             </section>
           )}
@@ -1355,6 +1487,7 @@ function Categories() {
     </>
   );
 }
+
 function ReferenceSources() {
   const [rev, setRev] = useState(0),
     [message, setMessage] = useState("");

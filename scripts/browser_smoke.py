@@ -40,44 +40,55 @@ with sync_playwright() as p:
     expect(page.get_by_text("Alkalmazás-adatbázis", exact=True)).to_be_visible()
     page.screenshot(path=str(args.artifacts / "dashboard-desktop.png"), full_page=True)
     page.get_by_role("navigation").get_by_role("button", name="eMAG-kategóriák").click()
-    expect(
-        page.get_by_text("Hiányzó szülőjű kategória", exact=False).first
-    ).to_be_visible()
-    page.get_by_role("button", name="Műszaki cikkek alkategóriái", exact=True).click()
-    page.get_by_role("button", name="Laptopok eMAG 2000", exact=False).click()
-    expect(page.get_by_role("heading", name="Laptopok", exact=True)).to_be_visible()
-    expect(
-        page.get_by_text("Termékbesorolásra választható", exact=True)
-    ).to_be_visible()
-    expect(page.locator(".category-full-path")).to_contain_text(
-        "Műszaki cikkek / Laptopok"
+    expected_roots = [
+        "Háztartási gépek és klíma",
+        "TV és szórakozás",
+        "Telefon, Tablet, Laptop",
+        "Számítástechnika",
+        "Fotó-Videó, Okos eszközök",
+        "Szupermarket",
+        "Otthon, barkács, kert",
+        "Játékok, Baba, Mama",
+        "Divat, ékszerek és kiegészítők",
+        "Szépségápolás",
+        "Sport és utazás",
+        "Könyvek, Filmek és Irodaszerek",
+        "Autó- és motor felszerelések",
+    ]
+    expect(page.locator(".tree > ul > li")).to_have_count(13)
+    names = page.locator(".tree > ul > li > .tree-row > .tree-name").evaluate_all(
+        "(items)=>items.map(e=>e.childNodes[0].textContent.trim())"
     )
-    expect(page.locator(".tree-row.selected")).to_contain_text("Laptopok")
-    expect(page.get_by_text("Paraméterek: 1", exact=True)).to_be_visible()
-    page.get_by_role("button", name="Műszaki cikkek", exact=True).click()
+    assert names == expected_roots
+    page.screenshot(
+        path=str(args.artifacts / "webshop-roots-desktop.png"), full_page=True
+    )
+    page.get_by_role("button", name="TV és szórakozás alkategóriái", exact=True).click()
+    page.locator("button.tree-name").filter(has_text="Televíziók").first.click()
+    expect(page.get_by_role("heading", name="Televíziók", exact=True)).to_be_visible()
+    expect(page.locator(".category-full-path")).to_contain_text(
+        "TV és szórakozás / Televíziók"
+    )
+    expect(page.get_by_text("LED TV", exact=True)).to_be_visible()
+    assert (
+        page.get_by_role("heading", name="Kategóriaparaméterek", exact=True).count()
+        == 0
+    )
+    page.get_by_role("button", name="TV és szórakozás /", exact=True).click()
     expect(
-        page.get_by_role("heading", name="Műszaki cikkek", exact=True)
+        page.get_by_role("heading", name="TV és szórakozás", exact=True)
     ).to_be_visible()
     page.get_by_role("button", name="Alkategóriák megnyitása", exact=True).click()
-    expect(page.locator(".tree-location")).to_contain_text("Műszaki cikkek")
-    page.get_by_role("button", name="Laptopok eMAG 2000", exact=False).click()
+    expect(page.locator(".tree-location")).to_contain_text("TV és szórakozás")
+    page.get_by_label("Kategóriakeresés", exact=True).fill("Televíziók")
+    expect(page.locator(".tree-path").first).to_contain_text("TV és szórakozás")
+    page.screenshot(
+        path=str(args.artifacts / "webshop-hierarchy-desktop.png"), full_page=True
+    )
+    page.get_by_role("navigation").get_by_role("button", name="Paraméterkereső").click()
     expect(page.get_by_text("Szín", exact=True)).to_be_visible()
-    page.get_by_role("button", name="Megnyitás →").click()
+    page.get_by_role("button", name="Megnyitás →").first.click()
     expect(page.locator(".value-list li").filter(has_text="Fekete")).to_be_visible()
-    page.screenshot(path=str(args.artifacts / "reference-desktop.png"), full_page=True)
-    page.get_by_label("Kategóriakeresés", exact=True).fill("Laptop")
-    expect(page.locator(".tree-path")).to_contain_text("Műszaki cikkek")
-    page.get_by_role(
-        "combobox", name="Kategóriafa megjelenítése", exact=True
-    ).select_option("all")
-    expect(
-        page.get_by_role(
-            "heading", name="Források és tényleges lefedettség", exact=True
-        )
-    ).to_be_visible()
-    expect(
-        page.locator(".source-grid").get_by_text("eMAG magyar webshop", exact=True)
-    ).to_be_visible()
     page.get_by_role("navigation").get_by_role("button", name="Felhasználók").click()
     expect(page.get_by_role("heading", name="Felhasználók", exact=True)).to_be_visible()
     page.get_by_role("button", name="+ Új felhasználó").click()
@@ -96,6 +107,7 @@ with sync_playwright() as p:
         page.get_by_role("heading", name="eMAG-kategóriák", exact=True)
     ).to_be_visible()
     assert page.evaluate("document.documentElement.scrollWidth <= window.innerWidth")
+    expect(page.locator(".tree > ul > li")).to_have_count(13)
     page.screenshot(path=str(args.artifacts / "reference-mobile.png"), full_page=True)
     page.get_by_role("button", name="Kilépés", exact=True).click()
     expect(page.get_by_role("heading", name="Adatdúsító", exact=True)).to_be_visible()

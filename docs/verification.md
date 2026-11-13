@@ -113,3 +113,21 @@ Az üzemeltető által ellenőrzött valós adatok: 2669 kategória, 4 igazolt g
 Forrásvizsgálat: robots, sitemap és dokumentációs belépési cím kezdeti kérései a környezeti proxy CONNECT 403 tiltásába ütköztek. A megismételhető kutatóeszköz robots-ellenőrzés nélkül nem tölti a webshopot. Nincs sikeres új webshopfa-letöltés vagy bizonyított teljes magyar webshop-lefedettség. A forrás- és architektúrajelentés: [codex03a.md](codex03a.md).
 
 A `.env`, a Docker Compose-fájlok, a 0001/0002 migrációk és a VPS szolgáltatásbeállításai változatlanok. A referenciaadatbázishoz nem adtunk író jogosultságot. VPS-telepítés nem történt; termékimport, AI-kutatás és rendszeres szinkron nem készült.
+
+## Valós emag.hu menüexport feldolgozása
+
+Forrás: a felhasználó által feltöltött, Windowsos `emag-menu-export.zip`, `https://www.emag.hu/homepage`. A feldolgozás offline történt, a csatolmány tartalma adatként, nem utasításként kezelve. A feldolgozott, nyilvános navigációs metaadat a `backend/reference_data/web_navigation.json` állományban verziózott; az eredeti ZIP nem került a repositoryba.
+
+- 13 főcsoport eredeti DOM-sorrendben; 609 JSON-menühivatkozás. A 420 kategóriaoldal-hivatkozás nem 420 igazolt Marketplace-kategória.
+- 79 szekciókapcsolat továbbra is ellenőrzendő, nincs kitalált szülő.
+- 18 HTML/JSON URL-eltérésnél az adott panelen belüli egyedi menü-ID-val azonosított, közvetlen JSON-link az elsődleges. A gyűjtő névalapú href-visszaállítási hibája javított; az eredeti bizonyítékok hash-ei megmaradtak.
+- Windows CRLF/LF hash-eltérés csak a pontos, dokumentált sorvégtranszformációval fogadható el; a bájthash és a manifesthash is tárolt. Más tartalommódosítást elutasítunk. Az új gyűjtő bájtazonosan ír HTML-t.
+- **59 sikeres backendteszt**: köztük valódi menü-snapshot, 13 főcsoport sorrendje, ID-névterek, szekció–gyermek kapcsolat, kapcsolódó márka-/szűrőlinkek, igazolt és visszavont, forrásverzióhoz kötött paraméterkapcsolat, explicit belső FK és tenantjogosultságok. 1 meglévő függőségi deprecation warning.
+- **9 sikeres exportáló-/kiegészítőgyűjtő-teszt**, szintetikus Chromium DOM-on; nincs élő eMAG-gyűjtés állítva.
+- TypeScript/Vite-build, Compose-build és MySQL-alapú API-integráció sikeres.
+- Asztali és 390 pixeles mobil böngészőpróba sikeres, 13 valódi magyar gyökérrel; útvonal, fel/le navigáció, keresés, pending kapcsolat miatti paramétertiltás és a korábbi adminfunkciók ellenőrzöttek. Nincs JavaScript-hiba vagy oldal-túlcsordulás.
+- Kezdeti automatikus Marketplace-megfeleltetés: **0**. A menü 79-es azonosítója Könyvek főcsoport, a Marketplace 79 Televíziók: ezeket nem tévesztjük össze.
+
+A bizonyított rész már egyetlen közös böngészőben jelenik meg. A 79 hiányos szekciókapcsolathoz és az egyelőre igazolatlan Marketplace-azonosságokhoz külön `scripts/collect_emag_menu_details.py` készült; a gyűjtött általános category.id mező önmagában továbbra sem Marketplace-azonosító. [Részletes feldolgozási jegyzőkönyv és futtatási parancs](verified-webshop-navigation.md).
+
+A pinfo_db, `.env`, Docker Compose external hálózat és a migrációk változatlanok. Új adatbázis-migráció és VPS-telepítés nem történt.

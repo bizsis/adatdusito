@@ -77,28 +77,16 @@
   }
   function cleanHtml(scope) {
     const clone = scope.cloneNode(true);
-    clone.querySelectorAll("script,style,iframe,form,input,textarea,select,svg,img,video,canvas").forEach(el => el.remove());
-    for (const el of [clone, ...clone.querySelectorAll("*")]) {
-      for (const a of [...el.attributes]) {
-        if (!["class", "id", "role", "aria-label", "data-id", "data-category-id", "data-submenu-id"].includes(a.name)) el.removeAttribute(a.name);
-      }
+    const originals=[...scope.querySelectorAll('a')], copies=[...clone.querySelectorAll('a')];
+    // Pair exact cloned elements BEFORE pruning. Names/IDs need not be unique.
+    const hrefs=new Map(copies.map((element,i)=>[element,publicUrl(originals[i].getAttribute('href'))?.url]));
+    clone.querySelectorAll('script,style,iframe,form,input,textarea,select,svg,img,video,canvas').forEach(el=>el.remove());
+    for(const el of [clone,...clone.querySelectorAll('*')]) for(const a of [...el.attributes]){
+      if(!['class','id','role','aria-label','data-id','data-category-id','data-submenu-id'].includes(a.name))el.removeAttribute(a.name);
     }
-    const comments=[]; const walker=document.createTreeWalker(clone,NodeFilter.SHOW_COMMENT);
-    while(walker.nextNode()) comments.push(walker.currentNode);
-    comments.forEach(node=>node.remove());
-    const originalLinks = [...scope.querySelectorAll("a")];
-    // Use already sanitized link destinations; no arbitrary attributes or query values.
-    const links = [...clone.querySelectorAll("a")];
-    // Removal of forms may change indices; match by label + DOM occurrence instead.
-    const originals = new Map();
-    for (const el of originalLinks) {
-      const key = text(el), value = publicUrl(el.getAttribute("href"));
-      if (value && !originals.has(key)) originals.set(key, value.url);
-    }
-    for (const el of links) {
-      const value = originals.get(text(el));
-      if (value) el.setAttribute("href", value);
-    }
+    const comments=[],walker=document.createTreeWalker(clone,NodeFilter.SHOW_COMMENT);
+    while(walker.nextNode())comments.push(walker.currentNode);comments.forEach(n=>n.remove());
+    for(const element of clone.querySelectorAll('a'))if(hrefs.get(element))element.setAttribute('href',hrefs.get(element));
     return clone.outerHTML;
   }
   const exports = new Map();

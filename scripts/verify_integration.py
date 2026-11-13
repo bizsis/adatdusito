@@ -39,6 +39,66 @@ with httpx.Client(
 ) as admin:
     login(admin, credentials["email"], credentials["password"])
     checked(admin.get("/openapi.json"))
+    navigation = checked(admin.get("/reference/navigation"))
+    assert (
+        navigation["total"] == 13
+        and navigation["items"][0]["name"] == "Háztartási gépek és klíma"
+    )
+    assert (
+        next(n for n in navigation["items"] if n["id"] == "web-dept-79")[
+            "canonical_emag_id"
+        ]
+        is None
+    )
+    pending = checked(admin.get("/reference/navigation/web-item-43-3730"))
+    assert pending["canonical_emag_id"] is None and pending["parameter_count"] is None
+    checked(admin.get("/reference/navigation/web-item-43-3730/selection"), 409)
+    # This runner is hardwired to the synthetic cloud MySQL on loopback:18080.
+    asset = json.loads(
+        (
+            Path(__file__).resolve().parents[1]
+            / "backend/reference_data/web_navigation.json"
+        ).read_text()
+    )
+    laptop = next(
+        n
+        for n in asset["nodes"]
+        if n["kind"] == "category"
+        and n["url"] == "https://www.emag.hu/laptop-notebook/c"
+    )
+    approval = {
+        "source_key": "emag_webshop",
+        "source_category_id": laptop["id"],
+        "evidence_url": laptop["url"],
+        "outcome": "available",
+        "mapping_status": "confirmed",
+        "canonical_emag_id": 2000,
+        "evidence_kind": "documented_crosswalk",
+        "content_sha256": "a" * 64,
+        "summary": "Szintetikus cloud MySQL-teszt: a helyi fixture explicit kategóriaazonossága.",
+    }
+    approved = checked(
+        admin.post("/reference/sources/observations", json=approval), 201
+    )
+    assert approved["source_category_id"].endswith("@" + asset["archive_sha256"])
+    bound = checked(admin.get("/reference/navigation/" + laptop["id"] + "/selection"))
+    assert bound["category_id"] == 20 and bound["emag_category_id"] == 2000
+    assert (
+        checked(admin.get("/reference/navigation/" + laptop["id"] + "/parameters"))[
+            "items"
+        ][0]["id"]
+        == 70
+    )
+    approval.update(
+        mapping_status="pending",
+        canonical_emag_id=None,
+        evidence_kind=None,
+        content_sha256=None,
+        summary="Szintetikus cloud MySQL-kapcsolat visszavonva, nem valós megfeleltetés.",
+    )
+    checked(admin.post("/reference/sources/observations", json=approval), 201)
+    checked(admin.get("/reference/navigation/" + laptop["id"] + "/selection"), 409)
+
     stats = checked(admin.get("/reference/coverage"))
     assert (
         stats["reference_total"] == 3

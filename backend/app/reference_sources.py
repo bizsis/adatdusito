@@ -134,6 +134,27 @@ def observe(
 ):
     if not db.get(ReferenceSource, body.source_key):
         raise HTTPException(409, "A forrásregiszterhez előbb migráció szükséges.")
+    if body.source_category_id and body.source_category_id.startswith(
+        ("web-dept-", "web-item-")
+    ):
+        from app.web_navigation import navigation, BINDABLE_KINDS
+
+        snapshot = navigation()
+        node = snapshot.nodes.get(body.source_category_id)
+        if not node:
+            raise HTTPException(404, "Ismeretlen webshop-navigációs azonosító.")
+        if body.mapping_status == "confirmed" and (
+            body.source_key != "emag_webshop" or node["kind"] not in BINDABLE_KINDS
+        ):
+            raise HTTPException(
+                409,
+                "Márka, kampány, szűrő vagy főcsoport nem feleltethető meg termékkategóriának.",
+            )
+        # Proofs are scoped to the exact captured source version. A subsequent
+        # menu export cannot silently inherit an approval for a reused menu ID.
+        body = body.model_copy(
+            update={"source_category_id": snapshot.proof_key(body.source_category_id)}
+        )
     if body.canonical_emag_id:
         with reference_database() as conn:
             if not conn.scalar(

@@ -1,5 +1,7 @@
 # Adatdúsító · CODEX 03A
 
+**Aktuális böngésző:** a valós Windowsos eMAG-export 13 magyar főcsoportja, eredeti sorrendben. A paraméterkapcsolatokat csak igazolt Marketplace-megfeleltetés után használjuk. [Bizonyíték és aktuális működés](docs/verified-webshop-navigation.md).
+
 Magyar nyelvű, többügyfeles adminfelület FastAPI, React/TypeScript, Celery/Redis és a meglévő MySQL 8.0 használatával.
 
 ## Funkciók
@@ -70,3 +72,7 @@ A `0003` migráció globális forrásnyilvántartást ad az alkalmazásadatbázi
 ## A magyar eMAG vásárlói menüjének exportja saját gépről
 
 A Marketplace gyökerei nem azonosak a 13 vásárlói főcsoporttal. A tényleges menüadatok begyűjtéséhez új, külön futó eszköz készült: `scripts/export_emag_menu.py`, illetve telepítés nélküli konzolos változata `scripts/emag_menu/menu_capture.js`. Adatbázisba egyik sem ír. [Windows/Chrome parancsok és kézi export](docs/emag-menu-export.md).
+
+## Valós webshop-menü: 13 főcsoport
+
+A kategóriaböngésző most a Windowsról átadott, ellenőrzött ZIP 13 magyar főcsoportjával indul, az eredeti sorrendben. A márkák, kampányok és paraméterszűrők nem külön termékkategóriák. Paramétereket kizárólag auditált, igazolt Marketplace-kapcsolat után töltünk be; új megfeleltetést név- vagy számegyezésből nem találtunk ki. [Feldolgozási bizonyíték, hiányok, kiegészítő gyűjtő és frissítés](docs/verified-webshop-navigation.md).

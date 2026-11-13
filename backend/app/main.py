@@ -23,6 +23,9 @@ app.include_router(reference_router)
 from app.reference_sources import router as sources_router
 
 app.include_router(sources_router)
+from app.web_navigation import router as navigation_router
+
+app.include_router(navigation_router)
 
 
 @app.middleware("http")
