@@ -1,0 +1,349 @@
+{
+  "version": 1,
+  "policy": "Scoped label equivalences and semantic placement of existing top-level source scopes only. No numeric-ID equivalence or fuzzy matching.",
+  "label_aliases": [
+    {
+      "root_id": "web-dept-1",
+      "menu_name": "Laptopok",
+      "reference_name": "Laptop / Notebook"
+    },
+    {
+      "root_id": "web-dept-1",
+      "menu_name": "Tabletek és tartozékok",
+      "reference_name": "Táblagépek és tartozékok"
+    },
+    {
+      "root_id": "web-dept-7",
+      "menu_name": "Egerek",
+      "reference_name": "Egér"
+    },
+    {
+      "root_id": "web-dept-7",
+      "menu_name": "Egérpadok",
+      "reference_name": "Egérpad"
+    },
+    {
+      "root_id": "web-dept-7",
+      "menu_name": "Szoftverek",
+      "reference_name": "Szoftver"
+    },
+    {
+      "root_id": "web-dept-43",
+      "menu_name": "Vetítővásznak",
+      "reference_name": "Vetítővászon"
+    },
+    {
+      "root_id": "web-dept-7",
+      "menu_name": "Vetítővásznak",
+      "reference_name": "Vetítővászon"
+    },
+    {
+      "root_id": "web-dept-114",
+      "menu_name": "Klímák",
+      "reference_name": "Klíma"
+    },
+    {
+      "root_id": "web-dept-114",
+      "menu_name": "Kenyérsütők",
+      "reference_name": "Kenyérsütő"
+    }
+  ],
+  "source_scope_placements": [
+    {
+      "reference_name": "Háztartási készülékek",
+      "parent_id": "web-dept-114"
+    },
+    {
+      "reference_name": "Kis háztartási gépek és tartozékok",
+      "parent_id": "web-dept-114"
+    },
+    {
+      "reference_name": "Légkondicionáló és tartozékok",
+      "parent_id": "web-dept-114"
+    },
+    {
+      "reference_name": "AC & Heating",
+      "parent_id": "web-dept-114"
+    },
+    {
+      "reference_name": "Televíziók és tartozékok",
+      "parent_id": "web-dept-43"
+    },
+    {
+      "reference_name": "Audio-video és  HiFi",
+      "parent_id": "web-dept-43"
+    },
+    {
+      "reference_name": "Játékok és játékkonzolok",
+      "parent_id": "web-dept-43"
+    },
+    {
+      "reference_name": "Játékkonzol",
+      "parent_id": "web-dept-43"
+    },
+    {
+      "reference_name": "TV Acc",
+      "parent_id": "web-dept-43"
+    },
+    {
+      "reference_name": "Audio & E-Books",
+      "parent_id": "web-dept-43"
+    },
+    {
+      "reference_name": "Hangszerek",
+      "parent_id": "web-dept-43"
+    },
+    {
+      "reference_name": "Telefonok és Internet",
+      "parent_id": "web-dept-1"
+    },
+    {
+      "reference_name": "Laptopok és tartozékok",
+      "parent_id": "web-dept-1"
+    },
+    {
+      "reference_name": "Táblagépek és tartozékok",
+      "parent_id": "web-dept-1"
+    },
+    {
+      "reference_name": "Phones Acc és szolgáltatások",
+      "parent_id": "web-dept-1"
+    },
+    {
+      "reference_name": "Tabletta Acc és szolgáltatások",
+      "parent_id": "web-dept-1"
+    },
+    {
+      "reference_name": "Laptop kiegészítők",
+      "parent_id": "web-dept-1"
+    },
+    {
+      "reference_name": "Szoftver",
+      "parent_id": "web-dept-7"
+    },
+    {
+      "reference_name": "Nyomtatók és kellékanyagok",
+      "parent_id": "web-dept-7"
+    },
+    {
+      "reference_name": "Szerverek és hálózati eszközök",
+      "parent_id": "web-dept-7"
+    },
+    {
+      "reference_name": "PC Alkatrészek",
+      "parent_id": "web-dept-7"
+    },
+    {
+      "reference_name": "PC perifériák",
+      "parent_id": "web-dept-7"
+    },
+    {
+      "reference_name": "Asztali számitógépek PC",
+      "parent_id": "web-dept-7"
+    },
+    {
+      "reference_name": "LED Monitorok",
+      "parent_id": "web-dept-7"
+    },
+    {
+      "reference_name": "Egyéb perifériák",
+      "parent_id": "web-dept-7"
+    },
+    {
+      "reference_name": "Nyomtató hardver",
+      "parent_id": "web-dept-7"
+    },
+    {
+      "reference_name": "Gaming Hardware",
+      "parent_id": "web-dept-7"
+    },
+    {
+      "reference_name": "Fotó & videó tartozékok",
+      "parent_id": "web-dept-29"
+    },
+    {
+      "reference_name": "Photo-Video",
+      "parent_id": "web-dept-29"
+    },
+    {
+      "reference_name": "Okos eszközök",
+      "parent_id": "web-dept-29"
+    },
+    {
+      "reference_name": "Fénykép Egyéb",
+      "parent_id": "web-dept-29"
+    },
+    {
+      "reference_name": "Egyéb fotó- és videokiegészítők",
+      "parent_id": "web-dept-29"
+    },
+    {
+      "reference_name": "Supermarket",
+      "parent_id": "web-dept-615"
+    },
+    {
+      "reference_name": "Food and Beverages",
+      "parent_id": "web-dept-615"
+    },
+    {
+      "reference_name": "Dry Food",
+      "parent_id": "web-dept-615"
+    },
+    {
+      "reference_name": "Kávé és Tea",
+      "parent_id": "web-dept-615"
+    },
+    {
+      "reference_name": "Pet Shop",
+      "parent_id": "web-dept-615"
+    },
+    {
+      "reference_name": "Kertészet",
+      "parent_id": "web-dept-173"
+    },
+    {
+      "reference_name": "Világítás & Elektronika",
+      "parent_id": "web-dept-173"
+    },
+    {
+      "reference_name": "Barkács",
+      "parent_id": "web-dept-173"
+    },
+    {
+      "reference_name": "House Cleaning",
+      "parent_id": "web-dept-173"
+    },
+    {
+      "reference_name": "Fürdőszobai kellékek",
+      "parent_id": "web-dept-173"
+    },
+    {
+      "reference_name": "Építőanyagok",
+      "parent_id": "web-dept-173"
+    },
+    {
+      "reference_name": "Household",
+      "parent_id": "web-dept-173"
+    },
+    {
+      "reference_name": "Home Textiles",
+      "parent_id": "web-dept-173"
+    },
+    {
+      "reference_name": "Furniture and Matresses",
+      "parent_id": "web-dept-173"
+    },
+    {
+      "reference_name": "Mattresses and Toppers",
+      "parent_id": "web-dept-173"
+    },
+    {
+      "reference_name": "Otthoni dekorációk",
+      "parent_id": "web-dept-173"
+    },
+    {
+      "reference_name": "Árucikkek a legkisebbeknek",
+      "parent_id": "web-dept-199"
+    },
+    {
+      "reference_name": "Játék",
+      "parent_id": "web-dept-199"
+    },
+    {
+      "reference_name": "Kids Fashion",
+      "parent_id": "web-dept-199"
+    },
+    {
+      "reference_name": "Bags & Accessories",
+      "parent_id": "web-dept-1023"
+    },
+    {
+      "reference_name": "Apparel Woman",
+      "parent_id": "web-dept-1023"
+    },
+    {
+      "reference_name": "Apparel Man",
+      "parent_id": "web-dept-1023"
+    },
+    {
+      "reference_name": "Footwear",
+      "parent_id": "web-dept-1023"
+    },
+    {
+      "reference_name": "Care & Makeup",
+      "parent_id": "web-dept-83"
+    },
+    {
+      "reference_name": "Személyi ápolás készülékek",
+      "parent_id": "web-dept-83"
+    },
+    {
+      "reference_name": "Hygiene",
+      "parent_id": "web-dept-83"
+    },
+    {
+      "reference_name": "Perfumes",
+      "parent_id": "web-dept-83"
+    },
+    {
+      "reference_name": "Orvosi fogyóeszközök és készüléke",
+      "parent_id": "web-dept-83"
+    },
+    {
+      "reference_name": "Étrend és táplálékkiegészítők",
+      "parent_id": "web-dept-165"
+    },
+    {
+      "reference_name": "Other Sports",
+      "parent_id": "web-dept-165"
+    },
+    {
+      "reference_name": "Kerékpározás",
+      "parent_id": "web-dept-165"
+    },
+    {
+      "reference_name": "Fitness gépek",
+      "parent_id": "web-dept-165"
+    },
+    {
+      "reference_name": "Running and Triathlon",
+      "parent_id": "web-dept-165"
+    },
+    {
+      "reference_name": "Luggages",
+      "parent_id": "web-dept-165"
+    },
+    {
+      "reference_name": "Sports clothing & footwear",
+      "parent_id": "web-dept-165"
+    },
+    {
+      "reference_name": "Könyvek_",
+      "parent_id": "web-dept-79"
+    },
+    {
+      "reference_name": "Irodaszerek",
+      "parent_id": "web-dept-79"
+    },
+    {
+      "reference_name": "Autófelszerelések",
+      "parent_id": "web-dept-512"
+    },
+    {
+      "reference_name": "Gumiabroncsok és felnik",
+      "parent_id": "web-dept-512"
+    },
+    {
+      "reference_name": "Car Accessories",
+      "parent_id": "web-dept-512"
+    },
+    {
+      "reference_name": "Car Electronics",
+      "parent_id": "web-dept-512"
+    },
+    {
+      "reference_name": "Járművek",
+      "parent_id": "web-dept-512"
+    }
+  ]
+}

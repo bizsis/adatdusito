@@ -39,7 +39,7 @@ with sync_playwright() as p:
     expect(page.get_by_role("heading", name="Áttekintés", exact=True)).to_be_visible()
     expect(page.get_by_text("Alkalmazás-adatbázis", exact=True)).to_be_visible()
     page.screenshot(path=str(args.artifacts / "dashboard-desktop.png"), full_page=True)
-    page.get_by_role("navigation").get_by_role("button", name="eMAG-kategóriák").click()
+    page.get_by_role("navigation").get_by_role("button", name="Kategóriák").click()
     expected_roots = [
         "Háztartási gépek és klíma",
         "TV és szórakozás",
@@ -102,10 +102,8 @@ with sync_playwright() as p:
         "Mobile page overflows viewport"
     )
     page.screenshot(path=str(args.artifacts / "tenants-mobile.png"), full_page=True)
-    page.get_by_role("navigation").get_by_role("button", name="eMAG-kategóriák").click()
-    expect(
-        page.get_by_role("heading", name="eMAG-kategóriák", exact=True)
-    ).to_be_visible()
+    page.get_by_role("navigation").get_by_role("button", name="Kategóriák").click()
+    expect(page.get_by_role("heading", name="Kategóriák", exact=True)).to_be_visible()
     assert page.evaluate("document.documentElement.scrollWidth <= window.innerWidth")
     expect(page.locator(".tree > ul > li")).to_have_count(13)
     page.screenshot(path=str(args.artifacts / "reference-mobile.png"), full_page=True)

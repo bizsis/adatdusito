@@ -63,7 +63,13 @@ class CategoryTree:
                 self._depths[id] = depth
 
     def visible(self, view):
-        return self.navigation if view == "navigation" else self.visible_all
+        return (
+            set(self.rows)
+            if view == "archive"
+            else self.navigation
+            if view == "navigation"
+            else self.visible_all
+        )
 
     def parent(self, id, view):
         parent = self.parents[id]

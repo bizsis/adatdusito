@@ -37,6 +37,11 @@ type NavCategory = NavLink & {
   url: string | null;
   children_count: number;
   mapping_status: string;
+  mapping_method: string | null;
+  reference_name: string | null;
+  archived: boolean;
+  inactive: boolean;
+  mapping_candidates: ReferenceChoice[];
   canonical_emag_id: number | null;
   selectable: boolean;
   parameter_count: number | null;
@@ -46,6 +51,7 @@ type NavCategory = NavLink & {
   path: NavLink[];
   related_links: (NavLink & { url: string | null })[];
 };
+type ReferenceChoice = { emag_category_id: number; name: string; path_names: string[] };
 type Parameter = {
   id: number;
   category_id: number;
@@ -932,7 +938,7 @@ function ValueBrowser({
 }
 function Parameters({
   categoryId,
-  view = "navigation",
+  view = "all",
   navigationId,
 }: {
   categoryId?: number;
@@ -950,7 +956,7 @@ function Parameters({
     <>
       <section className="card padded">
         <div className="sectionbar">
-          <h2>{categoryId ? "Kategóriaparaméterek" : "Paraméterkereső"}</h2>
+          <h2>{categoryId || navigationId ? "Kategóriaparaméterek" : "Paraméterkereső"}</h2>
           <span className="badge">{data?.total ?? "…"} paraméter</span>
         </div>
         <div className="filters">
@@ -1067,8 +1073,8 @@ function ShopNode({
             {node.kind === "department"
               ? "Főcsoport"
               : node.mapping_status === "confirmed"
-                ? `Igazolt eMAG #${node.canonical_emag_id}`
-                : "Marketplace-megfeleltetésre vár"}
+                ? (node.archived ? "Archivált kategória" : "Kategória paraméterekkel")
+                : "Összerendelésre vár"}
             {node.placement_status !== "verified_tree" && (
               <span> · Besorolás ellenőrzendő</span>
             )}
@@ -1106,6 +1112,103 @@ function ShopNode({
     </li>
   );
 }
+function CategoryReview({ node, onSaved }: { node: NavCategory; onSaved: () => void }) {
+  const [query, setQuery] = useState(""),
+    [parentQuery, setParentQuery] = useState(""),
+    [reference, setReference] = useState(String(node.canonical_emag_id || "")),
+    [parent, setParent] = useState(""),
+    [error, setError] = useState(""),
+    [busy, setBusy] = useState(false);
+  const term = useDebounce(query), parentTerm = useDebounce(parentQuery);
+  const choices = useLoad<{ items: ReferenceChoice[]; total: number }>(
+    `/reference/navigation/choices/reference?q=${encodeURIComponent(term)}`,
+  );
+  const parents = useLoad<{ items: (NavLink & { path_names: string[] })[]; total: number }>(
+    `/reference/navigation/choices/parents?q=${encodeURIComponent(parentTerm)}`,
+  );
+  const current = node.canonical_emag_id ? [{
+    emag_category_id: node.canonical_emag_id,
+    name: node.reference_name || node.name,
+    path_names: [node.reference_name || node.name],
+  }] : [];
+  const candidates = [...new Map(
+    [...current, ...(node.mapping_candidates || []), ...(choices.data?.items || [])]
+      .map(c => [c.emag_category_id, c]),
+  ).values()];
+  async function save(body: object) {
+    setBusy(true);
+    setError("");
+    try {
+      await api(`/reference/navigation/${encodeURIComponent(node.id)}/assignment`, "POST", body);
+      onSaved();
+    } catch (e) {
+      setError((e as Error).message);
+    } finally {
+      setBusy(false);
+    }
+  }
+  return (
+    <details>
+      <summary>Kategória besorolásának pontosítása (adminisztrátor)</summary>
+      {!node.id.startsWith("ref-") && (
+        <form onSubmit={e => {
+          e.preventDefault();
+          save({ canonical_emag_id: Number(reference) });
+        }}>
+          <label>
+            Meglévő kategória keresése
+            <input value={query} onChange={e => setQuery(e.target.value)} />
+          </label>
+          <label>
+            Megfelelő kategória kiválasztása
+            <select aria-label="Megfelelő kategória kiválasztása" required
+              value={reference} onChange={e => setReference(e.target.value)}>
+              <option value="">Válassz kategóriát</option>
+              {candidates.map(c => (
+                <option key={c.emag_category_id} value={c.emag_category_id}>
+                  {c.path_names.join(" / ")} · #{c.emag_category_id}
+                </option>
+              ))}
+            </select>
+          </label>
+          <ErrorBox message={choices.error} />
+          {choices.data && choices.data.total > 50 && (
+            <p>Pontosítsd a keresést a további kategóriákhoz.</p>
+          )}
+          <button disabled={busy}>Kategória összekapcsolása</button>
+        </form>
+      )}
+      <form onSubmit={e => {
+        e.preventDefault();
+        save({ parent_id: parent || null });
+      }}>
+        <label>
+          Szülőkategória keresése
+          <input value={parentQuery} onChange={e => setParentQuery(e.target.value)} />
+        </label>
+        <label>
+          Elhelyezés a közös fában
+          <select aria-label="Elhelyezés a közös fában"
+            value={parent} onChange={e => setParent(e.target.value)}>
+            <option value="">Elhelyezetlenül marad</option>
+            {parents.data?.items.filter(c => c.id !== node.id).map(c => (
+              <option key={c.id} value={c.id}>{c.path_names.join(" / ")}</option>
+            ))}
+          </select>
+        </label>
+        <ErrorBox message={parents.error} />
+        {parents.data && parents.data.total > 50 && (
+          <p>Pontosítsd a szülőkategória keresését a további találatokhoz.</p>
+        )}
+        <button disabled={busy}>Elhelyezés mentése</button>
+      </form>
+      <button disabled={busy} onClick={() => save({ reset: true })}>
+        Automatikus besorolás visszaállítása
+      </button>
+      <ErrorBox message={error} />
+    </details>
+  );
+}
 function ShopDetails({
   id,
   onSelect,
@@ -1117,9 +1220,7 @@ function ShopDetails({
   onChildren: (n: NavCategory) => void;
   onMappingUpdated: () => void;
 }) {
-  const [rev, setRev] = useState(0),
-    [error, setError] = useState(""),
-    [busy, setBusy] = useState(false);
+  const [rev, setRev] = useState(0);
   const result = useLoad<NavCategory>(
     `/reference/navigation/${encodeURIComponent(id)}`,
     rev,
@@ -1171,25 +1272,15 @@ function ShopDetails({
         <span className={"badge " + (node.selectable ? "good" : "")}>
           {node.selectable
             ? "Termékbesorolásra választható"
-            : node.kind === "department" || node.kind === "section"
-              ? "Strukturális navigáció"
+            : node.kind === "department" || node.kind === "section" || node.inactive
+              ? "Strukturális / termékbesorolásra nem választható"
               : "Besorolás előtt ellenőrzendő"}
         </span>
-        <p className="small muted">
-          Webshop menüazonosító:{" "}
-          {node.source_item_id || node.source_department_id} · ez nem
-          Marketplace-azonosító
-        </p>
-        {node.canonical_emag_id && (
-          <p>
-            Igazolt Marketplace eMAG-ID:{" "}
-            <strong>{node.canonical_emag_id}</strong>
-          </p>
-        )}
         {node.hierarchy_status === "needs_review" && (
           <p className="warning">
-            A főcsoporthoz tartozás bizonyított, de a pontos belső
-            szekciókapcsolat további forrásadatot igényel.
+            Ez a kategória nincs a normál kategóriafába besorolva, vagy inaktív.
+            A paraméterei továbbra is megtekinthetők; az adminisztrátor szükség
+            esetén pontosíthatja az elhelyezését.
           </p>
         )}
         <div className="facts">
@@ -1222,128 +1313,22 @@ function ShopDetails({
         )}
         {node.mapping_status !== "confirmed" && node.kind === "category" && (
           <p className="notice">
-            A webshop-menü bejegyzéséhez még nincs igazolt
-            Marketplace-kapcsolat. Paramétereket névegyezés vagy menüazonosító
-            alapján nem kapcsolunk hozzá.
+            Nincs egyértelmű kategóriaegyezés. Az adminisztrátor kiválaszthatja
+            a megfelelő meglévő kategóriát.
           </p>
         )}
+        {node.archived && <p className="warning">Archivált vagy töröltnek jelölt kategória. A paraméterei megtekinthetők, termékbesorolásra nem választható.</p>}
         {who.data?.permissions.includes("system.manage") &&
           ["category", "section"].includes(node.kind) && (
-            <details>
-              <summary>Igazolt Marketplace-megfeleltetés rögzítése</summary>
-              <form
-                onSubmit={async (e) => {
-                  e.preventDefault();
-                  const f = new FormData(e.currentTarget);
-                  setBusy(true);
-                  setError("");
-                  try {
-                    await api("/reference/sources/observations", "POST", {
-                      source_key: "emag_webshop",
-                      source_category_id: node.id,
-                      evidence_url: f.get("evidence_url"),
-                      outcome: "available",
-                      mapping_status: "confirmed",
-                      canonical_emag_id: Number(f.get("canonical_id")),
-                      evidence_kind: f.get("evidence_kind"),
-                      content_sha256: f.get("hash"),
-                      summary: f.get("summary"),
-                    });
-                    setRev(rev + 1);
-                    onMappingUpdated();
-                  } catch (e) {
-                    setError((e as Error).message);
-                  } finally {
-                    setBusy(false);
-                  }
-                }}
-              >
-                <p className="warning">
-                  A menüazonosító, a névegyezés és a numerikus URL önmagában nem
-                  bizonyít Marketplace-kapcsolatot. Csak külső bizonyítékkal
-                  igazolt megfeleltetést rögzíts.
-                </p>
-                <label>
-                  Marketplace eMAG-kategóriaazonosító
-                  <input name="canonical_id" type="number" min="1" required />
-                </label>
-                <label>
-                  Bizonyíték típusa
-                  <select name="evidence_kind">
-                    <option value="explicit_marketplace_id">
-                      Explicit Marketplace-azonosító a forrásban
-                    </option>
-                    <option value="documented_crosswalk">
-                      Dokumentált megfeleltetés
-                    </option>
-                  </select>
-                </label>
-                <label>
-                  Bizonyíték publikus eMAG HTTPS-hivatkozása
-                  <input
-                    type="url"
-                    name="evidence_url"
-                    defaultValue={node.url || ""}
-                    required
-                    maxLength={1000}
-                  />
-                </label>
-                <label>
-                  Bizonyíték SHA-256 hash-e
-                  <input
-                    name="hash"
-                    required
-                    pattern="[a-f0-9]{64}"
-                    minLength={64}
-                    maxLength={64}
-                  />
-                </label>
-                <label>
-                  Azonosság indoklása
-                  <textarea
-                    name="summary"
-                    required
-                    minLength={10}
-                    maxLength={2000}
-                  />
-                </label>
-                <label className="check">
-                  <input type="checkbox" required />
-                  Nem pusztán név- vagy számegyezés alapján erősítem meg.
-                </label>
-                <ErrorBox message={error} />
-                <button disabled={busy}>Megfeleltetés megerősítése</button>
-              </form>
-              {node.mapping_status === "confirmed" && (
-                <button
-                  disabled={busy}
-                  onClick={async () => {
-                    try {
-                      await api("/reference/sources/observations", "POST", {
-                        source_key: "emag_webshop",
-                        source_category_id: node.id,
-                        evidence_url: node.url,
-                        outcome: "partial",
-                        mapping_status: "pending",
-                        summary:
-                          "A korábbi megfeleltetés felülvizsgálatra visszavonva.",
-                      });
-                      setRev(rev + 1);
-                      onMappingUpdated();
-                    } catch (e) {
-                      setError((e as Error).message);
-                    }
-                  }}
-                >
-                  Megfeleltetés visszavonása
-                </button>
-              )}
-            </details>
+            <CategoryReview key={node.id + "-" + rev} node={node} onSaved={() => {
+              setRev(rev + 1);
+              onMappingUpdated();
+            }} />
           )}
       </section>
       {node.mapping_status === "confirmed" &&
         ["category", "section"].includes(node.kind) && (
-          <Parameters key={id + "-" + rev} navigationId={id} view="all" />
+          <Parameters key={id + "-" + rev} navigationId={id} view={node.archived ? "archive" : "all"} />
         )}
       {!!node.related_links.length && (
         <section className="card padded">
@@ -1396,13 +1381,21 @@ function Categories() {
     manifest_link_count: number;
     hierarchy_needs_review: number;
     confirmed_bindings: number;
+    reference_coverage?: {
+      reference_total: number;
+      placed_reference_count: number;
+      auto_mapped_reference_count: number;
+      automatically_arranged_reference_count: number;
+      review_reference_count: number;
+      unplaced_reference_count: number;
+    };
   }>("/reference/navigation/coverage", mappingRevision);
   return (
     <>
       <p className="notice">
-        A valós magyar eMAG-menü 13 főcsoportja, eredeti sorrendben. A webshop
-        menüazonosítói és a Marketplace-kategóriaazonosítók különböznek;
-        paraméter csak igazolt megfeleltetés után jelenik meg.
+        Egyetlen közös kategóriafa a 13 magyar főcsoporttal. A meglévő
+        kategóriák paraméterei automatikusan elérhetők az egyértelmű egyezéseknél.
+        A még el nem helyezett kategóriákat külön nézetben is megtalálod.
       </p>
       <ErrorBox message={coverage.error} />
       {coverage.data && (
@@ -1410,7 +1403,10 @@ function Categories() {
           {[
             [coverage.data.root_count, "Valós főcsoport"],
             [coverage.data.manifest_link_count, "Rögzített menühivatkozás"],
-            [coverage.data.confirmed_bindings, "Igazolt Marketplace-kapcsolat"],
+            [coverage.data.reference_coverage?.reference_total ?? "–", "Meglévő kategória"],
+            [coverage.data.reference_coverage?.automatically_arranged_reference_count ?? "–", "Automatikusan elhelyezett"],
+            [coverage.data.reference_coverage?.review_reference_count ?? "–", "Felülvizsgálandó kategória"],
+            [coverage.data.reference_coverage?.unplaced_reference_count ?? "–", "Elkülönített / el nem helyezett"],
             [
               coverage.data.hierarchy_needs_review,
               "Ellenőrzendő szekciókapcsolat",
@@ -1450,14 +1446,14 @@ function Categories() {
                 setOffset(0);
               }}
             >
-              <option value="tree">Hitelesített kategóriafa</option>
-              <option value="unclassified">Ellenőrzendő besorolású elemek</option>
+              <option value="tree">Közös kategóriafa</option>
+              <option value="unclassified">Felülvizsgálandó és el nem helyezett kategóriák</option>
             </select>
           </label>
           {scope === "unclassified" && !query && (
             <p>
-              A bizonytalan vagy hiányzó szülőkapcsolatú elemek külön listája.
-              Nem főkategóriák.
+              A felülvizsgálandó, inaktív, hiányzó szülőjű és el nem helyezett kategóriák
+              külön listája, a meglévő paramétereikkel. Nem főkategóriák.
             </p>
           )}
           <label>
@@ -1503,8 +1499,8 @@ function Categories() {
             <section className="card padded empty-detail">
               <h2>Válassz egy főcsoportot</h2>
               <p>
-                A plusz gombbal nyisd meg az almenüt. A szekciók és
-                kategóriahivatkozások a bizonyított HTML-kapcsolatot követik.
+                A plusz gombbal nyisd meg az alkategóriákat. Kategóriaválasztás
+                után megjelennek a hozzá tartozó paraméterek.
               </p>
             </section>
           )}
@@ -1527,6 +1523,11 @@ function ReferenceSources() {
       source_key: string;
       outcome: string;
       mapping_status: string;
+  mapping_method: string | null;
+  reference_name: string | null;
+  archived: boolean;
+  inactive: boolean;
+  mapping_candidates: ReferenceChoice[];
       summary: string;
       evidence_url: string;
       observed_at: string;
@@ -1919,7 +1920,7 @@ function App() {
     ...(can("users.manage") ? [["users", "♙", "Felhasználók"]] : []),
     ...(can("reference.read")
       ? [
-          ["categories", "⌘", "eMAG-kategóriák"],
+          ["categories", "⌘", "Kategóriák"],
           ["parameters", "≡", "Paraméterkereső"],
         ]
       : []),
@@ -2063,7 +2064,7 @@ function App() {
                     onClick={() => setPage("categories")}
                   >
                     <span>⌘</span>
-                    <h2>eMAG-kategóriák</h2>
+                    <h2>Kategóriák</h2>
                     <p>Hierarchia, paraméterek és megengedett értékek.</p>
                     <b>Referenciaböngésző →</b>
                   </button>

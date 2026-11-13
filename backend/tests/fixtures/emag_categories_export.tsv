@@ -1,0 +1,2670 @@
+id	emag_category_id	name	parent_id	is_allowed	parameter_count
+1	2	Processzorok	657	1	21
+2	3	Memóriák	657	1	12
+3	4	Merevlemezek	657	1	12
+4	5	LCD & LED monitorok	1512	1	39
+5	6	Asztali számítógép	1485	0	70
+6	7	Kompakt fényképezőgépek	1494	1	40
+7	8	Nyomtatók és multifunkciós nyomtatók	398	1	61
+8	9	PC Hangszórók	662	1	21
+9	10	Billentyűzetek	662	1	17
+10	11	Egér	662	1	16
+11	12	Hub-ok	663	1	7
+12	13	Hálózati kártyák	663	1	8
+13	14	Laptop / Notebook	1486	0	68
+14	15	Mobiltelefonok	754	0	43
+15	16	Webkamerák	662	1	15
+16	17	Mobiltelefon tartozékok	2065	0	0
+17	18	Fóliázók	2620	1	20
+18	19	Wireless adapterek	690	1	12
+19	20	Csatlakozási pontok	690	1	12
+20	21	Memóriakártya	2065	1	11
+21	22	Digitális rajztáblák	662	1	16
+22	23	Hangrögzítők	580	1	29
+23	24	Külső merevlemezek	662	1	18
+24	25	Fotonyomtatók	398	0	0
+25	26	Wireless Routerek	690	1	20
+26	27	Projektor tartozékok	2666	1	25
+27	28	Szünetmentes tápegység	370	1	31
+28	29	UPS vezérlőszoftver nélkül	370	0	40
+29	30	Hálózati antennák és kiegészítők	690	1	15
+30	31	Kártyaolvasó	668	1	8
+31	32	Eszpresszó kávéfőzők	846	1	29
+32	33	Turmixgépek és aprítók	847	1	18
+33	34	Konyhai robotgépek	847	1	23
+34	35	Hajszárítók	1516	1	17
+35	36	GPS Navigációs rendszerek	691	1	35
+36	37	Játékok PC-re és konzolra	829	0	17
+37	38	PC játékok	829	0	0
+38	39	Digitális képkeretek	824	1	22
+39	40	Számítógépházak	657	1	15
+40	41	Tápegységek	657	1	12
+41	43	Tükörreflexes fényképezőgépek	1494	0	56
+42	44	Vasalók, gőzölős vasalók és gőzállomások	812	1	23
+43	45	Párolók és aszalógépek	850	1	27
+44	46	Olajsütők	850	1	21
+45	47	Kenyérpirítók	848	1	15
+46	48	Gyümölcscentrifugák	845	1	20
+47	49	Mixerek	847	1	16
+48	50	Hősugárzók	3916	1	12
+49	51	Processzor hűtők	779	1	9
+50	52	Hűtőzselé	775	1	7
+51	53	PC ventilátorok	779	1	8
+52	54	Egérpad	662	1	6
+53	55	Laptop táskák	450	1	16
+54	56	Laptop memóriák	657	1	12
+55	57	Laptop merevlemezek	657	1	15
+56	58	Porszívók	402	1	27
+57	60	Hajgöndörítők és hajsütővasak	1516	1	24
+58	61	Hajvasalók	1516	1	21
+59	62	Személymérlegek	811	1	20
+60	63	Epilátorok	1514	1	26
+61	64	Masszírozó gép	533	1	26
+62	65	Elektromos fogkefék	1513	1	23
+63	66	Elemek, akkumulátorok és töltők	824	1	18
+64	67	Speciális akkumulátorok és töltők	824	1	18
+65	68	Háromlábú állvány	824	1	18
+66	70	Objektívek	824	1	26
+67	71	Egyéb fotó kiegészítők	824	1	14
+68	72	DSLR szűrők	824	1	15
+69	73	Tabletek	1487	0	50
+70	74	Távcsövek és spektívek	933	1	30
+71	75	Médialejátszók	938	1	26
+72	76	Különféle perifériák	662	1	7
+73	77	Gamepad	2661	0	0
+74	78	Ventilátorok és léghűtők	413	1	25
+75	79	Televíziók	1496	1	46
+76	80	Háztartási nagygépek alkatrészek és tartozékok	2546	0	0
+77	81	Iratmegsemmisítők	2620	1	22
+78	82	Papírvágó	2620	1	20
+79	83	Laminált fóliák	2620	1	11
+80	84	Spirálozógépek és tartozékok	2620	1	25
+81	85	Solid-State Drive (SSD meghajtó)	657	1	14
+82	86	Hosszabbítók/Elosztók	364	1	23
+83	87	Távirányítók	682	1	13
+84	89	Varrógépek	812	1	30
+85	90	Húsdarálók	847	1	17
+86	91	Konyhai mérlegek	488	1	16
+87	92	Kenyérsütőgépek	848	1	18
+88	93	Kávédarálók	846	1	15
+89	94	Levegőkezelő berendezések	2338	0	0
+90	95	Elrendezés és arhiválás	1507	0	0
+91	96	Kommunikációs és prezentációs eszközök	1507	0	0
+92	98	Feszültség stabilizátorok	370	1	24
+93	100	Tisztító készletek	682	1	10
+94	101	Tablet tartozékok	2306	0	0
+95	102	Hajformázók és hajsimító kefék	1516	1	24
+96	103	eBook olvasók	808	1	25
+97	104	Kávéfőzők	846	1	20
+98	105	Szeletelőgépek	847	1	20
+99	106	Hajcsavarók	1516	1	20
+100	108	Elektromos fogkefe és szájzuhany tartozékok	1513	1	12
+101	109	Szakállvágó kiegészítő	1514	1	14
+102	110	Ajtózárak	3804	1	18
+103	111	Festő és vakoló szerszámok	2839	1	18
+104	112	Csiszológép	360	1	27
+105	113	Sarokcsiszolók és köszörűk	360	1	23
+106	114	Elektromos generátorok	348	1	36
+107	115	Kompresszorok	348	1	25
+108	116	Autókozmetika	1414	1	15
+109	117	Tartozékok szállító és emelőberendezésekhez	3804	1	9
+110	118	Kulcsok és kulcskészletek	351	1	22
+111	119	Autós kompresszorok	347	1	19
+112	120	Autós porszívók	1414	1	14
+113	121	Autó inverterek, áramátalakítók	347	1	15
+114	122	Zseblámpák	364	1	25
+115	123	Teleszkópok	933	1	21
+116	125	Akkumulátortöltők	347	1	19
+117	126	Ajtó hengerek zárbetétek	3804	1	9
+118	127	Fúrók és csavarozók	360	1	30
+119	128	Fűrészek, fémfűrészek	360	1	13
+120	129	Zsanérok	3804	1	16
+121	130	Hegesztőgép	360	1	22
+122	131	Elektromos fűrész tartozékok	360	1	10
+123	132	Láncfűrész tartozékok	349	1	16
+124	133	Esőztetők	349	1	16
+125	134	Marógépek	360	1	27
+126	135	Hegesztőgép tartozékok	360	1	12
+127	136	Accesorii insurubat Deleted	360	0	0
+128	137	Villák	349	1	10
+129	138	Fűkaszák és szegélynyírók	349	1	32
+130	139	Lombszívók és szecskázók	349	1	23
+131	140	Láncfűrész	349	1	32
+132	141	Kézi permetezők	349	1	13
+133	142	Házi vízművek	349	1	26
+134	143	MILC fényképezőgépek	1494	1	56
+135	144	Írószerek	1507	0	0
+136	145	Elektromos keverőgépek	360	1	20
+137	146	Serpenyő	1603	1	21
+138	147	Fazekak és lábasok	1603	1	20
+139	148	TV tartozékok	682	1	25
+279	149	PlayStation tartozékok	761	1	0
+280	152	Hardver konzolok	762	0	36
+281	153	Adatvédelmi szűrők	2620	1	12
+282	154	Fűnyíró gépek	349	1	38
+283	155	Vezetékes fejhallgatók	449	0	16
+284	156	Hókotró eszközök	349	1	12
+285	157	Sövényvágók	349	1	26
+286	158	Elektromos gyaluk	360	1	23
+287	159	Kompresszor tartozékok	360	1	21
+288	160	Készletek és tartozékok fúráshoz és csavaráshoz	360	1	15
+289	161	Bojlerek	3754	1	31
+290	162	Kávé	3705	1	18
+291	163	Marógép tartozékok	360	1	18
+292	164	Autószerelő szerszámok	1458	1	17
+293	165	Masini de lustruit	2661	0	0
+294	166	Tömlők	349	1	16
+295	167	Gereblyék	351	1	13
+296	168	Szerszámkészletek	351	1	11
+297	257	Szkennerek	398	1	38
+298	258	Videokártyák	657	1	56
+299	259	Alaplapok	657	1	45
+300	261	Videókamerák	626	1	34
+301	262	Mátrix nyomtatók	398	1	31
+302	263	Hangkártyák	657	1	19
+303	264	DVD író	657	1	35
+304	265	Projektorok	2666	1	35
+305	266	Házimozi rendszerek	938	1	29
+306	267	DVD & Blu-Ray lejátszók	938	1	29
+307	268	Hangrendszerek	938	1	34
+308	269	Routerek	663	0	0
+309	270	Nyomtatószerverek	663	1	14
+310	271	Lézernyomtatók	398	0	0
+311	273	Autóhifi fejegységek és Autós DVD lejátszók	691	1	23
+312	275	Kellékanyagok	837	0	0
+313	276	Vezeték nélküli telefonok	754	1	53
+314	277	USB Memóriák	662	1	9
+315	278	Külső optikai meghajtók	662	1	41
+316	279	MP3 & MP4 lejátszók	580	1	21
+317	280	Lejátszók & vevők	401	1	29
+318	283	Aplicatii desktop OEM	574	0	0
+319	287	PC fejhallgatók	662	1	16
+320	288	Autós mélynyomók és hangszórók	691	1	15
+321	289	Fénymásolópapír	2603	1	6
+322	291	Powerball	829	1	0
+323	292	Kontakt grillek	850	1	17
+324	293	Külső merevlemez ház	775	1	7
+325	294	Laptop töltő	450	1	14
+326	295	Vízforralók	845	1	15
+327	296	Szakállvágók, villanyborotvák	1514	1	25
+328	297	Trimmelők	1514	1	24
+329	298	Fotós-videós táskák és tokok	824	1	15
+330	299	Vakuk	824	1	22
+331	303	Laptop állványok/hűtők	450	1	20
+332	305	NAS tartozékok & alkatrészek	950	1	15
+333	306	Kábelek és adapterek	682	1	9
+334	307	Állványok és tartók	682	1	19
+335	308	Erősítők	401	1	30
+336	309	Lejátszók	401	1	0
+337	310	Hangszórók	401	0	54
+338	311	Mikroszkópok	933	1	30
+339	312	Tintapatronok	275	1	14
+340	313	eBook olvasó tartozékok	808	1	8
+341	314	Epilátor tartozékok	1514	1	19
+342	315	Fejhallgató és lejátszó tartozékok	580	1	10
+343	316	Wireless audio rendszerek	401	0	0
+344	317	Lemezjátszók	401	1	22
+345	318	Nagyítók és optikai eszközök	933	1	20
+346	320	Autó elektronikai kiegészítők	691	1	8
+347	323	Audio Hi-Fi tartozékok	401	1	22
+348	326	NAS	950	1	23
+349	327	Egyéb tartozékok	450	1	13
+350	328	Szendvicssütők	848	1	19
+351	329	Szemhéjfesték	1294	1	15
+352	330	Fúrókalapács	360	1	30
+353	331	Öntözőpisztolyok	349	1	13
+354	332	Ipari melegítők	348	1	21
+355	333	PowerLAN adapterek	663	1	12
+356	334	Hegesztő felszerelés	348	1	11
+357	343	Hagyományos képkeretek	1547	1	10
+358	344	Szivattyúk	349	1	33
+359	345	Autófesték tartozékok	1458	0	0
+360	346	Szintezők és távolságmérők	351	1	22
+361	347	Autófelszerelés	3703	0	0
+362	348	Elektromos felszerelések	931	0	0
+363	349	Kertészet	NULL	0	0
+364	350	Elektromos fűrészek	360	1	34
+365	351	Szerszámok & Raktározás	931	0	0
+366	360	Elektromos barkács	931	0	0
+367	361	Rádióallomások és Radardetektorok	691	1	13
+368	362	Sport videókamerák	626	1	36
+369	363	Mikrohullámú sütők	3965	1	22
+370	364	Világítás & Elektronika	NULL	0	0
+371	365	Izzók	364	1	25
+372	366	Fali és mennyezeti lámpák	364	1	30
+373	367	Vetítővászon	2666	1	17
+374	368	Blu-ray és DVD filmek	869	1	22
+375	369	TV Tunere	657	0	0
+376	370	Szünetmentes tápegységek	838	0	0
+377	371	Switch kezelőszoftverrel	670	1	16
+378	372	Switch kezelőszoftver nélkül	670	1	20
+379	374	Vezetékes telefonok	754	1	35
+380	376	Szünetmentes tápegység tartozékok	370	1	21
+381	377	Számológép	2611	1	20
+382	380	Laptop akkumulátorok	450	1	12
+383	384	Hűtőszekrények	3966	1	45
+384	385	Mosógépek	3967	1	45
+385	386	Beépíthető sütők	3965	1	28
+386	387	Vasaló, gőzölős vasaló és gőzállomás tartozékok	629	1	17
+387	391	Tűzhelyek	3965	1	38
+388	392	Beépíthető páraelszívók DELETED	2661	0	0
+389	395	Nyomtató kiegészítők	275	1	12
+390	398	Nyomtatók	1746	0	0
+391	399	Iroda & Asztali alkalmazások	574	1	14
+392	401	Audio Hi-Fi	1497	0	0
+393	402	Háztartás	1490	0	0
+394	404	Aparate pentru preparat clatite deleted	1490	0	0
+679	405	Főzőlapok	3965	1	31
+680	406	Elektromos mini sütők	850	1	26
+681	407	Térfigyelő kamerák	408	1	24
+682	408	Megfigyelő és biztonsági rendszerek	838	0	0
+683	409	Pszichológia	903	1	20
+684	410	Klíma	413	0	49
+685	411	Mosogatógépek	3967	1	36
+686	413	Léghűtők	2338	0	0
+687	414	Klíma tartozékok	2338	1	22
+688	417	Csatlakozók	401	1	0
+689	419	Beépíthető készülékek	1488	0	0
+690	420	Szerverek	659	1	56
+691	421	Szerver processzorok	733	1	13
+692	422	Szerver merevlemezek	733	1	11
+693	423	Kábelek és tartozékok	663	1	17
+694	425	Beépíthető mosogatógépek DELETED	2661	0	0
+695	427	Hűtőszekrény alkatrészek és tartozékok	80	1	16
+696	435	Nagyformátumú nyomtatók	398	1	54
+697	438	Konyhai mosogatótálcák	2764	1	28
+698	439	Porszívó alkatrészek és tartozékok	629	1	17
+699	440	Háztartási kisgép kiegészítők	629	1	17
+700	442	Külső merevlemez tartozékok	662	1	6
+701	444	Instant fényképezőgépek	1494	1	35
+702	449	Fejhallgatók & tartozékok	2601	0	0
+703	450	Laptop tartozékok	1484	0	0
+704	453	Monitor kiegészítők	1512	1	12
+705	455	Szerver memóriak	733	1	8
+706	456	Szalag meghajtók	733	1	18
+707	467	Switch tartozékok	670	1	9
+708	468	Média átalakítók	663	1	13
+709	469	VoIP berendezések	663	1	25
+710	470	KVM Switch-ek	840	1	13
+711	471	Fémszekrények	659	1	8
+712	473	Szerver tartozékok	733	1	20
+713	478	Fém szekrénytartozékok	659	1	3
+714	480	KVM switch tartozékok	840	1	2
+715	481	IT tartozékok	657	1	3
+716	482	Blu Ray	657	1	43
+717	488	Konyhai felszerelések	1490	0	0
+718	490	Kép és videószerkesztés	574	1	0
+719	493	Kések és kés készletek	1607	1	13
+720	496	Merevlemez hűtők	779	1	8
+721	497	VGA Coolerek	779	1	18
+722	500	Ventilátor vezérlők	775	1	8
+723	447	Címkézőgépek	398	1	29
+724	502	Arcszauna Deleted	811	0	0
+725	504	Telekonferencia rendszerek	663	1	20
+726	505	Televízió-, internet- és mobilszolgáltatások	2306	1	28
+727	510	Szerver optikai meghajtók	733	1	2
+728	513	Szünetmentes tápegység kiegészítők	809	1	2
+729	514	Audio tartozékok	682	1	0
+730	515	Vérnyomásmérők	4337	1	22
+731	516	Lázmérők	930	1	21
+732	517	Vércukorszintmérők	4337	0	19
+733	519	Vákuumcsomagoló gépek	488	1	24
+734	520	Vízszűrő kancsók	3008	1	17
+735	522	PDU	659	1	10
+736	523	Beépíthető mikrohullámú sütők DELETED	2661	0	0
+737	525	Páraelszívók	3965	1	35
+738	526	Időjárásmérő rendszerek	826	1	34
+739	527	Órák és rádiós ébresztőórák	401	1	19
+740	529	Mosógép és szárítógép alkatrészek és tartozékok	80	1	17
+741	532	Digitális hőmérők	826	1	11
+742	533	Wellness termékek	1491	0	0
+743	535	Tűzhely alkatrészek és tartozékok	80	1	18
+744	536	Desszert készítő kisgépek	850	1	23
+745	537	Kiterjesztett garancia termékek	855	0	0
+746	539	Pelenkák és bugyik	1370	1	13
+747	540	Baba videómonitorok	1355	1	29
+748	541	Interaktív táblák	2666	1	24
+749	542	Cumisüvegek, cumik és tartozékok	3942	1	11
+750	545	Kerti rovarriasztók	1675	1	19
+751	547	Minikonyhák Deleted	2661	0	0
+752	548	Mosószer	3422	1	9
+753	549	Mosogatószer	3424	1	7
+754	550	Borotvák	1302	1	16
+755	551	Fogselyem	928	1	16
+756	552	Szájvizek	928	1	15
+757	553	Szájzuhanyok	1513	1	24
+758	554	DVR és NVR rendszerek	408	1	16
+759	555	Felügyeleti és biztonsági készlet	408	1	48
+760	556	Hozzáférés-ellenőrzési és felügyeleti tartozékok	408	1	16
+761	557	Autóriasztók és tolatóradarok	691	1	7
+762	571	eMAG Adományozás	1518	0	0
+763	573	3D Nyomtatás	1746	0	0
+764	574	Szoftver	NULL	0	0
+765	575	Étrend és táplálékkiegészítők	NULL	0	0
+766	577	Tokok, táskák és védőházak	797	1	14
+767	578	Akciókamera tartók és rögzítő rendszerek	797	1	10
+768	580	Lejátszók & hordozható hangszórók	2601	0	0
+769	581	Kamera stabilizátorok	824	1	20
+770	582	Kontrollerek, kormányok és gaming fejhallgatók	761	0	24
+771	584	Aspiratoare profesionale Deleted	402	0	0
+772	585	Aspiratoare cu spalare Deleted	402	0	0
+773	587	Más iskolai kellékek	2653	1	13
+774	590	Művészet	894	1	19
+775	604	Hanglemezek és zenei CD-k	869	1	22
+776	605	Szépirodalom	872	1	22
+777	609	Utazás	1506	0	0
+778	610	Arcmaszkok és bőrradírok	1302	1	18
+779	621	Elektronikus utalványok	619	0	4
+780	626	Videokamera	1495	0	0
+781	628	Intim ápolás	3721	0	0
+782	629	Háztartási Gépek	1490	0	0
+783	630	Fejszék	349	1	14
+784	631	DVR autó kamerák	691	1	34
+785	632	Játék takarító készletek	868	1	12
+786	635	Aspiratoare cu apa Deleted	402	0	0
+787	640	Adaptor-convertor DSLR	781	0	0
+788	641	3D kellékek	573	1	11
+789	642	Multifunkciós szerszámok és kiegészítők	360	1	29
+790	650	Antivírusok	574	1	12
+791	651	Operációs rendszerek	574	1	11
+792	657	Alkatrészek	1483	0	0
+793	659	Szerver	838	0	0
+794	661	Vérnyomásmérő tartozékok	4337	1	13
+795	662	Perifériák	1484	0	0
+796	663	Hálózat	838	0	0
+797	668	Fotó & videó tartozékok	NULL	0	0
+798	670	Kapcsolók	838	0	0
+799	673	Szárítógépek	3967	1	31
+800	680	Gázkazánok	3754	1	47
+801	682	TV Audio tartozékok	2595	0	0
+802	683	Tusfürdők	3779	1	15
+803	684	Mozgást segítő eszközök és termékek	4338	1	16
+804	686	Baba audiomonitorok	1355	1	20
+805	687	Púder és arcpirosító	1294	1	18
+806	688	Kozmetikai tükör	1294	1	20
+807	689	Categorie stearsa	NULL	0	0
+808	690	Wireless	838	0	0
+809	691	GPS Navigációs rendszerek és Autó-Motor elektronika	3704	0	0
+810	695	CD portabil Deleted	2601	0	0
+811	700	Síkosítók	3902	1	10
+812	703	Hallókészülékek	4337	1	11
+813	714	Festékszalagok	275	1	16
+814	716	PDA kiegészítők	754	0	0
+815	731	Laptop matricák és védőfóliák	450	1	9
+816	733	Szerver alkatrészek	838	0	0
+817	745	Software-nelistat	2661	0	0
+818	746	Kombinált hűtők	3966	1	47
+819	748	Önbarnítók	3907	1	16
+820	752	Egyéb konyhai kisgépek	488	1	0
+821	754	Telefonok és Internet	NULL	0	0
+822	546	Csaptelepek	2764	1	19
+823	747	Elsősegély készletek	937	1	11
+824	761	Játékok és játékkonzolok	NULL	0	0
+825	762	Játékkonzol	NULL	0	0
+826	763	Játékkonzol tartozékok	761	1	15
+827	764	Care & Makeup	NULL	0	0
+828	775	PC Modding	1483	0	0
+829	779	Coolerek és Ventilátorok	1483	0	0
+830	783	Laptop billentyűzetek	450	1	14
+831	789	Főzőlap alkatrészek és tartozékok	80	1	15
+832	791	Aparate de spalat cu presiune Deleted	488	0	0
+833	792	Etikett címkék	275	1	17
+834	797	Akció kamera tartozékok	668	0	0
+835	798	Lampi video	727	0	0
+836	799	Egyéb videó kiegészítők	797	1	14
+837	802	Laptop biztonsági rendszerek	450	1	11
+838	804	Aspiratoare cu filtrare apa Deleted	402	0	0
+839	808	eBook olvasók & tartozékok	2601	0	0
+840	809	Szünetmentes tápegységek szerverekhez	838	0	0
+841	810	Hajápolás és hajformázás	764	0	0
+842	811	Egészség	1491	0	0
+843	812	Ruhaápolás	1490	0	0
+844	813	Drónok & tartozékok	2661	0	0
+845	814	Akciókamera akkumulátorok és töltők	797	1	19
+846	815	Hangprojektorok	938	1	24
+847	816	Vércukorszintmérő tartozékok	4337	1	14
+848	817	Sminkecsetek, applikátorok	1294	1	18
+849	820	Gőztisztítók és elektromos felmosók	402	1	24
+850	821	Sütő alkatrészek és tartozékok	80	1	13
+851	823	Prese de calcat Deleted	812	0	0
+852	824	Fotó kiegészítők	668	0	0
+853	826	Meteorológia	2338	0	0
+854	828	Dekoratív panelek	2661	0	0
+855	829	Játékok	761	0	0
+856	830	Dokkoló állomások	450	1	16
+857	832	Lézernyomtató tonerek	275	1	13
+858	837	Nyomtatók és kellékanyagok	NULL	0	0
+859	838	Szerverek és hálózati eszközök	NULL	0	0
+860	840	KVM switch-ek és tartozékok	838	0	0
+861	841	Köröm és sarokreszelők	3051	1	13
+862	842	Terhességi és ovulációs tesztek	4189	1	11
+863	843	Nagy háztartási gépek	1488	0	0
+864	845	Italkészítés	1490	0	0
+865	846	Kávékészítés	1490	0	0
+866	847	Mixerek, aprítók & robotgépek	1490	0	0
+867	848	Kenyérkészítés	1490	0	0
+868	849	Páraelszívó alkatrészek és tartozékok	80	1	16
+869	850	Sütés & főzés	1490	0	0
+870	851	Mosogatógép alkatrészek és tartozékok	80	1	15
+871	853	Mikrohullámú sütő alkatrészek és tartozékok	80	1	17
+872	854	Aparate pentru preparat clatite I Deleted	1490	0	0
+873	855	Kiterjesztett garanciák	NULL	0	0
+874	857	Plüss játékok	1501	1	12
+875	859	Játékfigurák	862	1	13
+876	861	Társas-és puzzle játékok	1501	0	0
+877	862	Hobbi játékok	1501	0	0
+878	863	Kreatív játékok	1501	0	0
+879	864	Építő szettek és kockák	1501	0	0
+880	865	Távirányítós játékok és járművek	1501	0	0
+881	867	Kültéri játékok	1501	0	0
+882	868	Szerepjátékok	1501	0	0
+883	869	Média	1506	0	0
+884	870	Inhalátor Deleted	2661	0	0
+885	871	Hangoskönyvek	876	1	17
+886	872	Irodalom	1506	0	0
+887	874	Publicisztika	872	1	18
+888	875	Költészet, színház, irodalmi tanulmányok	872	1	20
+889	876	Hangoskönyvek és kiegészítők	1506	0	0
+890	877	Tankönyvek, segédkönyvek	1506	0	0
+891	878	Általános iskolai tankönyvek, gyakorlófüzetek	877	1	20
+892	879	Egyetemi és főiskolai tankönyvek	877	1	20
+893	880	Gyermek és ifjúsági könyvek	1506	0	0
+894	881	Gyermekversek, dalok	880	1	20
+895	883	Ismeretterjesztő könyvek	880	1	21
+896	884	Ifjúsági irodalom, fikció	880	1	23
+897	885	Gyermekirodalom	880	1	23
+898	886	Foglalkoztatók, fejlesztők, kifestők	880	1	22
+899	887	Szótárak	877	1	22
+900	888	Középiskolai tankönyvek	877	0	0
+901	889	Jog és kriminológia	903	1	20
+902	890	Nyelvkönyvek	877	1	20
+903	891	Vallás	903	1	19
+904	892	Életmód, egészség	1506	0	0
+905	893	Család, szülők és gyermeknevelés	892	1	21
+906	894	Művészet, építészet	1506	0	0
+907	895	Önismeret és személyes fejlődés	892	1	21
+908	897	Szórakoztató irodalom	872	1	21
+909	898	Útikönyvek	609	1	17
+910	900	Élménybeszámolók, útleírások, naplók	609	1	17
+911	901	Térképek	609	1	16
+912	902	Szexualitás	892	1	18
+913	903	Társadalomtudományok	1506	0	0
+914	904	Szociológia és filozófia	903	1	18
+915	905	Történelem	903	1	22
+916	907	Fejtörők és keresztrejtvények	917	1	17
+917	908	Politika, politológia	903	1	19
+918	910	Képregények	917	1	22
+919	911	Hobbi, szabadidő	917	1	17
+920	912	Szórakozás, kikapcsolódás	917	0	0
+921	913	Gasztronómia	917	1	24
+922	914	KRESZ könyvek és tesztek	917	1	19
+923	915	Kert, ház, otthon	917	1	21
+924	916	Design	894	1	20
+925	917	Hobbi és szabadidő	1506	0	0
+926	918	Orvostudomány és gyógyszerészet	1217	1	21
+927	919	Ezotéria, spiritualitás	903	1	19
+928	920	Kötelező olvasmányok	877	1	21
+929	921	Építészet	894	1	20
+930	923	Tudomány és technológia	1217	1	19
+931	925	Verseny és vizsgafelkészítő könyvek	877	1	22
+932	927	Napvédő termékek	3907	1	17
+933	928	Száj- és fogápolás	3721	0	0
+934	929	Körömvágó csipeszek	3051	1	16
+935	930	Orvosi készülékek	4336	0	0
+936	931	Barkács	NULL	0	0
+937	932	Szegek	3804	1	5
+938	933	Optika & csillagászat	1495	0	0
+939	934	Fegyvertartó szekrény	3804	1	21
+940	935	Kötél	3804	1	7
+941	936	Hajbalzsam	810	1	21
+942	937	Háztartás, Tárolás & Rendezés	931	0	0
+943	938	Otthoni audió videó	1497	0	0
+944	941	Varrógép alkatrészek és tartozékok	629	1	20
+945	942	Polirozó és csíszoló tartozékok	360	1	20
+946	943	Festő és vakoló pisztolyok és rendszerek	360	1	23
+947	944	Munkavédelmi cipők	360	1	17
+948	945	Öntözésvezérlők	349	1	16
+949	946	Magasnyomású mosók	349	1	19
+950	947	Pénz, gazdaság, üzleti élet	1506	0	0
+951	948	Újságok, magazinok	917	1	21
+952	949	Kézi kaszák	351	1	10
+953	950	Hálózati adattárolók	838	0	0
+954	951	IT és informatika	1217	1	19
+955	952	Társalgási kézikönyvek	877	1	20
+956	953	Borotva tartozékok	1302	1	15
+957	954	Vitaminok és Ásványi anyagok	2840	1	15
+958	955	Antibakteriális kézfertőtlenítő gélek	3779	1	7
+959	956	Autószerszám tartozékok	347	1	10
+960	957	Lampi Deleted	2661	0	0
+961	958	Tisztító- és mosószerek	1505	0	0
+962	959	Konyhai felülettisztító szerek	3424	1	10
+963	960	Univerzális tisztítószerek	3425	1	9
+964	1167	Triciklik	867	1	15
+965	1168	Gyermekjárművek	867	1	25
+966	1169	Interaktív gyerek játékok	861	1	14
+967	1170	Játék babakocsik	1202	1	11
+968	1171	Fertőzést kimutató tesztek	4189	1	10
+969	1172	Animale	2661	0	0
+970	1173	Sebtapaszok	4336	1	14
+971	1174	Játék munkagépek és járművek	865	1	15
+972	1176	Fejlesztő és oktató játékok	861	1	14
+973	1177	Puzzle	861	1	10
+974	1178	Autómodellek	862	1	12
+975	1182	Vonatok	1501	1	0
+976	1183	Rajz és festő készletek	863	1	17
+977	1186	Modellező paszta, agyag és homok	863	1	14
+978	1187	Építőkészletek	864	1	15
+979	1188	Seturi Figurine / Roboti	2661	0	0
+980	1189	Kockák és téglák	864	1	12
+981	1190	Egyéb elektromos járművek	3924	1	24
+982	1191	Játék motorkerékpárok	865	1	21
+983	1192	Játékautók	865	1	23
+984	1193	Távirányítós csónakok	865	1	22
+985	1196	Gyerekházak és sátrak	867	1	17
+986	1198	Játszóterek és tartozékok	867	1	16
+987	1202	Babák és tartozékok	1501	0	0
+988	1203	Játék hangszer	868	1	13
+989	1204	Gyerekkonyhák	868	1	13
+990	1205	Orvosi játékkészletek	868	1	12
+991	1208	Babák	1202	1	17
+992	1209	Társasjátékok	861	1	15
+993	1210	Testápoló és arcápoló készülékek	811	1	25
+994	1211	Játékrobotok	865	1	18
+995	1213	Papírsárkányok és repülő játékok	867	1	14
+996	1214	Strand és homokozó játékok	867	1	15
+997	1216	Babaházak és bútorok	1202	1	14
+998	1217	Egzakt tudományok	1506	0	0
+999	1218	Marketing és PR	947	1	20
+1000	1220	Menedzsment és üzleti adminisztráció	947	1	19
+1001	1222	Csillagászat	1217	1	19
+1002	1224	Sport, természetjárás	917	1	19
+1003	1225	Természet és környezet	903	1	19
+1004	1227	Matematika	1217	1	18
+1005	1228	Pénzügy és számvitel	947	1	20
+1006	1233	Közkapcsolatok	947	0	0
+1007	1234	Humán erőforrás	947	0	0
+1008	1235	Menedzsment	947	0	0
+1009	1241	Parfüm	3753	0	14
+1010	1294	Smink	764	0	0
+1011	1295	Szempillaspirál	1294	1	16
+1012	1296	Rúzs és szájkontúrceruza	1294	1	18
+1013	1297	Sminkalapok és alapozók	1294	1	19
+1014	1298	Körömlakk	3051	1	15
+1015	1301	Sminkkészletek	1294	1	16
+1016	1302	Bőrápolás	3721	0	0
+1017	1303	Arctisztítók, sminklemosók	1302	1	19
+1018	1304	Arckezelések és szérumok	1302	1	17
+1019	1175	Játékvonatok	865	1	15
+1020	1184	Játék helikopterek, repülők és hajók	865	1	24
+1021	1185	Kézműves készletek	863	1	12
+1022	1206	Gyerekműhelyek és tartozékok	868	1	13
+1023	1299	Smink kiegészítők	1294	1	18
+1024	1305	Borotva hab és gél	1302	1	15
+1025	1306	Arcszesz	1302	1	15
+1026	1308	Szájfény és ajakbalzsam	1294	1	20
+1027	1309	Arckrémek	1302	1	18
+1028	1311	Dezodorok és izzadásgátlók	3779	1	17
+1029	1312	Szappanok	3779	1	15
+1030	1313	Testápoló olajok	1302	1	15
+1031	1314	Testápoló	3779	1	17
+1032	1315	Testápoló kezelések	3779	1	15
+1033	1317	Tamponok és betétek	628	1	18
+1034	1318	Gyanta, gyantacsíkok és szőrtelenítő krémek	3779	1	16
+1035	1320	Fésűk és hajkefék	810	1	21
+1036	1321	Hajsampon	810	1	22
+1037	1322	Hajpakolások és kezelések	810	1	20
+1038	1323	Hajfesték és oxidálószer	810	1	20
+1039	1326	Hajlakkok és hajhabok	810	1	16
+1040	1327	Fogkrém	928	1	15
+1041	1329	Pet Shop	NULL	0	0
+1042	1330	Kutyaeledel	3535	1	13
+1043	1331	Pórázok, Nyakörvek és Ruhák	1329	0	0
+1044	1332	Kozmetika & Higiénia	1329	0	0
+1045	1333	Fekhelyek és Szállítóboxok	1329	0	0
+1046	1337	Játékok állatoknak	1329	1	16
+1047	1339	Kiskedvenc ruházat	1331	1	14
+1048	1340	Kefék, nyírók és fogók	1331	1	29
+1049	1341	Sampon és balzsam	1332	1	9
+1050	1342	Parazitaellenes készítmény	1332	0	16
+1051	1343	Kisállat almok és alátétek	1332	1	16
+1052	1344	Kisállat ágyak, párnák és matracok	1333	1	12
+1053	1345	Kisállathordozó táskák és eszközök	1333	1	25
+1054	1346	Kisállat bútor és szállítási eszköz kiegészítők	1333	1	15
+1055	1347	Akváriumok & Terráriumok	3542	1	20
+1056	1348	Akvárium szűrők és szűrőanyagok	3542	1	18
+1057	1351	Terhesség	1500	0	0
+1058	1352	Ruhák és szoknyák terhes nőknek	1351	0	0
+1059	1353	Mellszívók	1351	1	10
+1060	1354	Kismama kozmetikumok	1351	1	8
+1061	1355	Egészség és biztonság	1500	0	0
+1062	1356	Férfi ékszerek	2739	1	18
+1063	1357	Gyerek játszóágy	1355	1	14
+1064	1358	Babakocsik, bútorok és kiegészítők	1500	0	0
+1065	1359	Babakocsik és tartozékok	1358	1	23
+1066	1360	Gyerek kiságy	3238	1	15
+1067	1362	Depozitare si organizare	2661	0	0
+1068	1363	Tisztálkodás	1500	0	0
+1069	1364	Sapun, Sampon si Balsam	2661	0	0
+1070	1365	Baba fürdőkád és fürdőszobai kellékek	1363	1	14
+1071	1366	Törölközők és fürdőköpenyek	1363	1	12
+1072	1367	Speciális mosószerek	1363	1	5
+1073	1370	Pelenkák és tartozékok	1500	0	0
+1074	1371	Krémek és kenőcsök	3259	0	0
+1075	1373	Bébiételek	1500	0	0
+1076	1377	Bébiétel Deleted	2661	0	0
+1077	1379	Munkavédelmi kiegészítők	937	1	20
+1078	1380	Tűzoltó készülékek	937	1	18
+1079	1383	Gyereksampon és gyerekbalzsam	3259	1	10
+1080	1386	Tápok & táplálék kiegészítők	1329	0	0
+1081	1387	Etető és itató tálak	1386	1	17
+1082	1388	Fodrászkellékek	810	1	13
+1083	1390	Gyerek nadrág	3217	1	21
+1084	1391	Női fehérneműk és pizsamák	3710	0	0
+1085	1393	Gyerek cipők	3230	1	19
+1086	1394	Alakformáló fehérneműk	1391	1	18
+1087	1395	Fűzők és harisnyatartók	1391	1	6
+1088	1399	Ruházat és cipők	1500	0	0
+1089	1400	Személygépkocsik	1518	1	63
+1090	1401	Drónok	1495	1	48
+1091	1402	Mérési és ellenőrzési eszközök	364	1	14
+1092	1403	Tűzőgépek	2611	1	12
+1093	1404	Aktív habok és autómosó szerek	1414	1	12
+1094	1406	3D nyomtatók	573	1	38
+1095	1407	3D szkennerek	573	1	30
+1096	1408	3D ceruzák	573	1	14
+1097	1409	3D nyomtató kiegészítők	573	1	12
+1098	1410	Autófelszerelések	NULL	0	0
+1099	1411	Gumiabroncsok és felnik	NULL	0	0
+1100	1412	Gumiabroncsok	1411	1	16
+1101	1413	Felnik	1411	1	20
+1102	1414	Autóápolás és karbantartás	3703	0	0
+1103	1415	Motorolajok	1410	1	12
+1104	1416	Fékfolyadékok	1410	1	7
+1105	1417	Fagyálló	1410	1	8
+1106	1418	Szélvédőmosó folyadék	1414	1	8
+1107	1419	Hajtóműolajok	1410	1	11
+1108	1420	Autó adalékok	1410	1	5
+1109	1421	Ablaktörlők	1410	1	15
+1110	1422	Autóillatosítók	1414	1	12
+1111	1423	Autóelektronika	3704	0	0
+1112	1424	Izzók és biztosítékok	1423	1	8
+1113	1425	Autó akkumulátorok	1423	1	10
+1114	1426	Lámpatestek és alkatrészeik	1423	1	7
+1115	1427	Külső felszerelési cikkek	3703	0	0
+1116	1428	Tetőtartók	1427	1	13
+1117	1429	Tetőboxok	1427	1	14
+1118	1442	Kerékpár szállítók	1427	1	13
+1119	1316	Intim mosakodó gél és dezodor	628	1	16
+1120	1338	Nyakörvek, pórázok, hámok	1331	1	19
+1121	1361	Ágyneműk és babaágyhuzatok	3238	1	15
+1122	1372	Baba táskák	1370	1	13
+1123	1382	Baba orrszívók és tartozékok	1355	1	14
+1124	1443	Síléctartók	1427	1	14
+1125	1444	Vontatórendszerek	1427	1	8
+1126	1445	Dísztárcsák	1427	1	5
+1127	1446	Hóláncok	1427	1	6
+1128	1447	Belső felszerelési cikkek	3703	0	0
+1129	1448	Autószőnyegek	1447	1	7
+1130	1449	Csomagtér védelem	1447	1	3
+1131	1450	Autós könyöklők	1447	1	5
+1132	1451	Autós üléshuzatok	1447	1	8
+1133	1455	Autós tartók	1447	1	7
+1134	1456	Napellenzők, napvédők	1447	1	5
+1135	1458	Javítás és autó hibaelhárítás	3703	0	0
+1136	1459	Autófestékek	1458	1	12
+1137	1460	Autós biztonsági készletek	1458	1	6
+1138	1461	Autó Tuning	3703	0	0
+1139	1462	Visszapillantó tükrök	1461	1	6
+1140	1463	Kipufogó	1461	1	2
+1141	1473	Folie autocolanta & stickere auto	1461	0	0
+1142	1480	Autós dekorációk és tuning alkatrészek	1461	1	4
+1143	1481	Professzionális autó felszerelés	3703	0	0
+1144	1483	PC Alkatrészek	NULL	0	0
+1145	1484	PC perifériák	NULL	0	0
+1146	1485	Asztali számitógépek PC	NULL	0	0
+1147	1486	Laptopok és tartozékok	NULL	0	0
+1148	1487	Táblagépek és tartozékok	NULL	0	0
+1149	1488	Háztartási készülékek	NULL	0	0
+1150	1490	Kis háztartási gépek és tartozékok	NULL	0	0
+1151	1491	Személyi ápolás készülékek	NULL	0	0
+1152	1492	Légkondicionáló és tartozékok	NULL	0	0
+1153	1493	DSLR Fényképezőgépek Deteled	2661	0	0
+1154	1494	Fényképezőgépek	1495	0	0
+1155	1495	Photo-Video	NULL	0	0
+1156	1496	Televíziók és tartozékok	NULL	0	0
+1157	1497	Audio-video és  HiFi	NULL	0	0
+1158	1498	Hajvágó ollók	810	1	14
+1159	1500	Árucikkek a legkisebbeknek	NULL	0	0
+1160	1501	Játék	NULL	0	0
+1161	1505	House Cleaning	NULL	0	0
+1162	1506	Könyvek_	NULL	0	0
+1163	1507	Irodaszerek	NULL	0	0
+1164	1509	Fürdőszivacs	3779	1	18
+1165	1510	Bags & Accessories	NULL	0	0
+1166	1512	LED Monitorok	NULL	0	0
+1167	1513	Periute electrice	1491	0	0
+1168	1514	Epilatoare, tuns si ras	1491	0	0
+1169	1516	Hajvasalók, kefék és hajszárítók	1491	0	0
+1170	1517	Egyéb szolgáltatások	NULL	0	0
+1171	1518	Egyéb termékek	NULL	0	0
+1172	1520	Nappali és irodai bútorzat	3715	0	0
+1173	1521	Konyhabútor szettek	1535	1	33
+1174	1522	Kanapék	1520	1	35
+1175	1523	Nappali bútorok és könyvesszekrények	1520	1	19
+1176	1524	Íróasztalok	1520	1	16
+1177	1525	Polcok	1520	1	19
+1178	1526	Irodai székek	1520	1	20
+1179	1527	Étkezőgarnitúrák	1535	1	15
+1180	1528	Fogasok	1520	1	19
+1181	1529	Hálószoba bútorok	3715	0	0
+1182	1530	Hálószoba bútor	1529	1	23
+1183	1531	Ágyak	1529	1	21
+1184	1532	Ruhásszekrények	1529	1	19
+1185	1533	Komódok	1529	1	18
+1186	1535	Konyhabútorok	3715	0	0
+1187	1537	Konyhaszékek Deleted	1535	0	0
+1188	1538	Konyha asztalok	1535	1	20
+1189	1539	Konyhabútor készletek Deleted	1535	0	0
+1190	1541	Kerti bútor	3713	0	0
+1191	1542	Kerti bútor garnitúrák	1541	1	25
+1192	1543	Kerti ernyők és pavilonok	1541	1	11
+1193	1544	Kerti székek és napozóágyak	1541	1	13
+1194	1545	Kerti asztalok	1541	1	19
+1195	1546	Függőágyak és hinták	1541	1	11
+1196	1547	Belső dekorációk	4344	0	0
+1197	1548	Tapéta	1547	1	12
+1198	1549	Festmények	1547	1	24
+1199	1550	Dekor órák	1547	1	21
+1200	1565	Dekoratív vázák és tálak	1547	1	13
+1201	1566	Dekorációs párnák	1583	1	17
+1202	1567	Dekorációs kiegészítők	1547	1	20
+1203	1568	Gyertyák és aromaterápia	4344	0	0
+1204	1569	Gyertyák és mécsesek	1568	1	13
+1205	1572	Légfrissítők	958	1	10
+1206	1573	Party dekorációk	4344	0	0
+1207	1574	Party kiegészítők	1573	1	8
+1208	1575	Ajándék csomagolás	2603	1	10
+1209	1576	Ünnepi dekorációk	3713	0	0
+1210	1581	Matracok	4291	1	16
+1211	1582	Matracvédők	1583	1	7
+1212	1583	Szobatextíliák és szőnyegek	3714	0	0
+1213	1584	Szőnyegek	1583	1	15
+1214	1585	Ágytakarók és plédek	1583	1	11
+1215	1586	Párnák	1583	1	12
+1216	1588	Lepedők és párnahuzatok Deleted	1583	0	0
+1217	1589	Függönyök	1583	1	12
+1218	1590	Fürdőszoba textíliák és szőnyegek	3714	0	0
+1219	1591	Törölközők	1590	1	12
+1220	1592	Fürdőköpenyek	1590	1	0
+1221	1593	Fürdőszobaszőnyegek	1590	1	14
+1222	1594	Konyhatextíliák	3714	0	0
+1223	1595	Konyhai törölközők Deleted	2661	0	0
+1224	1596	Konyhai és grill kötények	1594	1	12
+1225	1597	Asztalterítők	1594	1	18
+1226	1599	Tányéralátétek	1594	1	15
+1227	1603	Főzőedények	3708	0	0
+1228	1604	Főzőedény fedők	1603	1	13
+1229	1605	Kávékiöntők	1603	1	11
+1230	1606	Hőálló edények	1603	1	21
+1231	1607	Főzőeszközök	3708	0	0
+1232	1610	Zöldség és gyümölcs hámozók	1607	1	13
+1233	1611	Tálak	1616	1	18
+1234	1613	Prések és kézi facsarók	1607	1	13
+1235	1614	Evőeszköz készletek és kiegészítők	3708	0	0
+1236	1615	Evőeszköz tartók Deleted	1614	0	0
+1237	1616	Étkezés	3708	0	0
+1238	1617	Étkészletek	1616	1	14
+1239	1618	Tányérok	1616	1	18
+1240	1619	Kancsók és csészék	1616	1	11
+1241	1620	Felszolgáló tálcák	1616	1	11
+1242	1621	Poharak és bár tartozékok	3708	0	0
+1243	1622	Poharak	1621	1	10
+1244	1623	Jégvödrök és kancsók Deleted	1621	0	0
+1245	1625	Koktél shakerek	1621	1	11
+1246	1626	Dugóhúzók és dugók	1621	1	14
+1247	1627	Szívószálak és koktél dekorációk	1621	1	8
+1248	1628	Tálalási kiegészítők	3708	0	0
+1249	1629	Termoszok és termosz bögrék	1628	1	13
+1250	1630	Konyhai tálcák	1628	1	13
+1251	1631	Olaj és ecet adagolók	1628	1	14
+1252	1632	Felszolgáló kosarak	1628	1	12
+1253	1633	Papírtörlők és szalvéták	3424	1	11
+1254	1634	Desszert étkészletek	1628	1	15
+1255	1644	Tálcák	1628	1	9
+1256	1646	Általános tisztítás	3708	0	0
+1257	1647	Seprűk, felmosók és vödrök	1646	1	17
+1258	1648	Seprű, kefe és felmosó kiegészítők	1646	1	16
+1259	1649	Ablaktisztító eszközök	1646	1	8
+1260	1650	Szivacsok és kendők	3424	1	11
+1261	1651	Szemeteszsákok	3424	1	11
+1262	1652	Szemetesek	1646	1	13
+1263	1653	Egyszerhasználatos kesztyűk	4012	1	7
+1264	1654	Lábtörlők	1583	1	11
+1265	1655	Öblítőszer	3422	1	9
+1266	1657	Vasalódeszkák	1646	1	14
+1267	1658	Ruhaszárítók	1646	1	12
+1268	1659	Grillek és tartozékok	3713	0	0
+1269	1660	Kerti grillezők	1659	1	19
+1270	1661	Grillező eszközök	1659	1	9
+1271	1662	Kerti dekorációk	3713	0	0
+1272	1663	Lampi solare Deleted	1662	0	0
+1273	1675	Növények és növényi termékek	3713	0	0
+1274	1676	Cserepek és tartók	1675	1	13
+1275	1677	Cserepes virágok	1675	1	14
+1276	1678	Fák, cserjék és facsemeték	1675	1	10
+1277	1679	Hagymák, vetőmagok és palánták	1675	1	12
+1278	1680	Virágföldek, mulcsok	1675	1	15
+1279	1682	Tárolási és szervezési cikkek	3708	0	0
+1280	1683	Fűszerdarálók és fűszeradagolók	1682	1	16
+1281	1684	Ételdobozok	1682	1	16
+1282	1685	Rafturi si suporturi bucatarie Deleted	2661	0	0
+1283	1686	Konyhai lapátok, kanalak és fogók	1607	1	11
+1284	1689	Konyhai sziták és tartozékok	1607	1	11
+1285	1690	Sütemény formák	1607	1	9
+1286	1691	Evőeszközök	1614	1	16
+1287	1692	Ágyneműk	1583	1	13
+1288	1693	Kerti dekorációs kiegészítők	1662	1	13
+1289	1694	Other Sports	NULL	0	0
+1290	1695	Kerékpározás	NULL	0	0
+1291	1697	Kerékpár szerszámok	3389	1	16
+1292	1698	Képernyők és prezentációs rendszerek	96	1	16
+1293	1700	Supermarket	NULL	0	0
+1294	1701	Kerékpár sárvédők	3389	1	10
+1295	1702	Kerékpár kerékagyak	4322	1	19
+1296	1703	Tartók kerékpár kiegészítőknek	3389	1	15
+1297	1704	Kerékpár defektjavító készletek	4322	1	14
+1298	1705	Produse & Alimente proaspete	1700	0	0
+1299	1706	Kerékpár computerek	3389	1	12
+1300	1707	Kerékpár kitámasztók	3389	1	14
+1301	1708	Legume	1705	0	0
+1302	1715	Legume proaspete	1708	0	0
+1303	1716	Salate si verdeturi	1708	0	0
+1304	1718	Hátizsákok	1510	1	18
+1305	1719	Bors si muraturi	1708	0	0
+1306	1721	Kerékpár világítás	3389	1	19
+1307	1722	Rotációs kapák	349	1	31
+1308	1723	Kerékpár pumpák	3389	1	16
+1309	1724	Kerékpár csomagtartók és táskák	3389	1	17
+1310	1725	Fructe	1705	0	0
+1311	1728	Kerékpár pótkerekek	3389	1	8
+1312	1729	Kerékpáros gyerekülések	3389	1	16
+1313	1732	Kerékpár csengők	3389	1	11
+1314	1734	Kerékpártartók	3389	1	10
+1315	1737	Aerobik, Pilates és Jóga Deleted	2372	0	0
+1316	1738	Egyéb perifériák	NULL	0	0
+1317	1739	Ugrálókötelek	2372	1	7
+1318	1740	Feszítővasak és emelőrudak	351	1	8
+1319	1741	Napelemes kemping termékek	1840	1	16
+1320	1746	Nyomtató hardver	NULL	0	0
+1321	1747	Kerékpár vázak	4322	1	12
+1322	1748	Erősítő gumiszalagok és kötelek	2372	1	13
+1323	1749	Fructe proaspete	1725	0	0
+1324	1750	Kéziszerszám tartozékok	351	1	14
+1325	1751	Küzdősportok	1694	0	0
+1326	1752	Lapte	1705	0	0
+1327	1753	Sportszemüvegek és lencsék	3811	1	26
+1328	1754	Védőfelszerelés	3811	1	10
+1329	1755	Gyerek túraszandálok	2324	0	0
+1330	1756	Férfi sportcipők	2324	1	28
+1331	1757	Branzeturi & Cascaval	1705	0	0
+1332	1758	Branza	1757	0	0
+1333	1759	Férfi sport papucsok	2324	1	13
+1334	1760	Férfi sportos csizmák	2324	1	15
+1335	1761	Crema de branza si Altele	1757	0	0
+1336	1762	Cascaval	1757	0	0
+1337	1763	Sportcipő kiegészítők	2324	1	11
+1338	1764	Férfi szabadidőruhák	1799	1	19
+1339	1765	Branzeturi Internationale si Specialitati	1757	0	0
+1340	1766	Női sportmelltartók	1799	1	19
+1341	1777	Iaurt, Smantana & Unt	1705	0	0
+1342	1778	Iaurt simplu	1777	0	0
+1343	1779	Iaurt cu fructe	1777	0	0
+1344	1780	Lapte batut, Sana si Chefir	1777	0	0
+1345	1781	Smantana si Frisca	1777	0	0
+1346	1782	Unt si Margarina	1777	0	0
+1347	1783	Deserturi	1705	0	0
+1348	1784	Oua	1705	0	0
+1349	1785	Teniszhúrok	2460	1	7
+1350	1786	Férfi sportzoknik	1865	1	16
+1351	1787	Búváruszonyok	2423	1	10
+1352	1788	Síbotok	2455	1	10
+1353	1789	Síbakancsok	2455	1	13
+1354	1790	Férfi sport sapkák	1865	1	15
+1355	1791	Férfi baseball sapkák és fejkendők	1865	1	17
+1356	1792	Snowboard deszkák	2455	1	16
+1357	1793	Sí és snowboard kötések	2455	1	14
+1358	1794	Teniszütő markolat	2460	1	7
+1359	1795	Sportlövészet fegyverek és Paintball	2377	1	16
+1360	1796	Sátrak	1840	1	24
+1361	1797	Hálózsákok	1840	1	17
+1362	1798	Kemping matracok	1840	1	15
+1363	1799	Sport ruházat	3752	0	0
+1364	1800	Atlétika és futás Deleted	3718	0	0
+1365	1801	Fitness súlyok	2372	1	15
+1366	1808	Vágóeszközök, kések, pengék	351	1	12
+1367	1809	Kerékpárok	1695	1	34
+1368	1810	Kerékpár zárak és lakatok	3389	1	8
+1369	1811	Gumiköpenyek, külsők	4322	1	18
+1370	1813	Anyák és csapágyak	4322	1	13
+1371	1814	Gyerek biciklik	1695	1	19
+1372	1815	Kerékpár kormányok	4322	1	17
+1373	1817	Kerékpár fékkarok	4322	1	16
+1374	1818	Fogaskoszorúk	4322	1	11
+1375	1819	Férfi alsóneműk	2269	1	16
+1376	1820	Kerékpár nyergek	4322	1	14
+1377	1821	Kerékpár nyereghuzat	3389	1	10
+1378	1822	Tenisz kiegészítők	2460	1	13
+1379	1823	Gaming Hardware	NULL	0	0
+1380	1824	Reflex labdák, boxkörték	1751	1	11
+1381	1825	Haspadok és hasizomerősítők	2372	1	14
+1382	1826	Kávéfőző alkatrészek és tartozékok	629	1	16
+1383	1827	Pontütő- és boxkesztyűk	1751	1	15
+1384	1829	Evezőgépek	2372	1	19
+1385	1831	Női sport sálak	1865	1	15
+1386	1839	Boxzsákok	1751	1	19
+1387	1840	Kemping & Túrázás	1694	0	0
+1388	1841	Kemping székek, asztalok és napernyők	1840	1	18
+1389	1842	Multifunkciós zsebkések	1840	1	11
+1390	1843	Kotyogós kávéfőzők	1603	1	13
+1391	1845	Súlyzók és rudak	2372	1	15
+1392	1846	Repülőjegyek	1518	1	15
+1393	1847	Papírkosarak	2611	1	11
+1394	1849	Túrahátizsákok	1694	1	11
+1395	1850	Saci de dormit	2661	0	0
+1396	1851	Fejvédő sisakok	3811	1	13
+1397	1852	Kerékpár hajtóművek és fogaskerekek	4322	1	12
+1398	1853	Taposógépek	2372	1	12
+1399	1861	Személyiségfejlesztő tanfolyamok	1518	1	12
+1400	1862	Manusi	2661	0	0
+1401	1865	Sport ruházat kiegészítők	3752	0	0
+1402	1866	Férfi sportdzsekik	1799	1	24
+1403	1867	Accesorii grajd	2194	0	0
+1404	1868	Futópadok	2372	1	21
+1405	1870	Karbantartási csomagok	1410	1	15
+1406	1871	Edzőkesztyűk	3811	1	19
+1407	1872	Paine	1705	0	0
+1408	1873	Paine si Specialitati	1872	0	0
+1409	1874	Peste & Produse din peste	1705	0	0
+1410	1876	Peste, Salata si Specialitati din peste	1874	0	0
+1411	1877	Icre si Salata icre	1874	0	0
+1412	1879	Férfi sportos mellények	1799	1	20
+1413	1885	Carne proaspata	1705	0	0
+1414	1886	Carne si Specialitati	1885	0	0
+1415	1887	Multifunkciós fittness gépek	2372	1	13
+1416	1888	Carne tocata, Mici si Altele	1885	0	0
+1417	1889	Mezeluri ambalate	1705	0	0
+1418	1890	Salam si Parizer	1889	0	0
+1419	1892	Sunca, Pastrama si Altele	1889	0	0
+1420	1893	Carnati si Cremvusti	1889	0	0
+1421	1894	Pate	1889	0	0
+1422	1910	Congelate & Semipreparate congelate	1700	0	0
+1423	1911	Legume si Fructe	1910	0	0
+1424	1912	Carne & Peste	1910	0	0
+1425	1913	Carne, Peste si Fructe mare	1912	0	0
+1426	1914	Deserturi si Semipreparate	1910	0	0
+1427	1915	Inghetata	1914	0	0
+1428	1916	Gustari si Deserturi	1914	0	0
+1429	1917	Semipreparate	1914	0	0
+1430	1918	Produse & Alimente de baza	1700	0	0
+1431	1919	Alimente de baza	1918	0	0
+1432	1920	Malai, Gris si Pesmet	1919	0	0
+1433	1921	Orez si Specialitati orez	1919	0	0
+1434	1922	Legume uscate	1919	0	0
+1435	1923	Otet si Suc de lamaie	1919	0	0
+1436	1924	Faina	1919	0	0
+1437	1925	Zahar	1919	0	0
+1438	1926	Ulei	1919	0	0
+1439	1927	Sare	1919	0	0
+1440	1928	Paste	1919	0	0
+1441	1929	Fűszerek	1918	0	0
+1442	1930	Fűszerek és fűszerkeverékek Deleted	1929	0	0
+1443	1931	Baze de mancaruri	1929	0	0
+1444	1932	Produse instant	1929	0	0
+1445	1933	Ketchup & Sosuri	1918	0	0
+1446	1934	Ketchup	1933	0	0
+1447	1941	Maioneza	1933	0	0
+1448	1942	Mustar si Hrean	1933	0	0
+1449	1943	Pasta de rosii si Bulion	1933	0	0
+1450	1944	Sosuri	1933	0	0
+1451	1945	Conserve	1918	0	0
+1452	1948	Conserve de legume	1945	0	0
+1453	1949	Conserve pate	1945	0	0
+1454	1950	Conserve carne	1945	0	0
+1455	1951	Conserve peste si specialitati	1945	0	0
+1456	1952	Conserve cu mancare gatita	1945	0	0
+1457	1953	Conserve de masline	1945	0	0
+1458	1954	Conserve muraturi	1945	0	0
+1459	1955	Dulciuri	1918	0	0
+1460	1956	Napolitane	1955	0	0
+1461	1957	Nuga, Halva si Rahat	1955	0	0
+1462	1958	Biscuiti	1955	0	0
+1463	1963	Piscoturi si Fursecuri	1955	0	0
+1464	1964	Prajituri si Rulade	1955	0	0
+1465	1965	Chec si Cozonac	1955	0	0
+1466	1966	Croissant	1955	0	0
+1467	1967	Ciocolata	1955	0	0
+1468	1968	Bomboane de ciocolata	1955	0	0
+1469	1969	Dropsuri, Drajeuri si Altele	1955	0	0
+1470	1970	Musli, Fulgi si Alte cereale	1955	0	0
+1471	1971	Guma de mestecat	1955	0	0
+1472	1972	Ingrediente deserturi	1918	0	0
+1473	1973	Blaturi, Foietaje si Decoratiuni	1972	0	0
+1474	1974	Cacao, Lapte praf si Frisca	1972	0	0
+1475	1975	Creme, Budinci si Semipreparate	1972	0	0
+1476	1976	Afanatori si Arome	1972	0	0
+1477	1977	Dulceata si Compoturi	1918	0	0
+1478	1978	Gem si Dulceata	1977	0	0
+1479	1979	Miere	1977	0	0
+1480	1980	Compoturi	1977	0	0
+1481	1981	Creme tartinabile si Specialitati	1977	0	0
+1482	1982	Cafea & Ceai	1918	0	0
+1483	1994	Ceai	1982	0	0
+1484	1995	Cafea si Bauturi instant	1982	0	0
+1485	1996	Lapte si Arome pentru cafea	1982	0	0
+1486	1997	Chips-uri si Snacks-uri	1918	0	0
+1487	1998	Chips-uri	1997	0	0
+1488	1999	Popcorn & Boabe popcorn	1997	0	0
+1489	2000	Snaks-uri si Pufuleti	1997	0	0
+1490	2001	Sticks-uri si Covrigei	1997	0	0
+1491	2002	Crakers si Paine prajita	1997	0	0
+1492	2009	Seminte, Alune si Migdale	1997	0	0
+1493	2010	Fructe uscate si Mixuri	1997	0	0
+1494	2011	Dietetice	1918	0	0
+1495	2012	Indulcitori	2011	0	0
+1496	2013	Produse pentru intolerante alimentare	2011	0	0
+1497	2014	Produse pentru slabit	2011	0	0
+1498	2015	Suplimente alimentare	2011	0	0
+1499	2016	Produse pe baza de soia	1918	0	0
+1500	2017	Produse naturiste	1918	0	0
+1501	2018	Specialitati internationale	1918	0	0
+1502	2019	Bauturi & Tabac	1700	0	0
+1503	2020	Apa	2019	0	0
+1504	2021	Bauturi racoritoare	2019	0	0
+1505	2022	Sucuri si Ice Tea	2021	0	0
+1506	2023	Energizant si Ice Coffee	2021	0	0
+1507	2024	Bauturi Alcoolice	2019	0	0
+1508	2025	Bere	2024	0	0
+1509	2026	Vin	2024	0	0
+1510	2027	Sampanie si Spumant	2024	0	0
+1511	2040	Bauturi aperitive sub 22%	2024	0	0
+1512	2041	Bauturi spirtoase +22%	2024	0	0
+1513	2042	Tigarete si Brichete	2019	0	0
+1514	2043	Tigarete	2042	0	0
+1515	2044	Brichete si Filtre tigarete	2042	0	0
+1516	2048	Sport kulacsok	1840	1	11
+1517	2049	Fumusete si Ingrijire personala	1700	0	0
+1518	2050	Make-up si Ingrijire Ten	2049	0	0
+1519	2051	Szurkolói termékek	2447	1	15
+1520	2052	Make-Up	2050	0	0
+1521	2053	Demachiant	2050	0	0
+1522	2054	Gyógylámpák	930	1	16
+1523	2055	Creme intretinere	2050	0	0
+1524	2057	Produse pentru barbierit	2049	0	0
+1525	2058	Öntapadó címkék	2603	1	15
+1526	2061	Aparate si Lame	2057	0	0
+1527	2062	Crema si Spuma de ras	2057	0	0
+1528	2063	Produse dupa barbierit	2057	0	0
+1529	2064	Szobabiciklik	2372	1	14
+1530	2065	Phones Acc és szolgáltatások	NULL	0	0
+1531	2079	Vopsit si Hair styling	2049	0	0
+1532	2080	Csomagoló cikkek	2373	1	10
+1533	2081	Vopsea pentru par	2079	0	0
+1534	2083	Fixativ, Gel si Spuma	2079	0	0
+1535	2084	Tratamente capilare	2079	0	0
+1536	2085	Címkéző gépek és tartozékok	2373	1	19
+1537	2086	Tartók és fürdőszobai kiegészítők	2764	1	13
+1538	2087	Accesorii pentru par	2079	0	0
+1539	2089	Gel de dus & Sapun	2049	0	0
+1540	2090	Melltartók	1391	1	19
+1541	2091	Sapun	2089	0	0
+1542	2092	Gel de dus	2089	0	0
+1543	2093	Spuma si sare de baie	2089	0	0
+1544	2094	Gumibelsők	4322	1	15
+1545	2095	Accesorii pentru baie	2089	0	0
+1546	2096	Női pizsamák	1391	1	20
+1547	2097	Sampon & Balsam	2049	0	0
+1548	2098	Sampon	2097	0	0
+1549	2100	Balsam	2097	0	0
+1550	2101	Igiena Orala	2049	0	0
+1551	2102	Pasta de dinti	2101	0	0
+1552	2103	Intretinere dentara	2101	0	0
+1553	2104	Periute de dinti	2101	0	0
+1554	2105	Deodorante & Antiperspirante	2049	0	0
+1555	2107	Produse Ingrijire Corporala	2049	0	0
+1556	2110	Apa de toaleta	2107	0	0
+1557	2111	Crema pentru corp	2107	0	0
+1558	2112	Creme pentru maini	2107	0	0
+1559	2113	Creme de plaja	2107	0	0
+1560	2114	Produse pentru epilat	2107	0	0
+1561	2115	Produse intretinere picioare	2107	0	0
+1562	2116	Ingrijire & Igiena intima	2049	0	0
+1563	2117	Servetele umede si Lotiune intima	2116	0	0
+1564	2118	Absorbante	2116	0	0
+1565	2119	Scutece incontinenta adulti	2116	0	0
+1566	2120	Prezervative si Lubrifianti	2116	0	0
+1567	2121	Articole de intretinere	2049	0	0
+1568	2122	Produse ingrijire unghii	2121	0	0
+1569	2123	Alcool Sanitar si Plasturi	2121	0	0
+1570	2124	Dischete demachiante si Vata	2121	0	0
+1571	2125	Produse intretinere nas si Urechi	2121	0	0
+1572	2126	Cadouri	2049	0	0
+1573	2141	Casa, Gradina & Auto	1700	0	0
+1574	2142	Produse curatenie	2141	0	0
+1575	2143	Curatenie Bucatarie	2142	0	0
+1576	2144	Curatenie Baie	2142	0	0
+1577	2145	Curatenie Geamuri	2142	0	0
+1578	2146	Curatenie Mobila si Parchet	2142	0	0
+1579	2147	Curatenie Pardoseli si Covoare	2142	0	0
+1580	2148	Detergent & Balsam de rufe	2141	0	0
+1581	2149	Detergent pentru rufe	2148	0	0
+1582	2150	Balsam rufe	2148	0	0
+1583	2151	Inalbitori	2148	0	0
+1584	2152	Intretinere masini de spalat	2148	0	0
+1585	2153	Odorizanti	2141	0	0
+1586	2154	Odorizant pentru camera	2153	0	0
+1587	2155	Odorizant pentru toaleta	2153	0	0
+1588	2156	Servetele & Hartie igienica	2141	0	0
+1589	2157	Servetele de masa	2156	0	0
+1590	2158	Role de bucatarie	2156	0	0
+1591	2159	Hartie igienica	2156	0	0
+1592	2160	Produse pentru menaj	2141	0	0
+1593	2161	Folie si Pungi alimentare	2160	0	0
+1594	2162	Saci pentru gunoi	2160	0	0
+1595	2163	Accesorii pentru curatenie	2160	0	0
+1596	2164	Produse intretinere & Accesorii incaltaminte	2141	0	0
+1597	2165	Crema pentru pantofi	2164	0	0
+1598	2166	Accesorii incaltaminte	2164	0	0
+1599	2167	Insecticide	2141	0	0
+1600	2168	Electrice I	2141	0	0
+1601	2169	Becuri si Baterii	2168	0	0
+1602	2170	Produse pentru bucatarie	2141	0	0
+1603	2171	Vesela	2170	0	0
+1604	2172	Tacamuri si Accesorii	2170	0	0
+1605	2173	Decoratiuni	2141	0	0
+1606	2174	Decoratiuni si Articole artizanale	2173	0	0
+1607	2175	Lumanari si Betisoare parfumate	2173	0	0
+1608	2176	Accesorii si Pungi pentru cadouri	2173	0	0
+1609	2177	Papuci & Ciorapi	2141	0	0
+1610	2178	Papuci	2177	0	0
+1611	2179	Dresuri	2177	0	0
+1612	2180	Sosete	2177	0	0
+1613	2181	Picnic	2141	0	0
+1614	2182	Farfurii si Tacamuri plastic	2181	0	0
+1615	2183	Carbuni si Chibrituri	2181	0	0
+1616	2184	Accesorii picnic	2181	0	0
+1617	2185	Cafea si Specialitati	1982	0	0
+1618	2186	Hrana, Ingrijire copii & Jucarii	1700	0	0
+1619	2187	Intretinere Auto	2141	0	0
+1620	2188	Odorizant auto	2187	0	0
+1621	2189	Produse intretinere masina	2187	0	0
+1622	2190	Alimentatie bebelusi si copii	2186	0	0
+1623	2191	Ingrijire & Igiena copii	2186	0	0
+1624	2192	Scutece si Servetele umede	2191	0	0
+1625	2193	Cosmetice copii	2191	0	0
+1626	2194	Jucarii & Petrecere	2186	0	0
+1627	2195	Jucarii copii	2194	0	0
+1628	2196	Filme & Librarie	1700	0	0
+1629	2197	Filme, Carti & Reviste	2196	0	0
+1630	2198	Filme si Carti	2197	0	0
+1631	2199	Reviste	2197	0	0
+1632	2200	Papetarie	2196	0	0
+1633	2201	Pentru animale	1700	0	0
+1634	2202	Hrana animale	2201	0	0
+1635	2203	Hrana caini	2202	0	0
+1636	2204	Hrana pisici	2202	0	0
+1637	2205	Hrana Pasari si Alte animale	2202	0	0
+1638	2206	Cosmetice si Accesorii animale	2201	0	0
+1639	2207	Produse sezoniere	1700	0	0
+1640	2208	Cosuri cadou	2207	0	0
+1641	2209	Pachete speciale	2207	0	0
+1642	2210	Flori	2207	0	0
+1643	2211	Decoratiuni Craciun	2207	0	0
+1644	2269	Férfi fehérneműk és pizsamák	3801	0	0
+1645	2272	Utazótáskák	3751	1	21
+1646	2284	Labdák	2447	1	12
+1647	2285	Aparatori fotbal Deleted	2661	0	0
+1648	2286	Férfi ujjatlan felsők	2718	1	13
+1649	2301	Golfütők és készletek	2409	1	18
+1650	2303	Fitness kiegészítők	2372	1	13
+1651	2305	Úszóruhák	2423	1	16
+1652	2306	Tabletta Acc és szolgáltatások	NULL	0	0
+1653	2307	Kerékpáros kosarak és utánfutók	3389	1	14
+1654	2316	Férfi sport felsők	1799	1	19
+1655	2318	Kémények és kiegészítők	3754	1	12
+1656	2319	Incaltaminte mers	2661	0	0
+1657	2320	Repülőmodellezés	3303	1	37
+1658	2321	Repülőmodellező készlet	3308	1	18
+1659	2322	Autómodellezés	3303	1	31
+1660	2323	Hajómodellezés	3303	1	29
+1661	2324	Sport cipők	3752	0	0
+1662	2325	Golf ernyők	2409	1	14
+1663	2326	Túrabotok	1840	1	17
+1664	2331	Sporttáplálkozás és hidratálás	575	0	0
+1665	2332	Kempingfőzők	1840	1	16
+1666	2333	Szíjak, óratartó dobozok és kiegészítők	2739	1	16
+1667	2336	Karcsúsító övek	2372	1	15
+1668	2337	Horgászati termékek	1694	0	0
+1669	2338	AC & Heating	NULL	0	0
+1670	2339	Ékszer dobozok	2697	1	6
+1671	2346	Horgok	2337	1	8
+1672	2347	Zsinórok és damilok	2337	1	7
+1673	2348	Smith gépek	2372	1	10
+1674	2349	Férfi sportos pulóverek	1799	1	19
+1675	2350	Női sport trikók	1799	1	16
+1676	2351	Halzsákok	2337	1	8
+1677	2352	Porlasztó	349	1	30
+1678	2353	Merítőhálók	2337	1	17
+1679	2354	Szerelések és tartozékok	2337	1	13
+1680	2356	Horgászorsók	2337	1	14
+1681	2361	Csali kiegészítők	2337	1	14
+1682	2362	Fan Gaming termékek	761	1	7
+1683	2363	Horgász ólmok	2337	1	12
+1684	2364	Horgászúszók	2337	1	10
+1685	2365	Csalik	2337	1	13
+1686	2366	Horgászfelszerelés tárolás és szállítás	2337	1	13
+1687	2367	Kapásjelzők	2337	1	8
+1688	2368	Halradarok	2337	1	28
+1689	2369	Horgászbot tartók	2337	1	14
+1690	2370	Ragadozóhal felszerelés	2337	1	11
+1691	2371	Kerékpár fékek	4322	1	21
+1692	2372	Fitness gépek	NULL	0	0
+1693	2373	Adminisztratív cikkek	1507	0	0
+1694	2374	Női ujjatlan felsők és body-k	2668	1	18
+1695	2375	Műtárgyak	1547	1	23
+1696	2376	Kerékpár kábelek	4322	1	10
+1697	2377	Sportlövészet termékek	1694	0	0
+1698	2392	Kerékpár villák és lengéscsillapítók	4322	1	23
+1699	2393	Postaládák	3804	1	13
+1700	2396	Kerékpár felnik	4322	1	19
+1701	2397	Kerékpár lánc	4322	1	11
+1702	2398	Csónak és motor kellékek	2931	1	32
+1703	2399	Kerékpár markolatok	4322	1	15
+1704	2400	Kerékpár pedálok	3389	1	19
+1705	2401	Sisakok és fúvók	1576	1	10
+1706	2402	IT tisztító eszközök	2620	1	10
+1707	2403	Kormányszárak	4322	1	14
+1708	2404	Kerékpár kerekek	4322	1	24
+1709	2405	Kerékpár váltókarok	4322	1	10
+1710	2406	Öntapadó jegyzettömb	2603	1	0
+1711	2407	Kerékpár küllők	4322	1	11
+1712	2408	Nyeregcsövek	4322	1	15
+1713	2409	Szabadtéri sportok	1694	0	0
+1714	2410	Smart home modulok és vezérlők	2805	1	16
+1715	2412	Fitness labdák	2372	1	16
+1716	2413	Görkorcsolyák	2409	1	23
+1717	2414	Gördeszkák	2409	1	20
+1718	2423	Vízisportok	1694	0	0
+1719	2424	Vízisport kiegészítők	2423	1	15
+1720	2425	Buvármaszkok és pipák	2423	1	18
+1721	2426	Karúszók és úszógumik	2423	1	13
+1722	2431	Okos eszközök	NULL	0	0
+1723	2430	Kemping étkészletek és eszközök	1840	1	14
+1724	2435	Beltéri sport termékek	1694	0	0
+1725	2437	Darts kiegészítők	2377	1	12
+1726	2438	Sportlövő fegyver lőszerek	2377	1	17
+1727	2439	Biliárd asztalok	2435	1	19
+1728	2440	Darts táblák	2377	1	16
+1729	2441	Labdapumpák	2447	1	13
+1730	2442	Csocsó Deleted	2435	0	0
+1731	2443	Bowling golyók és bábúk	2435	1	12
+1732	2444	Pókerszettek	2435	1	14
+1733	2445	Biliárd kiegészítők	2435	1	13
+1734	2446	Biliárd dákók	2435	1	12
+1735	2447	Csapatsport termékek	1694	0	0
+1736	2448	Kosárlabda palánkok	2447	1	19
+1737	2449	Focikapuk	2447	1	16
+1738	2450	Taktikai táblák	2447	1	15
+1739	2451	Serlegek, trófeák és érmek	2447	1	13
+1740	2452	Sportfelszerelés tisztító és karbantartó szerek	2472	1	7
+1741	2453	Trambulinok	2409	1	13
+1742	2454	Edzőfelszerelések	2447	1	11
+1743	2455	Sí és snowboard termékek	1694	0	0
+1744	2456	Jégkorcsolyák	2409	1	14
+1745	2457	Szánkó	2455	1	12
+1746	2458	Sílécek	2455	1	22
+1747	2459	Snowboard bakancsok	2455	1	14
+1748	2460	Ütős sport termékek	1694	0	0
+1749	2461	Tenisz- és tollasütők	2460	1	19
+1750	2465	Vibrációs trénerek	2372	1	25
+1751	2466	Archiváláshoz szükséges termékek	95	1	0
+1752	2467	Női fürdőköpenyek	1391	1	14
+1753	2468	Thermo táskák	1840	1	16
+1754	2469	Női sportos szoknyák	1799	1	14
+1755	2470	Férfi sportnadrágok	1799	1	20
+1756	2471	Női sportos ruhák	1799	1	14
+1757	2472	Sporteszközök karbantartása	1694	0	0
+1758	2483	Iránytűk	1840	1	10
+1759	2484	Reszelők és kézi reszelők	351	1	16
+1760	2486	Ready meal, Semipreparate si Sucuri fresh	1705	0	0
+1761	2487	Ready meal	2486	0	0
+1762	2488	Mancare semipreparata	2486	0	0
+1763	2489	Sucuri fresh	2486	0	0
+1764	2493	Kulcstartó dobozok	2373	1	11
+1765	2494	Iratrendezők	95	1	14
+1766	2495	Kerékpár fényvisszaverők	3389	1	12
+1767	2497	Kivezető cső kiegészítők	2338	0	0
+1768	2499	Harisnyák	1391	1	14
+1769	2502	Télisport kiegészítők	2455	1	9
+1770	2503	Bőröndök	3751	1	19
+1771	2504	Sebészeti kauterek	4337	1	11
+1772	2506	Ping pong asztal	2460	1	17
+1773	2514	SDA Egyéb	NULL	0	0
+1774	2518	Sporttáskák	2372	1	18
+1775	2519	Vonalkód olvasók	2373	1	30
+1776	2521	Műanyag mappa	95	1	10
+1777	2522	Pingpong ütők és kiegészítők	2460	1	20
+1778	2524	Laptop kiegészítők	NULL	0	0
+1779	2525	Ping pong labda adogatógépek	2460	1	11
+1780	2527	Virágdíszek	1547	1	10
+1781	2529	Férfi úszónadrágok	2269	1	14
+1782	2531	Fitness szőnyegek, matracok	2372	1	9
+1783	2532	Kerékpár tükrök	3389	1	10
+1784	2545	Egészségügyi szolgáltatások	1518	1	9
+1785	2546	MDA Others	NULL	0	0
+1786	2549	Keksz és jutalomfalatok	3535	1	12
+1787	2550	Táplálékkiegészítők	3535	1	13
+1788	2554	Szervezés, szállítás és tárolás	3708	0	0
+1789	2555	Tároló dobozok	2554	1	13
+1790	2556	Szennyeskosarak és lavórok	2554	1	12
+1791	2557	Vállfa és ruhatartó állvány	2554	1	12
+1792	2558	Scari si Rafturi Deleted	2554	0	0
+1793	2559	Fóliák és tasakok	3424	1	7
+1794	2562	Kiképző eszközök	1329	0	0
+1795	2563	Elektromos nyakörvek	2562	1	17
+1796	2564	Megfigyelés és láthatatlan kerítések	2562	1	21
+1797	2565	Sípok és clickerek	2562	1	12
+1798	2566	Távoltartók, riasztók	2562	1	11
+1799	2569	Klima beszerelés	1517	0	5
+1800	2570	Emelők és emelőberendezések	1481	1	24
+1801	2571	Kerék szervizberendezések	1481	1	20
+1802	2572	Tesztelők és autódiagnosztika	1481	1	18
+1803	2573	Műhelyfelszerelés	1481	1	20
+1804	2574	Professzionális szerszámok autó javításhoz	1481	1	13
+1805	2578	Izotóniás italok	2331	1	0
+1806	2579	Energizáló tabletták	2331	1	0
+1807	2580	Férfi pizsamák	2269	1	18
+1808	2584	Kuponok	657	0	0
+1809	2585	Ruházat és cipő rendezők	2554	1	10
+1810	2586	Egyszerhasználatos terítékek	3424	1	12
+1811	2588	Hordozható hangszórók	580	0	25
+1812	2589	Szánkók és téli játékok	867	1	0
+1813	2592	Női alsóneműk	1391	1	15
+1814	2593	Fürdőruhák	3016	1	22
+1815	2594	Fénykép Egyéb	NULL	0	0
+1816	2595	TV Acc	NULL	0	0
+1817	2596	Mappák	95	1	9
+1818	2600	Óvszerek	3902	1	15
+1819	2601	Audio & E-Books	NULL	0	0
+1820	2603	Papír & Papír termékek	1507	0	0
+1821	2604	Fotópapír	2603	1	8
+1822	2605	Naplók és naptárak	2603	1	15
+1823	2606	Füzetek	2653	1	12
+1824	2607	Borítékok	2603	1	16
+1825	2608	Iratminták	2603	1	9
+1826	2610	Jegyzettömb	2603	1	8
+1827	2611	Irodai kellékek	1507	0	0
+1828	2613	Gémkapcsok, iratkapcsok, iratcsipesz	2611	1	6
+1829	2614	Bélyegzők, bélyegzőpárnák és bélyegzőpárna festékek	2611	1	17
+1830	2615	Ollók és vágók	2611	1	15
+1831	2616	Irodai kelléktartók	2611	1	10
+1832	2617	Irattartók	2611	1	17
+1833	2618	Ragasztók és ragasztószalagok	2611	1	15
+1834	2619	Vonalzók	2611	0	0
+1835	2620	Irodatechnika termékek	1507	0	0
+1836	2621	Prémium írószerek	144	1	17
+1837	2622	Tollak	144	1	15
+1838	2623	Ergonomikus termékek	2620	1	8
+1839	2624	Golyóstollak	144	1	15
+1840	2625	Rollertollak	144	1	17
+1841	2626	Ceruzák és hegyezők	144	1	15
+1842	2627	Tűfilcek	144	1	8
+1843	2628	Korrektor és radír	144	1	16
+1844	2629	Grafitbél, golyóstoll betét és tinta	144	1	12
+1845	2630	Markerek	144	1	12
+1846	2631	Asztali készletek	144	1	13
+1847	2638	Gyűrűskönyvek	95	1	11
+1848	2639	Névjegykártyatartók	95	1	0
+1849	2640	Irattáskák, aktatáskák	95	1	12
+1850	2641	Archiváló dobozok	95	1	16
+1851	2642	Flipchart tábla	96	1	19
+1852	2643	Bemutató táblák	96	1	11
+1853	2645	Prezentáció kiegészítők	96	1	10
+1854	2653	Iskolai cikkek és kellékek	1507	0	0
+1855	2654	Írás és rajzolás	2653	1	13
+1856	2655	Iskolatáskák	2653	1	15
+1857	2656	Iskolai füzetek és papír	2653	1	0
+1858	2657	Fali térképek és földgömbök	2653	1	14
+1859	2660	Komplett rendszerek	401	1	39
+1860	2662	Adagoló	2764	1	17
+1861	2663	Fogkefék	928	1	12
+1862	2664	Multifunkciós főzőedények	850	1	21
+1863	2665	Tea	3705	1	14
+1864	2666	Projektorok & tartozékok	1497	0	0
+1865	2668	Női ruházat	3710	0	0
+1866	2669	Ruhák	2668	1	23
+1867	2671	Női blúzok	2668	1	17
+1868	2672	Női ingek	2668	1	18
+1869	2673	Női nadrágok és overálok	2668	1	20
+1870	2674	Női farmernadrágok	2668	1	17
+1871	2675	Női jégernadrágok	2668	1	17
+1872	2676	Szoknyák	2668	1	20
+1873	2677	Női blézerek	2668	1	18
+1874	2678	Női pólók	2668	1	15
+1875	2679	Női pulóverek	2668	1	18
+1876	2680	Női kapucnis felsők	2668	1	18
+1877	2681	Női dzsekik	2668	1	23
+1878	2682	Női ballonkabátok	2661	0	0
+1879	2683	Női hosszú kabátok	2668	1	21
+1880	2686	Női cipők	3711	0	0
+1881	2687	Női bokacsizmák	2686	1	27
+1882	2688	Női bakancsok	2686	1	27
+1883	2689	Női csizmák	2686	1	28
+1884	2690	Női tornacipők	2686	1	23
+1885	2693	Női félcipők	2686	1	26
+1886	2694	Női mokaszinek és vitorlás cipők	2686	1	26
+1887	2695	Balerina cipők	2686	1	24
+1888	2696	Női szandálok	2686	1	27
+1889	2697	Női táskák és kiegészítők	1510	0	0
+1890	2698	Női táskák	2697	1	21
+1891	2699	Női sálak és kendők	2697	1	13
+1892	2700	Női övek	2697	1	14
+1893	2701	Női ékszerek	2697	1	20
+1894	2709	Női karórák	2697	0	32
+1895	2710	Női napszemüvegek	2697	1	17
+1896	2711	Női pénztárcák	2697	1	13
+1897	2713	Női kalapok és sapkák	2697	1	14
+1898	2714	Női kesztyűk	2697	1	13
+1899	2717	Női zoknik	1391	1	11
+1900	2718	Férfi ruházat	3801	0	0
+1901	2719	Férfi pólók	2718	1	14
+1902	2720	Férfi pulóverek	2718	1	16
+1903	2721	Férfi kapucnis felsők	2718	1	18
+1904	2722	Férfi ingek	2718	1	17
+1905	2723	Férfi zakók	2718	1	17
+1906	2727	Férfi nadrágok	2718	1	19
+1907	2728	Férfi farmernadrágok	2718	1	16
+1908	2729	Férfi dzsekik	2718	1	22
+1909	2730	Férfi ballonkabátok	2661	0	0
+1910	2731	Férfi hosszú kabátok	2718	1	17
+1911	2732	Férfi cipők	3711	0	0
+1912	2733	Férfi bakancsok és bokacipők	2732	1	21
+1913	2734	Férfi csizmák deleted	2661	0	0
+1914	2735	Férfi tornacipők	2732	1	19
+1915	2736	Férfi mokaszinek és vitorlás cipők	2732	1	21
+1916	2737	Férfi cipő	2732	1	19
+1917	2738	Férfi elegáns cipők Deleted	2732	0	0
+1918	2739	Férfi kiegészítők	1510	0	0
+1919	2742	Férfi karórák	2739	0	32
+1920	2743	Férfi pénztárcák	2739	1	14
+1921	2744	Férfi övek	2739	1	15
+1922	2745	Férfi nyakkendők	2739	1	10
+1923	2712	Divatos női hátizsákok	2697	1	16
+1924	2746	Férfi csokornyakkendők	2739	1	10
+1925	2749	Mandzsettagombok	2739	1	13
+1926	2750	Férfi napszemüvegek	2739	1	19
+1927	2753	Férfi sálak és kendők	2739	1	14
+1928	2754	Férfi kalapok és sapkák	2739	1	16
+1929	2755	Férfi kesztyűk	2739	1	12
+1930	2756	Férfi zoknik	2269	1	11
+1931	2764	Fürdőszobai kellékek	NULL	0	0
+1932	2765	WC csészék, bidék és ülőkék	2764	1	20
+1933	2767	Tartozékok olvasáshoz	876	1	13
+1934	2768	Körömápoló gépek	811	1	24
+1935	2769	WC-papír és fürdőszoba kiegészítők	958	1	13
+1936	2771	Külső akkumulátorok	17	0	18
+1937	2772	Akkumulátorok	17	0	14
+1938	2773	Képernyővédő fóliák	17	0	11
+1939	2774	Egyéb kiegészítők	17	0	15
+1940	2775	Dokkolók	17	0	16
+1941	2776	Vezeték nélküli fejhallgatók	449	1	18
+1942	2779	Mobiltelefon tokok	17	0	7
+1943	2780	Töltők	17	0	16
+1944	2782	Adatkábelek/ USB kábelek	17	0	8
+1945	2783	Tablet tokok	101	1	12
+1946	2784	Táblagép védőfóliák	101	1	11
+1947	2785	Tablet kábelek és adapterek	101	1	11
+1948	2786	Tablet töltők	101	1	11
+1949	2787	Autós tartók és dokkolók	101	1	11
+1950	2788	Táblagép billentyűzetek	101	1	13
+1951	2789	Egyéb tablet tartozékok	101	1	12
+1952	2790	Audio processzorok	401	1	25
+1953	2791	Mikrofonok	401	1	23
+1954	2792	Állványok	401	1	17
+1955	2793	Vezérlők	401	1	18
+1956	2794	DJ felszerelések	401	1	20
+1957	2797	Illóolajok és illatosítók	533	1	12
+1958	2799	Aromaterápiás és wellness készülékek	533	1	22
+1959	2800	Aktivitásmérő készülékek	4337	1	28
+1960	2804	Sportórák	3811	1	31
+1961	2805	Smart Home	2338	0	0
+1962	2806	Riasztók és tartozékok	2805	1	25
+1963	2807	Biztonságtechnika és tartozékok	408	1	23
+1964	2809	Arctisztító kendő, vattakorong	1302	1	12
+1965	2810	Keverők	401	1	20
+1966	2811	Felnőtt pelenkák és inkontinencia bugyik	4332	1	16
+1967	2812	Neoncsövek	364	1	26
+1968	2813	Konnektorok	364	1	21
+1969	2814	Elektromos vezetékek és tartozékok	364	1	24
+1970	2815	Biztosítékok	364	1	19
+1971	2816	Kapcsolószekrények	364	1	17
+1972	2818	Villámhárítók és tartozékok	2872	1	2
+1973	2819	Fogók	351	1	12
+1974	2820	Kalapácsok	351	1	12
+1975	2821	Lapátok	349	1	15
+1976	2822	Szerszámosládák	351	1	13
+1977	2828	Csavarhúzók	351	1	15
+1978	2829	Szállítási és emelő felszerelések	3804	1	15
+1979	2830	Polcok, szekrények és öltözők	351	1	18
+1980	2831	Létrák	351	1	16
+1981	2832	Munkavédelmi ruházat	351	1	11
+1982	2833	Széfek és biztonsági dobozok	3804	1	21
+1983	2835	Fürdőkádak	2764	1	20
+1984	2836	Tükrök és kiegészítők DELETED	2661	0	0
+1985	2837	Fürdőszobai bútorok	2764	1	20
+1986	2838	Szellőztető rendszer	2764	1	21
+1987	2839	Lakberendezés	2872	0	0
+1988	2840	Étrend-kiegészítők	575	0	0
+1989	2842	Burkolólapok, padlólapok és mozaikok	2839	1	20
+1990	2843	Márvány, gránit mészkő	2839	1	18
+1991	2844	Dekorációs profilok	2839	1	17
+1992	2845	Töltőanyagok és csemperagasztók	2839	1	6
+1993	2846	Csempevágó gép és tartozékok	2839	1	23
+1994	2847	Ajtók és ablakok	2872	0	0
+1995	2848	Beltéri ajtók	2847	1	23
+1996	2849	Kültéri ajtók	2847	1	28
+1997	2857	Garázsajtók	2847	1	15
+1998	2858	Ablakok és tetőablakok	2847	1	24
+1999	2859	Ajtó tartozékok	2847	1	16
+2000	2860	Szilikonok, habok és technikai megoldások	2764	1	16
+2001	2862	Parketták és padlók	2839	1	19
+2002	2864	Lábazatok, padlótartozékok és szigetelések	2839	1	14
+2003	2865	Fali panelek és tartozékok	2839	1	15
+2004	2866	Egészségügyi fogyóeszközök	4012	1	17
+2005	2867	Festékek	2839	1	18
+2006	2868	Dekorációs vakolat és foglalat	2839	1	19
+2007	2869	Felületkezelések	2839	1	14
+2008	2871	Gyepgondozó eszközök	1675	1	12
+2009	2872	Építőanyagok	NULL	0	0
+2010	2873	Fürdősó és habfürdők	3779	1	14
+2011	2874	Cement, habarcs és adalékanyagok	2872	0	9
+2012	2875	Glet si sapa DELETED	2661	0	0
+2013	2877	Dekorcsempék	2872	1	7
+2014	2878	Burkolatok és szegélyek	2872	1	7
+2015	2880	Gipszkarton és tartozékok	2872	1	11
+2016	2886	Adeziv gips carton Deleted	2661	0	0
+2017	2887	Építőipari gépek	2872	0	0
+2018	2888	Fémcsövek, lemezek és profilok	2872	1	7
+2019	2889	Hidroizolatii si termoizolatii	2661	0	0
+2020	2890	Vízszigetelés és tartozékok	2872	1	10
+2021	2891	Hőszigetelés és tartozékok	2872	1	13
+2022	2751	Férfi táskák	2739	1	20
+2023	2798	Elektromos ágymelegítő	533	1	20
+2024	2892	Vízszigetelő és hőszigetelő ragasztók	2872	1	11
+2025	2893	Rehabilitációs gyógyászati eszközök	4337	1	19
+2026	2901	Hajwax és hajzselé	810	1	16
+2027	2902	Csavarok, anyák és rögzítő tartozékok	3804	1	12
+2028	2903	Lakatok	3804	1	17
+2029	2905	Tetőfedő elemek	2872	1	10
+2030	2907	Vízelvezetők	2872	1	6
+2031	2908	Betonkeverők és talicskák	2872	1	22
+2032	2909	Kerítéspanelek, kerítések és tartozékok	2872	1	16
+2033	2916	Beltéri lépcső tartozékok	2872	1	9
+2034	2920	Okosórák	2431	0	45
+2035	2925	Okos otthon	2431	0	12
+2036	2928	Karácsonyfa, műfenyő	1576	1	15
+2037	2929	Tűzijáték és konfetti	1576	1	4
+2038	2930	Zászlók, zászlófüzérek és girlandok	1576	1	12
+2039	2931	Robogók, ATV-k és más járművek	1410	0	0
+2040	2932	Motorkerékpárok és robogók	2931	1	58
+2041	2935	Motoros ruházat és - felszerelés	2931	1	6
+2042	2939	Keresztelő kellékek	3217	1	0
+2043	2942	Elektromos cigaretták	4074	0	27
+2044	2943	Üzemanyag-utalványok	1518	1	4
+2045	2944	Körömvágó ollók	3051	1	15
+2046	2945	Csipeszek	3051	1	13
+2047	2946	Körömdíszítők és műkörmös kellékek	3051	1	13
+2048	2947	Körömlakklemosó és körömápolók	3051	1	16
+2049	2952	Manikűr pedikűr készletek	3051	1	9
+2050	2953	Fejhallgató erősítők	449	1	18
+2051	2954	Hűtőládák	1840	1	21
+2052	2957	Férfi fürdőköpenyek	2269	1	14
+2053	2958	Ágyrácsok	1529	1	13
+2054	2959	Optika	4336	0	0
+2055	2960	Szemüvegek	2959	1	20
+2056	2961	Szemüvegkeretek	2959	1	15
+2057	2963	Kontaktlencsék	2959	1	19
+2058	2964	Szemüveg és kontaktlencse tartozékok	2959	1	15
+2059	2965	Napozás utáni készítmények	3907	1	16
+2060	2966	Kilincsek	3804	1	12
+2061	2967	Komposztálók	349	1	9
+2062	2968	Menyasszonyi ruhák	2668	1	16
+2063	2975	Kulcstartók	2739	1	14
+2064	2976	Beépíthető sütő és főzőlap szettek	419	1	0
+2065	2978	Medencék	3971	1	11
+2066	2981	Alkoholszonda	4189	1	18
+2067	2982	Protein szeletek	2331	1	0
+2068	2983	Trampolina Deleted	2661	0	0
+2069	2991	Kerti kanapék és fotelek	1541	1	14
+2070	2993	Professzionális erősítők	401	0	0
+2071	2997	Székek	1535	1	23
+2072	3005	Férfi ajándék kiegészítők	2739	0	0
+2073	3008	Vízszűrők	3708	0	0
+2074	3009	Fagyasztószekrények	3966	1	39
+2075	3010	Rollerek	2409	1	26
+2076	3011	Férfi papucsok	2732	1	15
+2077	3012	Férfi szandálok	2732	1	22
+2078	3013	Női klumpák és papucsok	2686	1	23
+2079	3014	Külső SSD meghajtók	662	1	11
+2080	3016	Női strand kiegészítők	3710	0	0
+2081	3019	Strandruházat	3016	1	15
+2082	3020	Beach Accessories	3016	1	19
+2083	3021	Gyerek- és ifjusági bútorok	1529	1	0
+2084	3022	Várótermi bútorok Deleted	1520	0	0
+2085	3023	Éjjeliszekrények	1529	1	19
+2086	3024	Radiátorok	3754	1	19
+2087	3025	Bevásárlókocsik	2554	1	10
+2088	3028	Vetőmagok	1675	0	0
+2089	3031	Vízi növények	1675	0	0
+2090	3033	Navigációs térképek	574	0	0
+2091	3034	Autó - Motor személyre szabott ajándékok	2931	0	0
+2092	3035	Autós-motoros ajándéktárgyak	3034	1	5
+2093	3036	Autó - Motor ajándékok	3034	1	7
+2094	3038	Lábvédők és ortézisek	4338	1	9
+2095	3039	Egyéb étrendkiegészítők	2840	1	13
+2096	3040	Winery deleted	1700	0	0
+2097	3050	Bor Deleted	3040	0	0
+2098	3051	Manikűr és pedikűr tartozékok	764	0	0
+2099	3052	Szemöldökformázók	1294	1	16
+2100	3053	Korrektor	1294	1	16
+2101	3054	Szemhéjtus és szemceruza	1294	1	16
+2102	3055	Highlighterek és kontúrozók	1294	1	19
+2103	3056	Gyepszellőztetők	349	1	31
+2104	3057	Kerti ollók	349	1	13
+2105	3058	Tartozékok kertészeti gépekhez	349	1	17
+2106	3059	Szilárd tüzelésű kazánok, kályhák és kandallók	3754	1	31
+2107	3060	Csövek és fittingek	3754	1	19
+2108	3061	Csövek és csővezetékek	3754	1	13
+2109	3062	Napkollektoros rendszerek és napelemek	3754	1	32
+2110	3063	Szeptikus tartályok	3754	1	15
+2111	3064	Radiátor és kandalló tartozékok	3754	1	18
+2112	3065	Csaptelep tartozékok	2764	1	12
+2113	3066	Mosdókagylók és talapzatok	2764	1	25
+2114	3067	Padlófűtés	3754	1	17
+2115	3068	Fotóalbumok	1547	1	11
+2116	3072	Légterelő	1461	1	6
+2117	3073	Hálók	2460	1	11
+2118	3074	Borkészítési termékek	349	1	16
+2119	3075	Komplett kerekek	1411	1	24
+2120	3077	Gamer székek	761	1	16
+2121	3078	Adathordozók és tartók	2620	1	15
+2122	3080	Virágcsokrok	1547	1	9
+2123	2936	Motorkerékpár kiegészítők	2931	1	16
+2124	3081	Virágkosarak	1547	0	0
+2125	3082	Gyerek karórák	4292	1	21
+2126	3083	Ajándék ötletek	3158	0	0
+2127	3084	Női esernyők	2697	1	18
+2128	3085	Férfi esernyők	2739	1	16
+2129	3086	Férfi nadrágtartó	2739	1	12
+2130	3088	Betoncsiszoló	2887	1	24
+2131	3089	Betonvibrátor	2887	1	25
+2132	3090	Betonvágó	2887	1	18
+2133	3091	Lemez tömörítő	2887	1	25
+2134	3092	Döngölők	2887	1	26
+2135	3093	Betonsimító	2887	1	12
+2136	3094	Csomagok és ajándékkosarak	3988	0	13
+2137	3096	Dohány, szivar és szivarkák	4074	0	18
+2138	3097	Édességek	3988	0	11
+2139	3098	Teraszfűtők	349	1	22
+2140	3099	Érmék és nemesfém rudak	2373	1	9
+2141	3100	Mezőgazdasági eszközök	931	0	0
+2142	3101	Traktorok DELETED	1410	0	35
+2143	3102	Pellettek és brikettek	3754	1	11
+2144	3103	Interaktív játékok	1501	0	0
+2145	3104	Sportfelszerelés védőhuzatok	3811	1	14
+2146	3105	Horgászbotok	2337	1	13
+2147	3106	Spiccbotok	2337	1	10
+2148	3113	Vonós hangszerek	3127	0	0
+2149	3114	Csalik és etetőanyagok	2337	1	6
+2150	3115	Kerekesszékek	4338	1	24
+2151	3122	Horgász zsákok és matracok	2337	1	11
+2152	3125	Haj kiegészítők	2697	1	13
+2153	3126	Horgász szék tartozékok	2337	1	11
+2154	3127	Hangszerek	NULL	0	0
+2155	3128	Gitárok	3127	1	37
+2156	3129	Férfi sport pólók	1799	1	16
+2157	3131	Szexi fehérnemű	1391	1	19
+2158	3132	Márciuska	1510	1	10
+2159	3133	Férfi felsők	2718	1	17
+2160	3134	Robotika	1501	0	0
+2161	3135	Processzorok és mikrovezérlők	3134	1	16
+2162	3136	Robot készletek	3134	1	16
+2163	3137	Robot érzékelők	3134	1	20
+2164	3138	Robot mechanikai alkatrészek	3134	1	21
+2165	3139	LCD-k robotokhoz, automatikákhoz	3134	1	24
+2166	3140	Vezeték nélküli komponensek	3134	1	21
+2167	3141	Tápegységek	3134	1	13
+2168	3143	Robot modulok és komponensek	3134	1	14
+2169	3144	Robot tartozékok	3134	1	17
+2170	3145	Vízipipák és dohányzási kellékek	4074	0	17
+2171	3146	Állattenyésztés termelés	349	0	0
+2172	3147	Inkubátorok	3146	1	23
+2173	3148	Fejőgépek	3146	1	23
+2174	3149	Itatórendszerek	3146	1	15
+2175	3150	Professzionális szerszámok	351	0	0
+2176	3151	Hidraulikuis szerszámok	3150	1	22
+2177	3152	1000V szigetelt csavarhúzók	3150	1	10
+2178	3153	Robbanásbiztos szerszámok	3150	1	9
+2179	3154	Hydro installations	2764	0	0
+2180	3155	Csapok	3154	1	9
+2181	3156	Szűrőberendezések	3154	1	27
+2182	3157	Villanypásztorok	3146	1	24
+2183	3158	Ajándék	NULL	0	0
+2184	3160	Gyerek népviseletek	3217	1	13
+2185	3161	Emléktárgyak	1547	1	13
+2186	3162	Gobelin készletek	1547	1	12
+2187	3163	Horgászcsónakok	2337	1	23
+2188	3164	Drón tartozékok	668	1	11
+2189	3165	Ablak tartozékok	2847	1	11
+2190	3167	Tápszerek	1373	0	6
+2191	3168	Speciális tápszerek	1373	0	6
+2192	3169	Tej és gabonapépek	1373	0	6
+2193	3170	Gyümölcspürék	1373	0	6
+2194	3171	Menük	1373	0	6
+2195	3172	Desszertek és kekszek	1373	0	6
+2196	3173	Üdítők és teák	1373	0	8
+2197	3174	Üdvözlőkártyák	2603	1	12
+2198	3175	Gourmet termékek	3988	0	8
+2199	3176	Pénztárgép	2620	1	24
+2200	3177	Pénztárfiók	2620	1	16
+2201	3178	Pénzszámláló gép	2620	1	11
+2202	3179	Női nadrágtartók	2697	1	8
+2203	3180	Cipőápolási termékek és kiegészítők	958	1	19
+2204	3181	Ekék	3100	1	18
+2205	3182	Tárcsás boronák	3100	1	18
+2206	3183	Malmok	3100	1	20
+2207	3184	Kombájnok	3100	1	15
+2208	3185	Vetőgépek	349	1	19
+2209	3186	Kapák	3100	1	17
+2210	3187	Trágyázó gépek	349	1	14
+2211	3188	Kerti aprítógépek	3100	1	20
+2212	3189	Irtóborona	3100	1	17
+2213	3190	Baba játékok	1501	0	0
+2214	3191	Fejőgép tartozékok	3146	1	17
+2215	3192	Színes ceruzák és filctollak	2653	1	13
+2216	3195	Füzetcímke	2653	1	0
+2217	3196	Kréták és iskolai táblák	2653	1	15
+2218	3197	Vízfestékek, ecsetek és rajzlapok	2653	1	29
+2219	3198	Gyurma	2653	1	13
+2220	3199	Abakuszok és ábécé tanuló készletek	2653	1	13
+2221	3200	Geometriai eszközök	2653	1	11
+2222	3201	Oktatási programok és szoftverek	2653	1	11
+2223	3121	Oldaltáskák	1840	1	14
+2224	3202	Baba nedves törlőkendők	1370	1	10
+2225	3203	Cumisüvegek, cumik és etető tartozékok	1500	0	0
+2226	3204	Cumik és tartozékok	3942	1	7
+2227	3205	Bögrék, poharak és baba tartozékok	3942	1	10
+2228	3206	Baba etetési kellékek	3942	1	11
+2229	3207	Cumisüveg melegítők és termoszok	3942	1	13
+2230	3208	Cumisüveg sterilizáló	3942	1	11
+2231	3209	Baba etetőszékek	3942	1	16
+2232	3210	Újszülött ruhák	3802	1	0
+2233	3211	Újszülött kezeslábasok	3210	0	0
+2234	3212	Lábfejes nadrágok	3210	0	0
+2235	3213	Újszülött sapkák	3210	0	0
+2236	3214	Újszülött kesztyűk	3210	0	0
+2237	3215	Baba kezeslábas	3210	0	0
+2238	3216	Gyerek pólók	3217	1	14
+2239	3217	Gyerek ruhák Fashion	3802	0	0
+2240	3218	Gyerek blúzok	3217	1	19
+2241	3219	Gyerek ingek	3217	1	18
+2242	3220	Gyerek dzsekik	3217	1	18
+2243	3221	Gyerek pulóverek és kardigánok	3217	1	19
+2244	3222	Gyerek dzsekik és mellények	3217	1	22
+2245	3223	Gyerek ruhák	3217	1	19
+2246	3224	Gyerek rövidnadrágok	3217	1	16
+2247	3225	Gyerek szoknyák	3217	1	19
+2248	3226	Gyerek fehérneműk	3217	1	13
+2249	3227	Gyerek pizsamák	3217	1	20
+2250	3228	Gyerek fürdőruhák	3217	1	17
+2251	3229	Gyerek ruházat kiegészítők	4292	1	21
+2252	3230	Gyerek lábbelik	3802	0	0
+2253	3231	Gyerek síbakancsok	3230	0	0
+2254	3232	Gyerek bakancsok	3230	1	20
+2255	3233	Gyerek mokaszinok	3230	0	0
+2256	3234	Gyerek balerinák	3230	0	0
+2257	3235	Gyerek szandálok	3230	1	14
+2258	3236	Babacipők	3217	1	14
+2259	3237	Gyerek papucsok és flip-flopok	3230	1	15
+2260	3238	Gyerekszoba bútor	1500	0	0
+2261	3239	Babahinták, hintaszékek és függőágyak	3238	1	15
+2262	3240	Pelenkázóasztalok	3238	1	13
+2263	3241	Gyerekszoba bútor	3238	1	15
+2264	3242	Gyerek biztonsági eszközök	3238	1	10
+2265	3243	Pólók terhes nőknek	1351	0	0
+2266	3244	Blúzok és ingek terhes nőknek	1351	0	0
+2267	3245	Nadrágok, farmerek és harisnyák terhes nőknek	1351	0	0
+2268	3246	Pulóverek terhes nőknek	1351	0	0
+2269	3247	Dzsekik és kabátok terhes nőknek	1351	0	0
+2270	3248	Pizsamák és fehérneműk terhes nőknek	1351	0	0
+2271	3249	Matracok, gyerekágy ágyneműk és kiegészítők	1500	0	0
+2272	3250	Gyerek matracok	3249	1	15
+2273	3252	Baba és gyerek hálózsákok	3249	1	9
+2274	3254	Autós gyerekülések	1358	1	15
+2275	3255	Babaerszények és babahámok	1358	1	13
+2276	3256	Bébikompok	1358	1	14
+2277	3257	Babahordozó eszközök	1358	1	11
+2278	3258	Mózeskosarak	1358	1	16
+2279	3259	Higiénia és gyerekgondozás	1500	0	0
+2280	3260	Gyermek tusfürdők és szappanok	3259	1	13
+2281	3261	Gyerek krémek és testápolók	3259	1	11
+2282	3262	Gyerek testápoló olaj	3259	1	9
+2283	3263	Szájhigiéniai termékek gyerekeknek	3259	1	14
+2284	3264	Sóoldatok és steril borogatások	575	1	8
+2285	3265	Bilik és WC szűkítők	1363	1	14
+2286	3266	Égészségügyi és gyermekgondozási készülékek	1500	0	0
+2287	3267	Gyerek és baba mérlegek	3266	1	18
+2288	3268	Párásítók	94	1	22
+2289	3270	Детски бодита	3217	1	13
+2290	3272	Visszavásárolt telefonok	754	0	0
+2291	3273	Visszavásárolt tablettek	1487	0	0
+2292	3274	Visszavásárolt laptopok	1486	0	0
+2293	3276	Smink gyerekeknek	3259	1	9
+2294	3277	Rágókák	3190	1	12
+2295	3278	Baba tevékenységi játékközpont	3190	1	14
+2296	3279	Fürdőjátékok	3190	1	10
+2297	3280	Baba csörgők	3190	1	11
+2298	3281	Kiságyforgó	3190	1	16
+2299	3282	Húzó és tolójátékok	3190	1	12
+2300	3283	Babakocsi és kiságy játékok	3190	1	14
+2301	3284	Játékfegyverek	868	1	15
+2302	3285	Szépség, ékszerek és kislány tartozékok	868	1	15
+2303	3286	Maszkok és gyerek jelmezek	868	1	9
+2304	3287	Bevásárlóközpont játékszett	868	1	13
+2305	3288	Kertész játékszett	868	1	10
+2306	3289	Laptopok, tabletek és gyerek kütyük	861	1	19
+2307	3290	Interaktív babajátékok	3190	1	14
+2308	3291	Oktatásijátékok deleted	861	0	0
+2309	3292	Oktatási játékok	861	0	0
+2310	3293	Gyerek trambulinok	867	1	13
+2311	3294	Gyerek csúszdák	867	1	14
+2312	3295	Gyerek hinták	867	1	16
+2313	3296	Gyerek mérleghinták	867	1	11
+2314	3303	Verseny modellezés	1501	0	0
+2315	3304	Motor - és ESC-modellezés	3303	1	21
+2316	3305	Rádióvezérlők	3303	1	21
+2317	3306	Modellezés elemek és töltők	2661	1	0
+2318	3308	Modellezés 1	1501	0	0
+2319	3309	Autómodellező készlet	3308	1	16
+2320	3310	Hajómodellező készlet	3308	1	16
+2321	3311	Katonai jármű modellező készlet	3308	1	17
+2322	3251	Párnák, paplanok és babapozicionálók	3249	1	14
+2323	3253	Baba takarók	3249	1	15
+2324	3312	FALLER Car System	3308	1	0
+2325	3313	Modellező festékek és ragasztók	3308	1	12
+2326	3314	Modellező segédeszközök  és kiegészítők	3308	1	11
+2327	3315	Játékmodellek	1501	0	0
+2328	3316	Repülőgép modellek	3315	1	16
+2329	3317	Modellhajók	3315	1	15
+2330	3318	Katonai jármű modellek	3315	1	15
+2331	3319	Építési munkagépek	3315	1	13
+2332	3320	Gyűjtőjátékok	1501	0	0
+2333	3321	Gyűjtőbabák	3320	1	10
+2334	3322	Gyűjtővonatok	3320	1	16
+2335	3323	Gyűjtőautók	3320	1	12
+2336	3324	Gyűjtő plüss játékok	3320	1	12
+2337	3325	Egyéb gyűjtőjátékok	3320	1	12
+2338	3326	Diorámák	1501	0	0
+2339	3327	Kész diorámák	3326	1	11
+2340	3335	Épületek diorámákhoz	3326	1	9
+2341	3337	Tartozékok diorámákhoz	3326	1	11
+2342	3338	Fúvós hangszerek	3127	1	28
+2343	3347	Gitárhúrok és hangszer kiegészítők	3127	1	35
+2344	3360	Nyilvános beszéd alatt használandó kellékek	3127	0	0
+2345	3361	Megafonok	3360	1	16
+2346	3362	Harsona	3360	1	15
+2347	3363	Füst-és fényhatások	3127	0	0
+2348	3364	Ködgép	3363	1	22
+2349	3366	Fényfelszerelés	3363	1	26
+2350	3367	Billentyűs hangszerek	3127	1	33
+2351	3372	Ütős hangszerek, hangterápiás termékek	3127	1	22
+2352	3375	Bojler szerelés szolgáltatás	1517	0	7
+2353	3377	Gyerek medencék	867	1	15
+2354	3378	Gyermek úszógumik, úszószemüvegek és kiegészítők	867	1	12
+2355	3379	Gumimatracok és gumilabdák	867	1	11
+2356	3381	Baba ruha szettek	2661	0	0
+2357	3382	Pelenka és játék tárolók	1370	1	10
+2358	3383	Gyerek melegítő szettek	3217	1	18
+2359	3384	Gyerek ruházat	3217	1	24
+2360	3385	Gyerek síruházat	3217	0	0
+2361	3386	Gyerek parfümök és dezodorok	3753	1	13
+2362	3387	Gyerek lázmérők	3266	1	17
+2363	3388	Képességfejlesztő játékok	3190	1	14
+2364	3389	Kerékpár tartozékok	1695	0	0
+2365	3392	Szoptatási kellékek	1351	1	11
+2366	3394	Okosórák és aktivitásmérők	2431	0	0
+2367	3395	VR szemüvegek és kiegészítők	2431	0	0
+2368	3396	Okos egészségügyi eszközök	2431	0	0
+2369	3397	Smart Home Technologies	2431	0	0
+2370	3398	Kütyük	2431	0	0
+2371	3399	Okosóra kiegészítők	3394	1	22
+2372	3400	Aktivitásmérő kiegészítők	3394	1	13
+2373	3401	Virtuális valóság szemüvegek	3395	1	20
+2374	3402	VR szemüveg kiegészítők	3395	1	8
+2375	3403	Okosmérlegek	3396	1	18
+2376	3404	Okos vércukor-és vérnyomásmérők	3396	1	33
+2377	3405	Alvásfigyelő készülékek	3396	1	13
+2378	3406	Okos otthon csomagok	3397	0	0
+2379	3407	Okos otthoni készletek és kiegészítők	3397	1	32
+2380	3410	Okos riasztórendszerek	3397	1	22
+2381	3411	Okos ruházati kiegészítők	3398	1	15
+2382	3412	Lokalizációs kütyük	3398	1	17
+2383	3413	Megfigyelőrendszerek	3398	1	19
+2384	3414	Autómodellek Deleted	3315	0	0
+2385	3415	Aktivitásmérők	3394	1	20
+2386	3416	Gyerek inhalátorok és tartozékok	3266	1	21
+2387	3417	Éjszakai fények, alvást segítő plüssállatok	3238	1	20
+2388	3418	Gyermek szőnyegek	3238	1	15
+2389	3419	VR Gaming szemüvegek	762	0	19
+2390	3420	VR Gaming kiegészítők	762	1	15
+2391	3421	Tiszítás és karbantartás	1505	0	0
+2392	3422	Mosás és ruhaápolás	958	0	0
+2393	3423	Fürdőszobai tisztító termékek	958	0	0
+2394	3424	Konyhai tisztító termékek	958	0	0
+2395	3425	Lakás tisztítás	958	0	0
+2396	3426	Szervezés és tárolás	3421	1	7
+2397	3427	Díszítések	4344	0	0
+2398	3429	Beltéri díszítések	2661	0	0
+2399	3430	Party kiegészítők	3427	0	0
+2400	3431	Fényforrások	364	0	0
+2401	3432	Kiegészítő világítástechnikai termékek	364	0	0
+2402	3433	Felszolgálás	3708	0	0
+2403	3434	Terítékek	3433	0	0
+2404	3435	Poharak és bár kiegészítők	3433	0	0
+2405	3436	Étkezési kellékek	3433	0	0
+2406	3437	Tárolás	3433	0	0
+2407	3438	Toalettpapírdeleted	3423	0	0
+2408	3439	Toalett fertőtlenítő	3423	1	6
+2409	3440	Vízkőoldó	3423	1	7
+2410	3441	Fürdőszobai tisztítószerek	3423	1	7
+2411	3442	WC illatosító	3423	1	6
+2412	3443	WC kefék	3423	1	0
+2413	3444	Univerzálistisztítószerek deleted	2661	0	0
+2414	3445	Bútortisztító szerek	3425	1	7
+2415	3446	Padlótisztító szerek	3425	1	9
+2416	3447	Ablaktisztító szerek	3425	1	5
+2417	3448	Ablaktörlők	3425	0	0
+2418	3449	Szőnyegtisztító szerek	3425	1	5
+2419	3450	Rovarcsapdák	3425	1	16
+2420	3451	Légfrissítők deleted	3425	0	0
+2421	3452	Mosogatószer deleted	2661	0	0
+2422	3453	Konyhaifelülettisztítószerek deleted	2661	0	0
+2423	3376	Memória és intelligencia játékok	861	1	13
+2424	3454	Szemeteszsákokdeleted	2661	0	0
+2425	3455	Konyhaiszivacsokésszivacskendők deleted	3424	0	0
+2426	3456	Fóliákéstasakok deleted	2661	0	0
+2427	3457	Papírtörlőkésszalvéták deleted	3424	0	0
+2428	3458	Egyszerhasználatoskesztyűk deleted	2661	0	0
+2429	3459	Eldobható terítékek	3424	0	0
+2430	3460	Seprűk, felmosók és vödrök Deleted	2661	0	0
+2431	3461	Tisztító készletek Deleted	3424	0	0
+2432	3462	Mosószerdeleted	2661	0	0
+2433	3463	Öblítőszer deleted	2661	0	0
+2434	3464	Vízkő-eltávolító	3422	1	5
+2435	3465	Folteltávolító	3422	1	8
+2436	3466	Textilápoló szerek	3422	1	8
+2437	3467	Ruhafehérítő és keményítő	3422	1	7
+2438	3468	Vasalódeszkákdeleted	2661	0	0
+2439	3469	Vasalódeszka huzatok	1646	1	14
+2440	3470	Ruhaszárítók deleted	2661	0	0
+2441	3471	Ruhaszárító tartozékok	1646	1	8
+2442	3472	Ruháskosarakmosdótálak deleted	2661	0	0
+2443	3473	Tároló dobozok	2661	0	0
+2444	3474	Vákuum tasakok és ruhazsákok	2661	0	0
+2445	3475	Vállfák és állványok	2661	0	0
+2446	3476	Szemetesek	2661	0	0
+2447	3477	Karácsonyfák	2661	0	0
+2448	3478	Karácsonyfa tartók	1576	1	9
+2449	3479	Karácsonyi fények	1576	1	23
+2450	3480	Karácsonyfa gömbök	1576	1	12
+2451	3481	Karácsonyi girlandok	1576	1	12
+2452	3482	Karácsonyi koszorúk	1576	1	15
+2453	3483	Karácsonyi dekorációs figurák	1576	1	12
+2454	3484	Mesterséges hó	1576	1	4
+2455	3485	Karácsonyi jelmezek és kiegészítők	1576	1	11
+2456	3486	Tapéta	2661	0	0
+2457	3487	Deleted - Festmények	2661	0	0
+2458	3488	Dekorációs matricák	1547	1	16
+2459	3489	Dekoratív órák	2661	0	0
+2460	3490	Fotóalbumok deleted	2661	0	0
+2461	3492	Dekoratív vázák és tálak	2661	0	0
+2462	3493	Tükrök	1547	1	14
+2463	3494	Gyertyák és lámpák	1700	0	0
+2464	3495	Gyertyatartók	1547	1	14
+2465	3498	Dekoratív kiegészítők	3429	0	0
+2466	3499	Műnövények	1547	1	11
+2467	3500	Léggömbök	3430	1	10
+2468	3501	Tűzijáték és konfetti	2661	0	0
+2469	3502	Sisakok és fúvók	2661	0	0
+2470	3503	Dekoratív zászlófüzérek és girlandok	2661	0	0
+2471	3504	Farsangi maszkok és jelmezek	1573	1	10
+2472	3505	Meghívók (Ajándékokba kerül)	3430	0	0
+2473	3506	Lampionok	3430	1	14
+2474	3507	Ideiglenes tetoválások	3430	1	10
+2475	3508	Beltéri világítás	364	0	0
+2476	3509	Kültéri világítás	364	0	0
+2477	3510	Csillárok és függesztékek	3508	1	23
+2478	3511	Faliésmennyezetilámpák deleted	2661	0	0
+2479	3512	Spotlámpák	3508	1	27
+2480	3513	Állólámpák	3508	1	28
+2481	3515	Lámpák és oszlopok	3509	1	26
+2482	3517	Napelemes lámpák	3509	1	23
+2483	3518	Világítási kiegészítők	3509	1	22
+2484	3519	Ipari világítás	3509	1	30
+2485	3520	Zseblámpák deleted	2661	0	0
+2486	3521	Izzók deleted	2661	0	0
+2487	3522	Neoncsövek deleted	2661	0	0
+2488	3523	LED szalagok	3431	1	28
+2489	3524	Hosszabbítók/Elosztók deleted	2661	0	0
+2490	3525	Hosszabbító/Elosztó kiegészítők	3432	1	21
+2491	3526	Elektromos vezetékek és tartozékok	2661	0	0
+2492	3527	Konnektorok deleted	2661	0	0
+2493	3528	Kapcsolók	3432	1	20
+2494	3529	Konnektor és kapcsoló kiegészítők	3432	1	14
+2495	3530	Biztosítékok deleted	2661	0	0
+2496	3531	Elektromos csengők	3432	1	16
+2497	3532	Kapcsolószekrények Deleted	3432	0	0
+2498	3533	Kapcsolószekrény kiegészítők/tartozékok	3432	1	12
+2499	3534	Mérési és ellenőrzési eszközök	2661	0	0
+2500	3535	Eledel	1329	0	0
+2501	3536	Kiegészítők Deleted	1329	0	0
+2502	3537	Házikedvenc kozmetikumok	1329	0	0
+2503	3538	Higiénia	1329	0	0
+2504	3539	Divat	1329	0	0
+2505	3541	Idomító eszközök	1329	0	0
+2506	3542	Akváriumok és terráriumok	1329	0	0
+2507	3543	Akváriumok & Terráriumok	3542	0	0
+2508	3544	Akvárium és terrárium bútorok és kiegészítők	3542	1	13
+2509	3545	Akvárium dekorációk és mesterséges növények	3542	1	13
+2510	3546	Akvárium szűrők és szűrőanyagok	2661	0	0
+2511	3547	Levegő szivattyúk és akvárium tartozékok	3542	1	22
+2512	3548	Akvárium világító termékek	3542	1	20
+2513	3549	Akvárium melegítők és hűtők	3542	1	20
+2514	3550	Akvárium sterilizálók	3542	1	16
+2515	3551	Akvárium és terrárium tisztítószerek	3542	1	16
+2516	3552	Akváriumi víztesztek	3542	1	6
+2517	3553	Akvárium szkimmerek	3542	1	21
+2518	3555	Akváriumi szerek és kezelések	3542	1	10
+2519	3556	Akváriumi növénytáp	3542	1	5
+2520	3497	Hamutartók	1547	1	15
+2521	3514	Éjjeli és asztali lámpák	3508	1	28
+2522	3516	Reflektorok és munkalámpák	3509	1	25
+2523	3554	Akváriumi etetők	3542	1	13
+2524	3557	Etető és itató tálak	2661	0	0
+2525	3558	Nyakörvek, pórázok, hámok	2661	0	0
+2526	3559	Sampon és balzsam	2661	0	0
+2527	3560	Tisztítószerek állatoknak	3537	1	15
+2528	3561	Szájhigiéniai termékek	3537	1	14
+2529	3562	Parazitaellenes készítmények	2661	0	0
+2530	3563	Kefék, nyírók és fogók	2661	0	0
+2531	3564	Házikedvenc kozmetikumok ( parfümök, dezodorok, körömlakk)	3537	1	11
+2532	3565	Kiskedvenc ruházat	2661	0	0
+2533	3566	Kisállat cipők	3539	1	12
+2534	3567	Állat parfümök	3539	1	0
+2535	3568	Kiskedvenc medálok	3539	1	14
+2536	3569	Kisállat ruházat kiegészítők (fejpántok, kendők, sapkák)	3539	1	14
+2537	3570	Kutyaeledel	3535	0	0
+2538	3571	Macskaeledel	3535	1	12
+2539	3572	Hal- és hüllőeledel	3535	1	6
+2540	3573	Madár- és rágcsálóeledel	3535	1	4
+2541	3574	Kekszek és jutalomfalatok deleted	3535	0	0
+2542	3575	Kisállat táplálékkiegészítők	3535	0	0
+2543	3576	Kisállat ágyak, párnák és matracok	2661	0	0
+2544	3577	Kisállathordozó táskák és eszközök	2661	0	0
+2545	3578	Kutyaházak, ketrecek és kalitkák	1333	1	23
+2546	3579	Kisállat bútor és szállítási eszköz kiegészítők	2661	0	0
+2547	3580	Kisállat takarók és alátétek	2661	0	0
+2548	3581	Alomtálca	3538	1	10
+2549	3582	Alomtálca kiegészítők (lapátok, szőnyegek, szűrők, zacskók)	3538	1	10
+2550	3583	Kisállat folteltávolítók (spray-k, oldatok)	3538	1	16
+2551	3584	Elektronikus nyakörvek	3541	0	0
+2552	3585	Kutyasípok deleted	3541	0	0
+2553	3586	Élősködők elleni szerek	3541	0	0
+2554	3587	Poharak Deleted	3435	0	0
+2555	3588	Kancsók és borospalackok	3435	1	14
+2556	3589	Jeges vödrök és fogók	3435	1	13
+2557	3590	Jégkocka formák	3435	1	11
+2558	3591	Termoszok és termosz bögrék deleted	3435	0	0
+2559	3592	Koktél shakerek deleted	3435	0	0
+2560	3593	Dugóhúzók és dugók Deleted	3435	0	0
+2561	3594	Szívószálak és koktél dekorációks-deleted	3435	0	0
+2562	3595	Italtartók	3435	1	17
+2563	3596	Befőttesüvegek és fedők	3437	1	14
+2564	3597	Ételdobozok-Deleted	3437	0	0
+2565	3598	Szalvétatartók	3437	1	12
+2566	3599	Fűszerdarálók és fűszeradagolók Deleted	3437	0	0
+2567	3600	Olaj és ecet adagolók deleted	3436	0	0
+2568	3601	Felszolgáló szettek	3436	1	14
+2569	3602	Felszolgáló kosarak deleted	3436	0	0
+2570	3603	Felszolgáló tálcák deleted	3436	0	0
+2571	3604	Tálcáksdeleted	2661	0	0
+2572	3605	Tányéralátétek Deleted	2661	0	0
+2573	3606	Fogpiszkálók	3436	1	7
+2574	3607	Étkészletek	3434	0	0
+2575	3608	Tányérok-deleted	3434	0	0
+2576	3609	Konyhai tálcák DELETED	3434	0	0
+2577	3610	Tálak	3434	0	0
+2578	3611	Bögrék és csészék Deleted	3434	0	0
+2579	3612	Desszert étkészletek Deleted	3434	0	0
+2580	3613	Edénytartók	3434	1	9
+2581	3614	Evőeszközök és készletek Deleted	3434	0	0
+2582	3616	Bögrék, szűrők és szűrőberendezések deleted	2661	0	0
+2583	3617	Bögrék és szűrőrendszerek	3616	0	0
+2584	3618	Bögre szűrők és kiegészítők	3616	0	0
+2585	3619	Főzőedények	1603	1	0
+2586	3620	Serpenyők deleted	2661	0	0
+2587	3621	Fagyasztóládák	3966	1	27
+2588	3622	Kukták	1603	1	15
+2589	3623	Tepsik	1603	1	19
+2590	3624	Hőálló edények deleted	2661	0	0
+2591	3625	Főzőedény fedők deleted	2661	0	0
+2592	3626	Vízforralók deleted	2661	0	0
+2593	3627	Teáskannák	1603	1	14
+2594	3629	Tea kiegészítők	1603	1	12
+2595	3630	Főző kellékek	2661	0	0
+2596	3631	Késekéskéskészletek Deleted	3630	0	0
+2597	3632	Késélezők	1607	1	20
+2598	3633	Vágódeszkák	1607	1	12
+2599	3634	Konyhailapátokkanalak fogók deleted	3630	0	0
+2600	3635	Konyhai ecsetek, spatulák és habverők	1607	1	15
+2601	3636	Konyhaiszitákéstartozékok deleted	3630	0	0
+2602	3637	Szűrők	1607	1	10
+2603	3638	Reszelők és tartozékok	1607	1	12
+2604	3639	Zöldségésgyümölcshámozók deleted	3630	0	0
+2605	3640	Kézi szeletelők	1607	1	14
+2606	3641	Tésztavágók deleted	3630	0	0
+2607	3642	Süteményformák deleted	3630	0	0
+2608	3643	Sütemény díszítő eszközök	1607	1	12
+2609	3644	Konyhai mérőeszközök	1607	1	10
+2610	3645	Présekéskézi facsarók deleted	3630	0	0
+2611	3646	Konyhai ollók	1607	1	12
+2612	3648	Pótkocsik	349	1	16
+2613	3649	Gyémánt ékszerek	2697	1	16
+2614	3650	Rendezvény jegyek	1518	1	12
+2615	3651	Turisztikai csomagok	1518	1	15
+2616	3652	Kisállat játék felszerelések	1333	1	8
+2617	3653	Gyerekszoba dekorációk	3238	1	9
+2618	3654	Kültéri tervezés	2764	0	0
+2619	3655	Készházak	1518	1	17
+2620	3656	Vicces ajándékok	1573	1	9
+2621	3657	Lótakarmány	3535	1	6
+2622	3615	Evőeszköz tartók	3434	1	9
+2623	3647	Konyhai hőmérők	1607	1	22
+2624	3658	Akvárumi és terráriumi hőmérők	3542	1	14
+2625	3659	Akvárium és terrárium homokok és aljzatok	3542	1	7
+2626	3660	Nedvességmegkötő	3423	1	13
+2627	3661	Lefolyó tisztitó	3423	1	6
+2628	3662	Ikonok	3427	1	13
+2629	3663	Dekoratív mágnesek	1547	1	10
+2630	3664	Festőállványok	1547	1	18
+2631	3665	Esernyőtartók	1547	1	10
+2632	3666	Party tányérok	1573	1	13
+2633	3667	Arc és testfestés	1573	1	13
+2634	3668	Személyre szabott ajándékok	3427	1	17
+2635	3669	Gyermek kreatív készletek	2653	1	11
+2636	3671	Csíráztatók	349	1	17
+2637	3673	Yachtok és csónakok	1518	1	15
+2638	3674	Vízszűrő kancsó tartozékok	3008	1	14
+2639	3675	Kézi darálók	1607	1	18
+2640	3678	Konzervnyitók	1628	1	8
+2641	3679	Konyhai eszköz készletek	1628	1	12
+2642	3680	Sodrófák	1628	1	12
+2643	3681	Üvegek	1628	1	13
+2644	3682	Gumiabroncs szolgáltatások	1517	0	2
+2645	3683	Cipőtárolók	1520	1	15
+2646	3686	Motorkerékpár gumik	1411	1	18
+2647	3687	Vitaminok és baba táplálékkiegészítők	3259	1	10
+2648	3688	Fotelek	1520	1	16
+2649	3689	Toalett asztalok	1529	1	16
+2650	3690	Paplanok	1583	1	13
+2651	3692	Sütőkesztyűk	1594	1	14
+2652	3693	Piknik kosarak	1659	1	13
+2653	3696	Hűtővitrinek	3966	1	33
+2654	3697	Side by side hűtők	3966	1	47
+2655	3698	Fedőmatracok	4291	1	12
+2656	3699	Kozmetikai táskák és neszeszerek	1294	1	15
+2657	3700	Vasalat és tartozékok	3804	1	20
+2658	3702	dc	NULL	0	0
+2659	3703	Car Accessories	NULL	0	0
+2660	3704	Car Electronics	NULL	0	0
+2661	3705	Kávé és Tea	NULL	0	0
+2662	3708	Household	NULL	0	0
+2663	3710	Apparel Woman	NULL	0	0
+2664	3711	Footwear	NULL	0	0
+2665	3713	Season	NULL	0	0
+2666	3714	Home Textiles	NULL	0	0
+2667	3715	Furniture and Matresses	NULL	0	0
+2668	3718	Running and Triathlon	NULL	0	0
+2669	3721	Hygiene	NULL	0	0
+2670	3722	Vízszűrők, kancsók, szűrőrendszerek	1621	1	6
+2671	3723	Kézi örlők	1607	1	14
+2672	3724	Kézi daráló alkatrészeek	1607	1	10
+2673	3725	Hómaró gépek	349	1	37
+2674	3726	Zuhanyoszlopok és zuhanyszettek	2764	1	14
+2675	3727	Teherautó abroncsok	1411	1	22
+2676	3728	Transport and lifting equipment accessories Deleted	2661	0	0
+2677	3729	Munkavédelmi felszerelések 1	931	0	0
+2678	3730	Munkavédelmi kesztyűk	3729	1	10
+2679	3731	Munkavédelmi szemüvegek és arcvédők	4012	1	11
+2680	3732	Munkavédelmi sisak	3729	1	8
+2681	3733	Üvegházak	349	1	21
+2682	3734	Kerti kiegészítők	349	1	14
+2683	3735	Öntözőkészletek	349	1	23
+2684	3736	Öntözés kiegészítők	349	1	9
+2685	3737	Elektromos malmok	349	1	16
+2686	3738	Medencefedés	3971	1	16
+2687	3739	Medence karbantartási megoldások	3971	1	6
+2688	3740	Medence szívók	3971	1	21
+2689	3741	Medence tartozékok	3971	1	15
+2690	3742	Kagyló tartozékok	2764	1	12
+2691	3743	WC tartály alkatrészek	2764	1	12
+2692	3744	Mosdókagyló és talapzat tartozékok	2764	0	0
+2693	3745	Kézszárítók	2764	1	16
+2694	3746	Tartozékok szellőztető rendszerekhez	2764	1	9
+2695	3747	Higítók és alapozók	2839	1	10
+2696	3748	Tartozékok festéshez és vakoláshoz	2839	1	8
+2697	3749	Szeptikus tartály tartozékok	3154	1	10
+2698	3750	Szerszámnyelek	349	1	11
+2699	3751	Luggages	NULL	0	0
+2700	3752	Sports clothing & footwear	NULL	0	0
+2701	3753	Perfumes	NULL	0	0
+2702	3754	Fűtési berendezések	2764	0	0
+2703	3755	Tűzhelygyújtó	2653	1	0
+2704	3756	Szauna kabinok	2764	1	16
+2705	3757	Ragasztópisztolyok	360	1	26
+2706	3758	Napelem és napelemes rendszer tartozékok	3754	1	23
+2707	3759	Drótok	3804	1	9
+2708	3760	Asztal és szék tartozékok	1529	1	16
+2709	3761	Térelválasztók és paravánok	1529	1	15
+2710	3762	Szakmai bútorok	1520	1	16
+2711	3763	Kerti házak	1541	1	18
+2712	3764	Aljzatok és csatlakozok	349	1	12
+2713	3765	Virágcserép és kaspó kiegészítők	1675	1	11
+2714	3766	Sínek és függöny galériák	1590	1	11
+2715	3767	Rolók és redőnyök	1590	1	20
+2716	3768	Szemüveg és kontaktlencse ápolók	2959	1	15
+2717	3769	Gokart és ATV tartozékok	1411	1	19
+2718	3770	Ipari gumiabroncsok	1411	1	23
+2719	3771	Elektromos generátor kiegészítők	348	1	12
+2720	3772	Satuk és rögzítők	360	1	11
+2721	3773	Elektromos szerszám töltők és akkumulátorok	360	1	17
+2722	3685	Elektronikus ipari mérlegek	1607	1	22
+2723	3691	Sötétítők	1590	1	11
+2724	3774	Tágulási tartályok	3154	1	19
+2725	3775	Tágulási tartály kiegészítők	3154	1	11
+2726	3776	Menyasszonyi fátylak	2668	1	9
+2727	3777	Mobil kerekesszék rámpák	4338	1	8
+2728	3778	Tojásfesték	3988	1	8
+2729	3779	Higiéna	3721	0	0
+2730	3780	Szelfibotok	17	0	14
+2731	3781	Adapterek	17	0	8
+2732	3782	USB OTG Pendrive/ OTG Pendrive	17	0	14
+2733	3783	Fejhallgatók	17	0	0
+2734	3784	Férfi öltönyök	2718	1	20
+2735	3785	Női öltönyök és együttesek	2668	1	20
+2736	3786	Függyöny és roló tartozékok	1583	1	20
+2737	3787	Motoros kasza és kapa tartozékok	349	1	28
+2738	3788	Szauna tartozékok	2764	1	13
+2739	3789	Asztalok és munkaasztalok	360	1	15
+2740	3790	POS készülékek	2653	1	27
+2741	3791	LPG berendezések	1458	1	17
+2742	3792	Utánfutó tartozékok	1458	1	13
+2743	3793	Utánfutók	1458	1	19
+2744	3796	Mobiltelefon alkatrészek és tartozékok	17	1	10
+2745	3797	Mobiltelefon-kijelzők és érintőképernyők	17	1	9
+2746	3798	Mobiltelefon alaplapok	17	1	0
+2747	3799	Mobiltelefon flex kábel	17	1	0
+2748	3800	Mobiltelefon hátlapok	17	1	6
+2749	3801	Apparel Man	NULL	0	0
+2750	3802	Kids Fashion	NULL	0	0
+2751	3803	Kaputechnika készletek és garázskapuk	2839	1	25
+2752	3804	Feronery & accessories	2872	0	0
+2753	3805	Hordók	3437	1	14
+2754	3806	Babaápolási termékek	1363	1	8
+2755	3807	Szivattyú és házi vízmű kiegészítők	349	1	15
+2756	3808	Kerti kutak és csapok	349	1	16
+2757	3809	Kiegészítők külső építkezésekhez	3654	1	11
+2758	3810	Rajongói termékek	2661	1	0
+2759	3811	Sport kiegészítők	1694	0	0
+2760	3812	Kerékpár edzőgörgő	3389	1	22
+2761	3813	Csocsó asztalok	2435	1	14
+2762	3814	Sakk és táblajátékok	2435	1	16
+2763	3815	Szabadtéri sport tartozékok	2409	1	14
+2764	3816	Ütők	2409	1	12
+2765	3817	Léghoki és csocsó tartozékok	2409	1	7
+2766	3818	Baseball ütők	2409	1	13
+2767	3819	Önvédelmi eszközök	2409	0	15
+2768	3820	Kemping és túra kiegészítők	1840	1	13
+2769	3821	Kés és bicska kiegészítők	1840	1	10
+2770	3822	Szörfdeszkák	2423	1	17
+2771	3823	Szörfdeszka tartozékok	2423	1	13
+2772	3824	Sport és precíziós lövészeti kiegészítők	2377	1	19
+2773	3825	Utazási kiegészítők	3751	1	15
+2774	3826	Sportcsónak tartozékok	2337	1	12
+2775	3827	Csempe és padlólap kiegészítők	3654	1	16
+2776	3828	Elektronikus játék licenszek	762	1	6
+2777	3830	Laptop kijelző	450	1	13
+2778	3831	Sátor tartozékok	1840	1	14
+2779	3832	Textilanyagok	1583	1	13
+2780	3833	Diétás tápok	1329	1	13
+2781	3834	Váz fülek	4322	1	8
+2782	3835	Kerékpáralkatrész tartozékok	4322	1	12
+2783	3836	Gimnasztika felszerelések	2372	1	17
+2784	3837	Férfi sport fehérnemű	1799	1	14
+2785	3838	Vízisí	2423	1	14
+2786	3839	Termékek sportsérülések utáni rehabilitációra	3811	1	10
+2787	3840	Szőrtelenítő tartozékok	3779	1	16
+2788	3841	Easy Care elektronikai és műszaki cikk biztosítás	1517	0	0
+2789	3842	Hegymászó kiegészítők	2409	0	0
+2790	3843	Intim törlőkendők	628	1	10
+2791	3844	Bajusz és szakáll ápolók	810	1	16
+2792	3845	Fogfehérítés	928	1	13
+2793	3846	Fogszabályzó és műfogsor ápolók	928	1	17
+2794	3848	Fonalak	1583	1	11
+2795	3849	Központi fűtés szerelés	1517	0	7
+2796	3850	Építőipari állványok	2872	1	18
+2797	3851	Hallókészülék tartozékok	4337	1	10
+2798	3852	Tömegközlekedési szolgáltatások	1518	1	4
+2799	3853	Hasított sertés	1518	1	4
+2800	3855	Női overál	2668	1	20
+2801	3856	UV lámpák Deleted	1294	0	0
+2802	3860	Komposzt WC	2887	1	9
+2803	3862	Csomagológépek deleted	2661	0	0
+2804	3863	Függöny és sötétítő kiegészítők	3427	1	8
+2805	3864	Bélyegek	3427	1	9
+2806	3865	Kirakati babák	3427	1	17
+2807	3866	Padlótisztító gép	349	1	37
+2808	3867	Ózongenerátor	2338	1	12
+2809	3868	Traktor alkatrészek	1410	1	20
+2810	3869	Ejtőernyő	2409	1	16
+2811	3870	Siklóernyő	2409	1	16
+2812	3871	Extrém sport és túlélőcsomag kiegészítők	2409	1	15
+2813	3872	Multifunkciós gép tartozékok	2372	1	16
+2814	3873	Lakókocsi tartozékok	1840	1	13
+2815	3874	Vadászati kiegészítők	1840	1	13
+2816	3875	Tetováló felszerelés	3779	1	16
+2817	3876	Tetováló kiegészítők	3779	1	27
+2818	3882	Motorvédő lemez	1411	1	16
+2819	3883	Lovas kiegészítők	2409	1	16
+2820	3884	Rövidáru	3427	1	21
+2821	3885	Orvosi eszközök és kiegészítők	4012	1	32
+2822	3794	Ragasztópisztoly tartozékok	360	1	15
+2823	3858	Otthoni egészségügyi készülékek és kiegészítők	4337	1	15
+2824	3886	Méhészet	349	0	0
+2825	3887	Kaptárak	3886	1	15
+2826	3888	Kaptár kiegészítők	3886	1	13
+2827	3889	Viaszolvasztó centrifuga	3886	1	15
+2828	3890	Fedelező eszközök	3886	1	14
+2829	3891	Mézfeldolgozás és csomagolás	3886	1	20
+2830	3892	Viaszolvasztó	3886	1	19
+2831	3893	Virágporszedő	3886	1	11
+2832	3894	Méhészeti eszközök	3886	1	11
+2833	3895	Lépek	3886	1	13
+2834	3896	Méhtakarmányok és gyógykezelések	3886	1	11
+2835	3897	Méhanyanevelés	3886	1	11
+2836	3898	Kandalló és kályha tartozékok	2764	1	16
+2837	3899	Nagy háztartási gépek beüzemelése	1517	0	6
+2838	3900	Audió és videó készülékek beüzemelése	1517	0	6
+2839	3901	Magasnyomású mosó tartozékok	349	1	22
+2840	3902	Szexuális egészségügyi termékek	3721	0	0
+2841	3903	Fali dekorációk	3427	1	13
+2842	3904	Bejárati ajtó kulcs kiegészítők	2661	1	0
+2843	3905	Gyerek ékszerek	4292	1	15
+2844	3907	Nap elleni védelem	3721	0	0
+2845	3908	Elektromos radiátorok	3916	1	19
+2846	3909	Elektromos konvektorok	3916	1	16
+2847	3910	Infrapanelek	3916	1	15
+2848	3911	Halogén és kvarc hősugárzók	3916	1	16
+2849	3912	Elektromos kandallók	3916	1	18
+2850	3913	Páramentesítők	94	1	24
+2851	3914	Légtisztítók	94	1	20
+2852	3915	Átfolyós vízmelegítők	3754	1	25
+2853	3916	Fűtőkészülékek	2338	0	0
+2854	3917	test 559	NULL	0	0
+2855	3918	Háztartási vízmelegítők	3754	0	0
+2856	3919	Beltéri lépcsők	3715	1	25
+2857	3920	Csónakmotorok	2423	1	19
+2858	3921	Cards	NULL	0	0
+2859	3922	eCREDIT	NULL	0	0
+2860	3923	Járművek	NULL	0	0
+2861	3924	Elektromos járművek és tartozékok	3923	0	0
+2862	3925	Elektromos jármű tartozékok	3924	1	18
+2863	3926	Elektromos jármű töltőállomások	3924	1	25
+2864	3927	Esküvői meghívók	2603	1	10
+2865	3928	Sírkövek, síremlékek	349	1	8
+2866	3929	Üzemanyagtartályok	1410	1	18
+2867	3930	Üzemanyagtartály tartozékok	1410	1	12
+2868	3931	Kútoszlopok	1410	1	20
+2869	3932	Kútoszlop tartozékok	1410	1	22
+2870	3933	Megfigyelő rendszer telepítés	1517	0	7
+2871	3934	Mobiltelefon javítás	1517	0	7
+2872	3936	Fotós szolgáltatások	668	0	10
+2873	3937	Belsőépítészeti szolgáltatások	1583	0	8
+2874	3938	Streaming szolgáltatások	1518	0	4
+2875	3939	Étterem menüajánlatok	1518	0	8
+2876	3940	Szépségápolási ajánlatok és szolgáltatások	1518	0	11
+2877	3941	Luxus parfümök	3753	0	0
+2878	3942	Baba etetési kiegészítők	1500	0	0
+2879	3944	Egyházi tárgyak	3427	1	20
+2880	3945	Mezőgazdasági és kertészeti berendezések telepítése	349	0	5
+2881	3946	Szépségápolási készülék alkatrészek	1514	1	0
+2882	3947	Streaming kiegészítők	761	1	7
+2883	3950	Autóalkatrészek	1410	1	14
+2884	3951	Pneumatikus szerszámok	351	1	23
+2885	3952	Tégla, AAC és beton blokkok	2872	1	16
+2886	3953	Hidraulika olajok	1410	1	6
+2887	3954	Hűtő és fagyasztókamrák	413	1	18
+2888	3955	Automaták	846	1	32
+2889	3957	Ingatlanok	1518	0	22
+2890	3959	Tűzőkapocsok és gémkapcsok	2611	1	14
+2891	3960	Lyukasztók	2611	1	14
+2892	3961	Vászon- és parafatáblák	96	1	9
+2893	3962	Színes papír	2603	1	9
+2894	3963	Speciális papír	2603	1	10
+2895	3964	Tolltartók	2653	1	13
+2896	3965	Főzés	1488	0	0
+2897	3966	Hűtés és mélyhűtés	1488	0	0
+2898	3967	Mosás és szárítás	1488	0	0
+2899	3968	Food and Beverages	NULL	0	0
+2900	3969	Promóció	1490	0	0
+2901	3970	Vízadagolók	3754	1	30
+2902	3971	Úszómedence és kiegészítők	3713	0	0
+2903	3972	Mosogatótál	1517	0	3
+2904	3973	Egészségügyi maszkok	4012	1	14
+2905	3974	Egyenruhák és orvosi köpenyek	4012	1	10
+2906	3975	Egészségügyi szesz	4012	1	3
+2907	3976	Kézfertőtlenítő szappan	4012	1	7
+2908	3977	Fertőtlenítő tisztítószerek	4012	1	10
+2909	3978	Antibakteriális nedves törlőkendő kéztisztításra	4012	1	8
+2910	3979	Antibakteriális nedves törlőkendő felületfertőtlenítésre	3425	1	8
+2911	3980	Fitness gép összeszerelés	1517	0	3
+2912	3981	Pulzoximéter	930	1	19
+2913	3982	Fertőtlenítő szőnyegek	4012	1	8
+2914	3983	Alkoholos italok	3968	0	0
+2915	3984	Szeszes italok	3983	0	0
+2916	3985	Sörök	3983	1	9
+2917	3986	Pezsgő	3983	1	0
+2918	3987	Pezsgő és habzóbor	3983	1	11
+2919	3988	Online élelmiszerbolt	4010	0	0
+2920	3989	Alapvető élelmiszerek	3988	0	11
+2921	3990	Fűszerek és fűszerkeverékek	3988	0	9
+2922	3991	Konzervek és gyorsételek	3988	0	9
+2923	3949	Autós hűtők	3703	1	28
+2924	3992	Ketchup és szószok	3988	0	9
+2925	3993	Diétás és természetes termékek	3988	0	6
+2926	3994	Chips és ropi	3988	0	10
+2927	3995	Lekvár és befőtt	3988	0	8
+2928	3997	Gabonapehely és müzli	3988	0	7
+2929	3998	Tészták	3988	0	6
+2930	3999	Whiskey	3984	1	6
+2931	4000	Vodka	3984	1	6
+2932	4001	Rum	3984	1	7
+2933	4002	Hagyományos	3984	1	6
+2934	4003	Konyak és armagnac	3984	1	9
+2935	4004	Gin	3984	1	6
+2936	4005	Tequila	3984	1	5
+2937	4006	Likőr	3984	1	6
+2938	4008	Más italok	3984	1	6
+2939	4009	Aperitif	3984	1	8
+2940	4010	Dry Food	NULL	0	0
+2941	4011	Bor	3983	1	10
+2942	4012	Medical Consumables	4336	0	0
+2943	4013	E-cigi készletek	4074	0	22
+2944	4014	Alkoholmentes italok	3968	0	0
+2945	4015	Ásványvíz	4014	0	7
+2946	4016	Szénsavas üdítők	4014	0	6
+2947	4017	Szénsavmentes üdítők	4014	0	9
+2948	4018	Szörpök	4014	0	7
+2949	4019	Energiaitalok	4014	0	9
+2950	4021	Genius	1518	0	0
+2951	4022	Fehérjék	2331	1	12
+2952	4023	Aminosavak	2331	1	13
+2953	4024	Szénhidrátok	2331	1	12
+2954	4025	Kreatin	2331	1	12
+2955	4026	Egyéb sport-táplálékkiegészítők	2331	1	12
+2956	4027	Öregedésgátló és szépségápolási termékek	2840	1	13
+2957	4028	Étrendkiegészítők gyerekeknek	2840	1	13
+2958	4029	Méregtelenítő és súlycsökkentő termékek	2840	1	13
+2959	4030	Szexuális egészség támogató termékek	2840	1	13
+2960	4031	Immunerősítők	2840	1	12
+2961	4032	PC mikrofonok	662	1	19
+2962	4033	eMAG Ads	1518	0	1
+2963	4034	Női sport felsők	1799	1	19
+2964	4035	Gyerek sport felsők	1799	0	0
+2965	4036	Női sportos pulóverek	1799	1	19
+2966	4037	Gyerek sportos pulóverek	1799	1	20
+2967	4038	Férfi sport trikók	1799	1	16
+2968	4039	Gyerek sport trikók	1799	0	0
+2969	4040	Női sport pólók	1799	1	16
+2970	4041	Gyerek sport pólók	1799	1	17
+2971	4042	Női sportnadrágok	1799	1	20
+2972	4043	Gyerek sportnadrágok	1799	1	20
+2973	4044	Sportos ruhák és szoknyák lányoknak	1799	1	15
+2974	4045	Lány sportos ruhák	1799	0	0
+2975	4046	Női sportos mellények	1799	1	20
+2976	4047	Gyerek sportos mellények	1799	0	0
+2977	4048	Női sportdzsekik	1799	1	24
+2978	4049	Gyerek sportdzsekik	1799	1	24
+2979	4050	Lány sportmelltartók	1799	0	0
+2980	4051	Női szabadidőruhák	1799	1	19
+2981	4052	Gyerek szabadidőruhák	1799	1	19
+2982	4053	Női sport fehérnemű	1799	1	14
+2983	4054	Gyerek sport fehérnemű	1799	0	0
+2984	4055	Női túraszandálok	2324	0	0
+2985	4056	Férfi túraszandálok	2324	0	0
+2986	4057	Női sportcipők	2324	1	29
+2987	4058	Gyerek sportcipők	2324	1	27
+2988	4059	Női sport papucsok	2324	1	13
+2989	4060	Gyerek sport papucsok	2324	1	12
+2990	4061	Női sportos csizmák	2324	1	15
+2991	4062	Gyerek sportos csizmák	2324	1	15
+2992	4063	Női sportzoknik	1865	1	17
+2993	4064	Gyerek sportzoknik	1865	1	17
+2994	4065	Női sport sapkák	1865	1	15
+2995	4066	Gyerek sport sapkák	1865	0	0
+2996	4067	Női baseball sapkák és fejkendők	1865	1	17
+2997	4068	Gyerek baseball sapkák és fejkendők	1865	1	18
+2998	4069	Férfi sport sálak	1865	1	15
+2999	4070	Gyerek sport sálak	1865	0	0
+3000	4071	Okos hangszórók és hangfalak	938	1	17
+3001	4072	COVID-19 RT-PCR tesztek	4189	0	6
+3002	4073	PC hűtő tartozékok	775	1	7
+3003	4074	Cigaretta és dohány	NULL	0	0
+3004	4075	OTC	NULL	0	0
+3005	4076	Cigik	4074	0	6
+3006	4078	Heated tobacco devices and consumable	4074	0	12
+3007	4079	Autó belső tisztítószerek	1414	1	13
+3008	4080	Autó külső tisztítószerek	1414	1	13
+3009	4081	Polírozó gépek és tartozékok	1414	1	21
+3010	4189	Tesztek	4336	0	0
+3011	4290	Mattresses and Toppers	NULL	0	0
+3012	4291	Mattresses & Toppers	4290	0	0
+3013	4292	Gyermek kiegészítők	3802	0	0
+3014	4293	Gyerek kalapok és sapkák	4292	1	15
+3015	4294	Gyerek fejpántok és bandanák	4292	1	14
+3016	4295	Gyerek kendők és sálak	4292	1	12
+3017	4296	Gyerek kesztyűk	4292	1	14
+3018	4297	Gyerek zoknik és harisnyák	4292	1	15
+3019	4298	Gyerek napszemüvegek	4292	1	18
+3020	4299	Gyerek táskák	4292	1	16
+3021	4300	Gyerek kezeslábasok	3217	1	23
+3022	4301	Zuhanykabinok	2764	1	21
+3023	4302	Fürdőkád kiegészítők	2764	1	17
+3024	4303	Zuhanytálcák, ajtók és kádparavánok	2764	1	19
+3025	4304	Keresztelői ruhák	3802	1	13
+3026	4306	Keresztelő cipők	3802	1	8
+3027	4307	Keresztelő kellékek és babakelengye	3802	1	13
+3028	4308	Használt termékek	4033	0	0
+3029	4309	Ágyneműhuzatok	1583	1	10
+3030	4310	Paplanhuzatok	1583	1	8
+3031	4311	Párnahuzatok	1583	1	8
+3032	4313	Kerti tároló ládák és szekrények	1541	1	13
+3033	4314	Férfi melegítő szettek	2718	1	19
+3034	4315	Női melegítő szettek	2668	1	20
+3035	4316	Férfi népviseletek	2718	1	12
+3036	4317	Női népviseletek	2668	1	13
+3037	4318	Elektromos kerékpárok	1695	1	35
+3038	4319	Elektromos rollerek	3924	1	23
+3039	4320	Elektromos robogók	3924	1	23
+3040	4321	Hoverboardok	3924	1	23
+3041	4322	Kerékpár alkatrészek	1695	0	0
+3042	4323	Gaming iroda	761	1	11
+3043	4324	Zsámolyok	1520	1	13
+3044	4325	Szék és kanapé kárpit	1583	1	12
+3045	4327	Hajformázó kiegészítők	1516	1	13
+3046	4330	Fűtés kiegészítők	3754	1	20
+3047	4331	Mobilházak	1541	0	17
+3048	4332	Felnőtt pelenkák és inkontinencia termékek	4336	0	0
+3049	4333	Inkontinencia termékek	4332	1	14
+3050	4334	Egyéb fotó- és videokiegészítők	NULL	0	0
+3051	4336	Orvosi fogyóeszközök és készüléke	NULL	0	0
+3052	4337	Orvosi eszközök	4336	0	0
+3053	4338	Mozgást segítő eszközök	4336	0	0
+3054	4340	Parfümök eMAG Belső	3753	0	14
+3055	4341	Pirotechnikai eszközök	1576	0	0
+3056	4342	Termékenységfokozó és terhes vitaminok	2840	1	11
+3057	4343	Utalványok BF	1518	0	5
+3058	4344	Otthoni dekorációk	NULL	0	0
+3059	4368	Erotika	NULL	0	0
+3060	4369	Szexuális játékok	4368	0	0
+3061	4370	Vibrátorok és dildók	4369	1	16
+3062	4371	Dildók	4369	0	0
+3063	4372	Anális játékok és hüvelygolyók	4369	1	14
+3064	4373	Péniszgyűrűk és maszturbátorok	4369	1	13
+3065	4374	Maszturbátorok	4369	0	0
+3066	4375	Mellbimbó játékok	4369	0	0
+3067	4376	Hüvelygolyók	4369	0	0
+3068	4377	Szexbabák	4369	1	13
+3069	4378	Szexgépek	4369	1	14
+3070	4379	Szexpumpák	4369	1	13
+3071	4380	BDSM	4368	0	0
+3072	4381	Erényövek és strap-on	4380	1	13
+3073	4382	Strap-on	4380	0	0
+3074	4384	Erotikus dekorációk és kiegészítők	4368	1	10
+3075	4385	Intim masszázsolajok	4368	1	5
+3076	4386	Erotikus drogéria	2840	1	10
+3077	4387	Ehető bugyik és erotikus édességek	4368	1	8
+3078	4388	Erotikus játékok	4368	1	7
+3079	4389	Erotikus ruházat	4368	0	0
+3080	4390	Szexi jelmezek, szerepjátékok	4389	1	7
+3081	4391	Fetish cipők	4368	1	8
+3082	4392	Szex-játék tisztítás, karbantartás	4368	1	6
+3083	4393	Hőszivattyúk	3754	1	13
+3084	4394	Hőszivattyú kiegészítők	3754	0	0
+3085	4396	Egyedi pólók	3801	1	11
+3086	4397	Okosgyűrűk	3394	1	5
+3087	4403	Férfi mellények	2718	0	20
+3088	4404	Női mellények	2668	0	21
+3089	4405	Női espadrilles cipők	2686	0	23
+3090	4406	Férfi espadrilles cipők	2732	0	19
+3091	4383	BDSM kiegészítő készletek	4380	1	7
+3092	4395	Elektromos tisztító kefék	3424	1	16

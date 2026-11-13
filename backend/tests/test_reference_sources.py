@@ -23,7 +23,7 @@ def test_source_observation_is_global_audited_and_not_a_category(environment):
     )
     assert client.get("/api/v1/reference/sources/observations").json()["total"] == 1
     assert client.get("/api/v1/reference/coverage").json()["reference_total"] == 6
-    assert client.get("/api/v1/reference/sources").json()["automatic_mapping"] is False
+    assert client.get("/api/v1/reference/sources").json()["automatic_mapping"] is True
     assert any(
         e["action"] == "reference.source_observation"
         for e in client.get("/api/v1/audit").json()["items"]

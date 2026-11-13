@@ -67,7 +67,7 @@ def missing(detail):
     raise HTTPException(404, detail)
 
 
-View = Literal["navigation", "all"]
+View = Literal["navigation", "all", "archive"]
 
 
 def load_tree(conn):

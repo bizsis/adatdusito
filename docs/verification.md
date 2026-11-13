@@ -164,3 +164,21 @@ A korábbi `/reference/categories` végpont a Marketplace-adatok kompatibilitás
 Ellenőrzés: **72 sikeres backendteszt**, 1 meglévő függőségi deprecation warning; **2 sikeres asztali/mobil Chromium-próba** (1440 és 390 pixel), helyi production builddel és szintetikus API-válaszokkal; TypeScript/Vite-build sikeres. A böngészőpróba a 13 főcsoport sorrendjét, a kezdeti gyermeklekérések hiányát, kibontást/összecsukást, a külön ellenőrzendő listát, a globális keresést és a keresés törlése utáni gyökérnézetet ellenőrzi. A backendtesztek kiegészített gráfon is ellenőrzik a szülő nélküli, hiányzó szülőjű és ciklikus elemek elkülönítését, a lapozható listát és a forrásadatok változatlanságát.
 
 A böngészőpróba futtatása: előbb `npm --prefix frontend run build`, majd `PYTHONPATH=backend .venv/bin/pytest -q scripts/tests/test_navigation_browser.py`. Ez nem kapcsolódik a VPS-hez.
+
+## CODEX 03B – Meglévő kategóriák automatikus összekapcsolása
+
+Az új szabály felváltja a korábbi, minden összekapcsoláshoz kézi bizonyítékot kérő munkafolyamatot. Egyedi normalizált kategórianév, egyértelmű szülői környezet és szűk, verziózott névváltozat-/kategóriakör-szabályok alapján automatikus összekapcsolás történik. A többértelmű esetek egyszerű adminisztrátori választóval oldhatók fel. A kategóriaoldalon nincs SHA-256-bekérés vagy bizonyítékűrlap.
+
+A felhasználó valódi, titokmentes TSV-exportján ellenőrzött eredmény: **2669 / 2669 megőrzött kategória, 1935 automatikusan a normál fában elhelyezett referencia-kategória (1625 aktív + 310 strukturális), 51 felülvizsgálandó és 683 elkülönített/el nem helyezett kategória**. A közvetlen név/környezet szerinti menümegfeleltetések 267 egyedi forráskategóriát fednek le; a 6 többértelmű menübejegyzés nincs találgatással feloldva. A 13 magyar gyökér és sorrendje változatlan. Az inaktív forráslevelek elkülönítve maradnak; nincs nyelvi minták alapján szűrés.
+
+A valós exportban a Televíziók külső ID-ja **79**, belső ID-ja **75**, közvetlen paraméterszáma **46**. A kötelező/opcionális bontás és az értékek nem részei a TSV-exportnak: ezek működését külön, 46 definíciós szintetikus referencián teszteltük. A működő API mindig a referenciaadatbázis eredeti FK-jából olvassa őket.
+
+**101 sikeres teszt**: 85 backend-/API-/böngészőteszt és 16 exportáló-/gyűjtő-/navigációs teszt, 1 meglévő Starlette/AnyIO deprecation warning. Új vizsgálatok: valós 2669-es export és annak megőrzése; TV 46 paraméter kézi jóváhagyás nélkül; eredeti kötelező/opcionális, szűrő- és újérték-jelzők; paraméterkeresés és kurzoros értékkeresés/lapozás; névtérkülönbség; egyedi és környezetfüggő egyezés; többértelmű név; szemantikus névkörök biztonságos korlátozása; hiányzó szülő/ciklus; inaktív és Deleted kategóriák; adminisztrátori választás, visszaállítás, audit és jogosultság; 2669 kategóriás teljesítményteszt. A régi forrásmegfigyelési API kompatibilitási és visszavonási tesztjei megmaradtak.
+
+Az új UI-t a valódi FastAPI tesztalkalmazáson, szintetikus csak olvasási referenciaadatbázissal asztali és 390 pixeles mobil Chromiumon teszteltük. A 46 paraméter, kötelező/opcionális szám, értéklista és keresés, menüből hiányzó kategória paraméterei, SHA nélküli adminisztrátori elhelyezés, teljes útvonal és mobil túlcsordulás hiánya sikeresen ellenőrzött. A további asztali/mobil navigációs próba a 13 főcsoportot, igény szerinti gyermekbetöltést és globális keresést ellenőrzi.
+
+TypeScript/Vite- és Docker Compose-build sikeres. Az elkülönített felhőbeli MySQL 8 alkalmazás-adatbázisán a migráció **0003 → 0004** sikeres; `alembic check`: nincs további sémaeltérés. A helyi MySQL API-integrációban a bejelentkezés, szerepek, tenantizoláció, CSRF, audit, hierarchia, eredeti belső FK és értéklapozás is sikeres. A helyi health/readiness/Celery smoke-próba sikeres.
+
+Az eredeti 0001–0003 migrációk, `.env`, Compose és az external hálózat változatlanok. Csak az alkalmazás `category_overrides` táblája új; a referenciaadatokhoz nem adtunk író jogosultságot és nem másoltunk paraméterértékeket. **VPS-telepítés nem történt.**
+
+[Részletes adatmodell, lefedettség, reprodukálás és kézi frissítés](codex03b.md).

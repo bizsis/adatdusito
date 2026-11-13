@@ -101,7 +101,7 @@ def test_coverage_exposes_evidence_counts_without_creating_bindings(environment)
     data = client.get("/api/v1/reference/navigation/coverage").json()
     assert data["root_count"] == 13
     assert data["hierarchy_needs_review"] == 79
-    assert data["confirmed_bindings"] == 0
+    assert data["reference_coverage"]["represented_reference_count"] == 6
     assert data["details_verification"]["verified_parent_connections"] == 544
     assert data["details_verification"]["changed_parent_connections"] == 0
     assert data["details_verification"]["new_marketplace_bindings"] == 0

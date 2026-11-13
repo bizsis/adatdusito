@@ -1,8 +1,4 @@
-"""One shared shopper-facing navigation, with explicit Marketplace bindings only.
-
-The observed navigation contains no duplicate Marketplace catalog. Bindings are
-immutable/audited reference_observations in the existing application database.
-"""
+"""One common tree: existing source categories, automatic matches and app choices."""
 
 from collections import Counter
 from functools import lru_cache
@@ -12,10 +8,12 @@ from typing import Literal
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy import select
 from sqlalchemy.orm import Session
-from app.models import ReferenceObservation
-from app.security import database, require
+from app.models import ReferenceObservation, CategoryOverride, now
+from app.security import database, require, Identity, audit
 from app.db import reference_database
 from app.reference import load_tree, list_parameters
+from app.unified_categories import build_unified
+from pydantic import BaseModel, ConfigDict, Field
 
 TREE_KINDS = {"department", "section", "category"}
 BINDABLE_KINDS = {"section", "category"}
@@ -69,10 +67,9 @@ class Navigation:
             else:
                 status = self.placement[current]
             for ancestor in reversed(trail):
-                if (
-                    status == "verified_tree"
-                    and self.nodes[ancestor]["hierarchy_status"] != "verified_dom"
-                ):
+                if status == "verified_tree" and self.nodes[ancestor][
+                    "hierarchy_status"
+                ] not in {"verified_dom", "verified_reference", "verified_assignment"}:
                     status = "needs_review"
                 self.placement[ancestor] = status
 
@@ -146,35 +143,32 @@ def observations(db, nav):
     return latest
 
 
-def mapping_tree(latest):
-    if not any(r.mapping_status == "confirmed" for r in latest.values()):
-        return None
+def resolved(db):
+    base = navigation()
+    latest = observations(db, base)
     with reference_database() as conn:
-        return load_tree(conn)
+        tree = load_tree(conn)
+    overrides = list(db.scalars(select(CategoryOverride)))
+    return build_unified(base, tree, latest, overrides), latest, tree
 
 
 def dto(nav, id, latest, tree):
     node = nav.nodes[id]
     record = latest.get(id)
     mapped = None
-    if (
-        node["kind"] in BINDABLE_KINDS
-        and record
-        and record.mapping_status == "confirmed"
-        and tree
-    ):
-        internal = tree.external.get(record.canonical_emag_id)
-        if internal in tree.visible_all:
-            mapped = tree.item(internal, "all")
+    if tree and hasattr(nav, "bindings"):
+        internal = nav.bindings.get(id)
+        if internal is not None:
+            mapped = tree.item(internal, "archive")
     status = (
-        ("confirmed" if mapped else "unavailable")
-        if record and record.mapping_status == "confirmed"
-        else record.mapping_status
-        if record
+        "confirmed"
+        if mapped
         else "pending"
         if node["kind"] in BINDABLE_KINDS
         else "not_applicable"
     )
+    if not mapped and (id in getattr(nav, "blocked", set())):
+        status = "rejected"
     return {
         **node,
         "children_count": len(nav.tree_children(id)),
@@ -183,6 +177,25 @@ def dto(nav, id, latest, tree):
         "ancestors": [nav.summary(k) for k in nav.path(id)[:-1]],
         "related_links": nav.related(id),
         "mapping_status": status,
+        "mapping_method": getattr(nav, "methods", {}).get(id),
+        "reference_name": mapped["name"] if mapped else None,
+        "reference_key": f"emag_marketplace:{mapped['emag_category_id']}"
+        if mapped
+        else None,
+        "archived": bool(tree and mapped and mapped["id"] in tree.deleted),
+        "inactive": bool(mapped and mapped["is_allowed"] != 1),
+        "reference_hierarchy_error": mapped["hierarchy_error"] if mapped else None,
+        "mapping_candidates": [
+            tree.light(k)
+            | {
+                "path_names": [
+                    tree.rows[p]["name"] for p in tree.path_ids(k, "archive")
+                ]
+            }
+            for k in getattr(nav, "candidates", {}).get(id, [])
+        ]
+        if tree
+        else [],
         "mapping_evidence_id": record.id if record else None,
         "canonical_emag_id": mapped["emag_category_id"] if mapped else None,
         "marketplace_category_id": mapped["id"] if mapped else None,
@@ -221,7 +234,7 @@ def nodes(
     limit: int = Query(50, ge=1, le=100),
     db: Session = Depends(database),
 ):
-    nav = navigation()
+    nav, latest, tree = resolved(db)
     if parent_id:
         require_node(nav, parent_id)
     if q:
@@ -236,11 +249,21 @@ def nodes(
         id
         for id in ids
         if id in nav.visible
-        and (not q or q.casefold() in nav.nodes[id]["name"].casefold())
+        and (
+            not q
+            or q.casefold() in nav.nodes[id]["name"].casefold()
+            or (
+                id in nav.bindings
+                and q.casefold() in tree.rows[nav.bindings[id]]["name"].casefold()
+            )
+            or (
+                q.isdecimal()
+                and id in nav.bindings
+                and str(tree.rows[nav.bindings[id]]["emag_category_id"]) == q
+            )
+        )
     ]
     # Source order is retained, including across search results and pages.
-    latest = observations(db, nav)
-    tree = mapping_tree(latest)
     return {
         "items": [dto(nav, id, latest, tree) for id in ids[offset : offset + limit]],
         "total": len(ids),
@@ -252,10 +275,9 @@ def nodes(
 
 @router.get("/coverage")
 def coverage(db: Session = Depends(database)):
-    nav = navigation()
-    latest = observations(db, nav)
-    tree = mapping_tree(latest)
+    nav, latest, tree = resolved(db)
     return {
+        "reference_coverage": nav.reference_coverage,
         "root_count": len(nav.roots),
         "unclassified_count": sum(
             key in nav.visible and status != "verified_tree"
@@ -278,21 +300,19 @@ def coverage(db: Session = Depends(database)):
 
 @router.get("/{node_id}")
 def detail(node_id: str, db: Session = Depends(database)):
-    nav = navigation()
+    nav, latest, tree = resolved(db)
     require_node(nav, node_id)
-    latest = observations(db, nav)
-    return dto(nav, node_id, latest, mapping_tree(latest))
+    return dto(nav, node_id, latest, tree)
 
 
 def confirmed(node_id, db, selection=False):
-    nav = navigation()
+    nav, latest, tree = resolved(db)
     require_node(nav, node_id)
-    latest = observations(db, nav)
-    node = dto(nav, node_id, latest, mapping_tree(latest))
+    node = dto(nav, node_id, latest, tree)
     if node["mapping_status"] != "confirmed" or node["kind"] not in BINDABLE_KINDS:
         raise HTTPException(
             409,
-            "Nincs igazolt Marketplace-megfeleltetés; paramétert névegyezésből nem töltünk be.",
+            "A kategória többértelmű vagy még nincs összekapcsolva; adminisztrátori választás szükséges.",
         )
     if selection and not node["selectable"]:
         raise HTTPException(
@@ -315,7 +335,7 @@ def parameters(
         category_id=node["marketplace_category_id"],
         q=q,
         mandatory=mandatory,
-        view="all",
+        view="archive" if node["archived"] else "all",
         offset=offset,
         limit=limit,
     )
@@ -334,4 +354,146 @@ def selection(node_id: str, db: Session = Depends(database)):
         "parameter_inheritance": False,
         "reference_writes_allowed": False,
         "new_value_policy": "proposal_requires_approval",
+    }
+
+
+@router.get("/choices/reference")
+def reference_choices(
+    q: str = Query("", max_length=120),
+    limit: int = Query(50, ge=1, le=100),
+    db: Session = Depends(database),
+):
+    nav, _, tree = resolved(db)
+    term = q.casefold()
+    keys = [
+        k
+        for k, row in tree.rows.items()
+        if k not in tree.deleted
+        and (term in row["name"].casefold() or str(row["emag_category_id"]) == q)
+    ]
+    return {
+        "items": [
+            tree.light(k)
+            | {
+                "path_names": [
+                    tree.rows[p]["name"] for p in tree.path_ids(k, "archive")
+                ]
+            }
+            for k in keys[:limit]
+        ],
+        "total": len(keys),
+    }
+
+
+@router.get("/choices/parents")
+def parent_choices(
+    q: str = Query("", max_length=120),
+    limit: int = Query(50, ge=1, le=100),
+    db: Session = Depends(database),
+):
+    nav, _, _ = resolved(db)
+    keys = [
+        k
+        for k in nav.nodes
+        if k in nav.visible
+        and nav.placement[k] == "verified_tree"
+        and (not q or q.casefold() in nav.nodes[k]["name"].casefold())
+    ]
+    return {
+        "items": [
+            nav.summary(k) | {"path_names": [nav.nodes[p]["name"] for p in nav.path(k)]}
+            for k in keys[:limit]
+        ],
+        "total": len(keys),
+    }
+
+
+class AssignmentInput(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    canonical_emag_id: int | None = Field(None, gt=0)
+    parent_id: str | None = Field(None, max_length=160)
+    disable_automatic: bool = False
+    reset: bool = False
+
+
+@router.post("/{node_id}/assignment")
+def assign_category(
+    node_id: str,
+    body: AssignmentInput,
+    who: Identity = Depends(require("system.manage")),
+    db: Session = Depends(database),
+):
+    nav, _, tree = resolved(db)
+    require_node(nav, node_id)
+    node = nav.nodes[node_id]
+    if node["kind"] not in BINDABLE_KINDS:
+        raise HTTPException(409, "Főcsoporthoz nem rendelhető termékkategória.")
+    if body.reset and len(body.model_fields_set) > 1:
+        raise HTTPException(422, "A visszaállítás nem kombinálható más módosítással.")
+    if body.disable_automatic and body.canonical_emag_id is not None:
+        raise HTTPException(
+            422, "Az automatikus összerendelés tiltása mellett ne adj meg kategóriát."
+        )
+    if body.reset:
+        row = db.get(CategoryOverride, node_id)
+        if row:
+            db.delete(row)
+    else:
+        if not body.model_fields_set:
+            raise HTTPException(422, "Válassz kategóriát vagy elhelyezést.")
+        if body.canonical_emag_id is not None:
+            if (
+                body.canonical_emag_id not in tree.external
+                or tree.external[body.canonical_emag_id] in tree.deleted
+            ):
+                raise HTTPException(409, "Ismeretlen vagy törölt kategória.")
+            if (
+                node_id.startswith("ref-")
+                and body.canonical_emag_id != node["canonical_emag_id"]
+            ):
+                raise HTTPException(409, "A forráskategória azonosítója nem írható át.")
+        if "parent_id" in body.model_fields_set and body.parent_id is not None:
+            if (
+                body.parent_id not in nav.visible
+                or nav.placement[body.parent_id] != "verified_tree"
+                or node_id in nav.path(body.parent_id)
+            ):
+                raise HTTPException(
+                    409, "A szülő nem elhelyezett kategória, vagy ciklust okozna."
+                )
+        row = db.get(CategoryOverride, node_id)
+        if row is None:
+            row = CategoryOverride(
+                node_id=node_id,
+                source_key="emag_marketplace",
+                override_parent=False,
+                disable_automatic=False,
+            )
+            db.add(row)
+        if "canonical_emag_id" in body.model_fields_set:
+            if body.canonical_emag_id:
+                row.disable_automatic = False
+            row.source_category_id = (
+                str(body.canonical_emag_id) if body.canonical_emag_id else None
+            )
+        if "parent_id" in body.model_fields_set:
+            row.parent_id, row.override_parent = body.parent_id, True
+        if "disable_automatic" in body.model_fields_set:
+            row.disable_automatic = body.disable_automatic
+            if body.disable_automatic:
+                row.source_category_id = None
+        row.actor_id, row.updated_at = who.user.id, now()
+        row.source_snapshot = (
+            navigation().data["archive_sha256"]
+            if not node_id.startswith("ref-")
+            else None
+        )
+    audit(db, who, "category.assignment", node_id, **body.model_dump())
+    db.commit()
+    updated, latest, tree = resolved(db)
+    # A newly matched native category is represented by its existing webshop node.
+    return {
+        "saved": True,
+        "node_id": node_id,
+        "reference_coverage": updated.reference_coverage,
     }

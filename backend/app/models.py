@@ -158,3 +158,18 @@ class ReferenceObservation(Base):
     evidence_kind: Mapped[str | None] = mapped_column(String(48), nullable=True)
     summary: Mapped[str] = mapped_column(Text)
     actor_id: Mapped[int] = mapped_column(ForeignKey("users.id"))
+
+
+class CategoryOverride(Base):
+    """Shared operator choices; category/parameter records stay in their source."""
+
+    __tablename__ = "category_overrides"
+    node_id: Mapped[str] = mapped_column(String(160), primary_key=True)
+    source_key: Mapped[str] = mapped_column(String(48), default="emag_marketplace")
+    source_category_id: Mapped[str | None] = mapped_column(String(160), nullable=True)
+    parent_id: Mapped[str | None] = mapped_column(String(160), nullable=True)
+    override_parent: Mapped[bool] = mapped_column(Boolean, default=False)
+    disable_automatic: Mapped[bool] = mapped_column(Boolean, default=False)
+    source_snapshot: Mapped[str | None] = mapped_column(String(64), nullable=True)
+    actor_id: Mapped[int] = mapped_column(ForeignKey("users.id"))
+    updated_at: Mapped[datetime] = mapped_column(DateTime, default=now, onupdate=now)

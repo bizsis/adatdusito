@@ -79,21 +79,22 @@ def test_actual_13_roots_order_and_namespace_separation(environment):
     tv = client.get("/api/v1/reference/navigation/web-item-43-3730").json()
     assert (
         tv["name"] == "Televíziók"
-        and tv["canonical_emag_id"] is None
-        and tv["mapping_status"] == "pending"
+        and tv["canonical_emag_id"] == 79
+        and tv["mapping_status"] == "confirmed"
+        and tv["mapping_method"] == "automatic_exact"
     )
-    assert tv["parameter_count"] is None  # Unknown is not "zero parameters".
+    assert tv["parameter_count"] == 1  # Direct existing fixture parameter, no copy.
     assert (
         client.get(
             "/api/v1/reference/navigation/web-item-43-3730/parameters"
         ).status_code
-        == 409
+        == 200
     )
     assert (
         client.get(
             "/api/v1/reference/navigation/web-item-43-3730/selection"
         ).status_code
-        == 409
+        == 200
     )
 
 
@@ -217,7 +218,7 @@ def test_shared_navigation_search_pagination_and_reference_readonly(environment)
     coverage = client.get("/api/v1/reference/navigation/coverage").json()
     assert coverage["root_count"] == 13 and coverage["manifest_link_count"] == 609
     assert (
-        coverage["confirmed_bindings"] == 0
+        coverage["reference_coverage"]["represented_reference_count"] == 7
         and not coverage["full_category_tree_verified"]
     )
     assert coverage["hierarchy_needs_review"] == 79
@@ -248,7 +249,14 @@ def test_mapping_approval_is_bound_to_source_snapshot(environment, monkeypatch):
         client.get(
             "/api/v1/reference/navigation/web-item-43-3730/selection"
         ).status_code
-        == 409
+        == 200
+    )
+
+    assert (
+        client.get("/api/v1/reference/navigation/web-item-43-3730").json()[
+            "mapping_method"
+        ]
+        == "automatic_exact"
     )
 
 

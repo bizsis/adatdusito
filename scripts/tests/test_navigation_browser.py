@@ -85,9 +85,7 @@ def test_verified_roots_lazy_children_and_separate_review(width, height):
         page.on("pageerror", lambda error: errors.append(str(error)))
         page.route("http://navigation.test/**", route_request)
         page.goto("http://navigation.test/")
-        page.get_by_role("navigation").get_by_role(
-            "button", name="eMAG-kategóriák"
-        ).click()
+        page.get_by_role("navigation").get_by_role("button", name="Kategóriák").click()
         expect(page.locator(".tree > ul > li")).to_have_count(13)
         assert not any("parent_id" in q for q in requests)
         expect(page.locator(".tree > ul > li > .tree-row > .tree-name")).to_have_text(

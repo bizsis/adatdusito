@@ -101,7 +101,8 @@ def sources(
         ],
         "canonical_source": "pinfo_db",
         "webshop_completeness": "unverified",
-        "automatic_mapping": False,
+        "automatic_mapping": True,
+        "mapping_policy": "unique_name_context_and_reviewable_choices",
     }
 
 
