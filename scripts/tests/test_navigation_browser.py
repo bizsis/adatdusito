@@ -10,19 +10,35 @@ from urllib.parse import parse_qs, urlparse
 import pytest
 from playwright.sync_api import sync_playwright, expect
 from app.web_navigation import navigation, dto
+from app.fixed_navigation import resolve_fixed
+from app.category_tree import CategoryTree
 
 
 @pytest.mark.parametrize("width,height", [(1440, 1000), (390, 844)])
 def test_verified_roots_lazy_children_and_separate_review(width, height):
     dist = Path(__file__).resolve().parents[2] / "frontend/dist"
     assert (dist / "index.html").exists(), "Run npm run build in frontend first"
-    nav = navigation()
-    requests = []
-    pending = next(
-        n
-        for n in nav.nodes.values()
-        if n["kind"] == "category" and nav.placement[n["id"]] != "verified_tree"
+    tree = CategoryTree(
+        [
+            dict(
+                id=1,
+                emag_category_id=79,
+                name="Televíziók",
+                parent_id=None,
+                is_allowed=True,
+            ),
+            dict(
+                id=2,
+                emag_category_id=999,
+                name="Televíziók",
+                parent_id=None,
+                is_allowed=False,
+            ),
+        ]
     )
+    nav = resolve_fixed(navigation(), tree)
+    requests = []
+    pending = nav.nodes["web-item-43-3730"]
 
     def route_request(route):
         url = urlparse(route.request.url)
@@ -50,6 +66,7 @@ def test_verified_roots_lazy_children_and_separate_review(width, height):
                 "manifest_link_count": 609,
                 "hierarchy_needs_review": 79,
                 "confirmed_bindings": 0,
+                "reference_coverage": nav.reference_coverage,
             }
         elif path.endswith("/navigation"):
             requests.append(query)
@@ -61,13 +78,17 @@ def test_verified_roots_lazy_children_and_separate_review(width, height):
                     if term.casefold() in nav.nodes[k]["name"].casefold()
                 ]
             elif query.get("scope") == ["unclassified"]:
-                ids = [k for k in nav.visible if nav.placement[k] != "verified_tree"]
+                ids = [
+                    k
+                    for k in nav.visible
+                    if k not in nav.bindings and len(nav.candidates.get(k, [])) > 1
+                ]
             elif "parent_id" in query:
                 ids = nav.tree_children(query["parent_id"][0])
             else:
                 ids = nav.roots
             response = {
-                "items": [dto(nav, k, {}, None) for k in ids],
+                "items": [dto(nav, k, {}, tree) for k in ids],
                 "total": len(ids),
                 "offset": 0,
                 "limit": 100,
@@ -104,7 +125,12 @@ def test_verified_roots_lazy_children_and_separate_review(width, height):
             0
         )
         page.get_by_label("Nézet", exact=True).select_option("unclassified")
-        expect(page.get_by_text("Nem főkategóriák.", exact=False)).to_be_visible()
+        expect(
+            page.get_by_text(
+                "Csak a több lehetséges paraméterforrással rendelkező kategóriák.",
+                exact=False,
+            )
+        ).to_be_visible()
         expect(
             page.locator(".tree-name").filter(has_text=pending["name"])
         ).to_have_count(1)

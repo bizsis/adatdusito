@@ -12,7 +12,6 @@ from app.models import ReferenceObservation, CategoryOverride, now
 from app.security import database, require, Identity, audit
 from app.db import reference_database
 from app.reference import load_tree, list_parameters
-from app.unified_categories import build_unified
 from app import catalog_store
 from pydantic import BaseModel, ConfigDict, Field
 
@@ -150,7 +149,9 @@ def resolved(db):
     with reference_database() as conn:
         tree = load_tree(conn)
     overrides = list(db.scalars(select(CategoryOverride)))
-    return build_unified(base, tree, latest, overrides), latest, tree
+    from app.fixed_navigation import resolve_fixed
+
+    return resolve_fixed(base, tree, latest, overrides), latest, tree
 
 
 def dto(nav, id, latest, tree):
@@ -161,15 +162,9 @@ def dto(nav, id, latest, tree):
         internal = nav.bindings.get(id)
         if internal is not None:
             mapped = tree.item(internal, "archive")
-    status = (
-        "confirmed"
-        if mapped
-        else "pending"
-        if node["kind"] in BINDABLE_KINDS
-        else "not_applicable"
-    )
-    if not mapped and (id in getattr(nav, "blocked", set())):
-        status = "rejected"
+    from app.fixed_navigation import binding_status
+
+    status = binding_status(nav, id)
     return {
         **node,
         "children_count": len(nav.tree_children(id)),
@@ -184,7 +179,7 @@ def dto(nav, id, latest, tree):
         if mapped
         else None,
         "archived": bool(tree and mapped and mapped["id"] in tree.deleted),
-        "inactive": bool(mapped and mapped["is_allowed"] != 1),
+        "inactive": False,
         "reference_hierarchy_error": mapped["hierarchy_error"] if mapped else None,
         "mapping_candidates": [
             tree.light(k)
@@ -201,7 +196,7 @@ def dto(nav, id, latest, tree):
         "canonical_emag_id": mapped["emag_category_id"] if mapped else None,
         "marketplace_category_id": mapped["id"] if mapped else None,
         "selectable": bool(
-            mapped and mapped["selectable"] and node["kind"] == "category"
+            node["kind"] == "category" and not node.get("structural_only")
         ),
         "parameter_count": mapped["parameter_count"] if mapped else None,
         "mandatory_parameter_count": mapped["mandatory_parameter_count"]
@@ -244,7 +239,11 @@ def nodes(
     if q:
         ids = list(nav.nodes)  # Search covers unresolved/disconnected categories too.
     elif scope == "unclassified":
-        ids = [key for key in nav.nodes if nav.placement[key] != "verified_tree"]
+        ids = [
+            key
+            for key in nav.nodes
+            if key not in nav.bindings and len(nav.candidates.get(key, [])) > 1
+        ]
     elif parent_id:
         ids = nav.tree_children(parent_id)
     else:
@@ -343,6 +342,8 @@ def parameters(
     version = catalog_store.active_version(db)
     if version:
         node = catalog_store.detail(db, version, node_id)
+        if node["mapping_status"] != "confirmed":
+            return {"items": [], "total": 0, "offset": offset, "limit": limit}
         return catalog_store.parameters(
             db,
             version,
@@ -378,7 +379,8 @@ def selection(node_id: str, db: Session = Depends(database)):
             "navigation_id": node_id,
             "category_id": node["unified_category_id"],
             "catalog_version_id": version.id,
-            "canonical_reference_key": f"category:{node['unified_category_id']}",
+            "canonical_reference_key": f"fixed_category:{node_id}",
+            "parameter_source_category_id": node["parameter_source_category_id"],
             "parameter_inheritance": False,
             "reference_writes_allowed": False,
             "new_value_policy": "proposal_requires_approval",
@@ -388,7 +390,8 @@ def selection(node_id: str, db: Session = Depends(database)):
         "navigation_id": node_id,
         "snapshot_sha256": node["snapshot_sha256"],
         "mapping_evidence_id": node["mapping_evidence_id"],
-        "canonical_reference_key": f"emag_marketplace:{node['canonical_emag_id']}",
+        "canonical_reference_key": f"fixed_category:{node_id}",
+        "parameter_source_category_id": node["marketplace_category_id"],
         "category_id": node["marketplace_category_id"],
         "emag_category_id": node["canonical_emag_id"],
         "parameter_inheritance": False,
@@ -487,6 +490,12 @@ def assign_category(
     if body.disable_automatic and body.canonical_emag_id is not None:
         raise HTTPException(
             422, "Az automatikus összerendelés tiltása mellett ne adj meg kategóriát."
+        )
+    if "parent_id" in body.model_fields_set:
+        raise HTTPException(409, "A rögzített kategóriahierarchia nem módosítható.")
+    if node["kind"] != "category" or node.get("structural_only"):
+        raise HTTPException(
+            409, "Navigációs gyűjtőponthoz nem szükséges paraméter-hozzárendelés."
         )
     if body.reset:
         row = db.get(CategoryOverride, node_id)

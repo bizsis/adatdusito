@@ -102,7 +102,7 @@ def test_owned_catalog_serves_all_existing_browsing_without_source_access(
         client.get("/api/v1/reference/navigation?q=Menüben nem szereplő").json()[
             "total"
         ]
-        == 1
+        == 0
     )
     assert (
         client.get("/api/v1/reference/navigation/coverage").json()[
@@ -129,20 +129,14 @@ def test_owned_catalog_serves_all_existing_browsing_without_source_access(
             "/api/v1/reference/navigation/ref-emag-54321/assignment",
             json={"parent_id": "web-dept-43"},
         ).status_code
-        == 200
-    )
-    assert (
-        client.get("/api/v1/reference/navigation/ref-emag-54321").json()[
-            "placement_status"
-        ]
-        == "verified_tree"
+        == 404
     )
     assert (
         client.post(
-            "/api/v1/reference/navigation/ref-emag-54321/assignment",
-            json={"reset": True},
+            "/api/v1/reference/navigation/web-item-43-3730/assignment",
+            json={"parent_id": "web-dept-43"},
         ).status_code
-        == 200
+        == 409
     )
 
 

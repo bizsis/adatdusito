@@ -60,6 +60,7 @@ type ReferenceChoice = {
   emag_category_id: number;
   name: string;
   path_names: string[];
+  parameter_count?: number;
 };
 type Parameter = {
   id: number;
@@ -1083,11 +1084,11 @@ function ShopNode({
           <small>
             {node.kind === "department"
               ? "Főcsoport"
-              : node.structural_only
-                ? "Strukturális navigáció"
+              : node.kind === "section" || node.structural_only
+                ? "Navigációs gyűjtőpont"
               : node.mapping_status === "confirmed"
-                ? (node.archived ? "Archivált kategória" : "Kategória paraméterekkel")
-                : "Összerendelésre vár"}
+                ? "Paraméterforrás hozzárendelve"
+                : node.mapping_status === "pending" ? "Bizonytalan paraméter-hozzárendelés" : "Paraméterkészlet még nem érhető el"}
             {node.placement_status !== "verified_tree" && (
               <span> · Besorolás ellenőrzendő</span>
             )}
@@ -1127,21 +1128,16 @@ function ShopNode({
 }
 function CategoryReview({ node, onSaved }: { node: NavCategory; onSaved: () => void }) {
   const [query, setQuery] = useState(""),
-    [parentQuery, setParentQuery] = useState(""),
     [reference, setReference] = useState(
       String(node.unified_category_id || node.canonical_emag_id || ""),
     ),
-    [parent, setParent] = useState(""),
     [error, setError] = useState(""),
     [busy, setBusy] = useState(false);
-  const term = useDebounce(query), parentTerm = useDebounce(parentQuery);
+  const term = useDebounce(query);
   const choices = useLoad<{ items: ReferenceChoice[]; total: number }>(
     `/reference/navigation/choices/reference?q=${encodeURIComponent(term)}`,
   );
-  const parents = useLoad<{ items: (NavLink & { path_names: string[] })[]; total: number }>(
-    `/reference/navigation/choices/parents?q=${encodeURIComponent(parentTerm)}`,
-  );
-  const current = node.canonical_emag_id ? [{
+  const current: ReferenceChoice[] = node.canonical_emag_id ? [{
     category_id: node.unified_category_id,
     emag_category_id: node.canonical_emag_id,
     name: node.reference_name || node.name,
@@ -1165,7 +1161,7 @@ function CategoryReview({ node, onSaved }: { node: NavCategory; onSaved: () => v
   }
   return (
     <details>
-      <summary>Kategória besorolásának pontosítása (adminisztrátor)</summary>
+      <summary>Paraméter-hozzárendelés szerkesztése (adminisztrátor)</summary>
       {!node.id.startsWith("ref-") && (
         <form onSubmit={e => {
           e.preventDefault();
@@ -1174,17 +1170,17 @@ function CategoryReview({ node, onSaved }: { node: NavCategory; onSaved: () => v
             : { canonical_emag_id: Number(reference) });
         }}>
           <label>
-            Meglévő kategória keresése
+            Paraméterforrás keresése
             <input value={query} onChange={e => setQuery(e.target.value)} />
           </label>
           <label>
-            Megfelelő kategória kiválasztása
-            <select aria-label="Megfelelő kategória kiválasztása" required
+            Paraméterforrás kiválasztása
+            <select aria-label="Paraméterforrás kiválasztása" required
               value={reference} onChange={e => setReference(e.target.value)}>
               <option value="">Válassz kategóriát</option>
               {candidates.map(c => (
                 <option key={c.category_id || c.emag_category_id} value={c.category_id || c.emag_category_id}>
-                  {c.path_names.join(" / ")}
+                  {c.path_names.join(" / ")} · eMAG {c.emag_category_id}{c.parameter_count !== undefined ? ` · ${c.parameter_count} paraméter` : ""}
                 </option>
               ))}
             </select>
@@ -1193,37 +1189,13 @@ function CategoryReview({ node, onSaved }: { node: NavCategory; onSaved: () => v
           {choices.data && choices.data.total > 50 && (
             <p>Pontosítsd a keresést a további kategóriákhoz.</p>
           )}
-          <button disabled={busy}>Kategória összekapcsolása</button>
+          <button disabled={busy}>Paraméterforrás mentése</button>
         </form>
       )}
-      <form onSubmit={e => {
-        e.preventDefault();
-        save({ parent_id: parent || null });
-      }}>
-        <label>
-          Szülőkategória keresése
-          <input value={parentQuery} onChange={e => setParentQuery(e.target.value)} />
-        </label>
-        <label>
-          Elhelyezés a közös fában
-          <select aria-label="Elhelyezés a közös fában"
-            value={parent} onChange={e => setParent(e.target.value)}>
-            <option value="">Elhelyezetlenül marad</option>
-            {parents.data?.items.filter(c => c.id !== node.id).map(c => (
-              <option key={c.id} value={c.id}>{c.path_names.join(" / ")}</option>
-            ))}
-          </select>
-        </label>
-        <ErrorBox message={parents.error} />
-        {parents.data && parents.data.total > 50 && (
-          <p>Pontosítsd a szülőkategória keresését a további találatokhoz.</p>
-        )}
-        <button disabled={busy}>Elhelyezés mentése</button>
-      </form>
       <button disabled={busy} onClick={() => save({ reset: true })}>
         {node.catalog_version_id
-          ? "Importált besorolás visszaállítása"
-          : "Automatikus besorolás visszaállítása"}
+          ? "Automatikus paraméter-hozzárendelés visszaállítása"
+          : "Automatikus paraméter-hozzárendelés visszaállítása"}
       </button>
       <ErrorBox message={error} />
     </details>
@@ -1307,8 +1279,8 @@ function ShopDetails({
           <span>Alkategóriák / szekciók: {node.children_count}</span>
           <span>
             Paraméterek:{" "}
-            {node.kind === "department"
-              ? "Strukturális főcsoport"
+            {node.kind === "department" || node.kind === "section" || node.structural_only
+              ? "Navigációs gyűjtőpont"
               : (node.parameter_count ?? "Még nem ellenőrzött")}
           </span>
           {node.parameter_count !== null && (
@@ -1331,15 +1303,14 @@ function ShopDetails({
             Feljebb
           </button>
         )}
-        {node.mapping_status !== "confirmed" && node.kind === "category" && (
+        {node.mapping_status === "pending" && node.kind === "category" && (
           <p className="notice">
-            Nincs egyértelmű kategóriaegyezés. Az adminisztrátor kiválaszthatja
-            a megfelelő meglévő kategóriát.
+            Több lehetséges paraméterforrás található. Az adminisztrátor pontosíthatja a paraméter-hozzárendelést.
           </p>
         )}
         {node.archived && <p className="warning">Archivált vagy töröltnek jelölt kategória. A paraméterei megtekinthetők, termékbesorolásra nem választható.</p>}
         {who.data?.permissions.includes("system.manage") &&
-          ["category", "section"].includes(node.kind) && (
+          node.kind === "category" && !node.structural_only && (
             <CategoryReview key={node.id + "-" + rev} node={node} onSaved={() => {
               setRev(rev + 1);
               onMappingUpdated();
@@ -1415,6 +1386,10 @@ function Categories() {
     hierarchy_needs_review: number;
     confirmed_bindings: number;
     reference_coverage?: {
+      fixed_category_count: number;
+      parameter_linked_category_count: number;
+      ambiguous_parameter_binding_count: number;
+      unavailable_parameter_binding_count: number;
       reference_total: number;
       placed_reference_count: number;
       auto_mapped_reference_count: number;
@@ -1426,24 +1401,18 @@ function Categories() {
   return (
     <>
       <p className="notice">
-        Egyetlen közös kategóriafa a 13 magyar főcsoporttal. A meglévő
-        kategóriák paraméterei automatikusan elérhetők az egyértelmű egyezéseknél.
-        A még el nem helyezett kategóriákat külön nézetben is megtalálod.
+        A jóváhagyott magyar kategóriafa rögzített: 13 főcsoport, változatlan alkategóriákkal.
+        A forrásadatbázis kizárólag paramétereket és értékeket biztosít; az aktív/inaktív jelzője nem módosítja ezt a fát.
       </p>
       <ErrorBox message={coverage.error} />
       {coverage.data && (
         <div className="reference-metrics">
           {[
             [coverage.data.root_count, "Valós főcsoport"],
-            [coverage.data.manifest_link_count, "Rögzített menühivatkozás"],
-            [coverage.data.reference_coverage?.reference_total ?? "–", "Meglévő kategória"],
-            [coverage.data.reference_coverage?.automatically_arranged_reference_count ?? "–", "Automatikusan elhelyezett"],
-            [coverage.data.reference_coverage?.review_reference_count ?? "–", "Felülvizsgálandó kategória"],
-            [coverage.data.reference_coverage?.unplaced_reference_count ?? "–", "Elkülönített / el nem helyezett"],
-            [
-              coverage.data.hierarchy_needs_review,
-              "Ellenőrzendő szekciókapcsolat",
-            ],
+            [coverage.data.reference_coverage?.fixed_category_count ?? "–", "Rögzített kategóriapont"],
+            [coverage.data.reference_coverage?.parameter_linked_category_count ?? "–", "Hozzárendelt paraméterforrás"],
+            [coverage.data.reference_coverage?.ambiguous_parameter_binding_count ?? "–", "Bizonytalan paraméter-hozzárendelés"],
+            [coverage.data.reference_coverage?.unavailable_parameter_binding_count ?? "–", "Paraméterforrás még nem érhető el"],
           ].map(([v, label]) => (
             <div className="card" key={String(label)}>
               <strong>{v}</strong>
@@ -1480,20 +1449,19 @@ function Categories() {
               }}
             >
               <option value="tree">Közös kategóriafa</option>
-              <option value="unclassified">Felülvizsgálandó és el nem helyezett kategóriák</option>
+              <option value="unclassified">Bizonytalan paraméter-hozzárendelések</option>
             </select>
           </label>
           {scope === "unclassified" && !query && (
             <p>
-              A felülvizsgálandó, inaktív, hiányzó szülőjű és el nem helyezett kategóriák
-              külön listája, a meglévő paramétereikkel. Nem főkategóriák.
+              Csak a több lehetséges paraméterforrással rendelkező kategóriák. A gyűjtőpontokhoz nem szükséges paraméterkapcsolat.
             </p>
           )}
           <label>
             Kategóriakeresés
             <input
               value={q}
-              placeholder="Keresés a teljes kategóriaállományban"
+              placeholder="Keresés a rögzített kategóriafában"
               onChange={(e) => {
                 setQ(e.target.value);
                 setOffset(0);

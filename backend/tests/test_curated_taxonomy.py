@@ -261,7 +261,7 @@ def test_rebuild_reuses_owned_memberships_stable_ids_and_preserves_active_tree(
         client.get("/api/v1/reference/navigation?q=Menüben nem szereplő").json()[
             "total"
         ]
-        == 1
+        == 0
     )
     assert (
         client.get("/api/v1/reference/navigation/web-item-43-3730/parameters").json()[
@@ -307,7 +307,11 @@ def test_rebuild_preserves_admin_bindings_and_native_parent_choices_but_blocks_d
     with Session(target) as db:
         nav = index(db, db.get(CatalogVersion, second))
         assert nav.nodes["web-item-43-3730"]["mapping_method"] == "administrator"
-        assert nav.nodes["ref-emag-54321"]["parent_id"] == "web-dept-43"
+        assert "ref-emag-54321" not in nav.nodes
+        assert (
+            db.get(CatalogNode, (second, "ref-emag-54321")).data["parent_id"]
+            == "web-dept-43"
+        )
         override = db.get(CategoryOverride, "web-item-43-3730")
         override.parent_id, override.override_parent = "web-dept-44", True
         db.commit()

@@ -7,10 +7,30 @@ import pytest
 from playwright.sync_api import sync_playwright, expect
 from conftest import login
 from test_unified_categories import (
-    extra_reference_categories as extra_reference_categories,
-    extra_reference_parameters as extra_reference_parameters,
-    extra_reference_values as extra_reference_values,
+    extra_reference_categories as tv_categories,
+    extra_reference_parameters as tv_parameters,
+    extra_reference_values as tv_values,
 )
+from test_fixed_category_catalog import (
+    extra_reference_categories as desktop_categories,
+    extra_reference_parameters as desktop_parameters,
+    extra_reference_values as desktop_values,
+)
+
+
+@pytest.fixture
+def extra_reference_categories():
+    return tv_categories.__wrapped__() + desktop_categories.__wrapped__()
+
+
+@pytest.fixture
+def extra_reference_parameters():
+    return tv_parameters.__wrapped__() + desktop_parameters.__wrapped__()
+
+
+@pytest.fixture
+def extra_reference_values():
+    return tv_values.__wrapped__() + desktop_values.__wrapped__()
 
 
 @pytest.mark.parametrize("owned", [False, True])
@@ -80,6 +100,33 @@ def test_unified_category_ui_parameters_values_and_simple_review(
         page.get_by_role("navigation").get_by_role("button", name="Kategóriák").click()
         expect(page.locator(".tree > ul > li")).to_have_count(13)
         assert not any("parent_id=" in query for _, _, query in requests)
+        page.get_by_role(
+            "button", name="Számítástechnika alkategóriái", exact=True
+        ).click()
+        page.locator("button.tree-name").filter(
+            has_text="Asztali PC és monitorok"
+        ).click()
+        expect(
+            page.get_by_role("heading", name="Asztali PC és monitorok", exact=True)
+        ).to_be_visible()
+        assert (
+            page.get_by_text(
+                "Paraméter-hozzárendelés szerkesztése (adminisztrátor)", exact=True
+            ).count()
+            == 0
+        )
+        assert page.get_by_text("Összerendelésre vár", exact=True).count() == 0
+        page.get_by_role(
+            "button", name="Asztali PC és monitorok alkategóriái", exact=True
+        ).click()
+        page.locator("button.tree-name").filter(has_text="Asztali számítógépek").click()
+        expect(page.get_by_text("70 paraméter", exact=True)).to_be_visible()
+        expect(
+            page.get_by_text("Termékbesorolásra választható", exact=True)
+        ).to_be_visible()
+        expect(page.locator(".category-full-path")).to_contain_text(
+            "Számítástechnika / Asztali PC és monitorok / Asztali számítógépek"
+        )
         if owned:
             # The declared filter-derived node is lazy, structural and retained.
             assert (
@@ -118,14 +165,12 @@ def test_unified_category_ui_parameters_values_and_simple_review(
         assert page.get_by_text("Bizonyíték SHA-256 hash-e", exact=True).count() == 0
         if owned:
             page.get_by_text(
-                "Kategória besorolásának pontosítása (adminisztrátor)", exact=True
+                "Paraméter-hozzárendelés szerkesztése (adminisztrátor)", exact=True
             ).click()
-            selection = page.get_by_label(
-                "Megfelelő kategória kiválasztása", exact=True
-            )
+            selection = page.get_by_label("Paraméterforrás kiválasztása", exact=True)
             assert int(selection.input_value()) >= 1_000_000_000
             page.get_by_role(
-                "button", name="Kategória összekapcsolása", exact=True
+                "button", name="Paraméterforrás mentése", exact=True
             ).click()
             expect(page.get_by_text("46 paraméter", exact=True)).to_be_visible()
         page.get_by_role("button", name="Megnyitás →", exact=True).first.click()
@@ -137,32 +182,13 @@ def test_unified_category_ui_parameters_values_and_simple_review(
             "5001"
         )
         expect(page.get_by_text("1 paraméter", exact=True)).to_be_visible()
-        # Native categories outside the menu are in this same browser and keep parameters.
+        # Source-only categories do not expand the approved taxonomy.
         page.get_by_label("Kategóriakeresés", exact=True).fill("Menüben nem szereplő")
-        page.locator("button.tree-name").filter(has_text="Menüben nem szereplő").click()
         expect(
-            page.get_by_role("heading", name="Menüben nem szereplő", exact=True)
-        ).to_be_visible()
-        expect(
-            page.get_by_text("El nem helyezett paraméter", exact=True)
-        ).to_be_visible()
-        page.get_by_text(
-            "Kategória besorolásának pontosítása (adminisztrátor)", exact=True
-        ).click()
-        page.get_by_label("Szülőkategória keresése", exact=True).fill(
-            "TV és szórakozás"
-        )
-        parent = page.get_by_label("Elhelyezés a közös fában", exact=True)
-        expect(parent.locator('option[value="web-dept-43"]')).to_have_count(1)
-        parent.select_option("web-dept-43")
-        page.get_by_role("button", name="Elhelyezés mentése", exact=True).click()
-        expect(page.locator(".category-full-path")).to_contain_text(
-            "TV és szórakozás / Menüben nem szereplő"
-        )
-        assert any(
-            method == "POST" and path.endswith("/assignment")
-            for method, path, _ in requests
-        )
+            page.locator("button.tree-name").filter(has_text="Menüben nem szereplő")
+        ).to_have_count(0)
+        assert page.get_by_label("Elhelyezés a közös fában", exact=True).count() == 0
+        assert page.get_by_label("Szülőkategória keresése", exact=True).count() == 0
         assert page.evaluate(
             "document.documentElement.scrollWidth <= window.innerWidth"
         )

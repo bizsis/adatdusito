@@ -1,5 +1,5 @@
 {
-  "version": 2,
+  "version": 3,
   "policy": "Scoped label equivalences and semantic placement of existing top-level source scopes only. No numeric-ID equivalence or fuzzy matching.",
   "label_aliases": [
     {
@@ -386,6 +386,14 @@
         "Memóriakártya"
       ],
       "reference_name": "Memóriakártya"
+    },
+    {
+      "path": [
+        "Számítástechnika",
+        "Asztali PC és monitorok",
+        "Asztali számítógépek"
+      ],
+      "reference_name": "Asztali számítógép"
     }
   ],
   "context_qualifiers": [

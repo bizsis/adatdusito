@@ -125,19 +125,79 @@ def index(db, version):
             .group_by(CatalogLinkEntry.category_id)
         )
     }
-    return nav
+    from app.category_tree import CategoryTree
+    from app.fixed_navigation import resolve_fixed
+    from app.models import CategoryOverride
+    from app.web_navigation import navigation, observations
+    from types import SimpleNamespace
+
+    source_counts = {
+        r.source_id: nav.owned_counts.get(
+            r.target_id, {"total": 0, "mandatory": 0, "optional": 0}
+        )
+        for r in nav.owned_categories.values()
+    }
+    tree = CategoryTree([r.data for r in nav.owned_categories.values()], source_counts)
+    base = navigation()
+    fixed = resolve_fixed(
+        base, tree, observations(db, base), list(db.scalars(select(CategoryOverride)))
+    )
+    source_targets = {r.source_id: r.target_id for r in nav.owned_categories.values()}
+    fixed.owned_nodes = {}
+    for key, node in fixed.nodes.items():
+        original = nav.owned_nodes.get(key)
+        internal = fixed.bindings.get(key)
+        category_id = (
+            source_targets[internal]
+            if internal is not None
+            else original.category_id
+            if original
+            else None
+        )
+        fixed.owned_nodes[key] = SimpleNamespace(
+            key=key,
+            category_id=category_id,
+            data={
+                **node,
+                "mapping_candidate_ids": [
+                    source_targets[c] for c in fixed.candidates.get(key, [])
+                ],
+                "mapping_method": fixed.methods.get(key),
+                "selectable": node["kind"] == "category"
+                and not node.get("structural_only")
+                and category_id is not None,
+                "inactive": False,
+                "archived": False,
+                "related_parameter_filters": original.data.get(
+                    "related_parameter_filters", []
+                )
+                if original
+                else [],
+            },
+        )
+        fixed.nodes[key] = fixed.owned_nodes[key].data
+    fixed.owned_categories, fixed.owned_counts = nav.owned_categories, nav.owned_counts
+    return fixed
 
 
 def dto(db, version, nav, key):
     if key not in nav.visible:
         raise HTTPException(404, "A kategória nem található.")
     row, node = nav.owned_nodes[key], nav.nodes[key]
-    source = nav.owned_categories.get(row.category_id)
-    counts = nav.owned_counts.get(
-        row.category_id, {"total": 0, "mandatory": 0, "optional": 0}
+    from app.fixed_navigation import binding_status
+
+    source = nav.owned_categories.get(row.category_id) if key in nav.bindings else None
+    counts = (
+        nav.owned_counts.get(
+            row.category_id, {"total": 0, "mandatory": 0, "optional": 0}
+        )
+        if source
+        else {"total": 0, "mandatory": 0, "optional": 0}
     )
     return {
         **node,
+        "category_key": key,
+        "parameter_source_category_id": row.category_id if source else None,
         "unified_category_id": row.category_id,
         "selectable": bool(
             node.get("selectable")
@@ -153,14 +213,22 @@ def dto(db, version, nav, key):
         "path": [nav.summary(k) for k in nav.path(key)],
         "ancestors": [nav.summary(k) for k in nav.path(key)[:-1]],
         "related_links": nav.related(key),
-        "mapping_status": "confirmed"
-        if source
-        else "pending"
-        if node["kind"] in {"category", "section"}
-        else "not_applicable",
+        "mapping_status": binding_status(nav, key),
         "canonical_emag_id": int(source.external_id) if source else None,
         "marketplace_category_id": source.source_id if source else None,
-        "mapping_candidates": [],
+        "mapping_candidates": [
+            {
+                "category_id": next(
+                    r.target_id
+                    for r in nav.owned_categories.values()
+                    if r.source_id == c
+                ),
+                "emag_category_id": nav.reference.rows[c]["emag_category_id"],
+                "name": nav.reference.rows[c]["name"],
+                "path_names": [nav.reference.rows[c]["name"]],
+            }
+            for c in nav.candidates.get(key, [])
+        ],
         "mapping_evidence_id": None,
         "parameter_count": counts["total"],
         "mandatory_parameter_count": counts["mandatory"],
@@ -180,7 +248,11 @@ def nodes(db, version, parent_id=None, q="", scope="tree", offset=0, limit=50):
     keys = (
         list(nav.nodes)
         if q
-        else [k for k in nav.nodes if nav.placement[k] != "verified_tree"]
+        else [
+            k
+            for k in nav.nodes
+            if k not in nav.bindings and len(nav.candidates.get(k, [])) > 1
+        ]
         if scope == "unclassified"
         else nav.tree_children(parent_id)
         if parent_id
@@ -259,6 +331,7 @@ def coverage(db, version):
     original = version.counters["coverage"]
     runtime = {
         **original,
+        **nav.reference_coverage,
         "placed_reference_count": len(placed),
         "review_reference_count": len(review),
         "unplaced_reference_count": len(source_ids - placed - review),
@@ -288,11 +361,9 @@ def coverage(db, version):
         "catalog_version_id": version.id,
         "parameter_source": "owned_catalog",
         "source_record_counts": version.verification["processed"],
-        "confirmed_bindings": len(source_ids),
-        "hierarchy_needs_review": sum(
-            not n["id"].startswith("ref-") and n["hierarchy_status"] == "needs_review"
-            for n in nav.nodes.values()
-        ),
+        "confirmed_bindings": len(nav.bindings),
+        "fixed_taxonomy_verified": True,
+        "hierarchy_needs_review": 0,
         "manifest_link_count": 609,
         "full_category_tree_verified": False,
         "kind_counts": dict(Counter(n["kind"] for n in nav.nodes.values())),
@@ -468,9 +539,13 @@ def reference_choices(db, version, q, limit):
                 "category_id": category_id,
                 "emag_category_id": int(record.external_id),
                 "name": data["name"],
-                "path_names": [nav.nodes[k]["name"] for k in nav.path(key)]
-                if key
-                else [data["name"]],
+                "path_names": [
+                    nav.reference.rows[p]["name"]
+                    for p in nav.reference.path_ids(record.source_id, "archive")
+                ],
+                "parameter_count": nav.owned_counts.get(category_id, {}).get(
+                    "total", 0
+                ),
             }
         )
     return {"items": items[:limit], "total": len(items)}
@@ -498,45 +573,32 @@ def assign(db, version, node_id, body, who):
     from app.models import CategoryOverride, now
     from app.security import audit
 
-    setting = db.get(
-        Setting,
-        "reference_catalog_active",
-        with_for_update=True,
-        populate_existing=True,
-    )
+    setting = db.get(Setting, ACTIVE_KEY, with_for_update=True, populate_existing=True)
     if not setting or setting.value != str(version.id):
         raise HTTPException(
             409, "A katalógus időközben változott. Töltsd újra az oldalt."
         )
     nav = index(db, version)
-    if node_id not in nav.visible or nav.nodes[node_id]["kind"] not in {
-        "category",
-        "section",
-    }:
-        raise HTTPException(409, "Csak meglévő kategória besorolása módosítható.")
-    row = nav.owned_nodes[node_id]
-    fields = body.model_fields_set
-    if not fields or (body.reset and len(fields) != 1):
-        raise HTTPException(422, "Válassz egy kategóriát vagy elhelyezést.")
-    override = db.get(CategoryOverride, node_id)
-    data = dict(row.data)
-    if body.reset:
-        row.category_id = data["_imported_category_id"]
-        data["parent_id"], data["hierarchy_status"] = (
-            data["_imported_parent_id"],
-            data["_imported_hierarchy_status"],
+    if node_id not in nav.visible:
+        raise HTTPException(404, "A rögzített kategória nem található.")
+    node = nav.nodes[node_id]
+    if node["kind"] != "category" or node.get("structural_only"):
+        raise HTTPException(
+            409, "Navigációs gyűjtőponthoz nem szükséges paraméter-hozzárendelés."
         )
+    fields = body.model_fields_set
+    if "parent_id" in fields:
+        raise HTTPException(409, "A rögzített kategóriahierarchia nem módosítható.")
+    if not fields or (body.reset and len(fields) != 1) or body.disable_automatic:
+        raise HTTPException(
+            422,
+            "Válassz paraméterforrást vagy állítsd vissza az automatikus hozzárendelést.",
+        )
+    override = db.get(CategoryOverride, node_id)
+    if body.reset:
         if override:
             db.delete(override)
     else:
-        if not override:
-            override = CategoryOverride(
-                node_id=node_id,
-                source_key=SOURCE,
-                override_parent=False,
-                disable_automatic=False,
-            )
-            db.add(override)
         selected = body.category_id
         if body.canonical_emag_id:
             selected = next(
@@ -547,92 +609,22 @@ def assign(db, version, node_id, body, who):
                 ),
                 None,
             )
-        if "category_id" in fields or "canonical_emag_id" in fields:
-            if (
-                selected not in nav.owned_categories
-                or "deleted" in nav.owned_categories[selected].data["name"].casefold()
-                or (node_id.startswith("ref-") and selected != row.category_id)
-            ):
-                raise HTTPException(
-                    409, "Ismeretlen, archivált vagy nem módosítható kategória."
-                )
-            row.category_id = selected
-            data["mapping_method"] = "administrator"
-            override.source_category_id = nav.owned_categories[selected].external_id
-            override.disable_automatic = False
-        if "parent_id" in fields:
-            if body.parent_id is not None and (
-                body.parent_id not in nav.visible
-                or nav.placement[body.parent_id] != "verified_tree"
-                or node_id in nav.path(body.parent_id)
-            ):
-                raise HTTPException(409, "Érvénytelen szülő vagy ciklikus kapcsolat.")
-            data["parent_id"], data["hierarchy_status"] = (
-                body.parent_id,
-                "verified_assignment",
-            )
-            override.parent_id, override.override_parent = body.parent_id, True
-        if body.disable_automatic:
-            raise HTTPException(422, "Az importált besorolás visszaállítását használd.")
+        if selected not in nav.owned_categories:
+            raise HTTPException(409, "Ismeretlen paraméterforrás.")
+        source = nav.owned_categories[selected]
+        if not override:
+            override = CategoryOverride(node_id=node_id, source_key=SOURCE)
+            db.add(override)
+        override.source_category_id, override.disable_automatic = (
+            source.external_id,
+            False,
+        )
+        override.source_snapshot = nav.data["archive_sha256"]
         override.actor_id, override.updated_at = who.user.id, now()
-        override.source_snapshot = (
-            None
-            if node_id.startswith("ref-")
-            else version.counters["navigation_snapshot"]
-        )
-    source = nav.owned_categories.get(row.category_id)
-    data.update(
-        {
-            "canonical_emag_id": int(source.external_id) if source else None,
-            "marketplace_category_id": source.source_id if source else None,
-            "selectable": bool(
-                source
-                and source.data["is_allowed"] == 1
-                and "deleted" not in source.data["name"].casefold()
-            ),
-            "archived": bool(source and "deleted" in source.data["name"].casefold()),
-            "inactive": bool(source and source.data["is_allowed"] != 1),
-        }
-    )
-    row.data = data
-    # A changed menu binding must never hide the previously represented category.
-    remaining = {r.category_id for r in nav.owned_nodes.values()}
-    for category_id, record in nav.owned_categories.items():
-        if category_id in remaining:
-            continue
-        key = "ref-emag-" + record.external_id
-        if key in nav.owned_nodes:
-            continue
-        meta = {
-            "id": key,
-            "name": record.data["name"],
-            "kind": "category",
-            "parent_id": None,
-            "root_id": None,
-            "order": len(nav.nodes),
-            "hierarchy_status": "needs_review",
-            "source_item_id": None,
-            "source_department_id": "",
-            "url": None,
-            "canonical_emag_id": int(record.external_id),
-            "marketplace_category_id": record.source_id,
-            "selectable": record.data["is_allowed"] == 1
-            and "deleted" not in record.data["name"].casefold(),
-            "inactive": record.data["is_allowed"] != 1,
-            "archived": "deleted" in record.data["name"].casefold(),
-            "_imported_category_id": category_id,
-            "_imported_parent_id": None,
-            "_imported_hierarchy_status": "needs_review",
-        }
-        db.add(
-            CatalogNode(
-                version_id=version.id, key=key, category_id=category_id, data=meta
-            )
-        )
     audit(
         db,
         who,
-        "category.assignment",
+        "category.parameter_assignment",
         node_id,
         catalog_version_id=version.id,
         **body.model_dump(),

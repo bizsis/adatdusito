@@ -226,26 +226,25 @@ def test_tv_46_parameters_values_search_and_original_flags_without_manual_approv
     assert all(s.strip().upper().startswith("SELECT ") for s in statements)
 
 
-def test_unplaced_and_deleted_parameters_are_available_in_same_browser(environment):
+def test_source_only_categories_remain_in_parameter_library_not_fixed_tree(environment):
     client, *_ = environment
     login(client)
-    found = client.get("/api/v1/reference/navigation?q=Menüben nem szereplő").json()[
-        "items"
-    ]
-    assert found[0]["id"] == reference_node_id(54321)
-    result = client.get(
-        f"/api/v1/reference/navigation/{reference_node_id(54321)}/parameters"
-    ).json()
-    assert result["items"][0]["id"] == 2000
-    archived = client.get(
-        f"/api/v1/reference/navigation/{reference_node_id(54322)}"
-    ).json()
-    assert archived["archived"] and not archived["selectable"]
+    assert (
+        client.get("/api/v1/reference/navigation?q=Menüben nem szereplő").json()[
+            "items"
+        ]
+        == []
+    )
     assert (
         client.get(
-            f"/api/v1/reference/navigation/{reference_node_id(54322)}/parameters"
-        ).json()["items"][0]["id"]
-        == 2001
+            f"/api/v1/reference/navigation/{reference_node_id(54321)}"
+        ).status_code
+        == 404
+    )
+    # Original links/values are still queryable as source library data.
+    assert (
+        client.get("/api/v1/reference/parameters?category_id=220&view=all").status_code
+        == 200
     )
     assert (
         client.get("/api/v1/reference/parameters/2001/values?view=archive").json()[
@@ -253,44 +252,25 @@ def test_unplaced_and_deleted_parameters_are_available_in_same_browser(environme
         ][0]["value_text"]
         == "Archív érték"
     )
-    branch = client.get(f"/api/v1/reference/navigation?parent_id={TV}").json()["items"]
-    assert any(n["id"] == reference_node_id(12345) for n in branch)
-    assert all(n["id"] != reference_node_id(54322) for n in branch)
 
 
-def test_simple_admin_choices_are_shared_audited_and_reject_cycles_and_wrong_ids(
+def test_fixed_tree_rejects_placement_changes_and_only_edits_parameter_binding(
     environment,
 ):
     client, engine, *_ = environment
     login(client, "processor@example.hu")
-    target = reference_node_id(54321)
     assert (
         client.post(
-            f"/api/v1/reference/navigation/{target}/assignment", json={"parent_id": TV}
+            f"/api/v1/reference/navigation/{TV}/assignment",
+            json={"canonical_emag_id": 79},
         ).status_code
         == 403
     )
     login(client)
     assert (
         client.post(
-            f"/api/v1/reference/navigation/{target}/assignment", json={"parent_id": TV}
-        ).status_code
-        == 200
-    )
-    assert (
-        client.get(f"/api/v1/reference/navigation/{target}").json()["placement_status"]
-        == "verified_tree"
-    )
-    assert (
-        client.post(
-            f"/api/v1/reference/navigation/{target}/assignment",
-            json={"canonical_emag_id": 79},
-        ).status_code
-        == 409
-    )
-    assert (
-        client.post(
-            f"/api/v1/reference/navigation/{TV}/assignment", json={"parent_id": target}
+            f"/api/v1/reference/navigation/{TV}/assignment",
+            json={"parent_id": "web-dept-79"},
         ).status_code
         == 409
     )
@@ -310,18 +290,21 @@ def test_simple_admin_choices_are_shared_audited_and_reject_cycles_and_wrong_ids
     )
     assert (
         client.post(
-            f"/api/v1/reference/navigation/{target}/assignment", json={"reset": True}
+            f"/api/v1/reference/navigation/{TV}/assignment",
+            json={"canonical_emag_id": 79},
         ).status_code
         == 200
     )
-    assert (
-        client.get(f"/api/v1/reference/navigation/{target}").json()["placement_status"]
-        != "verified_tree"
-    )
     with Session(engine) as db:
         assert db.scalar(select(Audit).where(Audit.action == "category.assignment"))
-        assert db.get(CategoryOverride, target) is None
-    login(client, "admin@example.hu")
+    assert (
+        client.post(
+            f"/api/v1/reference/navigation/{TV}/assignment", json={"reset": True}
+        ).status_code
+        == 200
+    )
+    with Session(engine) as db:
+        assert db.get(CategoryOverride, TV) is None
     assert (
         client.get(f"/api/v1/reference/navigation/{TV}/parameters").json()["total"]
         == 46

@@ -105,10 +105,10 @@ def test_dom_sections_facets_brands_and_reviewed_unknown_groups(environment):
     assert (
         washing["name"] == "Mosógépek és szárítógépek" and washing["kind"] == "section"
     )
-    assert any(
-        n["kind"] == "parameter_filter" and n["name"] == "Elöltöltős mosógépek"
-        for n in washing["related_links"]
-    )
+    children = client.get(
+        "/api/v1/reference/navigation?parent_id=" + washing["id"]
+    ).json()["items"]
+    assert any(n["name"] == "Elöltöltős mosógépek" for n in children)
     television = client.get("/api/v1/reference/navigation/web-item-43-3730").json()
     assert any(
         n["name"] == "LED TV" and n["kind"] == "parameter_filter"
@@ -116,8 +116,13 @@ def test_dom_sections_facets_brands_and_reviewed_unknown_groups(environment):
     )
     root = client.get("/api/v1/reference/navigation/web-dept-114").json()
     assert any(n["kind"] == "brand" for n in root["related_links"])
-    for id in ["web-item-114-3490", "web-item-114-4165"]:
-        assert client.get("/api/v1/reference/navigation/" + id).status_code == 404
+    # The operator-approved former filter is now a fixed structural point.
+    assert (
+        client.get("/api/v1/reference/navigation/web-item-114-3490").status_code == 200
+    )
+    assert (
+        client.get("/api/v1/reference/navigation/web-item-114-4165").status_code == 404
+    )
     unresolved = next(
         n
         for n in navigation().nodes.values()
@@ -127,7 +132,7 @@ def test_dom_sections_facets_brands_and_reviewed_unknown_groups(environment):
         client.get("/api/v1/reference/navigation/" + unresolved["id"]).json()[
             "hierarchy_status"
         ]
-        == "needs_review"
+        == "verified_assignment"
     )
 
 
@@ -288,15 +293,15 @@ def test_root_registry_and_separate_unclassified_list_preserve_source_graph(
     listed = client.get(
         "/api/v1/reference/navigation?scope=unclassified&limit=100"
     ).json()
-    assert {"unplaced", "orphan", "cycle-a", "cycle-b"} <= {
-        n["id"] for n in listed["items"]
-    }
+    assert {"unplaced", "orphan", "cycle-a", "cycle-b"}.isdisjoint(
+        {n["id"] for n in listed["items"]}
+    )
     assert nav.placement["unplaced"] == "unclassified"
     assert nav.placement["orphan"] == "missing_parent"
     assert nav.placement["cycle-a"] == "cycle"
     found = client.get("/api/v1/reference/navigation?q=Teszt&limit=100").json()
-    assert found["total"] == 4
-    assert client.get("/api/v1/reference/navigation/orphan").status_code == 200
+    assert found["total"] == 0
+    assert client.get("/api/v1/reference/navigation/orphan").status_code == 404
     assert data == before  # Indexing/search never repairs identities or parents.
 
 
@@ -309,16 +314,19 @@ def test_uncertain_children_are_separate_but_remain_globally_searchable(environm
         for n in nav.nodes.values()
         if n["kind"] == "category" and n["hierarchy_status"] == "needs_review"
     )
+    from app.curated_taxonomy import apply_taxonomy
+
+    pending = apply_taxonomy(nav).nodes[pending["id"]]
     children = client.get(
         "/api/v1/reference/navigation",
         params={"parent_id": pending["parent_id"], "limit": 100},
     ).json()
-    assert pending["id"] not in {n["id"] for n in children["items"]}
+    assert pending["id"] in {n["id"] for n in children["items"]}
     assert all(n["placement_status"] == "verified_tree" for n in children["items"])
     review = client.get(
         "/api/v1/reference/navigation?scope=unclassified&limit=100"
     ).json()
-    assert pending["id"] in {n["id"] for n in review["items"]}
+    assert pending["id"] not in {n["id"] for n in review["items"]}
     found = client.get(
         "/api/v1/reference/navigation",
         params={"q": pending["name"], "parent_id": "web-dept-43"},
