@@ -12,6 +12,7 @@ from sqlalchemy import (
     Boolean,
     Column,
     Integer,
+    JSON,
     MetaData,
     String,
     Table,
@@ -21,7 +22,9 @@ from sqlalchemy import (
     select,
 )
 from app.db import reference_database
-from app.security import require
+from app.security import require, database
+from sqlalchemy.orm import Session
+from app import catalog_store
 
 metadata = MetaData()
 categories = Table(
@@ -34,6 +37,7 @@ categories = Table(
     Column("is_allowed", Boolean),
     Column("is_ean_mandatory", Boolean),
     Column("is_warranty_mandatory", Boolean),
+    Column("raw_json", JSON),
 )
 parameters = Table(
     "emag_category_parameters",
@@ -47,6 +51,7 @@ parameters = Table(
     Column("is_mandatory", Boolean),
     Column("is_filter", Boolean),
     Column("allow_new_value", Boolean),
+    Column("raw_json", JSON),
 )
 values = Table(
     "emag_parameter_values",
@@ -71,7 +76,11 @@ View = Literal["navigation", "all", "archive"]
 
 
 def load_tree(conn):
-    rows = list(conn.execute(select(categories)).mappings())
+    rows = list(
+        conn.execute(
+            select(*(c for c in categories.c if c.name != "raw_json"))
+        ).mappings()
+    )
     groups = conn.execute(
         select(
             parameters.c.category_id,
@@ -118,7 +127,10 @@ def paginated(conn, stmt, offset, limit):
 
 
 @router.get("/coverage")
-def coverage():
+def coverage(db: Session = Depends(database)):
+    version = catalog_store.active_version(db)
+    if version:
+        return catalog_store.coverage(db, version)
     with reference_database() as conn:
         from datetime import datetime, timezone
 
@@ -135,7 +147,29 @@ def list_categories(
     view: View = "navigation",
     offset: int = Query(0, ge=0, le=100000),
     limit: int = Query(50, ge=1, le=100),
+    db: Session = Depends(database),
 ):
+    version = catalog_store.active_version(db)
+    if version:
+        parent = None
+        if parent_id is not None:
+            parent = catalog_store.category_detail(db, version, parent_id)["id"]
+            nav = catalog_store.index(db, version)
+            parent = next(
+                (k for k in nav.visible if nav.owned_nodes[k].category_id == parent),
+                None,
+            )
+        result = catalog_store.nodes(db, version, parent, q, "tree", offset, limit)
+        result["items"] = [
+            {
+                **n,
+                "navigation_id": n["id"],
+                "id": n["unified_category_id"],
+                "parent_id": n["parent_category_id"],
+            }
+            for n in result["items"]
+        ]
+        return result
     with reference_database() as conn:
         tree = load_tree(conn)
         ids = tree.visible(view)
@@ -166,14 +200,30 @@ def list_categories(
 
 
 @router.get("/categories/{category_id}")
-def category(category_id: int, view: View = "navigation"):
+def category(
+    category_id: int, view: View = "navigation", db: Session = Depends(database)
+):
+    version = catalog_store.active_version(db)
+    if version:
+        return catalog_store.category_detail(db, version, category_id)
     with reference_database() as conn:
         return get_category(load_tree(conn), category_id, view)
 
 
 @router.get("/categories/{category_id}/selection")
-def category_selection(category_id: int):
+def category_selection(category_id: int, db: Session = Depends(database)):
     """Stable reference contract for future imports; does not create any product."""
+    version = catalog_store.active_version(db)
+    if version:
+        node = catalog_store.category_detail(db, version, category_id)
+        if not node["selectable"]:
+            raise HTTPException(409, "Strukturális kategória nem választható.")
+        return {
+            "category": node,
+            "category_id": node["unified_category_id"],
+            "parameter_inheritance": False,
+            "reference_writes_allowed": False,
+        }
     with reference_database() as conn:
         tree = load_tree(conn)
         item = get_category(tree, category_id, "all")
@@ -198,7 +248,13 @@ def list_parameters(
     view: View = "navigation",
     offset: int = Query(0, ge=0, le=10000),
     limit: int = Query(25, ge=1, le=100),
+    db: Session = Depends(database),
 ):
+    version = catalog_store.active_version(db)
+    if version:
+        return catalog_store.parameters(
+            db, version, category_id, q, mandatory, view, offset, limit
+        )
     with reference_database() as conn:
         tree = load_tree(conn)
         if category_id is not None:
@@ -206,7 +262,7 @@ def list_parameters(
         visible_ids = tree.visible(view)
         stmt = (
             select(
-                parameters,
+                *(c for c in parameters.c if c.name != "raw_json"),
                 categories.c.name.label("category_name"),
                 categories.c.emag_category_id,
             )
@@ -237,12 +293,16 @@ def parameter_values(
     after: int = Query(0, ge=0),
     view: View = "navigation",
     limit: int = Query(50, ge=1, le=100),
+    db: Session = Depends(database),
 ):
+    version = catalog_store.active_version(db)
+    if version:
+        return catalog_store.values(db, version, parameter_id, q, after, view, limit)
     with reference_database() as conn:
         tree = load_tree(conn)
         parameter = (
             conn.execute(
-                select(parameters)
+                select(*(c for c in parameters.c if c.name != "raw_json"))
                 .join(categories, parameters.c.category_id == categories.c.id)
                 .where(
                     parameters.c.id == parameter_id,

@@ -13,11 +13,27 @@ from test_unified_categories import (
 )
 
 
+@pytest.mark.parametrize("owned", [False, True])
 @pytest.mark.parametrize("width,height", [(1440, 1000), (390, 844)])
 def test_unified_category_ui_parameters_values_and_simple_review(
-    environment, width, height
+    environment, width, height, owned, monkeypatch
 ):
-    client, *_ = environment
+    client, target, source, _ = environment
+    if owned:
+        from app.catalog_import import SourceReader, import_catalog, activate
+        from app import reference, web_navigation, reference_sources
+        from contextlib import contextmanager
+
+        version = import_catalog(target, SourceReader(source), pause_ms=0)
+        activate(target, version)
+
+        @contextmanager
+        def forbidden():
+            raise AssertionError("Owned UI contacted source database")
+            yield
+
+        for module in (reference, web_navigation, reference_sources):
+            monkeypatch.setattr(module, "reference_database", forbidden)
     login(client)
     dist = Path(__file__).resolve().parents[2] / "frontend/dist"
     assert (dist / "index.html").exists(), "Build frontend before browser tests"
@@ -69,6 +85,18 @@ def test_unified_category_ui_parameters_values_and_simple_review(
         expect(page.get_by_text("Kötelező: 15", exact=True)).to_be_visible()
         expect(page.get_by_text("Opcionális: 31", exact=True)).to_be_visible()
         assert page.get_by_text("Bizonyíték SHA-256 hash-e", exact=True).count() == 0
+        if owned:
+            page.get_by_text(
+                "Kategória besorolásának pontosítása (adminisztrátor)", exact=True
+            ).click()
+            selection = page.get_by_label(
+                "Megfelelő kategória kiválasztása", exact=True
+            )
+            assert int(selection.input_value()) >= 1_000_000_000
+            page.get_by_role(
+                "button", name="Kategória összekapcsolása", exact=True
+            ).click()
+            expect(page.get_by_text("46 paraméter", exact=True)).to_be_visible()
         page.get_by_role("button", name="Megnyitás →", exact=True).first.click()
         expect(page.locator(".value-list li")).to_have_count(50)
         page.get_by_label("Keresés az értékekben", exact=True).fill("123")

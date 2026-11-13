@@ -182,3 +182,26 @@ TypeScript/Vite- és Docker Compose-build sikeres. Az elkülönített felhőbeli
 Az eredeti 0001–0003 migrációk, `.env`, Compose és az external hálózat változatlanok. Csak az alkalmazás `category_overrides` táblája új; a referenciaadatokhoz nem adtunk író jogosultságot és nem másoltunk paraméterértékeket. **VPS-telepítés nem történt.**
 
 [Részletes adatmodell, lefedettség, reprodukálás és kézi frissítés](codex03b.md).
+
+## CODEX 04 – Saját referenciakatalógus
+
+Új alkalmazásmigráció: **0005**, kizárólag új `catalog_*` táblákkal. A 0001–0004, `.env`, Compose és external hálózat változatlan. Az import külön adatverziót készít, az aktiválás külön operátori parancs; a forrásadatbázis csak olvasható marad. A globális közös azonosítók újrafutáskor megmaradnak; paraméterdefiníciók és pontosan egyező értékek közösek, az összes eredeti forrásrekord és kategóriafüggő megengedettérték-tagság külön megőrzött.
+
+**113 sikeres teszt**, 1 meglévő Starlette/AnyIO deprecation warning. Ebből 97 backend/API/böngészőteszt és 16 gyűjtő-/navigációs teszt. Új ellenőrzések:
+
+- Valódi, feltöltött TSV mind a **2669 kategóriájának importja**, a TSV-ből hiányzó teljes paraméter-/értékállomány importjának állítása nélkül.
+- Szintetikus **46 TV-paraméter**, 15 kötelező / 31 opcionális jelzővel, megengedett értékekkel, kereséssel és lapozással; saját azonosítók és legacy URL-feloldás.
+- **25 001 szintetikus forrásérték**, legfeljebb 997 soros tesztkötegekkel: 101 közös érték, az összes eredeti sor/tagság/sorrend megmarad. A globális kategória-/paraméter-/értékentitások száma újrafuttatás és második adatverzió után sem nő feleslegesen.
+- Két kategória azonos közös paraméterdefiníciójának **eltérő megengedett értékkészlete nem keveredik**.
+- Félbeszakított köteg visszagörgetése és utolsó sikeres checkpoint folytatása; aktív adatok változatlanok. Hiányos import nem aktiválható.
+- Forrásváltozás és sérült saját érték elutasítása; eredeti JSON-metaadat megőrzése, normál olvasásból kizárása és előzetes méretkorlát.
+- Asztali és 390 pixeles mobil böngészőpróba tényleges FastAPI tesztalkalmazással, **aktivált saját katalógussal és letiltott forráseléréssel**: 13 gyökér, paraméter-/értékkeresés, közös ID-t használó adminisztrátori választó, elhelyezés és teljes útvonal működik. Ugyanez az alapfelület az aktiválás előtti módban is ellenőrzött.
+- Hibás aktív verzió esetén 503 és nincs észrevétlen forrás-visszaesés. A readiness aktivált katalógus mellett csak saját táblákat ellenőriz.
+
+TypeScript/Vite- és Docker Compose-build sikeres. A meglévő, elkülönített felhőbeli MySQL 8 tesztpéldányon **0004 → 0005**, majd saját új táblákon **0005 → 0004 → 0005** migrációs kör sikeres; `alembic check`: nincs eltérés az ORM és a séma között. Ez nem VPS-művelet, és nem érintette a felhőbeli forrás- vagy ügyféltáblákat.
+
+A helyi MySQL parancssori import/ellenőrzés szándékosan a **3 kategória / 2 kategóriaparaméter / 3 érték** szintetikus cloud fixture-ön futott. Első és második verzió, aktiválás **1 → 2**, majd visszaállítás **2 → 1** sikeres. A saját HTTP API mindkét verzión és rollback után is a 13 gyökeret és helyes, közös ID-jú értékeket adta. Külön, üres `REFERENCE_DATABASE_URL` mellett futtatott saját katalógusolvasás és readiness sikeres. Health/readiness/Celery smoke-próba sikeres.
+
+**A teljes 29 398 kategóriaparaméter / 2 847 054 érték éles importját és teljesítményét nem teszteltük**, mert ez az állomány itt nem érhető el. A forráson és célon végigmenő VPS-ellenőrzés, a 46 TV-paraméter külön vizsgálata, a telepítés és a mutatóalapú rollback pontos parancsai: [CODEX 04](codex04.md). **VPS-telepítés és éles adatimport nem történt.**
+
+Aktív saját katalóguson a sémadowngrade MySQL-próbája a várt védelmi hibával leállt, még bármelyik katalógustábla törlése előtt. A séma ezután is 0005-ön maradt és az `alembic check` sikeres; a közös import/aktiválási zár a konkurens sémavisszabontást is védi.

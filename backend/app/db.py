@@ -25,6 +25,27 @@ def engine(reference=False):
 
 
 def check_database(reference=False):
+    if reference:
+        from sqlalchemy.orm import Session
+        from app.catalog_store import active_version
+        from app.models import CatalogNode, CatalogLinkEntry, CatalogValue
+        from sqlalchemy import select
+
+        with Session(engine()) as db:
+            version = active_version(db)
+            if version:
+                db.execute(
+                    select(CatalogNode.key)
+                    .where(CatalogNode.version_id == version.id)
+                    .limit(1)
+                )
+                db.execute(
+                    select(CatalogLinkEntry.link_id)
+                    .where(CatalogLinkEntry.version_id == version.id)
+                    .limit(1)
+                )
+                db.execute(select(CatalogValue.id).limit(1))
+                return
     with engine(reference).connect() as connection:
         if reference:
             connection.execute(text("SET TRANSACTION READ ONLY"))

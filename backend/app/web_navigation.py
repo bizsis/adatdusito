@@ -13,6 +13,7 @@ from app.security import database, require, Identity, audit
 from app.db import reference_database
 from app.reference import load_tree, list_parameters
 from app.unified_categories import build_unified
+from app import catalog_store
 from pydantic import BaseModel, ConfigDict, Field
 
 TREE_KINDS = {"department", "section", "category"}
@@ -234,6 +235,9 @@ def nodes(
     limit: int = Query(50, ge=1, le=100),
     db: Session = Depends(database),
 ):
+    version = catalog_store.active_version(db)
+    if version:
+        return catalog_store.nodes(db, version, parent_id, q, scope, offset, limit)
     nav, latest, tree = resolved(db)
     if parent_id:
         require_node(nav, parent_id)
@@ -275,6 +279,9 @@ def nodes(
 
 @router.get("/coverage")
 def coverage(db: Session = Depends(database)):
+    version = catalog_store.active_version(db)
+    if version:
+        return catalog_store.coverage(db, version)
     nav, latest, tree = resolved(db)
     return {
         "reference_coverage": nav.reference_coverage,
@@ -300,6 +307,9 @@ def coverage(db: Session = Depends(database)):
 
 @router.get("/{node_id}")
 def detail(node_id: str, db: Session = Depends(database)):
+    version = catalog_store.active_version(db)
+    if version:
+        return catalog_store.detail(db, version, node_id)
     nav, latest, tree = resolved(db)
     require_node(nav, node_id)
     return dto(nav, node_id, latest, tree)
@@ -330,6 +340,19 @@ def parameters(
     limit: int = Query(25, ge=1, le=100),
     db: Session = Depends(database),
 ):
+    version = catalog_store.active_version(db)
+    if version:
+        node = catalog_store.detail(db, version, node_id)
+        return catalog_store.parameters(
+            db,
+            version,
+            node["unified_category_id"],
+            q,
+            mandatory,
+            "archive" if node["archived"] else "all",
+            offset,
+            limit,
+        )
     node = confirmed(node_id, db)
     return list_parameters(
         category_id=node["marketplace_category_id"],
@@ -338,11 +361,28 @@ def parameters(
         view="archive" if node["archived"] else "all",
         offset=offset,
         limit=limit,
+        db=db,
     )
 
 
 @router.get("/{node_id}/selection")
 def selection(node_id: str, db: Session = Depends(database)):
+    version = catalog_store.active_version(db)
+    if version:
+        node = catalog_store.detail(db, version, node_id)
+        if not node["selectable"]:
+            raise HTTPException(
+                409, "Strukturális vagy archivált kategória nem választható."
+            )
+        return {
+            "navigation_id": node_id,
+            "category_id": node["unified_category_id"],
+            "catalog_version_id": version.id,
+            "canonical_reference_key": f"category:{node['unified_category_id']}",
+            "parameter_inheritance": False,
+            "reference_writes_allowed": False,
+            "new_value_policy": "proposal_requires_approval",
+        }
     node = confirmed(node_id, db, selection=True)
     return {
         "navigation_id": node_id,
@@ -363,6 +403,9 @@ def reference_choices(
     limit: int = Query(50, ge=1, le=100),
     db: Session = Depends(database),
 ):
+    version = catalog_store.active_version(db)
+    if version:
+        return catalog_store.reference_choices(db, version, q, limit)
     nav, _, tree = resolved(db)
     term = q.casefold()
     keys = [
@@ -391,6 +434,9 @@ def parent_choices(
     limit: int = Query(50, ge=1, le=100),
     db: Session = Depends(database),
 ):
+    version = catalog_store.active_version(db)
+    if version:
+        return catalog_store.parent_choices(db, version, q, limit)
     nav, _, _ = resolved(db)
     keys = [
         k
@@ -411,6 +457,7 @@ def parent_choices(
 class AssignmentInput(BaseModel):
     model_config = ConfigDict(extra="forbid")
     canonical_emag_id: int | None = Field(None, gt=0)
+    category_id: int | None = Field(None, ge=1_000_000_000, lt=2**53)
     parent_id: str | None = Field(None, max_length=160)
     disable_automatic: bool = False
     reset: bool = False
@@ -423,6 +470,13 @@ def assign_category(
     who: Identity = Depends(require("system.manage")),
     db: Session = Depends(database),
 ):
+    version = catalog_store.active_version(db)
+    if version:
+        return catalog_store.assign(db, version, node_id, body, who)
+    if body.category_id is not None:
+        raise HTTPException(
+            409, "Közös adatbázis-azonosítóhoz előbb aktiváld az importált katalógust."
+        )
     nav, _, tree = resolved(db)
     require_node(nav, node_id)
     node = nav.nodes[node_id]

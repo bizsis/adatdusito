@@ -2,6 +2,20 @@
 
 Alapútvonal: `/api/v1`. OpenAPI JSON: `/api/v1/openapi.json`, Swagger UI: `/api/v1/docs` – mindkettő bejelentkezéshez kötött. A régi `/api/health/live` és `/api/health/ready` útvonal változatlan.
 
+## CODEX 04: saját referenciaazonosítók
+
+A `0005` séma és az ellenőrzött katalógus külön aktiválása után a referencia-végpontok a saját adatbázisból dolgoznak. A 13 főcsoportos `/reference/navigation` marad az egyetlen közös böngésző API-ja. Aktiválásig a korábbi olvasó szolgálja ki ugyanazt a felületet. [Import, teljes ellenőrzés és visszaállítás](codex04.md).
+
+- Navigációs adatlap: `unified_category_id` = saját közös kategória-ID, `catalog_version_id` = adatverzió. A meglévő szöveges navigációs `id` útvonal-/aliasazonosító marad.
+- Kategóriaválasztás: a `/reference/navigation/{id}/selection` válasz `category_id` mezője aktivált katalógusnál a saját kategória-ID. A későbbi termékek ezt használják.
+- Paraméterlista: `parameter_id` = közös paraméterdefiníció; `id` és `category_parameter_id` = az adott kategória paraméterkapcsolata. Az `/reference/parameters/{id}/values` végpontnak a **kapcsolat** azonosítóját add át, hogy a kategóriaspecifikus értékkészletet kapd.
+- Értéklista: az `id` a közös érték-ID, a `next_cursor` változatlanul a következő oldalhoz használható. Eredeti forrásrekordok egyező paraméter + pontosan egyező értékszöveg esetén közös értékre hivatkozhatnak; minden eredeti tagság és sorrend megmarad.
+- Adminisztrátori választás: `POST /reference/navigation/{id}/assignment`, `{ "category_id": <közös ID> }`, vagy `{ "parent_id": "<navigációs szülő>" }`. Saját katalógus mellett a visszaállítás az importált állapotot állítja vissza. Nincs hash-bekérés.
+- A korábbi numerikus forrás-kategória- és kategóriaparaméter-azonosítók kompatibilitási feloldása megmarad. A saját ID-k legalább 1 000 000 000 értékűek; az eredeti eMAG külső azonosító külön metaadat, nem közös ID.
+- Az aktív katalógus hibája 503, nem automatikus forrás-visszaesés. Az aktiválás/rollback operátori CLI, nem tenantművelet. A `pinfo_db`-hez továbbra sincs író API.
+
+Az alábbi eredeti referencia-ID-leírások az aktiválás előtti, illetve forrás-kompatibilitási üzemmódot dokumentálják. A jogosultsági, CSRF- és ügyfélelkülönítési szerződés mindkét üzemmódban változatlan.
+
 ## Hitelesítés
 
 A `POST /auth/login` JSON email/password mezőkkel lép be; a válasz `csrf_token` értéket és HttpOnly, Secure, SameSite=Strict, hosthoz kötött cookie-t ad. A véletlen munkamenettokennek csak SHA-256 kivonata kerül az alkalmazás-adatbázisba. Abszolút élettartama 8 óra; új belépés tokenforgatást végez. Jelszavakhoz scrypt N=131072, r=8, p=1, egyedi 16 bájtos só, állandó idejű összehasonlítás használatos.

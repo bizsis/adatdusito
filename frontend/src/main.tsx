@@ -31,6 +31,8 @@ type NavLink = {
   path?: NavLink[];
 };
 type NavCategory = NavLink & {
+  unified_category_id?: number;
+  catalog_version_id?: number;
   placement_status: string;
   source_item_id: string | null;
   source_department_id: string;
@@ -51,9 +53,16 @@ type NavCategory = NavLink & {
   path: NavLink[];
   related_links: (NavLink & { url: string | null })[];
 };
-type ReferenceChoice = { emag_category_id: number; name: string; path_names: string[] };
+type ReferenceChoice = {
+  category_id?: number;
+  emag_category_id: number;
+  name: string;
+  path_names: string[];
+};
 type Parameter = {
   id: number;
+  parameter_id?: number;
+  category_parameter_id?: number;
   category_id: number;
   emag_parameter_id: number;
   name: string;
@@ -1115,7 +1124,9 @@ function ShopNode({
 function CategoryReview({ node, onSaved }: { node: NavCategory; onSaved: () => void }) {
   const [query, setQuery] = useState(""),
     [parentQuery, setParentQuery] = useState(""),
-    [reference, setReference] = useState(String(node.canonical_emag_id || "")),
+    [reference, setReference] = useState(
+      String(node.unified_category_id || node.canonical_emag_id || ""),
+    ),
     [parent, setParent] = useState(""),
     [error, setError] = useState(""),
     [busy, setBusy] = useState(false);
@@ -1127,13 +1138,14 @@ function CategoryReview({ node, onSaved }: { node: NavCategory; onSaved: () => v
     `/reference/navigation/choices/parents?q=${encodeURIComponent(parentTerm)}`,
   );
   const current = node.canonical_emag_id ? [{
+    category_id: node.unified_category_id,
     emag_category_id: node.canonical_emag_id,
     name: node.reference_name || node.name,
     path_names: [node.reference_name || node.name],
   }] : [];
   const candidates = [...new Map(
     [...current, ...(node.mapping_candidates || []), ...(choices.data?.items || [])]
-      .map(c => [c.emag_category_id, c]),
+      .map(c => [c.category_id || c.emag_category_id, c]),
   ).values()];
   async function save(body: object) {
     setBusy(true);
@@ -1153,7 +1165,9 @@ function CategoryReview({ node, onSaved }: { node: NavCategory; onSaved: () => v
       {!node.id.startsWith("ref-") && (
         <form onSubmit={e => {
           e.preventDefault();
-          save({ canonical_emag_id: Number(reference) });
+          save(node.catalog_version_id
+            ? { category_id: Number(reference) }
+            : { canonical_emag_id: Number(reference) });
         }}>
           <label>
             Meglévő kategória keresése
@@ -1165,8 +1179,8 @@ function CategoryReview({ node, onSaved }: { node: NavCategory; onSaved: () => v
               value={reference} onChange={e => setReference(e.target.value)}>
               <option value="">Válassz kategóriát</option>
               {candidates.map(c => (
-                <option key={c.emag_category_id} value={c.emag_category_id}>
-                  {c.path_names.join(" / ")} · #{c.emag_category_id}
+                <option key={c.category_id || c.emag_category_id} value={c.category_id || c.emag_category_id}>
+                  {c.path_names.join(" / ")}
                 </option>
               ))}
             </select>
@@ -1203,7 +1217,9 @@ function CategoryReview({ node, onSaved }: { node: NavCategory; onSaved: () => v
         <button disabled={busy}>Elhelyezés mentése</button>
       </form>
       <button disabled={busy} onClick={() => save({ reset: true })}>
-        Automatikus besorolás visszaállítása
+        {node.catalog_version_id
+          ? "Importált besorolás visszaállítása"
+          : "Automatikus besorolás visszaállítása"}
       </button>
       <ErrorBox message={error} />
     </details>
@@ -1671,7 +1687,7 @@ function SystemStatus() {
   }>("/system/status", rev);
   const names: Record<string, string> = {
     database: "Alkalmazás-adatbázis",
-    reference: "eMAG-referencia",
+    reference: "Közös referenciaadatbázis",
     redis: "Redis",
     worker: "Celery worker",
   };

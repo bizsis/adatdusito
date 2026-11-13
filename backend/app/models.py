@@ -1,7 +1,17 @@
 """Application-only schema. Reference tables must never join this metadata."""
 
 from datetime import datetime, timezone
-from sqlalchemy import Integer, Boolean, DateTime, ForeignKey, JSON, String, Text
+from sqlalchemy import (
+    Integer,
+    Boolean,
+    DateTime,
+    ForeignKey,
+    JSON,
+    String,
+    Text,
+    BigInteger,
+    Index,
+)
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 
 
@@ -173,3 +183,125 @@ class CategoryOverride(Base):
     source_snapshot: Mapped[str | None] = mapped_column(String(64), nullable=True)
     actor_id: Mapped[int] = mapped_column(ForeignKey("users.id"))
     updated_at: Mapped[datetime] = mapped_column(DateTime, default=now, onupdate=now)
+
+
+# Stable common IDs are allocated by the single catalog importer, above the
+# legacy eMAG range and below JavaScript's exact-integer limit. Versions contain
+# memberships/placements; shared definitions and values are stored only once.
+
+
+class CatalogVersion(Base):
+    __tablename__ = "catalog_versions"
+    id: Mapped[int] = mapped_column(primary_key=True)
+    source_key: Mapped[str] = mapped_column(String(48))
+    status: Mapped[str] = mapped_column(String(24), default="building")
+    phase: Mapped[str] = mapped_column(String(24), default="categories")
+    cursor: Mapped[int] = mapped_column(BigInteger, default=0)
+    source_state: Mapped[dict] = mapped_column(JSON)
+    counters: Mapped[dict] = mapped_column(JSON, default=dict)
+    verification: Mapped[dict | None] = mapped_column(JSON, nullable=True)
+    error: Mapped[str | None] = mapped_column(Text, nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=now)
+    updated_at: Mapped[datetime] = mapped_column(DateTime, default=now, onupdate=now)
+
+
+class CatalogCategory(Base):
+    __tablename__ = "catalog_categories"
+    id: Mapped[int] = mapped_column(BigInteger, primary_key=True, autoincrement=False)
+    key: Mapped[str] = mapped_column(String(160), unique=True)
+    name: Mapped[str] = mapped_column(String(255))
+
+
+class CatalogNode(Base):
+    __tablename__ = "catalog_category_nodes"
+    version_id: Mapped[int] = mapped_column(
+        ForeignKey("catalog_versions.id"), primary_key=True
+    )
+    key: Mapped[str] = mapped_column(String(160), primary_key=True)
+    category_id: Mapped[int | None] = mapped_column(
+        ForeignKey("catalog_categories.id"), nullable=True, index=True
+    )
+    data: Mapped[dict] = mapped_column(JSON)
+
+
+class CatalogParameter(Base):
+    __tablename__ = "catalog_parameters"
+    id: Mapped[int] = mapped_column(BigInteger, primary_key=True, autoincrement=False)
+    key: Mapped[str] = mapped_column(String(64), unique=True)
+    name: Mapped[str] = mapped_column(String(255))
+    type_id: Mapped[int | None] = mapped_column(Integer, nullable=True)
+
+
+class CatalogLink(Base):
+    __tablename__ = "catalog_category_parameters"
+    id: Mapped[int] = mapped_column(BigInteger, primary_key=True, autoincrement=False)
+    key: Mapped[str] = mapped_column(String(160), unique=True)
+
+
+class CatalogLinkEntry(Base):
+    __tablename__ = "catalog_category_parameter_entries"
+    version_id: Mapped[int] = mapped_column(
+        ForeignKey("catalog_versions.id"), primary_key=True
+    )
+    link_id: Mapped[int] = mapped_column(
+        ForeignKey("catalog_category_parameters.id"), primary_key=True
+    )
+    category_id: Mapped[int] = mapped_column(
+        ForeignKey("catalog_categories.id"), index=True
+    )
+    parameter_id: Mapped[int] = mapped_column(ForeignKey("catalog_parameters.id"))
+    name: Mapped[str] = mapped_column(String(255))
+    emag_parameter_id: Mapped[int] = mapped_column(Integer)
+    display_order: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    is_mandatory: Mapped[bool | None] = mapped_column(Boolean, nullable=True)
+    is_filter: Mapped[bool | None] = mapped_column(Boolean, nullable=True)
+    allow_new_value: Mapped[bool | None] = mapped_column(Boolean, nullable=True)
+    __table_args__ = (
+        Index(
+            "ix_catalog_entry_category",
+            "version_id",
+            "category_id",
+            "display_order",
+            "link_id",
+        ),
+    )
+
+
+class CatalogValue(Base):
+    __tablename__ = "catalog_parameter_values"
+    id: Mapped[int] = mapped_column(BigInteger, primary_key=True, autoincrement=False)
+    key: Mapped[str] = mapped_column(String(64), unique=True)
+    parameter_id: Mapped[int] = mapped_column(ForeignKey("catalog_parameters.id"))
+    value_text: Mapped[str] = mapped_column(Text)
+
+
+class CatalogSourceMapping(Base):
+    __tablename__ = "catalog_source_mappings"
+    version_id: Mapped[int] = mapped_column(
+        ForeignKey("catalog_versions.id"), primary_key=True
+    )
+    kind: Mapped[str] = mapped_column(String(24), primary_key=True)
+    source_key: Mapped[str] = mapped_column(String(48), primary_key=True)
+    source_id: Mapped[int] = mapped_column(BigInteger, primary_key=True)
+    target_id: Mapped[int] = mapped_column(BigInteger)
+    context_id: Mapped[int | None] = mapped_column(BigInteger, nullable=True)
+    external_id: Mapped[str | None] = mapped_column(String(160), nullable=True)
+    ordinal: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    payload_sha256: Mapped[str] = mapped_column(String(64))
+    source_json: Mapped[dict | list | None] = mapped_column(
+        JSON, nullable=True, deferred=True
+    )
+    data: Mapped[dict | None] = mapped_column(JSON, nullable=True)
+    __table_args__ = (
+        Index(
+            "ix_catalog_mapping_values", "version_id", "kind", "context_id", "target_id"
+        ),
+        Index("ix_catalog_mapping_targets", "version_id", "kind", "target_id"),
+        Index(
+            "ix_catalog_mapping_external",
+            "version_id",
+            "kind",
+            "source_key",
+            "external_id",
+        ),
+    )

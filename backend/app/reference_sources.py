@@ -95,11 +95,14 @@ def sources(
     who: Identity = Depends(require("reference.read")), db: Session = Depends(database)
 ):
     rows = db.scalars(select(ReferenceSource).order_by(ReferenceSource.key))
+    from app.catalog_store import active_version
+
+    version = active_version(db)
     return {
         "items": [
             {"key": r.key, "name": r.name, "description": r.description} for r in rows
         ],
-        "canonical_source": "pinfo_db",
+        "canonical_source": "owned_catalog" if version else "pinfo_db",
         "webshop_completeness": "unverified",
         "automatic_mapping": True,
         "mapping_policy": "unique_name_context_and_reviewable_choices",
@@ -157,16 +160,30 @@ def observe(
             update={"source_category_id": snapshot.proof_key(body.source_category_id)}
         )
     if body.canonical_emag_id:
-        with reference_database() as conn:
-            if not conn.scalar(
-                select(categories.c.id).where(
-                    categories.c.emag_category_id == body.canonical_emag_id
+        from app.catalog_store import active_version
+        from app.models import CatalogSourceMapping
+
+        version = active_version(db)
+        if version:
+            exists = db.scalar(
+                select(CatalogSourceMapping.target_id)
+                .where(
+                    CatalogSourceMapping.version_id == version.id,
+                    CatalogSourceMapping.kind == "category",
+                    CatalogSourceMapping.source_key == "emag_marketplace",
+                    CatalogSourceMapping.external_id == str(body.canonical_emag_id),
                 )
-            ):
-                raise HTTPException(
-                    409,
-                    "Ismeretlen kanonikus eMAG-azonosító; megfeleltetésre váró megfigyelésként rögzítsd.",
+                .limit(1)
+            )
+        else:
+            with reference_database() as conn:
+                exists = conn.scalar(
+                    select(categories.c.id).where(
+                        categories.c.emag_category_id == body.canonical_emag_id
+                    )
                 )
+        if not exists:
+            raise HTTPException(409, "Ismeretlen kanonikus kategória.")
     record = ReferenceObservation(**body.model_dump(), actor_id=who.user.id)
     db.add(record)
     db.flush()
