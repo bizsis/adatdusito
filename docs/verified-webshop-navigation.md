@@ -70,7 +70,7 @@ A saját Windows gépen, friss projektmásolatban, a korábban telepített `.men
 
 ```powershell
 git pull --ff-only origin main
-.\.menu-venv\Scripts\python.exe scripts/collect_emag_menu_details.py --channel chrome --category-url https://www.emag.hu/televiziok/c --output "$env:USERPROFILE\Desktop"
+.\.menu-venv\Scripts\python.exe scripts/collect_emag_menu_details.py --channel chrome --manual --category-url https://www.emag.hu/televiziok/c --output "$env:USERPROFILE\Desktop"
 ```
 
 Kezeld a sütikérdést, majd Enter a terminálban. A program a menüt járja be és a megadott egy kategóriaoldalról kér célzott adatot. További `--category-url` legfeljebb tízszer adható meg, nem indít teljes katalógus-crawlert. A végén az `emag-menu-details.zip` fájlt kell átadni. A robots-ellenőrzés és a normál hozzáférés megmarad; tiltás esetén nem kerül meg védelmet. Az élő oldalon a kiegészítő gyűjtő sem ellenőrzött ebből a felhőből, DOM- és JSON-mintákon tesztelt.
@@ -89,3 +89,30 @@ bash scripts/smoke.sh https://dev.pinfo.hu
 ```
 
 Ha a VPS még nem 0003-on van, előbb a korábbi dokumentált alkalmazásmigráció szükséges. E kiadás önmagában nem igényel új táblát, pinfo_db-írást, `.env`-, external hálózat-, MySQL-, Nginx- vagy HTTPS-módosítást. Frissítés után az első szinten a 13 magyar főcsoportnak kell látszania, eredeti sorrendben; a korábbi „AC & Heating” stb. nem jelenik meg külön, párhuzamos gyökérként.
+
+
+## Kiegészítő export hibajavítás: üres, hover-időtúllépéses csomag
+
+Az üzemeltető következő `emag-menu-details.zip` csomagja érvényes hash-sel, de csak 332 bájtos JSON-nal érkezett. A tartalma 0 menüpanel, 0 hálózati menüválasz, 0 kategóriaoldal és `Locator.hover: Timeout 30000ms exceeded.` hiba volt. Ez nem új kategóriabizonyíték és nem az eMAG kategóriáinak hiányát jelenti; a gyűjtés állt le. Ebből nem módosítottunk kategóriakapcsolatot.
+
+A gyűjtő v2 változata a `https://www.emag.hu/homepage` oldalról indul, és külön naplózza a betöltött, valamint az operátori beavatkozás utáni címet. Black Friday-átirányítás esetén a böngészőben újra megnyitható a `/homepage`, még a rögzítés elindítása előtt. Csak látható szövegegyezést választ, gyökérenként külön kezeli a hibát, és a kategóriaoldalak gyűjtését a menühibától függetlenül végrehajtja. A már rögzített részadatokat megtartja, a hiba fázisát és a menükapcsolók személyes adatok nélküli technikai állapotát is naplózza.
+
+**Ajánlott új futtatás PowerShellben, a saját projektkönyvtárban:**
+
+```powershell
+git pull --ff-only origin main
+.\.menu-venv\Scripts\python.exe scripts/collect_emag_menu_details.py --channel chrome --manual --category-url https://www.emag.hu/televiziok/c --output "$env:USERPROFILE\Desktop"
+```
+
+1. Kezeld a sütikérdést, majd Enter a terminálban.
+2. A böngészőben nyisd meg a Kategóriák menüt. Minden főcsoport fölött várd meg az almenüt, és az oldalra fókuszálva nyomj **Alt+Shift+M**-et (vagy F8-at). Ez a kézi mód nem próbálja automatikusan hoverelni a hibás kapcsolót.
+3. Ha kész a 13 panel, Enter a terminálban. A televízió kategóriaoldal ezt követően külön feldolgozódik.
+4. Az új `emag-menu-details.zip` csomagot add át akkor is, ha valamelyik rész hiányos; a részadatok megmaradnak.
+
+Ha most csak a kategóriaazonosító bizonyítéka szükséges, a menü teljesen kihagyható:
+
+```powershell
+.\.menu-venv\Scripts\python.exe scripts/collect_emag_menu_details.py --channel chrome --only-categories --category-url https://www.emag.hu/televiziok/c --output "$env:USERPROFILE\Desktop"
+```
+
+Az új `mode`, `menu_complete`, `requested_category_count`, `category_pages_complete` és fázisonkénti hibamezők segítik az ellenőrzést. A részleges csomag nem lesz teljesnek vagy Marketplace-azonosságot igazolónak minősítve. Automatikus megfeleltetés és adatbázisírás továbbra sincs.

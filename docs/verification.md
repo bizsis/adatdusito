@@ -131,3 +131,12 @@ Forrás: a felhasználó által feltöltött, Windowsos `emag-menu-export.zip`, 
 A bizonyított rész már egyetlen közös böngészőben jelenik meg. A 79 hiányos szekciókapcsolathoz és az egyelőre igazolatlan Marketplace-azonosságokhoz külön `scripts/collect_emag_menu_details.py` készült; a gyűjtött általános category.id mező önmagában továbbra sem Marketplace-azonosító. [Részletes feldolgozási jegyzőkönyv és futtatási parancs](verified-webshop-navigation.md).
 
 A pinfo_db, `.env`, Docker Compose external hálózat és a migrációk változatlanok. Új adatbázis-migráció és VPS-telepítés nem történt.
+
+
+## Kiegészítő gyűjtő: hover-időtúllépés javítása
+
+Az újonnan átadott `emag-menu-details.zip` hash-e helyes, de 0 panelt, 0 menü-JSON-t és 0 kategóriaoldalt tartalmazott; a gyűjtő egy hover-lépésnél leállt. A csomagból nem származott új kategóriamegfeleltetés.
+
+**14 sikeres gyűjtőteszt** Chromiumon, élő eMAG-hívás nélkül. Új regressziók: rejtett első/visible második kapcsoló; menühiba után is gyűjtött category.id bizonyíték; kézi Alt+Shift+M rögzítés automatikus hover nélkül; egy hibás főcsoport nem dobja el a többit; explicit csoportosító osztály alapján igazolt szülőkapcsolat, feloldhatatlan csoport ellenőrzendő marad. A kezdőlap a `https://www.emag.hu/homepage`, az átirányítás utáni cím külön naplózott. A kategóriaazonosító névtere továbbra is unverified. Új `--manual` és `--only-categories` módok; hibafázisok és személyes adat nélküli menüdiagnosztika kerül a részleges ZIP-be.
+
+Alkalmazás-, referenciaadat-, séma-, Compose- és .env-módosítás nincs; a javítás csak a gyűjtőt, annak tesztjeit és az útmutatót érinti. VPS-telepítés nem történt.

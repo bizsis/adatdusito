@@ -233,3 +233,119 @@ def test_clean_html_does_not_rewrite_same_name_different_source_id(page):
     group = capture(page, labels[0])
     assert "https://www.emag.hu/child-0/c/79" in group["html_evidence"]
     assert "https://www.emag.hu/brand-0/b" in group["html_evidence"]
+
+
+def details_module():
+    spec = importlib.util.spec_from_file_location(
+        "menu_details_recovery", ROOT / "scripts/collect_emag_menu_details.py"
+    )
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
+
+
+def test_details_uses_visible_duplicate_trigger_instead_of_hidden_first(page):
+    module = details_module()
+    fixture(page, count=2)
+    page.evaluate("""()=>{
+      document.querySelector('nav').style.display='none';
+      const hidden=document.createElement('button');hidden.textContent='Kategóriák';hidden.style.display='none';document.body.prepend(hidden);
+      const button=document.createElement('button');button.textContent='Kategóriák';button.style='position:fixed;left:10px;top:920px';
+      button.onmouseover=()=>{document.querySelector('nav').style.display='block';document.querySelectorAll('.panel').forEach(p=>{p.classList.add('megamenu-details-department');p.setAttribute('data-id',p.id);p.querySelectorAll('a').forEach(a=>a.classList.add('megamenu-item'))});document.querySelector('.panel').classList.add('megamenu-visible')};document.body.append(button);
+    }""")
+    page.evaluate(
+        "document.querySelectorAll('nav a').forEach(a=>a.addEventListener('mouseover',()=>document.querySelectorAll('.panel').forEach(p=>p.classList.toggle('megamenu-visible',!p.hidden))))"
+    )
+    result = {"menu_panels": [], "errors": []}
+    module.collect_menu(page, result)
+    assert len(result["menu_panels"]) == 2 and not result["errors"]
+    assert result["diagnostics"]["category_triggers"][0]["visible"] is False
+
+
+def test_details_menu_failure_does_not_discard_requested_category_evidence(page):
+    from urllib.robotparser import RobotFileParser
+
+    module = details_module()
+    fixture(page, count=1)
+    page.evaluate(
+        "document.querySelector('nav').style.display='none';document.body.insertAdjacentHTML('afterbegin','<button style=\"display:none\">Kategóriák</button>')"
+    )
+    result = {"menu_panels": [], "category_pages": [], "errors": []}
+    module.collect_menu(page, result)
+    assert result["errors"][0]["phase"] == "menu_open"
+    robots = RobotFileParser()
+    robots.parse(["User-agent: *", "Allow: /"])
+    page.context.route(
+        "https://www.emag.hu/televiziok/c",
+        lambda route: route.fulfill(
+            content_type="text/html",
+            body='<script type="application/json">{"category":{"id":79}}</script>',
+        ),
+    )
+    module.collect_category_pages(
+        page, ["https://www.emag.hu/televiziok/c"], robots, result
+    )
+    assert len(result["category_pages"]) == 1
+    assert result["category_pages"][0]["identifiers"][0]["value"] == "79"
+    assert result["category_pages"][0]["identifiers"][0]["namespace"] == "unverified"
+    assert len(result["errors"]) == 1
+
+
+def test_details_manual_capture_needs_no_hover_trigger(page, monkeypatch):
+    module = details_module()
+    fixture(page, count=1)
+    page.evaluate(
+        """()=>{const panel=document.querySelector('.panel');panel.classList.add('megamenu-details-department','megamenu-visible');panel.setAttribute('data-id','114');panel.querySelector('h3').classList.add('megamenu-details-department-title');panel.querySelectorAll('a').forEach(a=>a.classList.add('megamenu-item'));}"""
+    )
+    monkeypatch.setattr(
+        module,
+        "visible_text",
+        lambda *a: (_ for _ in ()).throw(AssertionError("Manual must not auto-hover")),
+    )
+    result = {"menu_panels": [], "errors": []}
+    module.collect_menu(
+        page,
+        result,
+        manual=True,
+        prompt=lambda message: page.keyboard.press("Alt+Shift+m"),
+    )
+    assert len(result["menu_panels"]) == 1 and not result["errors"]
+    assert result["menu_panels"][0]["dom"][0]["department_id"] == "114"
+
+
+def test_details_one_root_failure_keeps_other_root_data(page, monkeypatch):
+    module = details_module()
+    labels = fixture(page, count=2)
+    page.evaluate(
+        "document.querySelectorAll('.panel').forEach(p=>{p.classList.add('megamenu-details-department','megamenu-visible');p.querySelectorAll('a').forEach(a=>a.classList.add('megamenu-item'))})"
+    )
+    original = module.visible_text
+
+    def visible(page, label):
+        if label == labels[0]:
+            raise RuntimeError("Synthetic single-root failure")
+        return original(page, label)
+
+    monkeypatch.setattr(module, "visible_text", visible)
+    result = {"menu_panels": [], "errors": []}
+    module.collect_menu(page, result)
+    assert [r["name"] for r in result["menu_panels"]] == [labels[1]]
+    assert result["errors"][0]["root"] == labels[0]
+
+
+def test_details_recovers_only_explicit_menu_parent_ids(page):
+    module = details_module()
+    page.evaluate(
+        """()=>{document.body.innerHTML='<div class="megamenu-details-department megamenu-visible" data-id="43"><a class="megamenu-item megamenu-item-heading" data-id="3730">Televíziók</a><div class="megamenu-group megamenu-group-3730"><a class="megamenu-item" data-id="4017">LED TV</a></div><div class="megamenu-group megamenu-group-"><a class="megamenu-item" data-id="999">Ismeretlen csoport</a></div></div>'}"""
+    )
+    panel = page.evaluate(module.DOM_EVIDENCE)[0]
+    assert panel["department_id"] == "43"
+    nodes = {n["source_menu_item_id"]: n for n in panel["items"]}
+    assert nodes["4017"]["parent_menu_item_id"] == "3730"
+    assert nodes["4017"]["identifier_namespace"] == "webshop_menu_not_marketplace"
+    assert nodes["4017"]["hierarchy_status"] == "verified_dom"
+    assert (
+        nodes["999"]["parent_menu_item_id"] is None
+        and nodes["999"]["hierarchy_status"] == "needs_review"
+    )
+    assert module.HOME_URL == "https://www.emag.hu/homepage"
