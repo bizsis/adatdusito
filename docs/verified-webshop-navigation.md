@@ -116,3 +116,7 @@ Ha most csak a kategóriaazonosító bizonyítéka szükséges, a menü teljesen
 ```
 
 Az új `mode`, `menu_complete`, `requested_category_count`, `category_pages_complete` és fázisonkénti hibamezők segítik az ellenőrzést. A részleges csomag nem lesz teljesnek vagy Marketplace-azonosságot igazolónak minősítve. Automatikus megfeleltetés és adatbázisírás továbbra sincs.
+
+## Sikeres kiegészítő export
+
+A következő kézi export mind a 13 főcsoportot és 623 DOM-elemet rögzítette, gyűjtési hiba nélkül. A közös snapshot az új bizonyítékot is tartalmazza. Az újraellenőrzés 544 közvetlen szülőkapcsolatot megerősített, a korábbi 79 bizonytalan kapcsolatot nem oldotta fel. A meglévő gráfhoz képest nem volt kapcsolatváltozás. [Pontos összesítés, kategóriaoldal-azonosítók és reprodukálás](menu-details-verification.md).

@@ -195,6 +195,7 @@ def coverage(db: Session = Depends(database)):
         "manifest_link_count": nav.data["manifest_link_count"],
         "kind_counts": dict(Counter(n["kind"] for n in nav.nodes.values())),
         "hierarchy_needs_review": len(nav.data["issues"]),
+        "details_verification": nav.data.get("details_verification"),
         "confirmed_bindings": sum(
             dto(nav, id, latest, tree)["mapping_status"] == "confirmed"
             for id in nav.visible

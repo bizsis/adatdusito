@@ -140,3 +140,13 @@ Az újonnan átadott `emag-menu-details.zip` hash-e helyes, de 0 panelt, 0 menü
 **14 sikeres gyűjtőteszt** Chromiumon, élő eMAG-hívás nélkül. Új regressziók: rejtett első/visible második kapcsoló; menühiba után is gyűjtött category.id bizonyíték; kézi Alt+Shift+M rögzítés automatikus hover nélkül; egy hibás főcsoport nem dobja el a többit; explicit csoportosító osztály alapján igazolt szülőkapcsolat, feloldhatatlan csoport ellenőrzendő marad. A kezdőlap a `https://www.emag.hu/homepage`, az átirányítás utáni cím külön naplózott. A kategóriaazonosító névtere továbbra is unverified. Új `--manual` és `--only-categories` módok; hibafázisok és személyes adat nélküli menüdiagnosztika kerül a részleges ZIP-be.
 
 Alkalmazás-, referenciaadat-, séma-, Compose- és .env-módosítás nincs; a javítás csak a gyűjtőt, annak tesztjeit és az útmutatót érinti. VPS-telepítés nem történt.
+
+## Sikeres részletes menüexport beépítése
+
+A 2026-11-13 15:19:44 UTC kézi export hash-e ellenőrzött. A 13 főcsoport és 623 menüelem egyezik a meglévő navigációval. 544 közvetlen szülőkapcsolat megerősített (415 explicit szekciókapcsolat + 129 közvetlen főcsoportkapcsolat), 79 továbbra is ellenőrzendő; megváltoztatott szülőkapcsolat 0. A feldolgozó a DOM-ősökből és azonosított fejlécekből újraszámolja az állapotot. Marketplace-megfeleltetés nem készült az ismeretlen névterű kategóriaoldal-azonosítókból.
+
+**69 sikeres backendteszt**, 1 meglévő Starlette/AnyIO deprecation warning. Köztük 10 új ellenőrzés: valódi ZIP-ből bájtra reprodukálható adatsnapshot; főcsoportsorrend és hiányzó főcsoport; dupla elem; kitalált szülő; menü-/Marketplace-névtér keverése; kategóriaoldal igazolatlan névtere; részleges hibás gyűjtés; hibás hash és konfliktusos gráf elutasítása; API-lefedettség és változatlan jóváhagyási korlátok. A meglévő jogosultság-, tenant-, paraméter-FK-, migráció- és csak olvasási regressziós tesztek is sikeresek.
+
+**14 sikeres gyűjtő-/exportálóteszt** szintetikus Chromium-oldalakon. Élő eMAG- vagy VPS-kapcsolatot ez a feldolgozás nem igényelt. Frontendkód, `.env`, Docker Compose és adatbázisséma nem változott; a `pinfo_db` adatbázist nem értük el és nem módosítottuk. VPS-telepítés nem történt.
+
+[Részletes, főcsoportonkénti összesítés és reprodukáló parancs](menu-details-verification.md).
