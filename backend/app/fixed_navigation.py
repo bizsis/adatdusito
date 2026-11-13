@@ -67,3 +67,17 @@ def binding_status(nav, key):
     if key in nav.blocked:
         return "rejected"
     return "pending" if len(nav.candidates.get(key, [])) > 1 else "unavailable"
+
+
+def binding_scope_keys(nav, scope):
+    """Use the same product-only partition as the live dashboard counters."""
+    if scope not in {"unavailable", "unclassified"}:
+        return list(nav.nodes)
+    return [
+        key
+        for key, node in nav.nodes.items()
+        if node["kind"] == "category"
+        and not node.get("structural_only")
+        and key not in nav.bindings
+        and ((len(nav.candidates.get(key, [])) > 1) == (scope == "unclassified"))
+    ]

@@ -43,6 +43,16 @@ a felülvizsgálati nézetbe. A paraméter nélküli gyűjtőpont nem feladat. A
 megfelelő forrás nélküli termékkategória látható marad, „Paraméterkészlet még nem
 érhető el” jelzéssel; ez önmagában nem kézi ellenőrzési felszólítás.
 
+A **„Paraméterforrás még nem érhető el” kártyára kattintva** megnyílik az érintett
+kategóriák aktuális listája. A Nézet mezőben ugyanez „Paraméterforrás nélküli
+kategóriák” néven választható. Minden sor a kategórianevet és a teljes szülői
+útvonalat mutatja; kattintással megnyitható a meglévő paraméter-hozzárendelési
+szerkesztő. A lista kereshető és lapozható; a keresés a kiválasztott szűrésen belül
+marad. Gyűjtőpont és többértelmű hozzárendelés nem kerül ebbe a listába. A számláló
+és a lista ugyanabból az aktuális katalógusból készül, nem az offline jelentésből.
+A „Bizonytalan paraméter-hozzárendelés” kártya szintén megnyitható.
+
+
 A stabil kategóriaazonosság a rögzített `navigation_id` / `category_key`.
 A kiválasztási API `canonical_reference_key` mezője `fixed_category:<azonosító>`;
 ez a paraméterforrás megváltoztatásakor sem változik. A kompatibilitási numerikus

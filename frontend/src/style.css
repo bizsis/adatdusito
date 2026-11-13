@@ -1063,3 +1063,7 @@ summary {
     grid-template-columns: 1fr;
   }
 }
+
+.reference-metrics .metric-action { text-align: left; font: inherit; color: inherit; cursor: pointer; }
+.reference-metrics .metric-action:hover { background: #edf8f4; }
+.metric-link { display: block; margin-top: 10px; font-size: 12px; color: #267c67; }

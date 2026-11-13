@@ -225,7 +225,7 @@ router = APIRouter(
 def nodes(
     parent_id: str | None = Query(None, max_length=160),
     q: str = Query("", max_length=120),
-    scope: Literal["tree", "unclassified"] = "tree",
+    scope: Literal["tree", "unclassified", "unavailable"] = "tree",
     offset: int = Query(0, ge=0, le=100000),
     limit: int = Query(50, ge=1, le=100),
     db: Session = Depends(database),
@@ -236,14 +236,12 @@ def nodes(
     nav, latest, tree = resolved(db)
     if parent_id:
         require_node(nav, parent_id)
-    if q:
-        ids = list(nav.nodes)  # Search covers unresolved/disconnected categories too.
-    elif scope == "unclassified":
-        ids = [
-            key
-            for key in nav.nodes
-            if key not in nav.bindings and len(nav.candidates.get(key, [])) > 1
-        ]
+    from app.fixed_navigation import binding_scope_keys
+
+    if scope != "tree":
+        ids = binding_scope_keys(nav, scope)
+    elif q:
+        ids = list(nav.nodes)
     elif parent_id:
         ids = nav.tree_children(parent_id)
     else:

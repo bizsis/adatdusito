@@ -245,15 +245,13 @@ def nodes(db, version, parent_id=None, q="", scope="tree", offset=0, limit=50):
     nav = index(db, version)
     if parent_id and parent_id not in nav.visible:
         raise HTTPException(404, "A szülőkategória nem található.")
+    from app.fixed_navigation import binding_scope_keys
+
     keys = (
-        list(nav.nodes)
+        binding_scope_keys(nav, scope)
+        if scope != "tree"
+        else list(nav.nodes)
         if q
-        else [
-            k
-            for k in nav.nodes
-            if k not in nav.bindings and len(nav.candidates.get(k, [])) > 1
-        ]
-        if scope == "unclassified"
         else nav.tree_children(parent_id)
         if parent_id
         else nav.roots

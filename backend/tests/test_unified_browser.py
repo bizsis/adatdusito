@@ -100,6 +100,29 @@ def test_unified_category_ui_parameters_values_and_simple_review(
         page.get_by_role("navigation").get_by_role("button", name="Kategóriák").click()
         expect(page.locator(".tree > ul > li")).to_have_count(13)
         assert not any("parent_id=" in query for _, _, query in requests)
+        missing = client.get("/api/v1/reference/navigation?scope=unavailable").json()
+        page.get_by_role(
+            "button",
+            name="Paraméterforrás még nem érhető el – lista megnyitása",
+            exact=True,
+        ).click()
+        expect(page.get_by_label("Nézet", exact=True)).to_have_value("unavailable")
+        expect(page.locator(".tree > ul > li")).to_have_count(min(50, missing["total"]))
+        expect(page.locator(".tree-path").first).to_be_visible()
+        page.locator("button.tree-name").filter(
+            has_text=missing["items"][0]["name"]
+        ).first.click()
+        expect(
+            page.get_by_role("heading", name=missing["items"][0]["name"], exact=True)
+        ).to_be_visible()
+        expect(
+            page.get_by_text(
+                "Paraméter-hozzárendelés szerkesztése (adminisztrátor)", exact=True
+            )
+        ).to_be_visible()
+        assert page.get_by_label("Szülőkategória keresése", exact=True).count() == 0
+        page.get_by_label("Nézet", exact=True).select_option("tree")
+        expect(page.locator(".tree > ul > li")).to_have_count(13)
         page.get_by_role(
             "button", name="Számítástechnika alkategóriái", exact=True
         ).click()

@@ -1047,16 +1047,18 @@ function ShopNode({
   onSelect,
   selected,
   parents = [],
+  allowExpand = true,
 }: {
   node: NavCategory;
   onSelect: (n: NavLink) => void;
   selected?: string;
   parents?: string[];
+  allowExpand?: boolean;
 }) {
   const [open, setOpen] = useState(false),
     [offset, setOffset] = useState(0);
   const result = useLoad<Page<NavCategory>>(
-    open
+    open && allowExpand
       ? `/reference/navigation?parent_id=${encodeURIComponent(node.id)}&offset=${offset}`
       : null,
   );
@@ -1070,7 +1072,7 @@ function ShopNode({
           className="tree-toggle"
           aria-label={`${node.name} alkategóriái`}
           aria-expanded={open}
-          disabled={cycle || !node.children_count}
+          disabled={!allowExpand || cycle || !node.children_count}
           onClick={() => setOpen(!open)}
         >
           {open ? "−" : "+"}
@@ -1103,7 +1105,7 @@ function ShopNode({
           )}
         </button>
       </div>
-      {open && !cycle && (
+      {open && allowExpand && !cycle && (
         <>
           <ErrorBox message={result.error} />
           {result.loading && <Empty loading />}
@@ -1411,13 +1413,16 @@ function Categories() {
             [coverage.data.root_count, "Valós főcsoport"],
             [coverage.data.reference_coverage?.fixed_category_count ?? "–", "Rögzített kategóriapont"],
             [coverage.data.reference_coverage?.parameter_linked_category_count ?? "–", "Hozzárendelt paraméterforrás"],
-            [coverage.data.reference_coverage?.ambiguous_parameter_binding_count ?? "–", "Bizonytalan paraméter-hozzárendelés"],
-            [coverage.data.reference_coverage?.unavailable_parameter_binding_count ?? "–", "Paraméterforrás még nem érhető el"],
-          ].map(([v, label]) => (
-            <div className="card" key={String(label)}>
-              <strong>{v}</strong>
-              <small>{label}</small>
-            </div>
+            [coverage.data.reference_coverage?.ambiguous_parameter_binding_count ?? "–", "Bizonytalan paraméter-hozzárendelés", "unclassified"],
+            [coverage.data.reference_coverage?.unavailable_parameter_binding_count ?? "–", "Paraméterforrás még nem érhető el", "unavailable"],
+          ].map(([v, label, filter]) => filter ? (
+            <button type="button" className="card metric-action" key={String(label)} aria-label={`${label} – lista megnyitása`}
+              onClick={() => { setScope(String(filter)); setFocus(null); setOffset(0); setQ(""); setSelected(null); }}>
+              <strong>{v}</strong><small>{label}</small>
+              <span className="metric-link">Lista megnyitása →</span>
+            </button>
+          ) : (
+            <div className="card" key={String(label)}><strong>{v}</strong><small>{label}</small></div>
           ))}
         </div>
       )}
@@ -1450,12 +1455,16 @@ function Categories() {
             >
               <option value="tree">Közös kategóriafa</option>
               <option value="unclassified">Bizonytalan paraméter-hozzárendelések</option>
+              <option value="unavailable">Paraméterforrás nélküli kategóriák</option>
             </select>
           </label>
           {scope === "unclassified" && !query && (
             <p>
               Csak a több lehetséges paraméterforrással rendelkező kategóriák. A gyűjtőpontokhoz nem szükséges paraméterkapcsolat.
             </p>
+          )}
+          {scope === "unavailable" && (
+            <p>Azok a rögzített termékkategóriák, amelyekhez még nincs egyértelmű paraméterforrás. A teljes útvonal látható; a kategóriát megnyitva a paraméter-hozzárendelés szerkeszthető.</p>
           )}
           <label>
             Kategóriakeresés
@@ -1475,6 +1484,7 @@ function Categories() {
                 key={`${scope}:${query}:${focus?.id || ""}:${n.id}`}
                 node={n}
                 selected={selected?.id}
+                allowExpand={scope === "tree"}
                 onSelect={setSelected}
               />
             ))}

@@ -308,3 +308,51 @@ def test_inactive_source_supplies_70_parameters_without_changing_fixed_taxonomy(
             client.get("/api/v1/reference/navigation/" + DESKTOP).json()["path"]
             == desktop["path"]
         )
+
+
+@pytest.mark.parametrize("owned", [False, True])
+def test_unavailable_list_matches_live_counter_paths_pagination_and_scoped_search(
+    environment, owned
+):
+    client, target, source, _ = environment
+    if owned:
+        version = import_catalog(target, SourceReader(source), pause_ms=0)
+        activate(target, version)
+    login(client)
+    stats = client.get("/api/v1/reference/navigation/coverage").json()[
+        "reference_coverage"
+    ]
+    first = client.get("/api/v1/reference/navigation?scope=unavailable&limit=7").json()
+    assert first["total"] == stats["unavailable_parameter_binding_count"]
+    items = first["items"]
+    for offset in range(7, first["total"], 7):
+        items += client.get(
+            f"/api/v1/reference/navigation?scope=unavailable&limit=7&offset={offset}"
+        ).json()["items"]
+    assert len(items) == len({r["id"] for r in items}) == first["total"]
+    assert all(r["kind"] == "category" and not r.get("structural_only") for r in items)
+    assert all(
+        r["mapping_status"] == "unavailable" and len(r["path"]) >= 2 for r in items
+    )
+    assert all(r["path"][-1]["id"] == r["id"] for r in items)
+    assert DESKTOP not in {r["id"] for r in items}
+    assert not any(
+        r["name"] == "Nagyítók" for r in items
+    )  # ambiguous is a separate scope
+    assert (
+        client.get(
+            "/api/v1/reference/navigation?scope=unavailable&q=Asztali számítógépek"
+        ).json()["total"]
+        == 0
+    )
+    assert (
+        client.get(
+            "/api/v1/reference/navigation?scope=unclassified&q=Asztali számítógépek"
+        ).json()["total"]
+        == 0
+    )
+    name = items[0]["name"]
+    found = client.get(
+        "/api/v1/reference/navigation", params={"scope": "unavailable", "q": name}
+    ).json()
+    assert items[0]["id"] in {r["id"] for r in found["items"]}
