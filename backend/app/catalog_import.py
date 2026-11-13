@@ -105,7 +105,7 @@ class SourceReader:
                 ).mappings()
             ]
 
-    def profile(self):
+    def profile(self, include_metadata=True):
         result = {}
         with self.connect() as conn:
             for phase, table in TABLES.items():
@@ -113,6 +113,8 @@ class SourceReader:
                     select(func.count(), func.max(table.c.id))
                 ).one()
                 result[phase] = {"count": count, "max_id": high or 0}
+        if not include_metadata:
+            return result
         h = hashlib.sha256()
         for phase in ("categories", "parameters"):
             cursor = 0
@@ -498,18 +500,127 @@ def count_unique_values(db, data_id):
         aggregate_engine.dispose()
 
 
-def verify_version(target, reader, version_id, batch_size=2000, expected=None):
+def verify_version(
+    target,
+    reader,
+    version_id,
+    batch_size=2000,
+    expected=None,
+    restart=False,
+    _locked=False,
+):
+    from app.catalog_verification import sql_error
+    from contextlib import nullcontext
+
+    with nullcontext() if _locked else import_lock(target):
+        try:
+            return _verify_version(
+                target, reader, version_id, batch_size, expected, restart
+            )
+        except BaseException as error:
+            message = (
+                sql_error(error)
+                if not isinstance(error, KeyboardInterrupt)
+                else "KeyboardInterrupt: verification interrupted; completed checkpoints preserved"
+            )
+            checkpoint = {}
+            try:
+                with Session(target) as db:
+                    run = db.get(CatalogVersion, version_id)
+                    checkpoint = (
+                        (run.counters.get("verification_progress") or {}) if run else {}
+                    )
+                    if run:
+                        run.error = message[:4096]
+                        db.commit()
+            except Exception as persistence_error:
+                log.error(
+                    json.dumps(
+                        {
+                            "event": "verification_error_persistence_failed",
+                            "version": version_id,
+                            "error": sql_error(persistence_error),
+                        }
+                    )
+                )
+            log.error(
+                json.dumps(
+                    {
+                        "event": "verification_failed",
+                        "version": version_id,
+                        "phase": checkpoint.get("phase"),
+                        "cursor": checkpoint.get("cursor", 0),
+                        "error": message,
+                    },
+                    ensure_ascii=False,
+                )
+            )
+            raise
+
+
+def _verify_version(target, reader, version_id, batch_size, expected, restart):
     if not 1 <= batch_size <= 5000:
         raise ValueError("Invalid verification batch size")
-    with Session(target) as db, reader.snapshot() as snapshot:
+    from app.catalog_verification import (
+        CHECKER_VERSION,
+        verify_values,
+        progress,
+        mismatch,
+    )
+
+    started = time.monotonic()
+    log.info(
+        json.dumps(
+            {
+                "event": "verification_started",
+                "version": version_id,
+                "phase": "source_profile",
+            }
+        )
+    )
+    with Session(target, expire_on_commit=False) as db, reader.snapshot() as snapshot:
         run = db.get(CatalogVersion, version_id)
         if not run:
             raise ValueError("Unknown catalog version")
-        if snapshot.profile() != run.source_state:
-            raise ValueError("Source metadata/counts changed; start a new version")
+        profile = snapshot.profile(include_metadata=False)
+        for phase in TABLES:
+            if profile[phase] != run.source_state[phase]:
+                mismatch(
+                    phase,
+                    None,
+                    None,
+                    "source_profile",
+                    run.source_state[phase],
+                    profile[phase],
+                    "Source metadata/counts changed",
+                )
         from app.catalog_store import data_version_id
 
         data_id = data_version_id(db, run)
+        old = run.counters.get("verification_progress") or {}
+        state = (
+            old
+            if (
+                not restart
+                and not old.get("complete")
+                and old.get("checker_version") == CHECKER_VERSION
+                and old.get("source_state_sha") == digest(run.source_state)
+                and old.get("data_version_id") == data_id
+            )
+            else {
+                "complete": False,
+                "checker_version": CHECKER_VERSION,
+                "source_state_sha": digest(run.source_state),
+                "data_version_id": data_id,
+                "phase": "categories",
+                "cursor": 0,
+                "value_chunks": [],
+                "elapsed_seconds": 0,
+            }
+        )
+        run.counters = {**run.counters, "verification_progress": dict(state)}
+        run.error = None
+        db.commit()
         context = parameter_context(db, data_id)
         cats = dict(
             db.execute(
@@ -540,15 +651,51 @@ def verify_version(target, reader, version_id, batch_size=2000, expected=None):
             p.id: p.key
             for p in db.scalars(select(CatalogLink).where(CatalogLink.id.in_(entries)))
         }
+        common_categories = {
+            c.id: c
+            for c in db.scalars(
+                select(CatalogCategory).where(CatalogCategory.id.in_(cats.values()))
+            )
+        }
         processed = {}
+        metadata_hash = hashlib.sha256()
         for phase, kind in KINDS.items():
+            run.counters = {
+                **run.counters,
+                "verification_progress": {
+                    **run.counters.get("verification_progress", state),
+                    "phase": phase,
+                },
+            }
+            db.commit()
             cursor, count = 0, 0
-            while rows := snapshot.batch(phase, cursor, batch_size):
+            if phase == "values":
+                if metadata_hash.hexdigest() != run.source_state["metadata_sha256"]:
+                    mismatch(
+                        "metadata",
+                        None,
+                        None,
+                        "metadata_sha256",
+                        run.source_state["metadata_sha256"],
+                        metadata_hash.hexdigest(),
+                        "Source metadata changed",
+                    )
+                count = verify_values(
+                    db, run, snapshot, data_id, context, batch_size, state, started
+                )
+            while phase != "values" and (
+                rows := snapshot.batch(phase, cursor, batch_size)
+            ):
                 records = {
                     r.source_id: r
                     for r in db.scalars(
                         select(CatalogSourceMapping)
                         .options(undefer(CatalogSourceMapping.source_json))
+                        .with_hint(
+                            CatalogSourceMapping,
+                            "FORCE INDEX (PRIMARY)",
+                            dialect_name="mysql",
+                        )
                         .where(
                             CatalogSourceMapping.version_id == data_id,
                             CatalogSourceMapping.kind == kind,
@@ -557,94 +704,58 @@ def verify_version(target, reader, version_id, batch_size=2000, expected=None):
                         )
                     )
                 }
-                stored_values = (
-                    {
-                        v.id: v
-                        for v in db.scalars(
-                            select(CatalogValue).where(
-                                CatalogValue.id.in_(
-                                    [r.target_id for r in records.values()]
-                                )
-                            )
-                        )
-                    }
-                    if phase == "values"
-                    else {}
-                )
                 for row in rows:
                     record = records.get(row["id"])
-                    if not record or record.payload_sha256 != digest(row):
-                        raise ValueError(
-                            f"Missing/changed source record: {kind} {row['id']}"
+                    row_digest = digest(row)
+                    metadata_hash.update(row_digest.encode())
+                    if not record or record.payload_sha256 != row_digest:
+                        mismatch(
+                            phase,
+                            row["id"],
+                            record.target_id if record else None,
+                            "payload_sha256",
+                            row_digest,
+                            record.payload_sha256 if record else None,
+                            "Missing/changed source record",
                         )
-                    if phase == "values":
-                        value = stored_values.get(record.target_id)
-                        if (
-                            not value
-                            or record.context_id != context[row["parameter_id"]][0]
-                            or value.parameter_id != context[row["parameter_id"]][1]
-                            or value.value_text != row["value_text"]
-                            or record.ordinal != row["value_order"]
-                            or record.data != {"parameter_id": row["parameter_id"]}
-                            or value.key
-                            != digest(
-                                {
-                                    "parameter": value.parameter_id,
-                                    "text": row["value_text"],
-                                }
-                            )
-                        ):
-                            raise ValueError(
-                                "Stored value or allowed-value membership differs"
-                            )
-                    elif record.data != {
-                        k: v for k, v in row.items() if k != "raw_json"
-                    } or record.source_json != row.get("raw_json"):
-                        raise ValueError("Stored source metadata differs")
-                    elif phase == "parameters":
-                        entry = entries.get(record.target_id)
-                        if (
-                            not entry
-                            or entry.category_id != cats[row["category_id"]]
-                            or record.context_id != entry.category_id
-                            or links.get(record.target_id)
-                            != f"{SOURCE}:category_parameter:{row['id']}"
-                            or entry.parameter_id not in definitions
-                            or definitions[entry.parameter_id].type_id != row["type_id"]
-                            or normalized(definitions[entry.parameter_id].name)
-                            != normalized(row["name"])
-                            or record.external_id != str(row["emag_parameter_id"])
-                            or any(
-                                getattr(entry, k) != row[k]
-                                for k in (
-                                    "name",
-                                    "emag_parameter_id",
-                                    "display_order",
-                                    "is_mandatory",
-                                    "is_filter",
-                                    "allow_new_value",
-                                )
-                            )
-                        ):
-                            raise ValueError("Stored category parameter differs")
-                    else:
-                        category = db.get(CatalogCategory, record.target_id)
-                        if (
-                            not category
-                            or category.key
-                            != f"{SOURCE}:category:{row['emag_category_id']}"
-                            or record.external_id != str(row["emag_category_id"])
-                        ):
-                            raise ValueError("Missing or incorrect common category")
+                    from app.catalog_verification import check_metadata
+
+                    check_metadata(
+                        phase,
+                        row,
+                        record,
+                        cats,
+                        entries,
+                        links,
+                        definitions,
+                        common_categories,
+                    )
                 count += len(rows)
                 cursor = rows[-1]["id"]
-            own_count = db.scalar(
-                select(func.count())
-                .select_from(CatalogSourceMapping)
-                .where(
-                    CatalogSourceMapping.version_id == data_id,
-                    CatalogSourceMapping.kind == kind,
-                    CatalogSourceMapping.source_key == SOURCE,
+                progress(
+                    run,
+                    phase,
+                    count,
+                    run.source_state[phase]["count"],
+                    started,
+                    state.get("elapsed_seconds", 0),
+                )
+            own_count = (
+                count
+                if phase == "values"
+                else db.scalar(
+                    select(func.count())
+                    .select_from(CatalogSourceMapping)
+                    .with_hint(
+                        CatalogSourceMapping,
+                        "FORCE INDEX (PRIMARY)",
+                        dialect_name="mysql",
+                    )
+                    .where(
+                        CatalogSourceMapping.version_id == data_id,
+                        CatalogSourceMapping.kind == kind,
+                        CatalogSourceMapping.source_key == SOURCE,
+                    )
                 )
             )
             if own_count != count or count != run.source_state[phase]["count"]:
@@ -656,6 +767,23 @@ def verify_version(target, reader, version_id, batch_size=2000, expected=None):
             ):
                 raise ValueError("Unexpected production source count: " + phase)
             processed[phase] = count
+        run.counters = {
+            **run.counters,
+            "verification_progress": {
+                **run.counters.get("verification_progress", state),
+                "phase": "finalize",
+            },
+        }
+        db.commit()
+        log.info(
+            json.dumps(
+                {
+                    "event": "verification_finalizing",
+                    "version": run.id,
+                    "elapsed_seconds": round(time.monotonic() - started, 3),
+                }
+            )
+        )
         from app.catalog_facets import resolve_tv_filters
 
         if run.status != "ready":
@@ -727,14 +855,37 @@ def verify_version(target, reader, version_id, batch_size=2000, expected=None):
             "root_count": len(roots),
             "verified_at": now().isoformat(),
             "source_state": run.source_state,
+            "elapsed_seconds": state.get("elapsed_seconds", 0)
+            + time.monotonic()
+            - started,
         }
         db.commit()
     with Session(target) as db:
         run = db.get(CatalogVersion, version_id)
         run.verification = report
+        run.counters = {
+            **run.counters,
+            "verification_progress": {
+                "complete": True,
+                "phase": "complete",
+                "processed_values": report["processed"]["values"],
+                "elapsed_seconds": report["elapsed_seconds"],
+            },
+        }
+        run.error = None
         if run.phase == "verify":
             run.status, run.phase, run.error = "ready", "complete", None
         db.commit()
+    log.info(
+        json.dumps(
+            {
+                "event": "verification_completed",
+                "version": version_id,
+                "processed": report["processed"],
+                "elapsed_seconds": round(report["elapsed_seconds"], 3),
+            }
+        )
+    )
     return report
 
 
@@ -790,7 +941,7 @@ def import_catalog(
             version_id = run.id
             ready = run.status == "ready"
         if ready:
-            verify_version(target, reader, version_id, batch_size)
+            verify_version(target, reader, version_id, batch_size, _locked=True)
             return version_id
         batches = 0
         context = None
@@ -846,14 +997,13 @@ def import_catalog(
                     return version_id
                 if pause_ms:
                     time.sleep(pause_ms / 1000)
-            verify_version(target, reader, version_id, batch_size)
+            verify_version(target, reader, version_id, batch_size, _locked=True)
         except BaseException as error:
             with Session(target) as db:
                 run = db.get(CatalogVersion, version_id)
-                run.error = (
-                    type(error).__name__
-                    + ": stopped safely; inspect the source and resume this version or start a new one"
-                )
+                from app.catalog_verification import sql_error
+
+                run.error = sql_error(error)[:4096]
                 run.updated_at = now()
                 db.commit()
             raise
@@ -961,6 +1111,8 @@ def activate(target, version_id=None, legacy=False):
             or run.status != "ready"
             or not run.verification
             or not run.verification.get("complete")
+            or run.counters.get("verification_progress", {}).get("complete", True)
+            is not True
         ):
             raise ValueError(
                 "Only a completely verified, ready catalog can be activated"
@@ -968,7 +1120,14 @@ def activate(target, version_id=None, legacy=False):
         if not legacy:
             from app.catalog_store import data_version_id
 
-            data_version_id(db, run)
+            data_run = db.get(CatalogVersion, data_version_id(db, run))
+            if (
+                data_run.counters.get("verification_progress", {}).get("complete", True)
+                is not True
+            ):
+                raise ValueError(
+                    "Only a completely verified, ready catalog can be activated"
+                )
         setting = db.get(Setting, ACTIVE_KEY, with_for_update=True)
         previous = setting.value if setting else "legacy"
         value = "legacy" if legacy else str(version_id)
@@ -1006,6 +1165,11 @@ def main():
     parser.add_argument("--batch-size", type=int, default=2000)
     parser.add_argument("--pause-ms", type=int, default=10)
     parser.add_argument("--max-batches", type=int)
+    parser.add_argument(
+        "--restart-verification",
+        action="store_true",
+        help="Discard verification checkpoints and check all rows again (never reimports)",
+    )
     parser.add_argument("--expected-television-parameters", type=int)
     for phase in TABLES:
         parser.add_argument("--expected-" + phase, type=int)
@@ -1028,8 +1192,24 @@ def main():
                                 "status": r.status,
                                 "phase": r.phase,
                                 "cursor": r.cursor,
-                                "counts": r.counters,
+                                "counts": {
+                                    k: v
+                                    for k, v in r.counters.items()
+                                    if k != "verification_progress"
+                                },
                                 "error": r.error,
+                                "verification": {
+                                    k: v
+                                    for k, v in r.counters.get(
+                                        "verification_progress", {}
+                                    ).items()
+                                    if k != "value_chunks"
+                                },
+                                "verified_value_batches": len(
+                                    r.counters.get("verification_progress", {}).get(
+                                        "value_chunks", []
+                                    )
+                                ),
                             }
                             for r in db.scalars(
                                 select(CatalogVersion)
@@ -1083,6 +1263,7 @@ def main():
                         **{p: getattr(args, "expected_" + p) for p in TABLES},
                         "television_parameters": args.expected_television_parameters,
                     },
+                    restart=args.restart_verification,
                 )
             )
         )
@@ -1097,7 +1278,7 @@ if __name__ == "__main__":
         raise SystemExit(
             str(error) or "Import paused; completed batches are preserved"
         ) from None
-    except SQLAlchemyError:
-        raise SystemExit(
-            "Database operation failed; no activation performed. Inspect catalog status and resume the recorded version after correcting connectivity or permissions."
-        ) from None
+    except SQLAlchemyError as error:
+        from app.catalog_verification import sql_error
+
+        raise SystemExit(sql_error(error)) from None

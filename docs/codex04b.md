@@ -163,3 +163,7 @@ Célzott ellenőrzés: **19 sikeres teszt** (`test_catalog_verification_index.py
 `test_owned_catalog.py`, `test_curated_taxonomy.py`), valamint sikeres Ruff és
 `git diff --check`. A MySQL SQL-fordítás, az indexhint, a külön időkeret és a
 kapcsolat lezárása tesztelt; élő VPS-lekérdezést nem futtattunk.
+
+A teljes ellenőrzési folyamat további optimalizálását, a mentett kötegeket,
+automatikus folytatást és az 1-es verzió ellenőrzőparancsait a
+[folytatható katalógusellenőrzés útmutatója](catalog-verification.md) írja le.
