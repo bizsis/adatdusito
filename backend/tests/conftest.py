@@ -17,7 +17,28 @@ def password_hash():
 
 
 @pytest.fixture
-def environment(monkeypatch, password_hash):
+def extra_reference_categories():
+    return []
+
+
+@pytest.fixture
+def extra_reference_parameters():
+    return []
+
+
+@pytest.fixture
+def extra_reference_values():
+    return []
+
+
+@pytest.fixture
+def environment(
+    monkeypatch,
+    password_hash,
+    extra_reference_categories,
+    extra_reference_parameters,
+    extra_reference_values,
+):
     db_engine = create_engine(
         "sqlite://", connect_args={"check_same_thread": False}, poolclass=StaticPool
     )
@@ -101,37 +122,44 @@ def environment(monkeypatch, password_hash):
                     "emag_category_id": 1000,
                     "name": "Műszaki cikkek",
                     "parent_id": None,
+                    "is_allowed": True,
                 },
                 {
                     "id": 20,
                     "emag_category_id": 2000,
                     "name": "Laptopok",
                     "parent_id": 1000,
+                    "is_allowed": True,
                 },
                 {
                     "id": 30,
                     "emag_category_id": 3000,
                     "name": "Árva kategória",
                     "parent_id": 10,
+                    "is_allowed": True,
                 },
                 {
                     "id": 40,
                     "emag_category_id": 4000,
                     "name": "Unoka kategória",
                     "parent_id": 2000,
+                    "is_allowed": True,
                 },
                 {
                     "id": 50,
                     "emag_category_id": 5000,
                     "name": "Körkörös A",
                     "parent_id": 6000,
+                    "is_allowed": True,
                 },
                 {
                     "id": 60,
                     "emag_category_id": 6000,
                     "name": "Körkörös B",
                     "parent_id": 5000,
+                    "is_allowed": True,
                 },
+                *extra_reference_categories,
             ],
         )
         conn.execute(
@@ -159,6 +187,7 @@ def environment(monkeypatch, password_hash):
                     "is_filter": False,
                     "allow_new_value": True,
                 },
+                *extra_reference_parameters,
             ],
         )
         conn.execute(
@@ -181,7 +210,8 @@ def environment(monkeypatch, password_hash):
                     "parameter_id": 80,
                     "value_text": "Nem ide tartozik",
                     "value_order": 0,
-                }
+                },
+                *extra_reference_values,
             ],
         )
     event.listen(ref_engine, "before_cursor_execute", enforce_reference_readonly)

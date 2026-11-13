@@ -283,7 +283,10 @@ function Login({ onLogin }: { onLogin: () => Promise<void> }) {
           <br />
           ÁTLÁTHATÓ MUNKA.
         </span>
-        <p>Ügyfelek, felhasználók és eMAG-referenciaadatok egy helyen.</p>
+        <p>
+          Ügyfelek, felhasználók és kategória és termékparaméter
+          referenciaadatok egy helyen.
+        </p>
         <div className="orbit">→</div>
       </aside>
     </div>
@@ -864,7 +867,7 @@ function CategoryNode({
           {category.name}
           <small>
             eMAG {category.emag_category_id}
-            {category.missing_parent ? " · Hiányzó szülő" : ""}
+            {category.missing_parent ? " · Hiányzó vagy inaktív szülő" : ""}
           </small>
         </button>
       </div>
@@ -1094,7 +1097,7 @@ function CategoryDetails({
             {data.hierarchy_error && (
               <p className="warning">
                 {data.hierarchy_error === "missing_parent"
-                  ? `A szülőkategória (eMAG #${data.parent_emag_id}) hiányzik a referencia-adatbázisból.`
+                  ? "A szülőláncban inaktív vagy hiányzó kategória található."
                   : "A hierarchia hibás vagy túl mély; a teljes szülőlánc nem jeleníthető meg."}
               </p>
             )}
@@ -1127,8 +1130,8 @@ function Categories() {
   return (
     <>
       <p className="notice">
-        Csak olvasható referenciaadatok. A hiányzó szülőjű kategóriák külön
-        figyelmeztetéssel szerepelnek a gyökérszinten.
+        Csak olvasható referenciaadatok. A hiányzó vagy inaktív szülőjű
+        kategóriák külön figyelmeztetéssel szerepelnek a gyökérszinten.
       </p>
       <div className="browser-grid">
         <section className="card padded tree">

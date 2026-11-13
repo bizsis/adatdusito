@@ -23,6 +23,12 @@ with sync_playwright() as p:
     page.on("pageerror", lambda error: errors.append(str(error)))
     page.goto(base)
     expect(page.get_by_role("heading", name="Adatdúsító", exact=True)).to_be_visible()
+    expect(
+        page.get_by_text(
+            "Ügyfelek, felhasználók és kategória és termékparaméter referenciaadatok egy helyen.",
+            exact=True,
+        )
+    ).to_be_visible()
     page.screenshot(path=str(args.artifacts / "login-desktop.png"), full_page=True)
     page.get_by_label("Email-cím", exact=True).fill(credentials["email"])
     page.get_by_label("Jelszó", exact=True).fill("wrong-password")

@@ -66,15 +66,21 @@ def missing(detail):
 
 def category_select():
     parent = categories.alias("parent")
-    return select(
-        *[c for c in categories.c if c.name != "parent_id"],
-        categories.c.parent_id.label("parent_emag_id"),
-        parent.c.id.label("parent_id"),
-        parent.c.name.label("parent_name"),
-    ).select_from(
-        categories.outerjoin(
-            parent, parent.c.emag_category_id == categories.c.parent_id
+    return (
+        select(
+            *[c for c in categories.c if c.name != "parent_id"],
+            categories.c.parent_id.label("parent_emag_id"),
+            parent.c.id.label("parent_id"),
+            parent.c.name.label("parent_name"),
         )
+        .select_from(
+            categories.outerjoin(
+                parent,
+                (parent.c.emag_category_id == categories.c.parent_id)
+                & (parent.c.is_allowed == 1),
+            )
+        )
+        .where(categories.c.is_allowed == 1)
     )
 
 
@@ -114,7 +120,7 @@ def list_categories(
         if parent_id is not None:
             parent_external = conn.scalar(
                 select(categories.c.emag_category_id).where(
-                    categories.c.id == parent_id
+                    categories.c.id == parent_id, categories.c.is_allowed == 1
                 )
             )
             if parent_external is None:
@@ -165,7 +171,10 @@ def category(category_id: int):
                         categories.c.emag_category_id,
                         categories.c.name,
                         categories.c.parent_id,
-                    ).where(categories.c.emag_category_id == parent_external)
+                    ).where(
+                        categories.c.emag_category_id == parent_external,
+                        categories.c.is_allowed == 1,
+                    )
                 )
                 .mappings()
                 .first()
@@ -196,14 +205,20 @@ def list_parameters(
     limit: int = Query(25, ge=1, le=100),
 ):
     with reference_database() as conn:
-        stmt = select(
-            parameters,
-            categories.c.name.label("category_name"),
-            categories.c.emag_category_id,
-        ).join(categories, parameters.c.category_id == categories.c.id)
+        stmt = (
+            select(
+                parameters,
+                categories.c.name.label("category_name"),
+                categories.c.emag_category_id,
+            )
+            .join(categories, parameters.c.category_id == categories.c.id)
+            .where(categories.c.is_allowed == 1)
+        )
         if category_id is not None:
             if not conn.scalar(
-                select(categories.c.id).where(categories.c.id == category_id)
+                select(categories.c.id).where(
+                    categories.c.id == category_id, categories.c.is_allowed == 1
+                )
             ):
                 missing("A kategória nem található.")
             stmt = stmt.where(parameters.c.category_id == category_id)
@@ -231,7 +246,11 @@ def parameter_values(
 ):
     with reference_database() as conn:
         parameter = (
-            conn.execute(select(parameters).where(parameters.c.id == parameter_id))
+            conn.execute(
+                select(parameters)
+                .join(categories, parameters.c.category_id == categories.c.id)
+                .where(parameters.c.id == parameter_id, categories.c.is_allowed == 1)
+            )
             .mappings()
             .first()
         )

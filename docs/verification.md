@@ -69,3 +69,26 @@ A `compose.yaml` a megadott, működő VPS-konfigurációból csak az external `
 A 0001 migráció változatlan. Az új 0002 csak az `adatdusito_dev` adatbázist érintheti. A valódi referenciaadatbázis sémáját és a parent_id jelentését az üzemeltető adta át; a valós 2,8 milliós adathalmazon teljesítménymérést nem végeztünk. Értékszöveg részszavas keresésénél a meglévő indexek miatt nagy paraméterhalmazon lassabb lekérdezés előfordulhat; referenciaindex-módosítás nem történt.
 
 A kézi VPS-frissítés, mentés, inicializálás és utóellenőrzés parancsai: [deployment.md](deployment.md). A GitHub-kód átadása nem telepítés, és nem igazolja a távoli HTTPS-működést.
+
+## CODEX 02 javítás – aktív kategóriák és bejelentkezési felirat
+
+Dátum: 2026-11-13. A normál referenciafelület minden kategóriaútvonala backendoldalon `is_allowed = 1` feltételt alkalmaz. Ez a listára, keresésre, lapozott összesítésre, adatlapra, szülőválasztásra és szülőláncra is vonatkozik. Az inaktív kategória paraméter- és értékútvonala sem használható kerülőútként. Inaktív vagy hiányzó szülő alatt az aktív kategória önálló gyökérelemként elérhető marad, az aktív leszármazottakkal együtt. A szülőkapcsolat továbbra is külső eMAG-azonosító szerint oldódik fel.
+
+- **46 sikeres backendteszt**, ebből 15 új regressziós eset. A korábbi 31 teszt továbbra is sikeres; 1 meglévő függőségi deprecation warning maradt.
+- Új esetek: 0/NULL állapotok kizárása; keresés név/eMAG-ID szerint; aktív román nevű és aktív Deleted nevű kategóriák megtartása; inaktív szülő alatti aktív gyermek/leszármazott; szűrt lapozási elemszám; közvetlen inaktív kategória-/paraméter-hozzáférés elutasítása.
+- TypeScript/Vite build, Compose-build és MySQL-alapú API-integráció sikeres a külön, szintetikus cloud környezetben.
+- Chromium-próba asztali és 390 pixeles mobil méretben sikeres, JavaScript-hiba nélkül. Az új bejelentkezési felirat pontos szövege külön böngészőasserttel ellenőrzött.
+- A `.env`, a Compose external hálózat, az adatbázisséma és a migrációk változatlanok. A valódi `pinfo_db` adatbázishoz nem nyúltunk, VPS-telepítés nem történt.
+
+A VPS-en kizárólag kézi kód-/image-frissítés szükséges, a korábbi üzemeltetési felmérés és esetleges helyi Git-eltérések rendezése után:
+
+```bash
+cd /opt/adatdusito
+git status -sb
+git pull --ff-only origin main
+docker compose build
+docker compose up -d --no-build
+bash scripts/smoke.sh https://dev.pinfo.hu
+```
+
+Ellenőrizd böngészőből a bejelentkezési feliratot, az aktív kategóriák keresését és az inaktív szülő alatti aktív kategóriák elérhetőségét. A teljes gyökérlista darabszáma nem azonos az összes aktív kategória számával: a teljes aktív lista `roots=false` szűréssel kérhető. Ne futtass referenciaadatot módosító SQL-t, és ne másold felül a működő `.env` fájlt.

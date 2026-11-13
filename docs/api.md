@@ -65,3 +65,10 @@ Hibaformátum: `{"error":{"code":"403","message":"…"}}`. Validációs hibáná
 Az alkalmazás-metaadat csak az adatdusito_dev tábláit tartalmazza. A referencia-Core metadata különálló; nincs migrációs, INSERT/UPDATE/DELETE referenciaútvonal. A referencia-engine nem SELECT jellegű utasítást megtagad, a tranzakció read-only, és a legfontosabb védelem a külön SELECT-only MySQL-felhasználó. Adminmódosítás és audit ugyanabban az alkalmazás-tranzakcióban történik; jelszó és sessiontoken nem kerül auditadatba.
 
 Ez a fázis nem tartalmaz regisztrációs/jelszó-visszaállító emailt, MFA-t, importot, AI-t, kreditet vagy szinkronizálót. A JSON API csak azonos originről támogatott; a termék HTTPS reverse proxy mögött működik. A display_name/admin_notice jelenleg adminisztrációs konfigurációs rekord, nem globális felületfelülírás.
+
+
+## Aktív kategóriák szűrése
+
+A normál böngésző, a keresés, a lapozott lista, az adatlap, a szülőlánc és a paraméter-/értéklekérdezés kizárólag `is_allowed = 1` kategóriákból dolgozik. A 0 és NULL értékű kategóriák rejtettek; közvetlen ID-val sem választhatók ki (404). Nincs nyelvi vagy `Deleted` szóra épülő külön szűrés.
+
+A szülőkapcsolat változatlanul `parent.emag_category_id = child.parent_id`, de csak aktív szülő oldható fel. Az inaktív vagy hiányzó szülő alatti aktív kategória a gyökérlistában megmarad; `missing_parent=true` és a felületi figyelmeztetés ilyenkor a böngésző számára nem elérhető szülőt jelzi. Az aktív leszármazottak továbbra is bejárhatók. Inaktív szülő nevét és adatait a válaszok nem adják vissza. A referenciaadatbázis rekordjai nem változnak.
