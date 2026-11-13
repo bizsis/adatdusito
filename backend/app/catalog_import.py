@@ -463,6 +463,41 @@ def value_batch(db, run, rows, context):
     )
 
 
+def count_unique_values(db, data_id):
+    """Use the covering value index; allow this aggregate to exceed API timeouts."""
+    statement = (
+        select(func.count(func.distinct(CatalogSourceMapping.target_id)))
+        .where(
+            CatalogSourceMapping.version_id == data_id,
+            CatalogSourceMapping.kind == "value",
+        )
+        .with_hint(
+            CatalogSourceMapping,
+            "FORCE INDEX (ix_catalog_mapping_targets)",
+            dialect_name="mysql",
+        )
+    )
+    target = db.get_bind()
+    if target.dialect.name != "mysql":
+        return db.scalar(statement)
+    # A measured production count takes >11s even with the right index. Keep
+    # the normal 5s timeout for every other check/API read, using a disposable
+    # application-DB connection solely for this read-only aggregate.
+    from sqlalchemy import create_engine
+    from sqlalchemy.pool import NullPool
+
+    aggregate_engine = create_engine(
+        target.url,
+        poolclass=NullPool,
+        connect_args={"connect_timeout": 3, "read_timeout": 60, "write_timeout": 3},
+    )
+    try:
+        with aggregate_engine.connect() as connection:
+            return connection.scalar(statement)
+    finally:
+        aggregate_engine.dispose()
+
+
 def verify_version(target, reader, version_id, batch_size=2000, expected=None):
     if not 1 <= batch_size <= 5000:
         raise ValueError("Invalid verification batch size")
@@ -679,12 +714,7 @@ def verify_version(target, reader, version_id, batch_size=2000, expected=None):
                 "parameters": tv_count,
                 "path": [nav.nodes[k]["name"] for k in nav.path(key)],
             }
-        unique_values = db.scalar(
-            select(func.count(func.distinct(CatalogSourceMapping.target_id))).where(
-                CatalogSourceMapping.version_id == data_id,
-                CatalogSourceMapping.kind == "value",
-            )
-        )
+        unique_values = count_unique_values(db, data_id)
         report = {
             "unified_parameter_count": len(definitions),
             "unified_value_count": unique_values,

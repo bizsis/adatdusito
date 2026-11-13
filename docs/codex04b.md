@@ -136,3 +136,30 @@ docker compose exec backend python -m app.catalog_import activate --version UJ_V
   13 induló főcsoport, igény szerinti kibontás; saját verzióban a mosógépútvonal,
   strukturális állapot, TV-paraméterek, értékkeresés, adminisztrátori besorolás;
   JavaScript-hiba és vízszintes túlnyúlás nélkül.
+
+## MySQL 8 végső ellenőrzésének indexjavítása
+
+Az első VPS-import végső egyediérték-összesítésénél a MySQL a PRIMARY indexet
+választotta, a kliens pedig 2013-as időtúllépéssel megszakadt. Az üzemeltető által
+mért `FORCE INDEX (ix_catalog_mapping_targets)` lekérdezés 613410 különböző értéket
+adott 11,219 másodperc alatt.
+
+A `verify_version()` egyediérték-számlálása MySQL alatt most kifejezetten ezt a
+meglévő, `(version_id, kind, target_id)` fedőindexet kéri. A szűrés és a
+`COUNT(DISTINCT target_id)` jelentése változatlan. Mivel a mért idő az általános
+5 másodperces klienskorlátot is meghaladja, kizárólag ez az egy összesítés kap
+külön, legfeljebb 60 másodperces olvasási időkeretű kapcsolatot az
+alkalmazás-adatbázishoz. A kapcsolat siker és hiba esetén is lezárul. A többi
+ellenőrzés, az API-kapcsolatok időkorlátja és a referencia-adatbázis kezelése nem
+változik. SQLite tesztkörnyezetben ugyanaz a meglévő session marad használatban,
+MySQL-specifikus SQL nélkül.
+
+Nincs új index/migráció, új import, törlés vagy aktiválás. A meglévő `building /
+verify` verzió a javított kóddal a `verify --version 1` művelettel ellenőrizhető
+újra; siker esetén az eredeti működés szerint `ready / complete` lesz, de ettől
+még nem válik aktívvá. Ezt az üzemeltetői műveletet a fejlesztés során nem futtattuk.
+
+Célzott ellenőrzés: **19 sikeres teszt** (`test_catalog_verification_index.py`,
+`test_owned_catalog.py`, `test_curated_taxonomy.py`), valamint sikeres Ruff és
+`git diff --check`. A MySQL SQL-fordítás, az indexhint, a külön időkeret és a
+kapcsolat lezárása tesztelt; élő VPS-lekérdezést nem futtattunk.
