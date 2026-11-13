@@ -34,6 +34,7 @@ type NavCategory = NavLink & {
   unified_category_id?: number;
   catalog_version_id?: number;
   placement_status: string;
+  structural_only?: boolean;
   source_item_id: string | null;
   source_department_id: string;
   url: string | null;
@@ -52,6 +53,7 @@ type NavCategory = NavLink & {
   ancestors: NavLink[];
   path: NavLink[];
   related_links: (NavLink & { url: string | null })[];
+  related_parameter_filters?: { name: string; status: string; match: { parameter_name: string; value_text: string } | null }[];
 };
 type ReferenceChoice = {
   category_id?: number;
@@ -1081,6 +1083,8 @@ function ShopNode({
           <small>
             {node.kind === "department"
               ? "Főcsoport"
+              : node.structural_only
+                ? "Strukturális navigáció"
               : node.mapping_status === "confirmed"
                 ? (node.archived ? "Archivált kategória" : "Kategória paraméterekkel")
                 : "Összerendelésre vár"}
@@ -1346,6 +1350,19 @@ function ShopDetails({
         ["category", "section"].includes(node.kind) && (
           <Parameters key={id + "-" + rev} navigationId={id} view={node.archived ? "archive" : "all"} />
         )}
+      {!!node.related_parameter_filters?.length && (
+        <section className="card padded">
+          <h2>Kapcsolódó televíziószűrők</h2>
+          <div className="tablewrap"><table>
+            <thead><tr><th>Szűrő</th><th>Paraméterkapcsolat</th></tr></thead>
+            <tbody>{node.related_parameter_filters.map((filter) => (
+              <tr key={filter.name}><td>{filter.name}</td><td>{filter.match
+                ? `${filter.match.parameter_name}: ${filter.match.value_text}`
+                : filter.status === "ambiguous" ? "Többértelmű paraméterkapcsolat" : "Nincs igazolt paraméterérték"}</td></tr>
+            ))}</tbody>
+          </table></div>
+        </section>
+      )}
       {!!node.related_links.length && (
         <section className="card padded">
           <h2>Kapcsolódó linkek – nem külön termékkategóriák</h2>

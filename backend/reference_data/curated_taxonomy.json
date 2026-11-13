@@ -1,0 +1,3061 @@
+{
+  "format": "adatdusito.curated-taxonomy.v1",
+  "version": "04B.1",
+  "source": "Felhasználó által megadott, 13 menüképből átírt hierarchia; nem új webes adatgyűjtés.",
+  "input_sha256": "a2dc1e30897a5aa484f13c0bcf411cdf72ac0647b5e8bc883be3ba8c2d9006a5",
+  "roots": [
+    {
+      "name": "Háztartási gépek és klíma",
+      "children": [
+        {
+          "name": "Mosógépek és szárítógépek",
+          "children": [
+            {
+              "name": "Elöltöltős mosógépek",
+              "children": [],
+              "id": "web-item-114-3490"
+            },
+            {
+              "name": "Felültöltős mosógépek",
+              "children": [],
+              "id": "web-item-114-3491"
+            },
+            {
+              "name": "Szárítógépek",
+              "children": [],
+              "id": "web-item-114-3489"
+            },
+            {
+              "name": "Mosó-szárítógépek",
+              "children": [],
+              "id": "web-item-114-3492"
+            }
+          ],
+          "id": "web-item-114-3487"
+        },
+        {
+          "name": "Hűtők és fagyasztók",
+          "children": [
+            {
+              "name": "Hűtőszekrények",
+              "children": [],
+              "id": "web-item-114-3495"
+            },
+            {
+              "name": "Kombinált hűtők",
+              "children": [],
+              "id": "web-item-114-3496"
+            },
+            {
+              "name": "Side by side hűtők",
+              "children": [],
+              "id": "web-item-114-3497"
+            },
+            {
+              "name": "Fagyasztószekrények",
+              "children": [],
+              "id": "web-item-114-3498"
+            }
+          ],
+          "id": "web-item-114-3494"
+        },
+        {
+          "name": "Mosogatógépek",
+          "children": [
+            {
+              "name": "Szabadonálló mosogatógépek",
+              "children": [],
+              "id": "web-item-114-4225"
+            },
+            {
+              "name": "Keskeny mosogatógépek",
+              "children": [],
+              "id": "web-item-114-4237"
+            }
+          ],
+          "id": "web-item-114-3501"
+        },
+        {
+          "name": "Páraelszívók",
+          "children": [],
+          "id": "web-item-114-3502"
+        },
+        {
+          "name": "Tűzhelyek, főzőlapok és mikrohullámú sütők",
+          "children": [
+            {
+              "name": "Tűzhelyek",
+              "children": [],
+              "id": "web-item-114-4231"
+            },
+            {
+              "name": "Főzőlapok",
+              "children": [],
+              "id": "web-item-114-4232"
+            },
+            {
+              "name": "Mikrohullámú sütők",
+              "children": [],
+              "id": "web-item-114-4233"
+            }
+          ],
+          "id": "web-item-114-3503"
+        },
+        {
+          "name": "Beépíthető készülékek",
+          "children": [
+            {
+              "name": "Beépíthető főzőlapok",
+              "children": [],
+              "id": "web-item-114-3677"
+            },
+            {
+              "name": "Beépíthető sütők",
+              "children": [],
+              "id": "web-item-114-3506"
+            },
+            {
+              "name": "Beépíthető mosogatógépek",
+              "children": [],
+              "id": "web-item-114-3508"
+            },
+            {
+              "name": "Beépíthető mikrohullámú sütők",
+              "children": [],
+              "id": "web-item-114-3750"
+            }
+          ],
+          "id": "web-item-114-3504"
+        },
+        {
+          "name": "Hűtő-fűtő berendezések és vízmelegítők",
+          "children": [
+            {
+              "name": "Klímák",
+              "children": [],
+              "id": "web-item-114-4055"
+            },
+            {
+              "name": "Hősugárzók",
+              "children": [],
+              "id": "web-item-114-4133"
+            },
+            {
+              "name": "Páramentesítők",
+              "children": [],
+              "id": "web-item-114-4236"
+            },
+            {
+              "name": "Légtisztítók",
+              "children": [],
+              "id": "web-item-114-3787"
+            }
+          ],
+          "id": "web-item-114-3510"
+        },
+        {
+          "name": "Porszívók és vasalók",
+          "children": [
+            {
+              "name": "Porzsákos porszívók",
+              "children": [],
+              "id": "web-item-114-3751"
+            },
+            {
+              "name": "Porzsák nélküli porszívók",
+              "children": [],
+              "id": "web-item-114-3819"
+            },
+            {
+              "name": "Álló porszívók",
+              "children": [],
+              "id": "web-item-114-3752"
+            },
+            {
+              "name": "Robotporszívók",
+              "children": [],
+              "id": "web-item-114-3820"
+            },
+            {
+              "name": "Vasalók és gőzállomások",
+              "children": [],
+              "id": "web-item-114-3517"
+            }
+          ],
+          "id": "web-item-114-3515"
+        },
+        {
+          "name": "Kávékészítés",
+          "children": [
+            {
+              "name": "Automata eszpresszó kávéfőzők",
+              "children": [],
+              "id": "web-item-114-3753"
+            },
+            {
+              "name": "Kapszulás kávéfőzők",
+              "children": [],
+              "id": "web-item-114-3754"
+            }
+          ],
+          "id": "web-item-114-3518"
+        },
+        {
+          "name": "Konyhai kisgépek",
+          "children": [
+            {
+              "name": "Robotgépek",
+              "children": [],
+              "id": "web-item-114-3523"
+            },
+            {
+              "name": "Kenyérsütők",
+              "children": [],
+              "id": "web-item-114-3949"
+            },
+            {
+              "name": "Elektromos grillsütők",
+              "children": [],
+              "id": "web-item-114-3755"
+            },
+            {
+              "name": "Turmixgépek és aprítógépek",
+              "children": [],
+              "id": "web-item-114-3524"
+            },
+            {
+              "name": "Gyümölcsprések",
+              "children": [],
+              "id": "web-item-114-3525"
+            },
+            {
+              "name": "Kenyérpirítók",
+              "children": [],
+              "id": "web-item-114-3526"
+            },
+            {
+              "name": "Aszalók és párolók",
+              "children": [],
+              "id": "web-item-114-3527"
+            },
+            {
+              "name": "Olajsütők",
+              "children": [],
+              "id": "web-item-114-3528"
+            }
+          ],
+          "id": "web-item-114-3521"
+        }
+      ],
+      "id": "web-dept-114"
+    },
+    {
+      "name": "TV és szórakozás",
+      "children": [
+        {
+          "name": "Televíziók",
+          "children": [],
+          "id": "web-item-43-3730"
+        },
+        {
+          "name": "TV tartozékok",
+          "children": [
+            {
+              "name": "TV állványok és fali konzolok",
+              "children": [],
+              "id": "web-item-43-3548"
+            },
+            {
+              "name": "Távirányítók",
+              "children": [],
+              "id": "web-item-43-3549"
+            },
+            {
+              "name": "TV antennák és kiegészítők",
+              "children": [],
+              "id": "web-item-43-3550"
+            },
+            {
+              "name": "Kábelek és adapterek",
+              "children": [],
+              "id": "web-item-43-3547"
+            }
+          ],
+          "id": "web-item-43-3725"
+        },
+        {
+          "name": "Projektorok és tartozékok",
+          "children": [
+            {
+              "name": "Projektorok",
+              "children": [],
+              "id": "web-item-43-4238"
+            },
+            {
+              "name": "Vetítővásznak",
+              "children": [],
+              "id": "web-item-43-4239"
+            }
+          ],
+          "id": "web-item-43-3733"
+        },
+        {
+          "name": "Házimozi és audió rendszerek",
+          "children": [
+            {
+              "name": "Hangprojektorok",
+              "children": [],
+              "id": "web-item-43-3552"
+            },
+            {
+              "name": "Hangrendszerek",
+              "children": [],
+              "id": "web-item-43-3554"
+            },
+            {
+              "name": "Hangszórók",
+              "children": [],
+              "id": "web-item-43-3562"
+            },
+            {
+              "name": "Lemezjátszók",
+              "children": [],
+              "id": "web-item-43-4240"
+            },
+            {
+              "name": "Erősítők",
+              "children": [],
+              "id": "web-item-43-4241"
+            },
+            {
+              "name": "TV okosító eszközök",
+              "children": [],
+              "id": "web-item-43-4242"
+            }
+          ],
+          "id": "web-item-43-3551"
+        },
+        {
+          "name": "Lejátszók, hangfalak, fej- és fülhallgatók",
+          "children": [
+            {
+              "name": "Bluetooth fej- és fülhallgatók",
+              "children": [],
+              "id": "web-item-43-4185"
+            },
+            {
+              "name": "Vezetékes fej- és fülhallgatók",
+              "children": [],
+              "id": "web-item-43-3574"
+            },
+            {
+              "name": "Hordozható hangfalak",
+              "children": [],
+              "id": "web-item-43-3577"
+            }
+          ],
+          "id": "web-item-43-3573"
+        },
+        {
+          "name": "eBook olvasók és tartozékok",
+          "children": [],
+          "id": "web-item-43-3697"
+        },
+        {
+          "name": "Konzolok és játékok",
+          "children": [
+            {
+              "name": "Konzolok",
+              "children": [],
+              "id": "web-item-43-3582"
+            },
+            {
+              "name": "Hordozható játékkonzolok",
+              "children": [],
+              "id": "web-item-43-4021"
+            },
+            {
+              "name": "Konzol és PC játékok",
+              "children": [],
+              "id": "web-item-43-3583"
+            },
+            {
+              "name": "Gamepad, botkormányok és fejhallgatók",
+              "children": [],
+              "id": "web-item-43-3584"
+            },
+            {
+              "name": "Gamer székek",
+              "children": [],
+              "id": "web-item-43-3585"
+            },
+            {
+              "name": "VR Gaming szemüvegek",
+              "children": [],
+              "id": "web-item-43-3587"
+            },
+            {
+              "name": "Fan Gaming termékek",
+              "children": [],
+              "id": "web-item-43-3586"
+            }
+          ],
+          "id": "web-item-43-3581"
+        }
+      ],
+      "id": "web-dept-43"
+    },
+    {
+      "name": "Telefon, Tablet, Laptop",
+      "children": [
+        {
+          "name": "Telefonok",
+          "children": [
+            {
+              "name": "Okostelefonok",
+              "children": [],
+              "id": "web-item-1-3718"
+            },
+            {
+              "name": "Klasszikus mobiltelefonok",
+              "children": [],
+              "id": "web-item-1-4244"
+            }
+          ],
+          "id": "web-item-1-3681"
+        },
+        {
+          "name": "Mobiltelefon tartozékok",
+          "children": [
+            {
+              "name": "Telefontokok",
+              "children": [],
+              "id": "web-item-1-3195"
+            },
+            {
+              "name": "Kijelzővédő fóliák",
+              "children": [],
+              "id": "web-item-1-4245"
+            },
+            {
+              "name": "Töltőkábelek",
+              "children": [],
+              "id": "web-item-1-4246"
+            },
+            {
+              "name": "Külső akkumulátorok",
+              "children": [],
+              "id": "web-item-1-3192"
+            },
+            {
+              "name": "Telefon akkumulátorok",
+              "children": [],
+              "id": "web-item-1-3193"
+            },
+            {
+              "name": "Memóriakártyák",
+              "children": [],
+              "id": "web-item-1-3783"
+            },
+            {
+              "name": "Adatkábelek",
+              "children": [],
+              "id": "web-item-1-3176"
+            },
+            {
+              "name": "Vezetékes fej- és fülhallgatók",
+              "children": [],
+              "id": "web-item-1-3174"
+            },
+            {
+              "name": "Bluetooth fej- és fülhallgatók",
+              "children": [],
+              "id": "web-item-1-3710"
+            },
+            {
+              "name": "Egyéb tartozékok",
+              "children": [],
+              "id": "web-item-1-4321"
+            }
+          ],
+          "id": "web-item-1-3680"
+        },
+        {
+          "name": "Laptopok",
+          "children": [
+            {
+              "name": "Laptop, notebook",
+              "children": [],
+              "id": "web-item-1-3143"
+            },
+            {
+              "name": "Laptopok Windows-szal",
+              "children": [],
+              "id": "web-item-1-3180"
+            }
+          ],
+          "id": "web-item-1-3184"
+        },
+        {
+          "name": "Laptop tartozékok",
+          "children": [
+            {
+              "name": "Állványok és hűtők",
+              "children": [],
+              "id": "web-item-1-3147"
+            },
+            {
+              "name": "Merevlemezek",
+              "children": [],
+              "id": "web-item-1-3146"
+            },
+            {
+              "name": "Memóriák",
+              "children": [],
+              "id": "web-item-1-3149"
+            },
+            {
+              "name": "Laptop táskák",
+              "children": [],
+              "id": "web-item-1-3153"
+            }
+          ],
+          "id": "web-item-1-3186"
+        },
+        {
+          "name": "Tabletek és tartozékok",
+          "children": [
+            {
+              "name": "Tabletek",
+              "children": [],
+              "id": "web-item-1-3719"
+            },
+            {
+              "name": "Töltők",
+              "children": [],
+              "id": "web-item-1-3156"
+            },
+            {
+              "name": "Tokok",
+              "children": [],
+              "id": "web-item-1-3159"
+            },
+            {
+              "name": "Védőfóliák",
+              "children": [],
+              "id": "web-item-1-3160"
+            },
+            {
+              "name": "Kábelek és adapterek",
+              "children": [],
+              "id": "web-item-1-3161"
+            },
+            {
+              "name": "Egyéb tablet tartozékok",
+              "children": [],
+              "id": "web-item-1-4247"
+            }
+          ],
+          "id": "web-item-1-3154"
+        },
+        {
+          "name": "Okosórák és okos eszközök, aktivitásmérők",
+          "children": [
+            {
+              "name": "Okosórák",
+              "children": [],
+              "id": "web-item-1-4249"
+            },
+            {
+              "name": "Okos eszközök",
+              "children": [],
+              "id": "web-item-1-4250"
+            },
+            {
+              "name": "Aktivitásmérők",
+              "children": [],
+              "id": "web-item-1-4251"
+            }
+          ],
+          "id": "web-item-1-4248"
+        }
+      ],
+      "id": "web-dept-1"
+    },
+    {
+      "name": "Számítástechnika",
+      "children": [
+        {
+          "name": "Asztali PC és monitorok",
+          "children": [
+            {
+              "name": "Asztali számítógépek",
+              "children": [],
+              "id": "web-item-7-3630"
+            },
+            {
+              "name": "Monitorok",
+              "children": [],
+              "id": "web-item-7-3632"
+            },
+            {
+              "name": "Monitor kiegészítők",
+              "children": [],
+              "id": "web-item-7-4252"
+            }
+          ],
+          "id": "web-item-7-3629"
+        },
+        {
+          "name": "Gaming",
+          "children": [
+            {
+              "name": "Gamer PC-k",
+              "children": [],
+              "id": "web-item-7-3683"
+            },
+            {
+              "name": "Gamer laptopok",
+              "children": [],
+              "id": "web-item-7-3827"
+            },
+            {
+              "name": "Gamer monitorok",
+              "children": [],
+              "id": "web-item-7-3684"
+            },
+            {
+              "name": "Gamer székek",
+              "children": [],
+              "id": "web-item-7-3828"
+            },
+            {
+              "name": "Gamer billentyűzetek",
+              "children": [],
+              "id": "web-item-7-3829"
+            },
+            {
+              "name": "Gamer egérpad",
+              "children": [],
+              "id": "web-item-7-3830"
+            },
+            {
+              "name": "Gamer egér",
+              "children": [],
+              "id": "web-item-7-3831"
+            }
+          ],
+          "id": "web-item-7-3631"
+        },
+        {
+          "name": "Szoftverek",
+          "children": [
+            {
+              "name": "Antivírusok",
+              "children": [],
+              "id": "web-item-7-3662"
+            },
+            {
+              "name": "Operációs rendszerek",
+              "children": [],
+              "id": "web-item-7-3664"
+            },
+            {
+              "name": "Irodai alkalmazások",
+              "children": [],
+              "id": "web-item-7-3663"
+            }
+          ],
+          "id": "web-item-7-3661"
+        },
+        {
+          "name": "PC alkatrészek",
+          "children": [
+            {
+              "name": "Videokártyák",
+              "children": [],
+              "id": "web-item-7-3634"
+            },
+            {
+              "name": "SSD meghajtók",
+              "children": [],
+              "id": "web-item-7-3635"
+            },
+            {
+              "name": "Merevlemezek",
+              "children": [],
+              "id": "web-item-7-3636"
+            },
+            {
+              "name": "Memóriák",
+              "children": [],
+              "id": "web-item-7-3637"
+            },
+            {
+              "name": "Alaplapok",
+              "children": [],
+              "id": "web-item-7-3638"
+            },
+            {
+              "name": "Processzorok",
+              "children": [],
+              "id": "web-item-7-3639"
+            },
+            {
+              "name": "Processzor hűtők",
+              "children": [],
+              "id": "web-item-7-3640"
+            },
+            {
+              "name": "Tápegységek",
+              "children": [],
+              "id": "web-item-7-3665"
+            },
+            {
+              "name": "Számítógépházak",
+              "children": [],
+              "id": "web-item-7-3641"
+            }
+          ],
+          "id": "web-item-7-3633"
+        },
+        {
+          "name": "Hálózatok és megfigyelő rendszerek",
+          "children": [
+            {
+              "name": "WiFi routerek",
+              "children": [],
+              "id": "web-item-7-3654"
+            },
+            {
+              "name": "NAS-ok",
+              "children": [],
+              "id": "web-item-7-3656"
+            },
+            {
+              "name": "Kapcsolók",
+              "children": [],
+              "id": "web-item-7-4253"
+            },
+            {
+              "name": "Térfigyelő kamerák",
+              "children": [],
+              "id": "web-item-7-4333"
+            }
+          ],
+          "id": "web-item-7-3653"
+        },
+        {
+          "name": "Perifériák",
+          "children": [
+            {
+              "name": "Billentyűzetek",
+              "children": [],
+              "id": "web-item-7-3643"
+            },
+            {
+              "name": "Egerek",
+              "children": [],
+              "id": "web-item-7-3645"
+            },
+            {
+              "name": "Egérpadok",
+              "children": [],
+              "id": "web-item-7-4254"
+            },
+            {
+              "name": "Webkamerák",
+              "children": [],
+              "id": "web-item-7-4255"
+            },
+            {
+              "name": "Külső merevlemezek",
+              "children": [],
+              "id": "web-item-7-3647"
+            },
+            {
+              "name": "Külső SSD meghajtók",
+              "children": [],
+              "id": "web-item-7-3711"
+            },
+            {
+              "name": "PC fejhallgatók",
+              "children": [],
+              "id": "web-item-7-3648"
+            },
+            {
+              "name": "PC hangszórók",
+              "children": [],
+              "id": "web-item-7-3649"
+            },
+            {
+              "name": "Digitális rajztáblák",
+              "children": [],
+              "id": "web-item-7-3644"
+            }
+          ],
+          "id": "web-item-7-3642"
+        },
+        {
+          "name": "Projektorok és tartozékok",
+          "children": [],
+          "id": "web-item-7-3905"
+        },
+        {
+          "name": "Nyomtatók, szkennerek és fogyóanyagok",
+          "children": [
+            {
+              "name": "Nyomtatók",
+              "children": [],
+              "id": "web-item-7-3844"
+            },
+            {
+              "name": "Szkennerek",
+              "children": [],
+              "id": "web-item-7-4256"
+            },
+            {
+              "name": "Tintapatronok",
+              "children": [],
+              "id": "web-item-7-3845"
+            },
+            {
+              "name": "Nyomtató kiegészítők",
+              "children": [],
+              "id": "web-item-7-4257"
+            }
+          ],
+          "id": "web-item-7-3657"
+        }
+      ],
+      "id": "web-dept-7"
+    },
+    {
+      "name": "Fotó-Videó, Okos eszközök",
+      "children": [
+        {
+          "name": "Fényképezőgépek",
+          "children": [
+            {
+              "name": "Digitális fényképezőgépek",
+              "children": [],
+              "id": "web-item-29-3600"
+            },
+            {
+              "name": "MILC fényképezőgépek",
+              "children": [],
+              "id": "web-item-29-3601"
+            },
+            {
+              "name": "Tükörreflexes fényképezőgépek",
+              "children": [],
+              "id": "web-item-29-3602"
+            },
+            {
+              "name": "Instant fényképezőgépek",
+              "children": [],
+              "id": "web-item-29-3802"
+            }
+          ],
+          "id": "web-item-29-3616"
+        },
+        {
+          "name": "Fényképezőgép tartozékok",
+          "children": [
+            {
+              "name": "Objektívek",
+              "children": [],
+              "id": "web-item-29-3604"
+            },
+            {
+              "name": "Vakuk",
+              "children": [],
+              "id": "web-item-29-3605"
+            },
+            {
+              "name": "DSLR szűrők",
+              "children": [],
+              "id": "web-item-29-3611"
+            },
+            {
+              "name": "Háromlábú állványok",
+              "children": [],
+              "id": "web-item-29-3607"
+            },
+            {
+              "name": "Táskák, hátizsákok",
+              "children": [],
+              "id": "web-item-29-4193"
+            },
+            {
+              "name": "Memóriakártya",
+              "children": [],
+              "id": "web-item-29-3603"
+            },
+            {
+              "name": "Akkuk és töltők",
+              "children": [],
+              "id": "web-item-29-3609"
+            },
+            {
+              "name": "Elemek",
+              "children": [],
+              "id": "web-item-29-3610"
+            },
+            {
+              "name": "Egyéb tartozékok",
+              "children": [],
+              "id": "web-item-29-3615"
+            }
+          ],
+          "id": "web-item-29-3599"
+        },
+        {
+          "name": "Akció- és videókamerák",
+          "children": [
+            {
+              "name": "Videókamerák",
+              "children": [],
+              "id": "web-item-29-3537"
+            },
+            {
+              "name": "Sportkamerák",
+              "children": [],
+              "id": "web-item-29-3538"
+            },
+            {
+              "name": "Védőtokok",
+              "children": [],
+              "id": "web-item-29-4258"
+            }
+          ],
+          "id": "web-item-29-3817"
+        },
+        {
+          "name": "Kamera tartozékok",
+          "children": [
+            {
+              "name": "Tartók és rögzítő rendszerek",
+              "children": [],
+              "id": "web-item-29-3805"
+            },
+            {
+              "name": "Kamera stabilizátorok",
+              "children": [],
+              "id": "web-item-29-3807"
+            },
+            {
+              "name": "Akkumulátorok és töltők",
+              "children": [],
+              "id": "web-item-29-3806"
+            },
+            {
+              "name": "Egyéb videó kiegészítők",
+              "children": [],
+              "id": "web-item-29-3808"
+            }
+          ],
+          "id": "web-item-29-3803"
+        },
+        {
+          "name": "Digitális fotókeretek",
+          "children": [
+            {
+              "name": "Fotóalbumok",
+              "children": [],
+              "id": "web-item-29-3925"
+            }
+          ],
+          "id": "web-item-29-3613"
+        },
+        {
+          "name": "Távcsövek és optikai eszközök",
+          "children": [
+            {
+              "name": "Távcsövek és spektívek",
+              "children": [],
+              "id": "web-item-29-3541"
+            },
+            {
+              "name": "Teleszkópok",
+              "children": [],
+              "id": "web-item-29-4259"
+            },
+            {
+              "name": "Nagyítók",
+              "children": [],
+              "id": "web-item-29-3542"
+            }
+          ],
+          "id": "web-item-29-3850"
+        },
+        {
+          "name": "Okosórák",
+          "children": [
+            {
+              "name": "Android kompatibilis okosórák",
+              "children": [],
+              "id": "web-item-29-4260"
+            },
+            {
+              "name": "iOS kompatibilis okosórák",
+              "children": [],
+              "id": "web-item-29-4261"
+            },
+            {
+              "name": "Okosóra kiegészítők",
+              "children": [],
+              "id": "web-item-29-3864"
+            }
+          ],
+          "id": "web-item-29-3863"
+        },
+        {
+          "name": "Aktivitásmérők",
+          "children": [
+            {
+              "name": "Aktivitásmérő kiegészítők",
+              "children": [],
+              "id": "web-item-29-3866"
+            }
+          ],
+          "id": "web-item-29-3865"
+        },
+        {
+          "name": "Okos eszközök",
+          "children": [
+            {
+              "name": "Okosgyűrűk",
+              "children": [],
+              "id": "web-item-29-4266"
+            },
+            {
+              "name": "Okos otthon",
+              "children": [],
+              "id": "web-item-29-3869"
+            },
+            {
+              "name": "Modulok és vezérlők",
+              "children": [],
+              "id": "web-item-29-4264"
+            },
+            {
+              "name": "Okos riasztórendszerek",
+              "children": [],
+              "id": "web-item-29-4263"
+            },
+            {
+              "name": "Megfigyelőrendszerek",
+              "children": [],
+              "id": "web-item-29-4265"
+            },
+            {
+              "name": "Okos vércukor- és vérnyomásmérők",
+              "children": [],
+              "id": "web-item-29-3872"
+            },
+            {
+              "name": "VR szemüvegek",
+              "children": [],
+              "id": "web-item-29-3873"
+            }
+          ],
+          "id": "web-item-29-3868"
+        },
+        {
+          "name": "Drónok",
+          "children": [
+            {
+              "name": "Drón kiegészítők",
+              "children": [],
+              "id": "web-item-29-3875"
+            }
+          ],
+          "id": "web-item-29-3874"
+        },
+        {
+          "name": "Hoverboardok",
+          "children": [],
+          "id": "web-item-29-3876"
+        }
+      ],
+      "id": "web-dept-29"
+    },
+    {
+      "name": "Szupermarket",
+      "children": [
+        {
+          "name": "Online élelmiszerbolt",
+          "children": [
+            {
+              "name": "Alapvető élelmiszerek",
+              "children": [],
+              "id": "web-item-615-4268"
+            },
+            {
+              "name": "Tészták",
+              "children": [],
+              "id": "web-item-615-4269"
+            },
+            {
+              "name": "Konzervek és gyorsételek",
+              "children": [],
+              "id": "web-item-615-4270"
+            },
+            {
+              "name": "Diétás és bio termékek",
+              "children": [],
+              "id": "web-item-615-4271"
+            },
+            {
+              "name": "Gabonapelyhek",
+              "children": [],
+              "id": "web-item-615-4272"
+            },
+            {
+              "name": "Snackek",
+              "children": [],
+              "id": "web-item-615-4273"
+            },
+            {
+              "name": "Édességek",
+              "children": [],
+              "id": "web-item-615-4274"
+            }
+          ],
+          "id": "web-item-615-4198"
+        },
+        {
+          "name": "Alkoholmentes italok",
+          "children": [
+            {
+              "name": "Szénsavas üdítők",
+              "children": [],
+              "id": "web-item-615-3927"
+            },
+            {
+              "name": "Szénsavmentes üdítők",
+              "children": [],
+              "id": "web-item-615-3928"
+            },
+            {
+              "name": "Kávé",
+              "children": [],
+              "id": "web-item-615-3860"
+            },
+            {
+              "name": "Tea",
+              "children": [],
+              "id": "web-item-615-3857"
+            }
+          ],
+          "id": "web-item-615-4085"
+        },
+        {
+          "name": "Alkoholos italok",
+          "children": [
+            {
+              "name": "Bor",
+              "children": [],
+              "id": "web-item-615-4086"
+            },
+            {
+              "name": "Sör",
+              "children": [],
+              "id": "web-item-615-4087"
+            },
+            {
+              "name": "Likőr",
+              "children": [],
+              "id": "web-item-615-4089"
+            },
+            {
+              "name": "Whiskey",
+              "children": [],
+              "id": "web-item-615-4088"
+            }
+          ],
+          "id": "web-item-615-4084"
+        },
+        {
+          "name": "Online drogéria",
+          "children": [
+            {
+              "name": "Dermokozmetika",
+              "children": [],
+              "id": "web-item-615-4072"
+            },
+            {
+              "name": "Higiéniai termékek",
+              "children": [],
+              "id": "web-item-615-3922"
+            },
+            {
+              "name": "Babaápolás",
+              "children": [],
+              "id": "web-item-615-4275"
+            },
+            {
+              "name": "Baba tápszerek",
+              "children": [],
+              "id": "web-item-615-3934"
+            },
+            {
+              "name": "Cumisüvegek, cumik",
+              "children": [],
+              "id": "web-item-615-3942"
+            },
+            {
+              "name": "Pelenkák és bugyik",
+              "children": [],
+              "id": "web-item-615-3918"
+            },
+            {
+              "name": "Baba nedves törlőkendők",
+              "children": [],
+              "id": "web-item-615-3943"
+            },
+            {
+              "name": "Mosószerek",
+              "children": [],
+              "id": "web-item-615-3893"
+            },
+            {
+              "name": "Öblítőszerek",
+              "children": [],
+              "id": "web-item-615-3894"
+            },
+            {
+              "name": "Mosogatószerek és kapszulák",
+              "children": [],
+              "id": "web-item-615-3924"
+            },
+            {
+              "name": "Antibakteriális törlőkendő",
+              "children": [],
+              "id": "web-item-615-3900"
+            },
+            {
+              "name": "Fertőtlenítő tisztítószerek",
+              "children": [],
+              "id": "web-item-615-3901"
+            },
+            {
+              "name": "Kézfertőtlenítők",
+              "children": [],
+              "id": "web-item-615-4092"
+            },
+            {
+              "name": "Egészségügyi maszkok",
+              "children": [],
+              "id": "web-item-615-3896"
+            }
+          ],
+          "id": "web-item-615-3933"
+        },
+        {
+          "name": "Ajándékötletek",
+          "children": [
+            {
+              "name": "Csomagok és ajándékkosarak",
+              "children": [],
+              "id": "web-item-615-4277"
+            },
+            {
+              "name": "Üdvözlőkártyák",
+              "children": [],
+              "id": "web-item-615-4276"
+            },
+            {
+              "name": "Virágdíszek",
+              "children": [],
+              "id": "web-item-615-4278"
+            }
+          ],
+          "id": "web-item-615-3859"
+        },
+        {
+          "name": "Kisállattartás",
+          "children": [
+            {
+              "name": "Kutyaeledel",
+              "children": [],
+              "id": "web-item-615-3920"
+            },
+            {
+              "name": "Macskaeledel",
+              "children": [],
+              "id": "web-item-615-3921"
+            },
+            {
+              "name": "Diétás tápok",
+              "children": [],
+              "id": "web-item-615-3938"
+            },
+            {
+              "name": "Keksz és jutalomfalatok",
+              "children": [],
+              "id": "web-item-615-3937"
+            },
+            {
+              "name": "Játékok",
+              "children": [],
+              "id": "web-item-615-4281"
+            },
+            {
+              "name": "Kisállat fekhelyek",
+              "children": [],
+              "id": "web-item-615-4280"
+            },
+            {
+              "name": "Nyakörvek, pórázok, hámok",
+              "children": [],
+              "id": "web-item-615-3940"
+            },
+            {
+              "name": "Kozmetikumok",
+              "children": [],
+              "id": "web-item-615-4279"
+            },
+            {
+              "name": "Madár- és rágcsálóeledel",
+              "children": [],
+              "id": "web-item-615-3936"
+            }
+          ],
+          "id": "web-item-615-3891"
+        }
+      ],
+      "id": "web-dept-615"
+    },
+    {
+      "name": "Otthon, barkács, kert",
+      "children": [
+        {
+          "name": "Kert",
+          "children": [
+            {
+              "name": "Fűnyírók",
+              "children": [],
+              "id": "web-item-173-4075"
+            },
+            {
+              "name": "Magasnyomású mosók",
+              "children": [],
+              "id": "web-item-173-3378"
+            },
+            {
+              "name": "Lombszívók, szecskázók és ágaprítók",
+              "children": [],
+              "id": "web-item-173-4284"
+            },
+            {
+              "name": "Sövényvágók",
+              "children": [],
+              "id": "web-item-173-4285"
+            },
+            {
+              "name": "Szivattyúk",
+              "children": [],
+              "id": "web-item-173-4286"
+            }
+          ],
+          "id": "web-item-173-3292"
+        },
+        {
+          "name": "Szerszámgépek",
+          "children": [
+            {
+              "name": "Fúrók és csavarozók",
+              "children": [],
+              "id": "web-item-173-3290"
+            },
+            {
+              "name": "Elektromos fűrészek",
+              "children": [],
+              "id": "web-item-173-3291"
+            },
+            {
+              "name": "Csiszológépek",
+              "children": [],
+              "id": "web-item-173-4002"
+            },
+            {
+              "name": "Hegesztő és forrasztógépek",
+              "children": [],
+              "id": "web-item-173-4288"
+            },
+            {
+              "name": "Szerszámkészletek",
+              "children": [],
+              "id": "web-item-173-4290"
+            },
+            {
+              "name": "Szerszámosládák",
+              "children": [],
+              "id": "web-item-173-4291"
+            }
+          ],
+          "id": "web-item-173-3289"
+        },
+        {
+          "name": "Szaniterek",
+          "children": [
+            {
+              "name": "Csaptelepek",
+              "children": [],
+              "id": "web-item-173-3296"
+            },
+            {
+              "name": "Mosdókagylók",
+              "children": [],
+              "id": "web-item-173-3297"
+            },
+            {
+              "name": "Fürdőkádak",
+              "children": [],
+              "id": "web-item-173-4294"
+            },
+            {
+              "name": "Zuhanykabinok",
+              "children": [],
+              "id": "web-item-173-4295"
+            }
+          ],
+          "id": "web-item-173-3295"
+        },
+        {
+          "name": "Világítás és elektronika",
+          "children": [
+            {
+              "name": "Klasszikus izzók",
+              "children": [],
+              "id": "web-item-173-3300"
+            },
+            {
+              "name": "Okos izzók",
+              "children": [],
+              "id": "web-item-173-4297"
+            },
+            {
+              "name": "Lámpák",
+              "children": [],
+              "id": "web-item-173-3301"
+            }
+          ],
+          "id": "web-item-173-3299"
+        },
+        {
+          "name": "Kerti bútor",
+          "children": [
+            {
+              "name": "Kerti ernyők és pavilonok",
+              "children": [],
+              "id": "web-item-173-4359"
+            },
+            {
+              "name": "Kerti székek és napozóágyak",
+              "children": [],
+              "id": "web-item-173-4360"
+            }
+          ],
+          "id": "web-item-173-4159"
+        },
+        {
+          "name": "Bútorok",
+          "children": [
+            {
+              "name": "Kanapék",
+              "children": [],
+              "id": "web-item-173-4013"
+            },
+            {
+              "name": "Ruhásszekrények",
+              "children": [],
+              "id": "web-item-173-4014"
+            },
+            {
+              "name": "Ágyak",
+              "children": [],
+              "id": "web-item-173-3448"
+            },
+            {
+              "name": "Matracok",
+              "children": [],
+              "id": "web-item-173-3320"
+            },
+            {
+              "name": "Asztalok",
+              "children": [],
+              "id": "web-item-173-3769"
+            },
+            {
+              "name": "Székek",
+              "children": [],
+              "id": "web-item-173-3770"
+            },
+            {
+              "name": "Konyhabútorok",
+              "children": [],
+              "id": "web-item-173-4083"
+            },
+            {
+              "name": "Íróasztalok",
+              "children": [],
+              "id": "web-item-173-4011"
+            },
+            {
+              "name": "Irodai székek",
+              "children": [],
+              "id": "web-item-173-3319"
+            }
+          ],
+          "id": "web-item-173-3317"
+        },
+        {
+          "name": "Dekorációk",
+          "children": [],
+          "id": "web-item-173-4008"
+        },
+        {
+          "name": "Konyha és felszolgálás",
+          "children": [
+            {
+              "name": "Főzőedények",
+              "children": [],
+              "id": "web-item-173-4125"
+            },
+            {
+              "name": "Étkészletek",
+              "children": [],
+              "id": "web-item-173-3442"
+            },
+            {
+              "name": "Tálak",
+              "children": [],
+              "id": "web-item-173-4301"
+            },
+            {
+              "name": "Hőálló edények",
+              "children": [],
+              "id": "web-item-173-4299"
+            },
+            {
+              "name": "Vízszűrő kancsók és tartozékok",
+              "children": [],
+              "id": "web-item-173-3778"
+            }
+          ],
+          "id": "web-item-173-3302"
+        },
+        {
+          "name": "Textiláruk",
+          "children": [
+            {
+              "name": "Párnák",
+              "children": [],
+              "id": "web-item-173-3307"
+            },
+            {
+              "name": "Paplanok",
+              "children": [],
+              "id": "web-item-173-3308"
+            },
+            {
+              "name": "Ágyneműhuzatok",
+              "children": [],
+              "id": "web-item-173-3443"
+            },
+            {
+              "name": "Fedőmatracok",
+              "children": [],
+              "id": "web-item-173-3768"
+            },
+            {
+              "name": "Takarók és plédek",
+              "children": [],
+              "id": "web-item-173-3772"
+            }
+          ],
+          "id": "web-item-173-3306"
+        },
+        {
+          "name": "Tisztítás és karbantartás",
+          "children": [
+            {
+              "name": "Felmosó szettek",
+              "children": [],
+              "id": "web-item-173-3773"
+            },
+            {
+              "name": "Ruhaszárítók",
+              "children": [],
+              "id": "web-item-173-3316"
+            },
+            {
+              "name": "Vasalódeszkák",
+              "children": [],
+              "id": "web-item-173-3315"
+            }
+          ],
+          "id": "web-item-173-3312"
+        }
+      ],
+      "id": "web-dept-173"
+    },
+    {
+      "name": "Játékok, Baba, Mama",
+      "children": [
+        {
+          "name": "BABA-MAMA",
+          "structural": true,
+          "children": [
+            {
+              "name": "Bababolt",
+              "children": [
+                {
+                  "name": "Pelenkák",
+                  "children": [],
+                  "id": "web-item-199-3957"
+                },
+                {
+                  "name": "Popsitörlők",
+                  "children": [],
+                  "id": "web-item-199-3622"
+                },
+                {
+                  "name": "Cumisüvegek, cumik és tartozékok",
+                  "children": [],
+                  "id": "web-item-199-4302"
+                }
+              ],
+              "id": "web-item-199-4206"
+            },
+            {
+              "name": "Baba ételek és tartozékok",
+              "children": [
+                {
+                  "name": "Etetőszékek",
+                  "children": [],
+                  "id": "web-item-199-2497"
+                },
+                {
+                  "name": "Mellszívók és tartozékok",
+                  "children": [],
+                  "id": "web-item-199-3248"
+                }
+              ],
+              "id": "web-item-199-2494"
+            },
+            {
+              "name": "Higiénia és ápolási termékek",
+              "children": [],
+              "id": "web-item-199-2499"
+            },
+            {
+              "name": "Babakocsik és hordozók",
+              "children": [],
+              "id": "web-item-199-2725"
+            },
+            {
+              "name": "Gyerekszoba",
+              "children": [
+                {
+                  "name": "Kiságy",
+                  "children": [],
+                  "id": "web-item-199-3951"
+                }
+              ],
+              "id": "web-item-199-2512"
+            },
+            {
+              "name": "Babajátékok",
+              "children": [
+                {
+                  "name": "Interaktív babajátékok",
+                  "children": [],
+                  "id": "web-item-199-3264"
+                },
+                {
+                  "name": "Tevékenységi központok és játszószőnyegek",
+                  "children": [],
+                  "id": "web-item-199-3265"
+                }
+              ],
+              "id": "web-item-199-3263"
+            }
+          ],
+          "id": "web-item-199-2493"
+        },
+        {
+          "name": "JÁTÉKOK",
+          "structural": true,
+          "children": [
+            {
+              "name": "Játék bolt",
+              "children": [],
+              "id": "web-item-199-4208"
+            },
+            {
+              "name": "Szerepjátékok",
+              "children": [
+                {
+                  "name": "Gyerekkonyhák",
+                  "children": [],
+                  "id": "web-item-199-3691"
+                },
+                {
+                  "name": "Gyerekműhelyek és tartozékok",
+                  "children": [],
+                  "id": "web-item-199-3721"
+                },
+                {
+                  "name": "Bevásárló játékszettek",
+                  "children": [],
+                  "id": "web-item-199-4303"
+                }
+              ],
+              "id": "web-item-199-3266"
+            },
+            {
+              "name": "Lányos játékok",
+              "children": [
+                {
+                  "name": "Babák és Barbie-k",
+                  "children": [],
+                  "id": "web-item-199-4305"
+                },
+                {
+                  "name": "Babaházak",
+                  "children": [],
+                  "id": "web-item-199-4306"
+                },
+                {
+                  "name": "Játék babakocsik és kiegészítők",
+                  "children": [],
+                  "id": "web-item-199-4307"
+                },
+                {
+                  "name": "Plüss játékok",
+                  "children": [],
+                  "id": "web-item-199-4308"
+                }
+              ],
+              "id": "web-item-199-3269"
+            },
+            {
+              "name": "Fiús játékok",
+              "children": [
+                {
+                  "name": "Játékautók",
+                  "children": [],
+                  "id": "web-item-199-4309"
+                },
+                {
+                  "name": "Játékvonatok",
+                  "children": [],
+                  "id": "web-item-199-4311"
+                }
+              ],
+              "id": "web-item-199-3270"
+            },
+            {
+              "name": "Társasjátékok",
+              "children": [
+                {
+                  "name": "Gyerek társasjátékok",
+                  "children": [],
+                  "id": "web-item-199-4313"
+                },
+                {
+                  "name": "Családi társasjátékok",
+                  "children": [],
+                  "id": "web-item-199-4314"
+                },
+                {
+                  "name": "Felnőtt társasjátékok",
+                  "children": [],
+                  "id": "web-item-199-4315"
+                }
+              ],
+              "id": "web-item-199-3692"
+            },
+            {
+              "name": "Kreatív és készségfejlesztő játékok",
+              "children": [
+                {
+                  "name": "Memória és intelligencia játékok",
+                  "children": [],
+                  "id": "web-item-199-4316"
+                },
+                {
+                  "name": "Interaktív gyerek játékok",
+                  "children": [],
+                  "id": "web-item-199-4317"
+                },
+                {
+                  "name": "Rajz és festő készletek",
+                  "children": [],
+                  "id": "web-item-199-4319"
+                }
+              ],
+              "id": "web-item-199-3720"
+            },
+            {
+              "name": "LEGO készletek",
+              "children": [],
+              "id": "web-item-199-4129"
+            },
+            {
+              "name": "LEGO felnőtteknek",
+              "children": [],
+              "id": "web-item-199-4128"
+            },
+            {
+              "name": "Kültéri játékok",
+              "children": [
+                {
+                  "name": "Elektromos kisautók és járművek",
+                  "children": [],
+                  "id": "web-item-199-3686"
+                },
+                {
+                  "name": "Triciklik",
+                  "children": [],
+                  "id": "web-item-199-3687"
+                },
+                {
+                  "name": "Gyerekházak, sátrak",
+                  "children": [],
+                  "id": "web-item-199-3954"
+                },
+                {
+                  "name": "Játszóterek és tartozékok",
+                  "children": [],
+                  "id": "web-item-199-3955"
+                },
+                {
+                  "name": "Csúszdák",
+                  "children": [],
+                  "id": "web-item-199-3956"
+                },
+                {
+                  "name": "Hinták",
+                  "children": [],
+                  "id": "web-item-199-3953"
+                },
+                {
+                  "name": "Trambulinok",
+                  "children": [],
+                  "id": "web-item-199-3968"
+                }
+              ],
+              "id": "web-item-199-2484"
+            },
+            {
+              "name": "Gyerek ruhák, cipők, kiegészítők",
+              "children": [],
+              "id": "web-item-199-4320"
+            }
+          ],
+          "id": "web-item-199-2479"
+        }
+      ],
+      "id": "web-dept-199"
+    },
+    {
+      "name": "Divat, ékszerek és kiegészítők",
+      "children": [
+        {
+          "name": "NŐI DIVAT",
+          "structural": true,
+          "children": [
+            {
+              "name": "Női ruházat",
+              "children": [
+                {
+                  "name": "Ruhák",
+                  "children": [],
+                  "id": "web-item-1023-3798"
+                },
+                {
+                  "name": "Pólók",
+                  "children": [],
+                  "id": "web-item-1023-3128"
+                },
+                {
+                  "name": "Szoknyák",
+                  "children": [],
+                  "id": "web-item-1023-4069"
+                },
+                {
+                  "name": "Ingek",
+                  "children": [],
+                  "id": "web-item-1023-4000"
+                },
+                {
+                  "name": "Blézerek",
+                  "children": [],
+                  "id": "web-item-1023-4066"
+                },
+                {
+                  "name": "Pulóverek",
+                  "children": [],
+                  "id": "web-item-1023-3981"
+                },
+                {
+                  "name": "Dzsekik, mellények",
+                  "children": [],
+                  "id": "web-item-1023-3982"
+                },
+                {
+                  "name": "Farmernadrágok",
+                  "children": [],
+                  "id": "web-item-1023-3740"
+                },
+                {
+                  "name": "Nadrágok",
+                  "children": [],
+                  "id": "web-item-1023-4067"
+                }
+              ],
+              "id": "web-item-1023-2917"
+            },
+            {
+              "name": "Női cipők",
+              "children": [
+                {
+                  "name": "Női félcipők, magassarkúk",
+                  "children": [],
+                  "id": "web-item-1023-4064"
+                },
+                {
+                  "name": "Tornacipők",
+                  "children": [],
+                  "id": "web-item-1023-2930",
+                  "source_identity_url": "https://www.emag.hu/noi-tornacipok/c"
+                }
+              ],
+              "id": "web-item-1023-2926"
+            },
+            {
+              "name": "Női kiegészítők",
+              "children": [
+                {
+                  "name": "Karórák",
+                  "children": [],
+                  "id": "web-item-1023-2937"
+                },
+                {
+                  "name": "Övek",
+                  "children": [],
+                  "id": "web-item-1023-3998"
+                },
+                {
+                  "name": "Táskák",
+                  "children": [],
+                  "id": "web-item-1023-3974"
+                }
+              ],
+              "id": "web-item-1023-2935"
+            }
+          ],
+          "id": "web-item-1023-3243"
+        },
+        {
+          "name": "FÉRFI DIVAT",
+          "structural": true,
+          "children": [
+            {
+              "name": "Férfi ruházat",
+              "children": [
+                {
+                  "name": "Pólók",
+                  "children": [],
+                  "id": "web-item-1023-2943"
+                },
+                {
+                  "name": "Felsők",
+                  "children": [],
+                  "id": "web-item-1023-3991"
+                },
+                {
+                  "name": "Ingek",
+                  "children": [],
+                  "id": "web-item-1023-3992"
+                },
+                {
+                  "name": "Pulóverek",
+                  "children": [],
+                  "id": "web-item-1023-3990"
+                },
+                {
+                  "name": "Kapucnis felsők",
+                  "children": [],
+                  "id": "web-item-1023-3800"
+                },
+                {
+                  "name": "Zakók, blézerek",
+                  "children": [],
+                  "id": "web-item-1023-3993"
+                },
+                {
+                  "name": "Dzsekik és mellények",
+                  "children": [],
+                  "id": "web-item-1023-3744"
+                },
+                {
+                  "name": "Farmernadrágok",
+                  "children": [],
+                  "id": "web-item-1023-2946"
+                },
+                {
+                  "name": "Nadrágok",
+                  "children": [],
+                  "id": "web-item-1023-4070",
+                  "source_identity_url": "https://www.emag.hu/ferfi-nadragok/c"
+                }
+              ],
+              "id": "web-item-1023-2942"
+            },
+            {
+              "name": "Férfi cipők",
+              "children": [
+                {
+                  "name": "Férfi utcai cipők",
+                  "children": [],
+                  "id": "web-item-1023-4065"
+                },
+                {
+                  "name": "Tornacipők",
+                  "children": [],
+                  "id": "web-item-1023-2951"
+                }
+              ],
+              "id": "web-item-1023-2949"
+            },
+            {
+              "name": "Férfi kiegészítők",
+              "children": [
+                {
+                  "name": "Karórák",
+                  "children": [],
+                  "id": "web-item-1023-3746"
+                },
+                {
+                  "name": "Övek",
+                  "children": [],
+                  "id": "web-item-1023-3999"
+                },
+                {
+                  "name": "Táskák",
+                  "children": [],
+                  "id": "web-item-1023-3975"
+                }
+              ],
+              "id": "web-item-1023-2955"
+            }
+          ],
+          "id": "web-item-1023-3244"
+        },
+        {
+          "name": "GYERMEK DIVAT",
+          "structural": true,
+          "children": [
+            {
+              "name": "Dzsekik és mellények",
+              "children": [],
+              "id": "web-item-1023-4330"
+            },
+            {
+              "name": "Pulóverek és kardigánok",
+              "children": [],
+              "id": "web-item-1023-4329"
+            },
+            {
+              "name": "Pólók",
+              "children": [],
+              "id": "web-item-1023-4325"
+            },
+            {
+              "name": "Nadrágok",
+              "children": [],
+              "id": "web-item-1023-4327"
+            },
+            {
+              "name": "Zoknik és harisnyák",
+              "children": [],
+              "id": "web-item-1023-4328"
+            },
+            {
+              "name": "Cipők",
+              "children": [],
+              "id": "web-item-1023-4326"
+            }
+          ],
+          "id": "web-item-1023-3125"
+        },
+        {
+          "name": "SPORTCIPŐK ÉS RUHÁZAT",
+          "structural": true,
+          "children": [],
+          "id": "web-item-1023-3119"
+        },
+        {
+          "name": "STRANDRUHÁZAT",
+          "structural": true,
+          "children": [
+            {
+              "name": "Női fürdőruhák",
+              "children": [],
+              "id": "web-item-1023-4060"
+            },
+            {
+              "name": "Férfi úszónadrágok",
+              "children": [],
+              "id": "web-item-1023-4059"
+            },
+            {
+              "name": "Strand kiegészítők",
+              "children": [],
+              "id": "web-item-1023-4061"
+            },
+            {
+              "name": "Női papucsok",
+              "children": [],
+              "id": "web-item-1023-4062"
+            },
+            {
+              "name": "Férfi papucsok",
+              "children": [],
+              "id": "web-item-1023-4063"
+            }
+          ],
+          "id": "web-item-1023-4058"
+        }
+      ],
+      "id": "web-dept-1023"
+    },
+    {
+      "name": "Szépségápolás",
+      "children": [
+        {
+          "name": "Dermokozmetika bolt",
+          "children": [],
+          "id": "web-item-83-4187"
+        },
+        {
+          "name": "Hajápolás és sminkbolt",
+          "children": [],
+          "id": "web-item-83-4204"
+        },
+        {
+          "name": "Parfümök",
+          "children": [],
+          "id": "web-item-83-2994"
+        },
+        {
+          "name": "Szépségápolás",
+          "children": [
+            {
+              "name": "Arckrémek",
+              "children": [],
+              "id": "web-item-83-2534"
+            },
+            {
+              "name": "Arctisztítók, sminklemosók",
+              "children": [],
+              "id": "web-item-83-3406"
+            },
+            {
+              "name": "Tusfürdők",
+              "children": [],
+              "id": "web-item-83-3408"
+            },
+            {
+              "name": "Testápoló",
+              "children": [],
+              "id": "web-item-83-3409"
+            },
+            {
+              "name": "Szappanok",
+              "children": [],
+              "id": "web-item-83-3848"
+            },
+            {
+              "name": "Dezodorok és izzadásgátlók",
+              "children": [],
+              "id": "web-item-83-2539"
+            },
+            {
+              "name": "Napvédő termékek",
+              "children": [],
+              "id": "web-item-83-4126"
+            },
+            {
+              "name": "Hajsampon",
+              "children": [],
+              "id": "web-item-83-3411"
+            },
+            {
+              "name": "Hajbalzsam",
+              "children": [],
+              "id": "web-item-83-3412"
+            },
+            {
+              "name": "Tamponok és betétek",
+              "children": [],
+              "id": "web-item-83-4143"
+            },
+            {
+              "name": "Borotvák",
+              "children": [],
+              "id": "web-item-83-4334"
+            }
+          ],
+          "id": "web-item-83-4138"
+        },
+        {
+          "name": "Dekorkozmetika",
+          "children": [
+            {
+              "name": "Szempillaspirál",
+              "children": [],
+              "id": "web-item-83-4145"
+            },
+            {
+              "name": "Szemhéjtus és szemceruza",
+              "children": [],
+              "id": "web-item-83-4146"
+            },
+            {
+              "name": "Szemhéjfestékek",
+              "children": [],
+              "id": "web-item-83-4147"
+            },
+            {
+              "name": "Szemöldökformázók",
+              "children": [],
+              "id": "web-item-83-4148"
+            },
+            {
+              "name": "Sminkalapok és alapozók",
+              "children": [],
+              "id": "web-item-83-4149"
+            },
+            {
+              "name": "Korrektor",
+              "children": [],
+              "id": "web-item-83-4150"
+            },
+            {
+              "name": "Highlighterek és kontúrozók",
+              "children": [],
+              "id": "web-item-83-4151"
+            },
+            {
+              "name": "Rúzs és szájkontúrceruzák",
+              "children": [],
+              "id": "web-item-83-4152"
+            },
+            {
+              "name": "Szájfény és ajakbalzsam",
+              "children": [],
+              "id": "web-item-83-4153"
+            }
+          ],
+          "id": "web-item-83-3262"
+        },
+        {
+          "name": "Száj- és fogápolás",
+          "children": [
+            {
+              "name": "Elektromos fogkefék",
+              "children": [],
+              "id": "web-item-83-3394"
+            },
+            {
+              "name": "Fogkefe tartozékok",
+              "children": [],
+              "id": "web-item-83-2547"
+            },
+            {
+              "name": "Fogkrémek",
+              "children": [],
+              "id": "web-item-83-4335"
+            }
+          ],
+          "id": "web-item-83-2715"
+        },
+        {
+          "name": "Erotika",
+          "children": [
+            {
+              "name": "Óvszerek",
+              "children": [],
+              "id": "web-item-83-4219"
+            }
+          ],
+          "id": "web-item-83-4210"
+        },
+        {
+          "name": "Wellness és egészségügy",
+          "children": [
+            {
+              "name": "Okosmérlegek",
+              "children": [],
+              "id": "web-item-83-4336"
+            },
+            {
+              "name": "Masszázsgépek",
+              "children": [],
+              "id": "web-item-83-4337"
+            },
+            {
+              "name": "Egészségügyi készülékek és kiegészítők",
+              "children": [],
+              "id": "web-item-83-4338"
+            }
+          ],
+          "id": "web-item-83-4158"
+        },
+        {
+          "name": "Szépségápolási készülékek",
+          "children": [
+            {
+              "name": "Epilátorok",
+              "children": [],
+              "id": "web-item-83-2554"
+            },
+            {
+              "name": "IPL tartós szőrtelenítők",
+              "children": [],
+              "id": "web-item-83-4339"
+            },
+            {
+              "name": "Hajvasalók",
+              "children": [],
+              "id": "web-item-83-2555"
+            },
+            {
+              "name": "Hajgöndörítők",
+              "children": [],
+              "id": "web-item-83-4340"
+            },
+            {
+              "name": "Hajszárítók",
+              "children": [],
+              "id": "web-item-83-2556"
+            },
+            {
+              "name": "Elektromos borotvák",
+              "children": [],
+              "id": "web-item-83-2559"
+            },
+            {
+              "name": "Szakállvágó és hajnyíró készletek",
+              "children": [],
+              "id": "web-item-83-3410"
+            },
+            {
+              "name": "Hajpakolások és kezelések",
+              "children": [],
+              "id": "web-item-83-4139"
+            },
+            {
+              "name": "Köröm és sarokreszelők",
+              "children": [],
+              "id": "web-item-83-4156"
+            },
+            {
+              "name": "Hajfesték és oxidálószer",
+              "children": [],
+              "id": "web-item-83-4140"
+            },
+            {
+              "name": "Púder és arcpirosító",
+              "children": [],
+              "id": "web-item-83-4157"
+            },
+            {
+              "name": "Körömlakk",
+              "children": [],
+              "id": "web-item-83-4155"
+            },
+            {
+              "name": "Arcmaszkok és bőrradírok",
+              "children": [],
+              "id": "web-item-83-3407"
+            }
+          ],
+          "id": "web-item-83-2808"
+        }
+      ],
+      "id": "web-dept-83"
+    },
+    {
+      "name": "Sport és utazás",
+      "children": [
+        {
+          "name": "Sportbolt",
+          "children": [],
+          "id": "web-item-165-4220"
+        },
+        {
+          "name": "Bőröndök és utazótáskák",
+          "children": [
+            {
+              "name": "Bőröndök",
+              "children": [],
+              "id": "web-item-165-4342"
+            },
+            {
+              "name": "Utazótáskák",
+              "children": [],
+              "id": "web-item-165-4343"
+            },
+            {
+              "name": "Hátizsákok",
+              "children": [],
+              "id": "web-item-165-4344"
+            },
+            {
+              "name": "Túrahátizsákok",
+              "children": [],
+              "id": "web-item-165-4345"
+            }
+          ],
+          "id": "web-item-165-3215"
+        },
+        {
+          "name": "Edzőgépek",
+          "children": [
+            {
+              "name": "Futópadok",
+              "children": [],
+              "id": "web-item-165-3228"
+            },
+            {
+              "name": "Szobabiciklik",
+              "children": [],
+              "id": "web-item-165-3229"
+            },
+            {
+              "name": "Haspadok",
+              "children": [],
+              "id": "web-item-165-3237"
+            },
+            {
+              "name": "Taposógépek",
+              "children": [],
+              "id": "web-item-165-3231"
+            },
+            {
+              "name": "Multifunkciós gépek",
+              "children": [],
+              "id": "web-item-165-3230"
+            },
+            {
+              "name": "Evezőgépek",
+              "children": [],
+              "id": "web-item-165-4030"
+            }
+          ],
+          "id": "web-item-165-4029"
+        },
+        {
+          "name": "Fitnesz",
+          "children": [
+            {
+              "name": "Súlyzók",
+              "children": [],
+              "id": "web-item-165-3232"
+            },
+            {
+              "name": "Fitnesz súlyok",
+              "children": [],
+              "id": "web-item-165-4033"
+            },
+            {
+              "name": "Erősítő gumiszalagok és kötelek",
+              "children": [],
+              "id": "web-item-165-4034"
+            },
+            {
+              "name": "Fitnesz labdák",
+              "children": [],
+              "id": "web-item-165-3234"
+            },
+            {
+              "name": "Szőnyegek, matracok",
+              "children": [],
+              "id": "web-item-165-3233"
+            }
+          ],
+          "id": "web-item-165-3212"
+        },
+        {
+          "name": "Csapat és ütős sportok",
+          "children": [],
+          "id": "web-item-165-3218"
+        },
+        {
+          "name": "Szabadidős sport termékek",
+          "children": [
+            {
+              "name": "Rollerek",
+              "children": [],
+              "id": "web-item-165-4051"
+            },
+            {
+              "name": "Gördeszkák",
+              "children": [],
+              "id": "web-item-165-4052"
+            },
+            {
+              "name": "Görkorcsolyák",
+              "children": [],
+              "id": "web-item-165-4053"
+            }
+          ],
+          "id": "web-item-165-4050"
+        },
+        {
+          "name": "Még több sport és szabadidő",
+          "children": [
+            {
+              "name": "Túrázás és kemping",
+              "children": [],
+              "id": "web-item-165-4038"
+            },
+            {
+              "name": "Horgászat",
+              "children": [],
+              "id": "web-item-165-3222"
+            },
+            {
+              "name": "Vízisportok",
+              "children": [],
+              "id": "web-item-165-3236"
+            },
+            {
+              "name": "Küzdősportok",
+              "children": [],
+              "id": "web-item-165-3223"
+            },
+            {
+              "name": "Beltéri sportok",
+              "children": [],
+              "id": "web-item-165-4037"
+            }
+          ],
+          "id": "web-item-165-3221"
+        },
+        {
+          "name": "Sportcipők, ruházat és kiegészítők",
+          "children": [
+            {
+              "name": "Sportórák",
+              "children": [],
+              "id": "web-item-165-3279"
+            },
+            {
+              "name": "Sporttáskák",
+              "children": [],
+              "id": "web-item-165-3461"
+            }
+          ],
+          "id": "web-item-165-3214"
+        },
+        {
+          "name": "Kerékpározás",
+          "children": [
+            {
+              "name": "Felnőtt kerékpárok",
+              "children": [],
+              "id": "web-item-165-4041"
+            },
+            {
+              "name": "Gyerek kerékpárok",
+              "children": [],
+              "id": "web-item-165-4042"
+            },
+            {
+              "name": "Kerékpár alkatrészek és kiegészítők",
+              "children": [],
+              "id": "web-item-165-4346"
+            }
+          ],
+          "id": "web-item-165-3216"
+        },
+        {
+          "name": "Táplálékkiegészítők és vitaminok",
+          "children": [
+            {
+              "name": "Fehérjék",
+              "children": [],
+              "id": "web-item-165-4044"
+            },
+            {
+              "name": "Vitaminok és ásványi anyagok",
+              "children": [],
+              "id": "web-item-165-4045"
+            },
+            {
+              "name": "Méregtelenítő és súlycsökkentő termékek",
+              "children": [],
+              "id": "web-item-165-4046"
+            },
+            {
+              "name": "Aminosavak",
+              "children": [],
+              "id": "web-item-165-4047"
+            },
+            {
+              "name": "Szénhidrátok",
+              "children": [],
+              "id": "web-item-165-4048"
+            },
+            {
+              "name": "Kreatin",
+              "children": [],
+              "id": "web-item-165-4049"
+            }
+          ],
+          "id": "web-item-165-4027"
+        },
+        {
+          "name": "Téli sportok",
+          "children": [],
+          "id": "web-item-165-4358"
+        }
+      ],
+      "id": "web-dept-165"
+    },
+    {
+      "name": "Könyvek, Filmek és Irodaszerek",
+      "children": [
+        {
+          "name": "Online könyvesbolt",
+          "children": [
+            {
+              "name": "Hangoskönyvek",
+              "children": [],
+              "id": "web-item-79-3423"
+            },
+            {
+              "name": "Újságok, magazinok",
+              "children": [],
+              "id": "web-item-79-3595"
+            },
+            {
+              "name": "Irodalom",
+              "children": [],
+              "id": "web-item-79-3428"
+            },
+            {
+              "name": "Gyerekkönyvek",
+              "children": [],
+              "id": "web-item-79-3422"
+            },
+            {
+              "name": "Ifjúsági könyvek",
+              "children": [],
+              "id": "web-item-79-3594"
+            },
+            {
+              "name": "Család, szülők és gyermeknevelés",
+              "children": [],
+              "id": "web-item-79-3430"
+            },
+            {
+              "name": "Nyelvkönyvek",
+              "children": [],
+              "id": "web-item-79-3596"
+            },
+            {
+              "name": "Hobbi és szabadidő",
+              "children": [],
+              "id": "web-item-79-3431"
+            },
+            {
+              "name": "Utazás",
+              "children": [],
+              "id": "web-item-79-3432"
+            },
+            {
+              "name": "Sikerkönyvek",
+              "children": [],
+              "id": "web-item-79-3823"
+            },
+            {
+              "name": "Könyvek",
+              "children": [],
+              "id": "web-item-79-3825"
+            }
+          ],
+          "id": "web-item-79-3326"
+        },
+        {
+          "name": "Filmek, zene",
+          "children": [
+            {
+              "name": "Filmek",
+              "children": [],
+              "id": "web-item-79-3960"
+            },
+            {
+              "name": "CD-k",
+              "children": [],
+              "id": "web-item-79-3903"
+            },
+            {
+              "name": "Bakelit lemezek",
+              "children": [],
+              "id": "web-item-79-4347"
+            }
+          ],
+          "id": "web-item-79-3327"
+        },
+        {
+          "name": "Iroda",
+          "children": [
+            {
+              "name": "Számológépek",
+              "children": [],
+              "id": "web-item-79-3416"
+            },
+            {
+              "name": "Irattartók",
+              "children": [],
+              "id": "web-item-79-3330"
+            },
+            {
+              "name": "Gyűrűskönyvek",
+              "children": [],
+              "id": "web-item-79-3331"
+            },
+            {
+              "name": "Naplók és naptárak",
+              "children": [],
+              "id": "web-item-79-3332"
+            },
+            {
+              "name": "Projektorok",
+              "children": [],
+              "id": "web-item-79-3906"
+            },
+            {
+              "name": "Bemutató táblák",
+              "children": [],
+              "id": "web-item-79-3333"
+            },
+            {
+              "name": "Képernyők és prezentációs rendszerek",
+              "children": [],
+              "id": "web-item-79-3904"
+            },
+            {
+              "name": "Flipchart táblák",
+              "children": [],
+              "id": "web-item-79-3334"
+            },
+            {
+              "name": "Iratmegsemmisítők",
+              "children": [],
+              "id": "web-item-79-3336"
+            },
+            {
+              "name": "Nyomtatók",
+              "children": [],
+              "id": "web-item-79-3907"
+            },
+            {
+              "name": "Fénymásolópapírok",
+              "children": [],
+              "id": "web-item-79-3337"
+            },
+            {
+              "name": "Fotópapírok",
+              "children": [],
+              "id": "web-item-79-3338"
+            },
+            {
+              "name": "Irattáskák, aktatáskák",
+              "children": [],
+              "id": "web-item-79-3436"
+            },
+            {
+              "name": "Prémium írószerek",
+              "children": [],
+              "id": "web-item-79-3339"
+            }
+          ],
+          "id": "web-item-79-3328"
+        },
+        {
+          "name": "Iskolaszerek",
+          "children": [
+            {
+              "name": "Iskolatáskák",
+              "children": [],
+              "id": "web-item-79-4194"
+            },
+            {
+              "name": "Tolltartók",
+              "children": [],
+              "id": "web-item-79-3826"
+            }
+          ],
+          "id": "web-item-79-3340"
+        },
+        {
+          "name": "Írás és rajzolás",
+          "children": [
+            {
+              "name": "Füzetek",
+              "children": [],
+              "id": "web-item-79-3439"
+            },
+            {
+              "name": "Tűfilcek",
+              "children": [],
+              "id": "web-item-79-3908"
+            },
+            {
+              "name": "Színes ceruzák és filctollak",
+              "children": [],
+              "id": "web-item-79-3910"
+            },
+            {
+              "name": "Vízfestékek, ecsetek és rajzlapok",
+              "children": [],
+              "id": "web-item-79-3911"
+            },
+            {
+              "name": "Kréták és iskolai táblák",
+              "children": [],
+              "id": "web-item-79-3912"
+            },
+            {
+              "name": "Korrektor és radír",
+              "children": [],
+              "id": "web-item-79-3913"
+            }
+          ],
+          "id": "web-item-79-3909"
+        },
+        {
+          "name": "Egyéb iskolai kellékek",
+          "children": [
+            {
+              "name": "Gyermek kreatív készletek",
+              "children": [],
+              "id": "web-item-79-3915"
+            },
+            {
+              "name": "Fali térképek és földgömbök",
+              "children": [],
+              "id": "web-item-79-3916"
+            },
+            {
+              "name": "Geometriai eszközök",
+              "children": [],
+              "id": "web-item-79-3917"
+            }
+          ],
+          "id": "web-item-79-3914"
+        }
+      ],
+      "id": "web-dept-79"
+    },
+    {
+      "name": "Autó- és motor felszerelések",
+      "children": [
+        {
+          "name": "Autós műszaki cikkek",
+          "children": [
+            {
+              "name": "GPS Navigációs rendszerek",
+              "children": [],
+              "id": "web-item-512-3351"
+            },
+            {
+              "name": "Autóhifi fejegységek és autós DVD lejátszók",
+              "children": [],
+              "id": "web-item-512-3352"
+            },
+            {
+              "name": "Mélynyomók és hangszórók",
+              "children": [],
+              "id": "web-item-512-3353"
+            },
+            {
+              "name": "DVR autó kamerák",
+              "children": [],
+              "id": "web-item-512-3354"
+            },
+            {
+              "name": "Riasztók és tolatóradarok",
+              "children": [],
+              "id": "web-item-512-4349"
+            },
+            {
+              "name": "Rádióállomások és radardetektorok",
+              "children": [],
+              "id": "web-item-512-3355"
+            },
+            {
+              "name": "Autóhifi fejegységek",
+              "children": [],
+              "id": "web-item-512-4348"
+            },
+            {
+              "name": "Elektronikai kiegészítők",
+              "children": [],
+              "id": "web-item-512-4350"
+            },
+            {
+              "name": "Autós hűtők",
+              "children": [],
+              "id": "web-item-512-3685"
+            },
+            {
+              "name": "Autós emelők",
+              "children": [],
+              "id": "web-item-512-3775"
+            },
+            {
+              "name": "Dísztárcsák",
+              "children": [],
+              "id": "web-item-512-3362"
+            },
+            {
+              "name": "Fékfolyadékok",
+              "children": [],
+              "id": "web-item-512-4351"
+            },
+            {
+              "name": "Ablaktörlők",
+              "children": [],
+              "id": "web-item-512-4352"
+            },
+            {
+              "name": "Autóalkatrészek",
+              "children": [],
+              "id": "web-item-512-4353"
+            },
+            {
+              "name": "Izzók és biztosítékok",
+              "children": [],
+              "id": "web-item-512-4354"
+            },
+            {
+              "name": "Akkumulátorok",
+              "children": [],
+              "id": "web-item-512-4355"
+            }
+          ],
+          "id": "web-item-512-3350"
+        },
+        {
+          "name": "Autófelszerelések",
+          "children": [
+            {
+              "name": "Autós üléshuzatok",
+              "children": [],
+              "id": "web-item-512-4192"
+            },
+            {
+              "name": "Kerékpárszállítók",
+              "children": [],
+              "id": "web-item-512-3365"
+            },
+            {
+              "name": "Tetőcsomagtartók",
+              "children": [],
+              "id": "web-item-512-3363"
+            },
+            {
+              "name": "Tetőboxok",
+              "children": [],
+              "id": "web-item-512-3364"
+            }
+          ],
+          "id": "web-item-512-3356"
+        },
+        {
+          "name": "Gumiabroncsok",
+          "children": [
+            {
+              "name": "Nyári gumik",
+              "children": [],
+              "id": "web-item-512-3833"
+            },
+            {
+              "name": "Téli gumik",
+              "children": [],
+              "id": "web-item-512-3834"
+            },
+            {
+              "name": "Négyévszakos",
+              "children": [],
+              "id": "web-item-512-3832"
+            }
+          ],
+          "id": "web-item-512-3357"
+        },
+        {
+          "name": "Motorok és elektromos járművek",
+          "children": [
+            {
+              "name": "Motorkerékpárok és robogók",
+              "children": [],
+              "id": "web-item-512-3372"
+            },
+            {
+              "name": "Elektromos robogók",
+              "children": [],
+              "id": "web-item-512-4117"
+            },
+            {
+              "name": "Elektromos kerékpárok",
+              "children": [],
+              "id": "web-item-512-4116"
+            },
+            {
+              "name": "Elektromos rollerek",
+              "children": [],
+              "id": "web-item-512-4118"
+            },
+            {
+              "name": "Hoverboardok",
+              "children": [],
+              "id": "web-item-512-4119"
+            },
+            {
+              "name": "Egyéb elektromos járművek",
+              "children": [],
+              "id": "web-item-512-4120"
+            }
+          ],
+          "id": "web-item-512-3371"
+        }
+      ],
+      "id": "web-dept-512"
+    }
+  ],
+  "excluded_tv_filters": [
+    "LED TV",
+    "OLED TV",
+    "QLED TV",
+    "Ambilight TV",
+    "Smart TV",
+    "HD TV",
+    "Full HD TV",
+    "4K Ultra HD",
+    "8K"
+  ],
+  "issues": [],
+  "structural_filter_policy": "A név szerint előírt, szűrőeredetű menüpontok csak strukturális navigációk; automatikus pontos paraméterazonosság és termékbesorolás nélkül. Felhasználó megerősítette."
+}

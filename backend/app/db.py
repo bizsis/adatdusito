@@ -27,7 +27,7 @@ def engine(reference=False):
 def check_database(reference=False):
     if reference:
         from sqlalchemy.orm import Session
-        from app.catalog_store import active_version
+        from app.catalog_store import active_version, data_version_id
         from app.models import CatalogNode, CatalogLinkEntry, CatalogValue
         from sqlalchemy import select
 
@@ -41,7 +41,7 @@ def check_database(reference=False):
                 )
                 db.execute(
                     select(CatalogLinkEntry.link_id)
-                    .where(CatalogLinkEntry.version_id == version.id)
+                    .where(CatalogLinkEntry.version_id == data_version_id(db, version))
                     .limit(1)
                 )
                 db.execute(select(CatalogValue.id).limit(1))

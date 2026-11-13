@@ -1,5 +1,5 @@
 {
-  "version": 1,
+  "version": 2,
   "policy": "Scoped label equivalences and semantic placement of existing top-level source scopes only. No numeric-ID equivalence or fuzzy matching.",
   "label_aliases": [
     {
@@ -344,6 +344,83 @@
     {
       "reference_name": "Járművek",
       "parent_id": "web-dept-512"
+    }
+  ],
+  "path_aliases": [
+    {
+      "path": [
+        "Szupermarket",
+        "Alkoholos italok",
+        "Sör"
+      ],
+      "reference_name": "Sörök"
+    },
+    {
+      "path": [
+        "Telefon, Tablet, Laptop",
+        "Laptop tartozékok",
+        "Memóriák"
+      ],
+      "reference_name": "Laptop memóriák"
+    },
+    {
+      "path": [
+        "Telefon, Tablet, Laptop",
+        "Laptop tartozékok",
+        "Merevlemezek"
+      ],
+      "reference_name": "Laptop merevlemezek"
+    },
+    {
+      "path": [
+        "Telefon, Tablet, Laptop",
+        "Laptopok",
+        "Laptop, notebook"
+      ],
+      "reference_name": "Laptop / Notebook"
+    },
+    {
+      "path": [
+        "Fotó-Videó, Okos eszközök",
+        "Fényképezőgép tartozékok",
+        "Memóriakártya"
+      ],
+      "reference_name": "Memóriakártya"
+    }
+  ],
+  "context_qualifiers": [
+    {
+      "path": [
+        "Divat, ékszerek és kiegészítők",
+        "NŐI DIVAT"
+      ],
+      "prefix": "Női "
+    },
+    {
+      "path": [
+        "Divat, ékszerek és kiegészítők",
+        "FÉRFI DIVAT"
+      ],
+      "prefix": "Férfi "
+    },
+    {
+      "path": [
+        "Divat, ékszerek és kiegészítők",
+        "GYERMEK DIVAT"
+      ],
+      "prefix": "Gyerek "
+    }
+  ],
+  "ancestor_constraints": [
+    {
+      "path": [
+        "Számítástechnika",
+        "Hálózatok és megfigyelő rendszerek",
+        "Kapcsolók"
+      ],
+      "reference_ancestors": [
+        "Szerverek és hálózati eszközök"
+      ]
     }
   ]
 }

@@ -200,9 +200,15 @@ def category_phase(db, run, reader):
 
     with reader.connect() as conn:
         tree = load_tree(conn)
-    base = navigation()
+    from app.curated_taxonomy import apply_taxonomy
+
+    original = navigation()
+    base = apply_taxonomy(original)
     nav = build_unified(
-        base, tree, observations(db, base), list(db.scalars(select(CategoryOverride)))
+        base,
+        tree,
+        observations(db, original),
+        list(db.scalars(select(CategoryOverride))),
     )
     wanted = [
         {"key": f"{SOURCE}:category:{r['emag_category_id']}", "name": r["name"]}
@@ -242,6 +248,30 @@ def category_phase(db, run, reader):
         db.execute(insert(CatalogSourceMapping), source_rows)
         source_count += len(rows)
         cursor = rows[-1]["id"]
+    run.counters = {"categories": source_count, "parameters": 0, "values": 0}
+    store_tree(db, run, tree, base, nav, category_ids)
+    run.phase, run.cursor = "parameters", 0
+
+
+def store_tree(db, run, tree, base, nav, category_ids):
+    from app.curated_taxonomy import plan_signature
+
+    wanted = [
+        {"key": "navigation:" + k, "name": nav.nodes[k]["name"]}
+        for k in nav.visible
+        if k not in nav.bindings
+    ]
+    ids = {}
+    for start in range(0, len(wanted), 500):
+        ids.update(entities(db, CatalogCategory, wanted[start : start + 500]))
+    legacy_ids = {
+        r.key: r.id
+        for r in db.scalars(
+            select(CatalogCategory).where(
+                CatalogCategory.key.in_(["navigation:" + k for k in nav.visible])
+            )
+        )
+    }
     nodes = []
     for key, node in nav.nodes.items():
         internal = nav.bindings.get(key)
@@ -260,9 +290,12 @@ def category_phase(db, run, reader):
                 "inactive": tree.rows[internal]["is_allowed"] != 1
                 if internal is not None
                 else False,
-                "selectable": internal in tree.selectable
-                if internal is not None
-                else False,
+                "selectable": bool(
+                    internal is not None
+                    and internal in tree.selectable
+                    and node["kind"] == "category"
+                    and not node.get("structural_only")
+                ),
             }
         )
         meta["mapping_candidate_ids"] = [
@@ -276,20 +309,44 @@ def category_phase(db, run, reader):
         meta["_imported_category_id"] = category_id
         meta["_imported_parent_id"] = meta["parent_id"]
         meta["_imported_hierarchy_status"] = meta["hierarchy_status"]
+        meta["category_alias_ids"] = (
+            [legacy_ids["navigation:" + key]]
+            if "navigation:" + key in legacy_ids
+            and legacy_ids["navigation:" + key] != category_id
+            else []
+        )
         nodes.append(
             dict(version_id=run.id, key=key, category_id=category_id, data=meta)
         )
     for start in range(0, len(nodes), 500):
         db.execute(insert(CatalogNode), nodes[start : start + 500])
     run.counters = {
-        "categories": source_count,
-        "parameters": 0,
-        "values": 0,
+        **run.counters,
         "coverage": nav.reference_coverage,
         "root_ids": nav.roots,
         "navigation_snapshot": base.data["archive_sha256"],
+        "plan_signature": plan_signature(base),
+        "taxonomy_version": base.data.get("curated_taxonomy_version"),
+        "taxonomy_edges": {
+            k: n["parent_id"]
+            for k, n in base.nodes.items()
+            if n.get("taxonomy_version")
+        },
+        "taxonomy_identity_issues": base.data.get("curated_taxonomy_issues", []),
     }
-    run.phase, run.cursor = "parameters", 0
+
+
+def validate_tree(db, run):
+    rows = {
+        r.key: r
+        for r in db.scalars(select(CatalogNode).where(CatalogNode.version_id == run.id))
+    }
+    for key, parent in run.counters.get("taxonomy_edges", {}).items():
+        if key not in rows or rows[key].data["parent_id"] != parent:
+            raise ValueError(
+                "Declared hierarchy conflicts with an operator choice: " + key
+            )
+    return rows
 
 
 def parameter_batch(db, run, rows):
@@ -415,13 +472,16 @@ def verify_version(target, reader, version_id, batch_size=2000, expected=None):
             raise ValueError("Unknown catalog version")
         if snapshot.profile() != run.source_state:
             raise ValueError("Source metadata/counts changed; start a new version")
-        context = parameter_context(db, version_id)
+        from app.catalog_store import data_version_id
+
+        data_id = data_version_id(db, run)
+        context = parameter_context(db, data_id)
         cats = dict(
             db.execute(
                 select(
                     CatalogSourceMapping.source_id, CatalogSourceMapping.target_id
                 ).where(
-                    CatalogSourceMapping.version_id == version_id,
+                    CatalogSourceMapping.version_id == data_id,
                     CatalogSourceMapping.kind == "category",
                     CatalogSourceMapping.source_key == SOURCE,
                 )
@@ -430,9 +490,7 @@ def verify_version(target, reader, version_id, batch_size=2000, expected=None):
         entries = {
             r.link_id: r
             for r in db.scalars(
-                select(CatalogLinkEntry).where(
-                    CatalogLinkEntry.version_id == version_id
-                )
+                select(CatalogLinkEntry).where(CatalogLinkEntry.version_id == data_id)
             )
         }
         definitions = {
@@ -457,7 +515,7 @@ def verify_version(target, reader, version_id, batch_size=2000, expected=None):
                         select(CatalogSourceMapping)
                         .options(undefer(CatalogSourceMapping.source_json))
                         .where(
-                            CatalogSourceMapping.version_id == version_id,
+                            CatalogSourceMapping.version_id == data_id,
                             CatalogSourceMapping.kind == kind,
                             CatalogSourceMapping.source_key == SOURCE,
                             CatalogSourceMapping.source_id.in_([r["id"] for r in rows]),
@@ -549,7 +607,7 @@ def verify_version(target, reader, version_id, batch_size=2000, expected=None):
                 select(func.count())
                 .select_from(CatalogSourceMapping)
                 .where(
-                    CatalogSourceMapping.version_id == version_id,
+                    CatalogSourceMapping.version_id == data_id,
                     CatalogSourceMapping.kind == kind,
                     CatalogSourceMapping.source_key == SOURCE,
                 )
@@ -563,6 +621,11 @@ def verify_version(target, reader, version_id, batch_size=2000, expected=None):
             ):
                 raise ValueError("Unexpected production source count: " + phase)
             processed[phase] = count
+        from app.catalog_facets import resolve_tv_filters
+
+        if run.status != "ready":
+            resolve_tv_filters(db, run, data_id)
+        validate_tree(db, run)
         nodes = list(
             db.scalars(select(CatalogNode).where(CatalogNode.version_id == version_id))
         )
@@ -605,7 +668,7 @@ def verify_version(target, reader, version_id, batch_size=2000, expected=None):
                 select(func.count())
                 .select_from(CatalogLinkEntry)
                 .where(
-                    CatalogLinkEntry.version_id == version_id,
+                    CatalogLinkEntry.version_id == data_id,
                     CatalogLinkEntry.category_id == tv.target_id,
                 )
             )
@@ -618,7 +681,7 @@ def verify_version(target, reader, version_id, batch_size=2000, expected=None):
             }
         unique_values = db.scalar(
             select(func.count(func.distinct(CatalogSourceMapping.target_id))).where(
-                CatalogSourceMapping.version_id == version_id,
+                CatalogSourceMapping.version_id == data_id,
                 CatalogSourceMapping.kind == "value",
             )
         )
@@ -635,6 +698,7 @@ def verify_version(target, reader, version_id, batch_size=2000, expected=None):
             "verified_at": now().isoformat(),
             "source_state": run.source_state,
         }
+        db.commit()
     with Session(target) as db:
         run = db.get(CatalogVersion, version_id)
         run.verification = report
@@ -661,6 +725,10 @@ def import_catalog(
         raise ValueError("Invalid batch size/pause")
     with import_lock(target):
         profile = reader.profile()
+        from app.web_navigation import navigation
+        from app.curated_taxonomy import plan_signature
+
+        current_plan = plan_signature(navigation())
         with Session(target) as db:
             run = db.get(CatalogVersion, version_id) if version_id else None
             if version_id and not run:
@@ -672,7 +740,10 @@ def import_catalog(
                     .order_by(CatalogVersion.id.desc())
                     .limit(1)
                 )
-                if run and run.source_state != profile:
+                if run and (
+                    run.source_state != profile
+                    or run.counters.get("plan_signature") != current_plan
+                ):
                     run = None
             if run and run.source_state != profile:
                 raise ValueError("Source changed; use --new-version")
@@ -680,6 +751,12 @@ def import_catalog(
                 run = CatalogVersion(source_key=SOURCE, source_state=profile)
                 db.add(run)
                 db.commit()
+            if (
+                run.status != "ready"
+                and run.phase != "categories"
+                and run.counters.get("plan_signature") != current_plan
+            ):
+                raise ValueError("Hierarchy plan changed; start a new version")
             version_id = run.id
             ready = run.status == "ready"
         if ready:
@@ -753,6 +830,99 @@ def import_catalog(
         return version_id
 
 
+def rebuild_catalog(target, version_id):
+    """Stage a tree-only version from owned metadata; never reads the source DB.
+
+    Memberships reference the verified immutable data version, so millions of
+    allowed-value records are neither copied nor rewritten. Activation is separate.
+    """
+    from copy import deepcopy
+    from app.catalog_store import data_version_id
+    from app.category_tree import CategoryTree
+    from app.curated_taxonomy import apply_taxonomy
+    from app.web_navigation import navigation, observations
+
+    with import_lock(target), Session(target) as db:
+        previous = db.get(CatalogVersion, version_id)
+        if (
+            not previous
+            or previous.status != "ready"
+            or not previous.verification
+            or not previous.verification.get("complete")
+        ):
+            raise ValueError("Rebuild requires a verified ready version")
+        data_id = data_version_id(db, previous)
+        records = mappings(db, data_id, "category")
+        counts = {}
+        from sqlalchemy import case
+
+        grouped = {
+            row.category_id: dict(row._mapping)
+            for row in db.execute(
+                select(
+                    CatalogLinkEntry.category_id,
+                    func.count().label("total"),
+                    func.sum(
+                        case((CatalogLinkEntry.is_mandatory.is_(True), 1), else_=0)
+                    ).label("mandatory"),
+                    func.sum(
+                        case((CatalogLinkEntry.is_mandatory.is_(False), 1), else_=0)
+                    ).label("optional"),
+                )
+                .where(CatalogLinkEntry.version_id == data_id)
+                .group_by(CatalogLinkEntry.category_id)
+            )
+        }
+        for internal, record in records.items():
+            counts[internal] = grouped.get(
+                record.target_id, {"total": 0, "mandatory": 0, "optional": 0}
+            )
+        tree = CategoryTree([r.data for r in records.values()], counts)
+        original = navigation()
+        base = apply_taxonomy(original)
+        nav = build_unified(
+            base,
+            tree,
+            observations(db, original),
+            list(db.scalars(select(CategoryOverride))),
+        )
+        run = CatalogVersion(
+            source_key=previous.source_key,
+            source_state=deepcopy(previous.source_state),
+            counters={
+                **{p: previous.counters[p] for p in TABLES},
+                "data_version_id": data_id,
+                "rebuilt_from": previous.id,
+            },
+        )
+        db.add(run)
+        db.flush()
+        store_tree(
+            db, run, tree, base, nav, {k: r.target_id for k, r in records.items()}
+        )
+        from app.catalog_facets import resolve_tv_filters
+
+        resolve_tv_filters(db, run, data_id)
+        rows = validate_tree(db, run)
+        if len(nav.roots) != 13 or not {r.target_id for r in records.values()} <= {
+            r.category_id for r in rows.values()
+        }:
+            raise ValueError("Incomplete rebuilt hierarchy")
+        run.verification = {
+            **deepcopy(previous.verification),
+            "mode": "hierarchy_rebuild",
+            "data_version_id": data_id,
+            "unified_category_count": len(
+                {r.category_id for r in rows.values() if r.category_id is not None}
+            ),
+            "root_count": 13,
+            "verified_at": now().isoformat(),
+        }
+        run.status, run.phase = "ready", "complete"
+        db.commit()
+        return run.id
+
+
 def activate(target, version_id=None, legacy=False):
     with import_lock(target), Session(target) as db:
         run = db.get(CatalogVersion, version_id) if version_id else None
@@ -765,6 +935,10 @@ def activate(target, version_id=None, legacy=False):
             raise ValueError(
                 "Only a completely verified, ready catalog can be activated"
             )
+        if not legacy:
+            from app.catalog_store import data_version_id
+
+            data_version_id(db, run)
         setting = db.get(Setting, ACTIVE_KEY, with_for_update=True)
         previous = setting.value if setting else "legacy"
         value = "legacy" if legacy else str(version_id)
@@ -789,7 +963,9 @@ def main():
     parser = argparse.ArgumentParser(
         description="Owned reference catalog: stage, verify, explicitly activate/rollback"
     )
-    parser.add_argument("action", choices=["import", "verify", "activate", "status"])
+    parser.add_argument(
+        "action", choices=["import", "rebuild", "verify", "activate", "status"]
+    )
     parser.add_argument("--version", type=int)
     parser.add_argument("--new-version", action="store_true")
     parser.add_argument(
@@ -838,6 +1014,18 @@ def main():
         return
     if args.action == "activate":
         print(json.dumps(activate(target, args.version, args.legacy)))
+        return
+    if args.action == "rebuild":
+        if not args.version:
+            parser.error("--version is required for rebuild")
+        print(
+            json.dumps(
+                {
+                    "version": rebuild_catalog(target, args.version),
+                    "active_not_changed": True,
+                }
+            )
+        )
         return
     reader = SourceReader(engine(True))
     if args.action == "import":

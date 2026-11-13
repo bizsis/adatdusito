@@ -1,6 +1,8 @@
-# Adatdúsító · CODEX 04
+# Adatdúsító · CODEX 04B
 
 **Aktuális működés:** egy közös kategória- és paraméterkatalógus, 13 magyar főcsoporttal. A meglévő eMAG-adatok megszakítás után folytatható, kötegelt importtal saját, ellenőrzött adatverzióba kerülnek. A paraméterek és értékek csak egyszer tárolódnak közös azonosítóval, az eredeti forrásrekordok visszakereshetők. Aktiválás után a böngésző kizárólag a saját adatbázist használja. [Adatmodell, import, kézi telepítés és visszaállítás](docs/codex04.md).
+
+**CODEX 04B:** a rögzített, 584 pontos menüváz és a teljes útvonal szerinti egyeztetés új, külön aktiválható faverzióba kerül. A meglévő saját paraméter-/értékadatok újramásolása nélkül is előkészíthető. Git-frissítés önmagában nem módosítja az aktív adatverziót. [Lefedettség, korlátok és verziókezelés](docs/codex04b.md).
 
 Magyar nyelvű, többügyfeles adminfelület FastAPI, React/TypeScript, Celery/Redis és a meglévő MySQL 8.0 használatával.
 

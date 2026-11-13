@@ -31,14 +31,48 @@ def active_version(db):
         or not version.verification.get("complete")
     ):
         raise HTTPException(503, "Az aktív közös referenciaadat-verzió nem elérhető.")
+    data_version_id(db, version)
     return version
+
+
+def data_version_id(db, version):
+    seen = set()
+    current = version
+    while current.counters.get("data_version_id") is not None:
+        if current.id in seen:
+            raise HTTPException(503, "Ciklikus katalógus-adatverzió.")
+        seen.add(current.id)
+        current = db.get(CatalogVersion, int(current.counters["data_version_id"]))
+        if (
+            not current
+            or current.status != "ready"
+            or not current.verification
+            or not current.verification.get("complete")
+        ):
+            raise HTTPException(503, "Hiányzó közös katalógus-adatverzió.")
+    return current.id
 
 
 def source_category_id(db, version, category_id):
     if category_id >= COMMON_ID_START:
+        if db.scalar(
+            select(CatalogNode.key)
+            .where(
+                CatalogNode.version_id == version.id,
+                CatalogNode.category_id == category_id,
+            )
+            .limit(1)
+        ):
+            return category_id
+        for row in db.scalars(
+            select(CatalogNode).where(CatalogNode.version_id == version.id)
+        ):
+            if category_id in row.data.get("category_alias_ids", []):
+                return row.category_id
         return category_id
     mapping = db.get(
-        CatalogSourceMapping, (version.id, "category", SOURCE, category_id)
+        CatalogSourceMapping,
+        (data_version_id(db, version), "category", SOURCE, category_id),
     )
     if not mapping:
         raise HTTPException(404, "A kategória nem található.")
@@ -64,7 +98,7 @@ def index(db, version):
         r.target_id: r
         for r in db.scalars(
             select(CatalogSourceMapping).where(
-                CatalogSourceMapping.version_id == version.id,
+                CatalogSourceMapping.version_id == data_version_id(db, version),
                 CatalogSourceMapping.kind == "category",
                 CatalogSourceMapping.source_key == SOURCE,
             )
@@ -87,7 +121,7 @@ def index(db, version):
                     case((CatalogLinkEntry.is_mandatory.is_(False), 1), else_=0)
                 ).label("optional"),
             )
-            .where(CatalogLinkEntry.version_id == version.id)
+            .where(CatalogLinkEntry.version_id == data_version_id(db, version))
             .group_by(CatalogLinkEntry.category_id)
         )
     }
@@ -105,6 +139,11 @@ def dto(db, version, nav, key):
     return {
         **node,
         "unified_category_id": row.category_id,
+        "selectable": bool(
+            node.get("selectable")
+            and node["kind"] == "category"
+            and not node.get("structural_only")
+        ),
         "catalog_version_id": version.id,
         "children_count": len(nav.tree_children(key)),
         "parent_category_id": nav.owned_nodes[node["parent_id"]].category_id
@@ -267,7 +306,7 @@ def visible_categories(db, version, view):
     records = list(
         db.scalars(
             select(CatalogSourceMapping).where(
-                CatalogSourceMapping.version_id == version.id,
+                CatalogSourceMapping.version_id == data_version_id(db, version),
                 CatalogSourceMapping.kind == "category",
             )
         )
@@ -304,7 +343,7 @@ def parameters(
         )
         .join(CatalogParameter, CatalogParameter.id == CatalogLinkEntry.parameter_id)
         .join(CatalogCategory, CatalogCategory.id == CatalogLinkEntry.category_id)
-        .where(CatalogLinkEntry.version_id == version.id)
+        .where(CatalogLinkEntry.version_id == data_version_id(db, version))
     )
     if category_id is not None:
         stmt = stmt.where(CatalogLinkEntry.category_id == category_id)
@@ -343,16 +382,19 @@ def values(db, version, link_id, q="", after=0, view="all", limit=50):
     legacy_id = link_id < COMMON_ID_START
     if legacy_id:
         mapping = db.get(
-            CatalogSourceMapping, (version.id, "parameter", SOURCE, link_id)
+            CatalogSourceMapping,
+            (data_version_id(db, version), "parameter", SOURCE, link_id),
         )
         if not mapping:
             raise HTTPException(404, "A paraméter nem található.")
         link_id = mapping.target_id
     if legacy_id and 0 < after < COMMON_ID_START:
-        cursor = db.get(CatalogSourceMapping, (version.id, "value", SOURCE, after))
+        cursor = db.get(
+            CatalogSourceMapping, (data_version_id(db, version), "value", SOURCE, after)
+        )
         if cursor and cursor.context_id == link_id:
             after = cursor.target_id
-    entry = db.get(CatalogLinkEntry, (version.id, link_id))
+    entry = db.get(CatalogLinkEntry, (data_version_id(db, version), link_id))
     if not entry:
         raise HTTPException(404, "A paraméter nem található.")
     if entry.category_id not in visible_categories(db, version, view):
@@ -361,7 +403,7 @@ def values(db, version, link_id, q="", after=0, view="all", limit=50):
         CatalogSourceMapping.target_id.label("value_id"),
         func.min(CatalogSourceMapping.ordinal).label("value_order"),
     ).where(
-        CatalogSourceMapping.version_id == version.id,
+        CatalogSourceMapping.version_id == data_version_id(db, version),
         CatalogSourceMapping.kind == "value",
         CatalogSourceMapping.context_id == link_id,
         CatalogSourceMapping.target_id > after,

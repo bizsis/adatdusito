@@ -20,11 +20,17 @@ def test_unified_category_ui_parameters_values_and_simple_review(
 ):
     client, target, source, _ = environment
     if owned:
-        from app.catalog_import import SourceReader, import_catalog, activate
+        from app.catalog_import import (
+            SourceReader,
+            import_catalog,
+            rebuild_catalog,
+            activate,
+        )
         from app import reference, web_navigation, reference_sources
         from contextlib import contextmanager
 
         version = import_catalog(target, SourceReader(source), pause_ms=0)
+        version = rebuild_catalog(target, version)
         activate(target, version)
 
         @contextmanager
@@ -74,6 +80,31 @@ def test_unified_category_ui_parameters_values_and_simple_review(
         page.get_by_role("navigation").get_by_role("button", name="Kategóriák").click()
         expect(page.locator(".tree > ul > li")).to_have_count(13)
         assert not any("parent_id=" in query for _, _, query in requests)
+        if owned:
+            # The declared filter-derived node is lazy, structural and retained.
+            assert (
+                page.locator("button.tree-name")
+                .filter(has_text="Elöltöltős mosógépek")
+                .count()
+                == 0
+            )
+            page.get_by_role(
+                "button", name="Háztartási gépek és klíma alkategóriái", exact=True
+            ).click()
+            page.get_by_role(
+                "button", name="Mosógépek és szárítógépek alkategóriái", exact=True
+            ).click()
+            page.locator("button.tree-name").filter(
+                has_text="Elöltöltős mosógépek"
+            ).click()
+            expect(page.locator(".category-full-path")).to_contain_text(
+                "Háztartási gépek és klíma / Mosógépek és szárítógépek / Elöltöltős mosógépek"
+            )
+            expect(
+                page.get_by_text(
+                    "Strukturális / termékbesorolásra nem választható", exact=True
+                )
+            ).to_be_visible()
         page.get_by_role(
             "button", name="TV és szórakozás alkategóriái", exact=True
         ).click()

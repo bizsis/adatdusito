@@ -94,10 +94,42 @@ def build_unified(base, tree, latest=None, overrides=()):
             else:
                 blocked.add(key)  # Preserve a prior explicit revocation/rejection.
         label = normalized(node["name"])
+        path = [base.nodes[k]["name"] for k in base.path(key)]
+        norm_path = [normalized(p) for p in path]
         candidates[key] = names.get(label, [])
+        scoped_alias = (
+            next(
+                (
+                    r
+                    for r in rules.get("path_aliases", [])
+                    if [normalized(p) for p in r["path"]] == norm_path
+                ),
+                None,
+            )
+            if node.get("taxonomy_version")
+            else None
+        )
+        if scoped_alias:
+            candidates[key] = names.get(normalized(scoped_alias["reference_name"]), [])
+            alias_nodes.add(key)
+        elif node.get("taxonomy_version"):
+            qualifier = next(
+                (
+                    r
+                    for r in rules.get("context_qualifiers", [])
+                    if norm_path[: len(r["path"])] == [normalized(p) for p in r["path"]]
+                ),
+                None,
+            )
+            contextual_name = (
+                normalized(qualifier["prefix"] + node["name"]) if qualifier else None
+            )
+            if contextual_name and names.get(contextual_name):
+                candidates[key] = names[contextual_name]
+                alias_nodes.add(key)
         root = base.path(key)[0]
         alias = aliases.get((root, label))
-        if not candidates[key] and alias:
+        if not candidates[key] and alias and not scoped_alias:
             candidates[key] = names.get(alias, [])
             alias_nodes.add(key)
 
@@ -107,9 +139,32 @@ def build_unified(base, tree, latest=None, overrides=()):
         key = node["id"]
         if key in bindings or key in blocked:
             continue
+        if node.get("structural_only"):
+            candidates[key] = []
+            continue
         options = list(candidates[key])
+        constraint = (
+            next(
+                (
+                    r
+                    for r in rules.get("ancestor_constraints", [])
+                    if [normalized(p) for p in r["path"]]
+                    == [normalized(base.nodes[k]["name"]) for k in base.path(key)]
+                ),
+                None,
+            )
+            if node.get("taxonomy_version")
+            else None
+        )
+        if constraint:
+            required = {normalized(p) for p in constraint["reference_ancestors"]}
+            options = [
+                c
+                for c in options
+                if required & {normalized(tree.rows[p]["name"]) for p in ancestors(c)}
+            ]
         anchors = [bindings[k] for k in base.path(key)[:-1] if k in bindings]
-        if len(options) > 1 and anchors:
+        if len(options) > 1 and anchors and key not in alias_nodes:
             anchor = anchors[-1]
             options = [c for c in options if c == anchor or anchor in ancestors(c)]
         if len(options) > 1:
@@ -130,7 +185,7 @@ def build_unified(base, tree, latest=None, overrides=()):
                 "automatic_alias"
                 if key in alias_nodes
                 else "automatic_context"
-                if len(names[normalized(node["name"])]) > 1
+                if len(names[normalized(node["name"])]) > 1 or constraint
                 else "automatic_exact"
             )
 
@@ -140,6 +195,7 @@ def build_unified(base, tree, latest=None, overrides=()):
             byid[key]["original_parent_id"] = byid[key]["parent_id"]
             byid[key]["parent_id"] = choice.parent_id
             byid[key]["hierarchy_status"] = "verified_assignment"
+            byid[key]["operator_parent_override"] = True
     interim = Navigation(data)
     anchors = defaultdict(list)
     for key, internal in bindings.items():
