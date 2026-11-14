@@ -33,7 +33,7 @@ A Vezér frissíti. Utolsó módosítás: SECURITY-01 / CODEX 09, 2026-11.
 |---|---|
 | `backend/app/security.py`, biztonsági backend-tesztek (`backend/tests/test_login_protection.py`, `test_password_hash_capacity.py`, `test_deploy_nginx.py`) | Claude |
 | `deploy/nginx/*` (külső Nginx deploykonfiguráció) | Claude |
-| SECURITY-01 érintett pontjai: `backend/app/api.py` login-végpont, `backend/tests/conftest.py` login-guard stub, `.env.example` biztonsági változói | Claude (csak ebben a feladatban) |
+| SECURITY-01 érintett pontjai: `backend/app/api.py` login-végpont, `backend/app/auth_api.py` `throttle()`/`failure_limit()` és a passkey/MFA korlátozási hívások, `backend/app/oidc_api.py` és `backend/app/registration.py` korlátozási sorai, `backend/tests/conftest.py` stubok, `backend/tests/test_security_integration.py`, `.env.example` biztonsági változói | Claude (csak ebben a feladatban) |
 | `AGENTS.md`, `CLAUDE.md` | Claude (a tartalmi döntéseket a Vezér hozza) |
 | `frontend/**` (React UI/UX, Cloud & Teal design, ikonok, súgók, komponensek, `frontend/nginx.conf`) | Codex |
 | Minden más | a Vezér feladatonként jelöli ki; kijelölés nélkül nem módosítható |

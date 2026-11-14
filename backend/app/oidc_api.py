@@ -85,7 +85,7 @@ class Start(BaseModel):
 
 @router.post("/start")
 def start(body: Start, request: Request, db: Session = Depends(database)):
-    throttle(request, db, "google-start")
+    throttle(request, db, "google-start", per_client=True)
     p = config(db, "auth")
     if not p["google"]:
         raise HTTPException(403, "A Google-bejelentkezés nincs engedélyezve.")
@@ -148,7 +148,7 @@ def callback(
     error: str = "",
     db: Session = Depends(database),
 ):
-    throttle(request, db, "google-callback")
+    throttle(request, db, "google-callback", per_client=True)
     p = config(db, "auth")
     if not p["google"]:
         raise HTTPException(403, "A Google-bejelentkezés nincs engedélyezve.")
