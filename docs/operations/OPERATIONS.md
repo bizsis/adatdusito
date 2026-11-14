@@ -23,10 +23,10 @@
 6. Record action, outcome, affected tenants and follow-up in a private incident record.
 
 ## SMTP
-CODEX 08 invitation delivery relies on `SMTP_HOST`, `SMTP_FROM`, `SMTP_PORT`, `SMTP_SECURITY`, `SMTP_USER`, `SMTP_PASSWORD`. Current secrets are configured outside Git. CODEX 09 aims to add protected UI configuration and test sending.
+CODEX 09 code supports web-based encrypted SMTP configuration, connection tests, test messages and legacy environment fallback. Provision the application's encryption key and verify TLS/security settings before enabling; secrets remain outside Git. See CODEX 09 deployment notes.
 
 ## Security notes
-At documentation inception the SECURITY-01 branch is separate and not necessarily deployed. Its host-Nginx adjustments need manual, approved activation and configuration test on the VPS.
+SECURITY-01 has been merged into `main` but remains **not confirmed deployed** on the VPS. Host Nginx/HSTS/proxy changes still require approved activation and explicit checks.
 
 ## Operating ownership
 Paksi Informatika operates the platform. Operators handling tenant data require explicit system scopes, audit and privacy discipline.
