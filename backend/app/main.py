@@ -196,3 +196,6 @@ def documented_openapi():
 
 
 app.openapi = documented_openapi
+
+from app.import_api import router as import_router
+app.include_router(import_router)

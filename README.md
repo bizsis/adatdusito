@@ -1,4 +1,6 @@
-# Adatdúsító · CODEX 05
+# Adatdúsító
+
+[CODEX 07 – Beszállítói import és exportmező-adminisztráció](docs/codex-07-import-engine.md). A frissítés a saját adatbázis `0006` migrációját igényli.
 
 [Aktuális javítás: 45 termékkategória szerepének helyreállítása, 457 kategória profilokkal](docs/product-role-correction.md).
 

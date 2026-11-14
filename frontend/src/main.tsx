@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { createRoot } from "react-dom/client";
 import "./style.css";
+import {ImportWorkspace, ExportAdmin} from "./ImportWorkspace";
 
 type Role = "tenant_admin" | "processor" | "reviewer";
 type User = {
@@ -112,10 +113,10 @@ async function api<T>(
     credentials: "same-origin",
     signal,
     headers: {
-      ...(body !== undefined ? { "Content-Type": "application/json" } : {}),
+      ...(body !== undefined && !(body instanceof FormData) ? { "Content-Type": "application/json" } : {}),
       ...(method !== "GET" ? { "X-CSRF-Token": csrf } : {}),
     },
-    ...(body !== undefined ? { body: JSON.stringify(body) } : {}),
+    ...(body !== undefined ? { body: body instanceof FormData ? body : JSON.stringify(body) } : {}),
   });
   const data = response.status === 204 ? null : await response.json();
   if (!response.ok) {
@@ -1960,6 +1961,8 @@ function App() {
   const pages = [
     ["dashboard", "◫", "Áttekintés"],
     ["tenants", "▦", "Ügyfelek"],
+    ...(can("imports.read") ? [["imports", "⇧", "Beszállítói import"]] : []),
+    ...(can("exports.manage") || can("exports.profile") ? [["export-fields", "▤", "Webáruházmotorok / Exportmezők"]] : []),
     ...(can("users.manage") ? [["users", "♙", "Felhasználók"]] : []),
     ...(can("reference.read")
       ? [
@@ -2133,6 +2136,8 @@ function App() {
           )}
           {page === "users" && can("users.manage") && <Users />}
           {page === "tenants" && <Tenants me={me} />}{" "}
+          {page === "imports" && can("imports.read") && <ImportWorkspace key={me.tenant_id} api={api} canManage={can("imports.manage")} />}
+          {page === "export-fields" && <ExportAdmin key={me.tenant_id} api={api} central={can("exports.manage")} />}
           {page === "categories" && can("reference.read") && <Categories />}
           {page === "parameters" && can("reference.read") && <Parameters />}
           {page === "audit" && can("audit.read") && <AuditLog />}

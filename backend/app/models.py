@@ -119,6 +119,20 @@ ROLE_PERMISSIONS = {
 }
 
 
+for _role, _extra in {
+    "superadmin": [
+        "imports.read",
+        "imports.manage",
+        "exports.manage",
+        "exports.profile",
+    ],
+    "tenant_admin": ["imports.read", "imports.manage", "exports.profile"],
+    "processor": ["imports.read", "imports.manage"],
+    "reviewer": ["imports.read"],
+}.items():
+    ROLE_PERMISSIONS[_role].extend(_extra)
+
+
 def seed_roles(connection):
     connection.execute(
         Role.__table__.insert(),
@@ -305,3 +319,7 @@ class CatalogSourceMapping(Base):
             "external_id",
         ),
     )
+
+
+# Register application import tables on the shared metadata.
+from app import import_models as _import_models  # noqa: E402,F401
