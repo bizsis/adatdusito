@@ -248,19 +248,33 @@ class LoginGuard:
       Cleared on successful login.
     - IP attempts / IP failures: one address spraying many accounts.
     - account failures from all addresses (distributed guessing). This never
-      blocks addresses where the account has logged in successfully before
-      ("known" email+IP pairs, 30 days). For unknown addresses it escalates:
-      from ACCOUNT_ELEVATED failures each new address gets only
-      PAIR_LIMIT_ELEVATED attempts, from ACCOUNT_LOCK_UNKNOWN unknown addresses
-      are refused until the window expires. Known addresses keep working.
+      produces an account-wide denial: any global "refuse this account" switch
+      could be tripped by an attacker and would lock the owner out of every
+      new network (mobile, travel, expired KNOWN_TTL). Instead the per-address
+      attempt budget for addresses never used successfully with this account
+      shrinks as the attack grows: 10 normally, 3 from ACCOUNT_ELEVATED
+      failures, 1 per hour (SEVERE_WINDOW) from ACCOUNT_SEVERE failures.
+      The owner's first correct attempt from a new address therefore always
+      gets through (unless that address itself is throttled by the per-IP
+      counters, e.g. shared with an attacker behind CGNAT); known addresses
+      ("known" email+IP pairs, 30 days) keep the normal budget of 10.
+
+    Trade-off: an attacker controlling many addresses can still make one
+    guess per address per window during a severe attack. That cost is bounded
+    by the per-IP counters (300 attempts / 30 failures), the scrypt slot limit
+    and the 12-character minimum password length; availability for the
+    legitimate owner is preferred over a hard account lock. Stronger
+    protection against large botnets requires a second factor, not a lock.
     """
 
     PAIR_LIMIT = 10
     PAIR_LIMIT_ELEVATED = 3
+    PAIR_LIMIT_SEVERE = 1
     IP_ATTEMPTS = 300
     IP_FAILURES = 30
     ACCOUNT_ELEVATED = 20
-    ACCOUNT_LOCK_UNKNOWN = 100
+    ACCOUNT_SEVERE = 100
+    SEVERE_WINDOW = 3600
     KNOWN_TTL = 30 * 24 * 3600
 
     def __init__(self, redis, email, ip):
@@ -293,17 +307,21 @@ class LoginGuard:
                 self._block(self.ip_attempts)
             if int(r.get(self.ip_failures) or 0) >= self.IP_FAILURES:
                 self._block(self.ip_failures)
-            if not known and failures >= self.ACCOUNT_LOCK_UNKNOWN:
-                self._block(self.account)
-            pair_limit = (
-                self.PAIR_LIMIT
-                if known or failures < self.ACCOUNT_ELEVATED
-                else self.PAIR_LIMIT_ELEVATED
-            )
-            if _hit(r, self.pair) > pair_limit:
+            limit = self.pair_limit(known, failures)
+            # A severe attack also stretches a fresh unknown address's window,
+            # so each attacking address gets one guess per hour, not per 15 min.
+            window = self.SEVERE_WINDOW if limit == self.PAIR_LIMIT_SEVERE else LOGIN_WINDOW
+            if _hit(r, self.pair, window) > limit:
                 self._block(self.pair)
 
         self._safely(run)
+
+    def pair_limit(self, known, failures):
+        if known or failures < self.ACCOUNT_ELEVATED:
+            return self.PAIR_LIMIT
+        if failures < self.ACCOUNT_SEVERE:
+            return self.PAIR_LIMIT_ELEVATED
+        return self.PAIR_LIMIT_SEVERE
 
     def failure(self):
         def run():

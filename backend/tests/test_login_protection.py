@@ -155,13 +155,48 @@ def test_distributed_guessing_escalates_but_known_address_keeps_working(redis):
     assert statuses[:20] == [401] * 20
     assert statuses[20:25] == [401, 401, 401, 429, 429]
     failures = int(redis.get(LoginGuard(redis, VICTIM, "x").account))
-    assert failures >= LoginGuard.ACCOUNT_LOCK_UNKNOWN
-    # 100+ failures: unknown addresses refused, the known one still accepted.
+    assert failures >= LoginGuard.ACCOUNT_SEVERE
+    # 100+ failures: a fresh address gets a single attempt per hour ...
+    assert attempt(redis, "198.51.100.99") == 401
     assert attempt(redis, "198.51.100.99") == 429
-    assert attempt(redis, "198.51.100.20", ok=True) == 200
-    # The protection expires with the window.
+    assert attempt(redis, "198.51.100.99", ok=True) == 429
+    # The fresh address's window is stretched to one hour while the attack lasts.
+    assert redis.ttl(LoginGuard(redis, VICTIM, "198.51.100.99").pair) == 3600
+    # Once the account-wide counter expires (attack over), normal limits return.
     redis.advance(901)
     assert attempt(redis, "198.51.100.99", ok=True) == 200
+    # ... while the known address keeps its normal budget.
+    assert [attempt(redis, "198.51.100.20") for _ in range(9)] == [401] * 9
+    assert attempt(redis, "198.51.100.20", ok=True) == 200
+
+
+def distributed_attack(redis, failures=150):
+    """Many attacker addresses, a few guesses each, until `failures` accumulate."""
+    done = 0
+    for i in range(failures * 2):  # bounded: a fresh address always gets >= 1 try
+        if done >= failures:
+            break
+        ip = f"203.{i // 62500}.{i // 250 % 250}.{i % 250 + 1}"
+        for _ in range(3):
+            if attempt(redis, ip) == 401:
+                done += 1
+    assert done >= failures, "fresh attacker addresses were refused outright"
+    return int(redis.get(LoginGuard(redis, VICTIM, "x").account))
+
+
+def test_regression_owner_logs_in_from_unseen_address_after_100_distributed_failures(redis):
+    """Vezér review on PR #1: no account-wide denial for never-seen addresses."""
+    assert distributed_attack(redis) >= 100
+    # Never-seen address, no prior success, correct password on first try.
+    assert attempt(redis, "198.51.100.77", ok=True) == 200
+    # And again from another unseen network (e.g. mobile), without waiting.
+    assert attempt(redis, "2001:db8::1234", ok=True) == 200
+
+
+def test_attack_volume_never_blocks_a_fresh_address_outright(redis):
+    distributed_attack(redis, failures=1000)
+    for n in range(20):
+        assert attempt(redis, f"198.51.{100 + n}.7", ok=True) == 200
 
 
 def test_single_address_spraying_many_accounts_is_blocked(redis):
@@ -227,3 +262,17 @@ def test_api_spoofed_forwarded_header_does_not_bypass_limit(environment, redis, 
         attacker.headers["X-Forwarded-For"] = f"10.0.0.{i}, 203.0.113.66"
         codes.append(post_login(attacker, "wrong-password").status_code)
     assert codes[-1] == 429
+
+
+def test_api_owner_logs_in_from_unseen_address_during_severe_attack(environment, redis, monkeypatch):
+    monkeypatch.setattr(api, "login_guard", security.login_guard)
+    for _ in range(150):  # 150 distributed failures already recorded for the account
+        security._hit(redis, LoginGuard(redis, VICTIM, "x").account)
+    # Severe mode is active: a fresh attacker address gets exactly one guess.
+    attacker = from_address("203.0.113.200")
+    assert post_login(attacker, "wrong-password").status_code == 401
+    assert post_login(attacker, "wrong-password").status_code == 429
+    # The owner's first attempt from a never-seen network succeeds.
+    owner = from_address("198.51.100.77")
+    response = post_login(owner, PASSWORD)
+    assert response.status_code == 200 and response.json()["csrf_token"]
