@@ -1,0 +1,82 @@
+name: Dependency audit
+
+# Non-blocking vulnerability report for Python (pip-audit) and npm (npm audit).
+# Findings are classified as actionable / runtime-nofix / dev-only by
+# .github/scripts/ci_report.py and shown in the job summary; actionable ones
+# also appear as warning annotations. See docs/development/CI.md.
+
+on:
+  pull_request:
+    paths:
+      - backend/requirements.lock
+      - backend/requirements.txt
+      - scripts/browser-requirements.txt
+      - frontend/package.json
+      - frontend/package-lock.json
+      - .github/workflows/dependency-audit.yml
+      - .github/scripts/ci_report.py
+  push:
+    branches: [main]
+  schedule:
+    # New advisories appear without code changes: weekly, Monday 04:37 UTC.
+    - cron: "37 4 * * 1"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: dependency-audit-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+env:
+  # Switch to "true" once the current backlog is fixed to make actionable findings blocking.
+  FAIL_ON_ACTIONABLE: "false"
+
+jobs:
+  audit:
+    name: pip-audit + npm audit
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Install pip-audit
+        run: python -m pip install pip-audit==2.10.1
+      - name: Audit Python dependencies
+        # The lock is fully pinned and verified by `pip check` in CI, so it is
+        # audited as-is without resolving (--no-deps). Exit code 1 = findings.
+        run: |
+          mkdir -p reports
+          pip-audit -r backend/requirements.lock --no-deps --disable-pip \
+            -f json -o reports/pip-backend.json || test $? -eq 1
+          pip-audit -r scripts/browser-requirements.txt \
+            -f json -o reports/pip-browser-tests.json || test $? -eq 1
+      - name: Audit npm dependencies
+        working-directory: frontend
+        # Runtime-only audit tells shipped packages apart from build tooling.
+        run: |
+          npm audit --omit=dev --json > ../reports/npm-runtime.json || true
+          npm audit --json > ../reports/npm-all.json || true
+      - name: Report
+        shell: bash # -o pipefail: keeps the report's exit code through tee
+        run: |
+          args=()
+          if [ "$FAIL_ON_ACTIONABLE" = "true" ]; then args+=(--fail-on-actionable); fi
+          python .github/scripts/ci_report.py audit --summary "${args[@]}" \
+            --pip backend=reports/pip-backend.json \
+            --pip browser-tests=reports/pip-browser-tests.json \
+            --npm-runtime reports/npm-runtime.json --npm-all reports/npm-all.json \
+            | tee reports/dependency-report.md
+      - name: Keep raw reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: dependency-audit
+          path: reports/
+          retention-days: 14
