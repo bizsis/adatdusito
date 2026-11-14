@@ -8,6 +8,7 @@ import httpx
 
 ROOT = Path(__file__).resolve().parents[2]
 OUTER_HTTPS = ROOT / "deploy/nginx/dev.pinfo.hu.https.conf"
+OUTER_HTTP = ROOT / "deploy/nginx/dev.pinfo.hu.http.conf"
 INNER = ROOT / "frontend/nginx.conf"
 APP_FILE_LIMIT = 50_000_000  # import_api: limit("IMPORT_MAX_BYTES", 50_000_000)
 UNITS = {"": 1, "k": 1024, "m": 1024**2, "g": 1024**3}
@@ -52,3 +53,15 @@ def test_upload_size_chain_is_consistent():
 def test_app_limit_default_matches_documented_value():
     source = (ROOT / "backend/app/import_api.py").read_text()
     assert source.count('limit("IMPORT_MAX_BYTES", 50_000_000)') == 2
+
+
+def test_hsts_on_https_host_only_without_subdomains_or_preload():
+    https = OUTER_HTTPS.read_text()
+    headers = re.findall(r'add_header\s+Strict-Transport-Security\s+"([^"]+)"\s+always\s*;', https)
+    assert headers == ["max-age=31536000"]
+    # Locations with their own add_header would silently drop the server-level header.
+    for block in re.findall(r"location[^{]*\{([^}]*)\}", https):
+        assert "add_header" not in block
+    # HSTS must not be sent over plain HTTP (RFC 6797 7.2).
+    assert "Strict-Transport-Security" not in OUTER_HTTP.read_text()
+    assert "Strict-Transport-Security" not in INNER.read_text()
