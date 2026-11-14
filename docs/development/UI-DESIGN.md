@@ -1,6 +1,6 @@
-# Cloud & Teal UI design — approved target
+# Cloud & Teal UI design — CODEX 09 merged implementation
 
-**Status:** approved design specification for CODEX 09; not proof that deployed UI has adopted it.
+**Status:** CODEX 09 UI merged to `main` at `1d613fe`, deployment to VPS not yet confirmed. This file is design guidance; validate exact component implementation against current source.
 
 ## Visual tokens
 | Purpose | Hex |
@@ -33,4 +33,4 @@ Group permissions by functional domain; three clear columns: **human-readable ri
 Place clickable, touch/keyboard-accessible help near complex field labels. Explain the actual outcome in Hungarian. Use consistent controls and avoid fake inactive UI or nonfunctional "coming soon" configuration settings.
 
 ## Safety and evolution
-Do not refactor authorization away from the server. Frontend visibility never replaces backend checks. In CODEX 09, extract reusable components from oversized `frontend/src/main.tsx` without changing tenant isolation.
+Do not refactor authorization away from the server. Frontend visibility never replaces backend checks. CODEX 09 introduces shared UI components and workflows; future component refactoring must preserve server-side tenant isolation. Handle non-JSON proxy 413 as a follow-up.
