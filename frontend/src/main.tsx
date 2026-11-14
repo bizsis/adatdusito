@@ -1,9 +1,10 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import { createRoot } from "react-dom/client";
 import "./style.css";
-import {ImportWorkspace, ExportAdmin} from "./ImportWorkspace";
+import { AccessWorkspace, AcceptInvitation } from "./AccessWorkspace";
+import { ImportWorkspace, ExportAdmin } from "./ImportWorkspace";
 
-type Role = "tenant_admin" | "processor" | "reviewer";
+type Role = "tenant_admin" | "processor" | "reviewer" | "viewer";
 type User = {
   id: number;
   name: string;
@@ -16,6 +17,11 @@ type Member = User & { role: Role; membership_active: boolean };
 type Me = {
   user: User;
   tenant_id: number | null;
+  workspaces?: { tenant_id: number; name: string }[];
+  workspace?: { tenant_id: number; name: string } | null;
+  system?: boolean;
+  roles?: { id: number; name: string; code: string }[];
+  resource_access?: { full: boolean; companies?: number[]; shops?: number[] };
   role: string | null;
   permissions: string[];
   memberships: { tenant_id: number; name: string; role: string }[];
@@ -64,7 +70,11 @@ type NavCategory = NavLink & {
   ancestors: NavLink[];
   path: NavLink[];
   related_links: (NavLink & { url: string | null })[];
-  related_parameter_filters?: { name: string; status: string; match: { parameter_name: string; value_text: string } | null }[];
+  related_parameter_filters?: {
+    name: string;
+    status: string;
+    match: { parameter_name: string; value_text: string } | null;
+  }[];
 };
 type ReferenceChoice = {
   category_id?: number;
@@ -113,10 +123,14 @@ async function api<T>(
     credentials: "same-origin",
     signal,
     headers: {
-      ...(body !== undefined && !(body instanceof FormData) ? { "Content-Type": "application/json" } : {}),
+      ...(body !== undefined && !(body instanceof FormData)
+        ? { "Content-Type": "application/json" }
+        : {}),
       ...(method !== "GET" ? { "X-CSRF-Token": csrf } : {}),
     },
-    ...(body !== undefined ? { body: body instanceof FormData ? body : JSON.stringify(body) } : {}),
+    ...(body !== undefined
+      ? { body: body instanceof FormData ? body : JSON.stringify(body) }
+      : {}),
   });
   const data = response.status === 204 ? null : await response.json();
   if (!response.ok) {
@@ -332,449 +346,22 @@ function Login({ onLogin }: { onLogin: () => Promise<void> }) {
     </div>
   );
 }
-function UserForm({
-  tenant,
-  onDone,
-  close,
+function Tenants({
+  me,
+  onSwitch,
 }: {
-  tenant?: number;
-  onDone: () => void;
-  close: () => void;
+  me: Me;
+  onSwitch: (id: number) => Promise<void>;
 }) {
-  const [role, setRole] = useState<Role>("processor"),
-    [error, setError] = useState(""),
-    [busy, setBusy] = useState(false);
-  return (
-    <Modal
-      title={tenant ? "Új ügyfélfelhasználó" : "Új felhasználó"}
-      close={close}
-    >
-      <form
-        onSubmit={async (e) => {
-          e.preventDefault();
-          const fd = new FormData(e.currentTarget);
-          setBusy(true);
-          setError("");
-          try {
-            await api(tenant ? `/tenants/${tenant}/users` : "/users", "POST", {
-              name: fd.get("name"),
-              email: fd.get("email"),
-              password: fd.get("password"),
-              ...(tenant
-                ? { role }
-                : { superadmin: fd.get("superadmin") === "on" }),
-            });
-            onDone();
-            close();
-          } catch (e) {
-            setError((e as Error).message);
-          } finally {
-            setBusy(false);
-          }
-        }}
-      >
-        <label>
-          Név
-          <input name="name" required maxLength={120} />
-        </label>
-        <label>
-          Email-cím
-          <input name="email" type="email" required maxLength={254} />
-        </label>
-        <label>
-          Kezdeti jelszó
-          <input
-            name="password"
-            type="password"
-            required
-            minLength={12}
-            maxLength={128}
-            autoComplete="new-password"
-          />
-          <small>Legalább 12 karakter; biztonságos csatornán add át.</small>
-        </label>
-        {tenant ? (
-          <label>
-            Szerepkör
-            <RoleSelect value={role} onChange={setRole} />
-          </label>
-        ) : (
-          <label className="check">
-            <input type="checkbox" name="superadmin" />
-            Superadmin jogosultság
-          </label>
-        )}
-        <ErrorBox message={error} />
-        <button className="primary" disabled={busy}>
-          Létrehozás
-        </button>
-      </form>
-    </Modal>
-  );
-}
-function UserEdit({
-  user,
-  onDone,
-  close,
-}: {
-  user: User;
-  onDone: () => void;
-  close: () => void;
-}) {
-  const [error, setError] = useState(""),
-    [busy, setBusy] = useState(false);
-  return (
-    <Modal title="Felhasználó szerkesztése" close={close}>
-      <form
-        onSubmit={async (e) => {
-          e.preventDefault();
-          const fd = new FormData(e.currentTarget);
-          setBusy(true);
-          try {
-            await api(`/users/${user.id}`, "PATCH", {
-              name: fd.get("name"),
-              active: fd.get("active") === "on",
-              superadmin: fd.get("superadmin") === "on",
-              ...(fd.get("password") ? { password: fd.get("password") } : {}),
-            });
-            onDone();
-            close();
-          } catch (e) {
-            setError((e as Error).message);
-          } finally {
-            setBusy(false);
-          }
-        }}
-      >
-        <label>
-          Név
-          <input
-            name="name"
-            defaultValue={user.name}
-            required
-            maxLength={120}
-          />
-        </label>
-        <p>{user.email}</p>
-        <label className="check">
-          <input name="active" type="checkbox" defaultChecked={user.active} />
-          Aktív
-        </label>
-        <label className="check">
-          <input
-            name="superadmin"
-            type="checkbox"
-            defaultChecked={user.superadmin}
-          />
-          Superadmin
-        </label>
-        <label>
-          Új jelszó (opcionális)
-          <input
-            name="password"
-            type="password"
-            minLength={12}
-            maxLength={128}
-            autoComplete="new-password"
-          />
-        </label>
-        <p className="small muted">
-          Jelszó- vagy jogosultságmódosításkor a munkamenetek visszavonásra
-          kerülnek.
-        </p>
-        <ErrorBox message={error} />
-        <button className="primary" disabled={busy}>
-          Mentés
-        </button>
-      </form>
-    </Modal>
-  );
-}
-function Users() {
-  const [offset, setOffset] = useState(0),
-    [q, setQ] = useState(""),
-    [rev, setRev] = useState(0),
-    [creating, setCreating] = useState(false),
-    [edit, setEdit] = useState<User | null>(null);
-  const query = useDebounce(q);
-  const { data, error, loading } = useLoad<Page<User>>(
-    `/users?offset=${offset}&q=${encodeURIComponent(query)}`,
-    rev,
-  );
-  return (
-    <>
-      <div className="sectionbar">
-        <label className="search">
-          Keresés
-          <input
-            value={q}
-            onChange={(e) => {
-              setQ(e.target.value);
-              setOffset(0);
-            }}
-            placeholder="Név vagy email-cím"
-          />
-        </label>
-        <button className="primary" onClick={() => setCreating(true)}>
-          + Új felhasználó
-        </button>
-      </div>
-      <ErrorBox message={error} />
-      <div className="card tablewrap">
-        <table>
-          <thead>
-            <tr>
-              <th>Felhasználó</th>
-              <th>Jogosultság</th>
-              <th>Állapot</th>
-              <th>Művelet</th>
-            </tr>
-          </thead>
-          <tbody>
-            {data?.items.map((u) => (
-              <tr key={u.id}>
-                <td>
-                  <strong>{u.name}</strong>
-                  <small>
-                    {u.email} · #{u.id}
-                  </small>
-                </td>
-                <td>{u.superadmin ? "Superadmin" : "Ügyféltagság szerint"}</td>
-                <td>
-                  <Flag value={u.active} />
-                </td>
-                <td>
-                  <button onClick={() => setEdit(u)}>Szerkesztés</button>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-        {!data?.items.length && <Empty loading={loading} />}
-      </div>
-      {data && <Pager {...data} onChange={setOffset} />}
-      <p className="small muted">
-        A felhasználókat az Ügyfelek oldalon rendelheted szervezethez.
-      </p>
-      {creating && (
-        <UserForm
-          close={() => setCreating(false)}
-          onDone={() => setRev(rev + 1)}
-        />
-      )}{" "}
-      {edit && (
-        <UserEdit
-          user={edit}
-          close={() => setEdit(null)}
-          onDone={() => setRev(rev + 1)}
-        />
-      )}
-    </>
-  );
-}
-function Members({ tenant, me }: { tenant: Tenant; me: Me }) {
-  const [offset, setOffset] = useState(0),
-    [rev, setRev] = useState(0),
-    [creating, setCreating] = useState(false),
-    [edit, setEdit] = useState<Member | null>(null),
-    [error, setError] = useState(""),
-    [busy, setBusy] = useState(false);
-  const result = useLoad<Page<Member>>(
-    `/tenants/${tenant.id}/members?offset=${offset}`,
-    rev,
-  );
-  async function update(u: Member, body: unknown) {
-    setBusy(true);
-    setError("");
-    try {
-      await api(`/tenants/${tenant.id}/members/${u.id}`, "PATCH", body);
-      setRev(rev + 1);
-    } catch (e) {
-      setError((e as Error).message);
-    } finally {
-      setBusy(false);
-    }
-  }
-  return (
-    <section className="card padded">
-      <div className="sectionbar">
-        <h2>{tenant.name} · Felhasználók</h2>
-        <button className="primary" onClick={() => setCreating(true)}>
-          + Új felhasználó
-        </button>
-      </div>
-      <ErrorBox message={error || result.error} />
-      <div className="tablewrap">
-        <table>
-          <thead>
-            <tr>
-              <th>Név</th>
-              <th>Szerepkör</th>
-              <th>Tagság</th>
-              <th>Profil</th>
-            </tr>
-          </thead>
-          <tbody>
-            {result.data?.items.map((u) => (
-              <tr key={u.id}>
-                <td>
-                  <strong>{u.name}</strong>
-                  <small>{u.email}</small>
-                </td>
-                <td>
-                  <RoleSelect
-                    value={u.role}
-                    onChange={(role) => {
-                      if (!busy) void update(u, { role });
-                    }}
-                  />
-                </td>
-                <td>
-                  <button
-                    disabled={busy}
-                    onClick={() =>
-                      void update(u, { active: !u.membership_active })
-                    }
-                  >
-                    {u.membership_active
-                      ? "Tagság felfüggesztése"
-                      : "Tagság aktiválása"}
-                  </button>
-                  {!u.active && (
-                    <small>A felhasználó globálisan inaktív.</small>
-                  )}
-                </td>
-                <td>
-                  <button onClick={() => setEdit(u)}>Szerkesztés</button>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-      {!result.data?.items.length && <Empty loading={result.loading} />}{" "}
-      {result.data && <Pager {...result.data} onChange={setOffset} />}
-      {me.user.superadmin && (
-        <form
-          className="inline-form"
-          onSubmit={async (e) => {
-            e.preventDefault();
-            const fd = new FormData(e.currentTarget);
-            setBusy(true);
-            setError("");
-            try {
-              await api(`/tenants/${tenant.id}/members`, "POST", {
-                user_id: Number(fd.get("user_id")),
-                role: fd.get("role"),
-              });
-              setRev(rev + 1);
-            } catch (e) {
-              setError((e as Error).message);
-            } finally {
-              setBusy(false);
-            }
-          }}
-        >
-          <label>
-            Meglévő felhasználó belső azonosítója
-            <input
-              type="number"
-              name="user_id"
-              min="1"
-              required
-              placeholder="A Felhasználók oldalon találod"
-            />
-          </label>
-          <label>
-            Szerepkör
-            <select name="role">
-              {Object.entries(roleNames)
-                .filter(([key]) => key !== "superadmin")
-                .map(([key, name]) => (
-                  <option value={key} key={key}>
-                    {name}
-                  </option>
-                ))}
-            </select>
-          </label>
-          <button disabled={busy}>Hozzárendelés</button>
-        </form>
-      )}
-      {edit && (
-        <Modal
-          title="Ügyfélfelhasználó szerkesztése"
-          close={() => setEdit(null)}
-        >
-          <form
-            onSubmit={async (e) => {
-              e.preventDefault();
-              const fd = new FormData(e.currentTarget);
-              setError("");
-              setBusy(true);
-              try {
-                await api(`/tenants/${tenant.id}/users/${edit.id}`, "PATCH", {
-                  name: fd.get("name"),
-                  ...(fd.get("password")
-                    ? { password: fd.get("password") }
-                    : {}),
-                });
-                setRev(rev + 1);
-                setEdit(null);
-              } catch (e) {
-                setError((e as Error).message);
-              } finally {
-                setBusy(false);
-              }
-            }}
-          >
-            <label>
-              Név
-              <input
-                required
-                name="name"
-                maxLength={120}
-                defaultValue={edit.name}
-              />
-            </label>
-            <label>
-              Új jelszó (opcionális)
-              <input
-                name="password"
-                type="password"
-                minLength={12}
-                maxLength={128}
-                autoComplete="new-password"
-              />
-            </label>
-            <p className="small muted">
-              Több ügyfélhez tartozó vagy Superadmin-fiókot csak Superadmin
-              módosíthat. A saját jelszavadat a fejlécben módosíthatod.
-            </p>
-            <ErrorBox message={error} />
-            <button className="primary" disabled={busy}>
-              Mentés
-            </button>
-          </form>
-        </Modal>
-      )}
-      {creating && (
-        <UserForm
-          tenant={tenant.id}
-          close={() => setCreating(false)}
-          onDone={() => setRev(rev + 1)}
-        />
-      )}
-    </section>
-  );
-}
-function Tenants({ me }: { me: Me }) {
   const [offset, setOffset] = useState(0),
     [rev, setRev] = useState(0),
     [selected, setSelected] = useState<Tenant | null>(null),
     [editing, setEditing] = useState<Tenant | true | null>(null),
     [error, setError] = useState("");
   const result = useLoad<Page<Tenant>>(`/tenants?offset=${offset}`, rev);
-  const manage = me.user.superadmin || me.permissions.includes("tenant.manage");
+  const manage =
+    me.permissions.includes("tenants.edit") ||
+    me.permissions.includes("tenants.suspend");
   return (
     <>
       <div className="sectionbar">
@@ -783,7 +370,7 @@ function Tenants({ me }: { me: Me }) {
             ? "Ügyfelek és szervezeti hozzáférések kezelése."
             : "A hozzád rendelt szervezetek."}
         </p>
-        {me.user.superadmin && (
+        {me.permissions.includes("tenants.create") && (
           <button className="primary" onClick={() => setEditing(true)}>
             + Új ügyfél
           </button>
@@ -817,7 +404,16 @@ function Tenants({ me }: { me: Me }) {
       {!result.data?.items.length && <Empty loading={result.loading} />}{" "}
       {result.data && <Pager {...result.data} onChange={setOffset} />}{" "}
       {selected && manage && (
-        <Members key={selected.id} tenant={selected} me={me} />
+        <section className="card padded">
+          <h3>{selected.name}</h3>
+          <p>
+            A munkatársak és jogosultságok a kiválasztott munkaterületen
+            kezelhetők.
+          </p>
+          <button onClick={() => onSwitch(selected.id)}>
+            Munkaterület megnyitása: {selected.name}
+          </button>
+        </section>
       )}{" "}
       {editing && (
         <Modal
@@ -834,7 +430,8 @@ function Tenants({ me }: { me: Me }) {
                   editing === true ? "POST" : "PATCH",
                   {
                     name: fd.get("name"),
-                    ...(editing !== true && me.user.superadmin
+                    ...(editing !== true &&
+                    me.permissions.includes("tenants.suspend")
                       ? { active: fd.get("active") === "on" }
                       : {}),
                   },
@@ -856,7 +453,7 @@ function Tenants({ me }: { me: Me }) {
                 defaultValue={editing === true ? "" : editing.name}
               />
             </label>
-            {editing !== true && me.user.superadmin && (
+            {editing !== true && me.permissions.includes("tenants.suspend") && (
               <label className="check">
                 <input
                   type="checkbox"
@@ -982,7 +579,11 @@ function Parameters({
     <>
       <section className="card padded">
         <div className="sectionbar">
-          <h2>{categoryId || navigationId ? "Kategóriaparaméterek" : "Paraméterkereső"}</h2>
+          <h2>
+            {categoryId || navigationId
+              ? "Kategóriaparaméterek"
+              : "Paraméterkereső"}
+          </h2>
           <span className="badge">{data?.total ?? "…"} paraméter</span>
         </div>
         <div className="filters">
@@ -1030,7 +631,11 @@ function Parameters({
                 <tr key={p.id}>
                   <td>
                     <strong>{p.name}</strong>
-                    {p.category_constraint && <small>Kategóriamegkötés: {p.category_constraint.value_text}</small>}
+                    {p.category_constraint && (
+                      <small>
+                        Kategóriamegkötés: {p.category_constraint.value_text}
+                      </small>
+                    )}
                     <small>
                       eMAG #{p.emag_parameter_id} · Belső #{p.id}
                       {!categoryId && ` · ${p.category_name}`}
@@ -1103,9 +708,11 @@ function ShopNode({
               ? "Főcsoport"
               : node.kind === "section" || node.structural_only
                 ? "Navigációs gyűjtőpont"
-              : node.mapping_status === "confirmed"
-                ? "Paraméterforrás hozzárendelve"
-                : node.mapping_status === "pending" ? "Bizonytalan paraméter-hozzárendelés" : "Paraméterkészlet még nem érhető el"}
+                : node.mapping_status === "confirmed"
+                  ? "Paraméterforrás hozzárendelve"
+                  : node.mapping_status === "pending"
+                    ? "Bizonytalan paraméter-hozzárendelés"
+                    : "Paraméterkészlet még nem érhető el"}
             {node.placement_status !== "verified_tree" && (
               <span> · Besorolás ellenőrzendő</span>
             )}
@@ -1143,10 +750,18 @@ function ShopNode({
     </li>
   );
 }
-function CategoryReview({ node, onSaved }: { node: NavCategory; onSaved: () => void }) {
+function CategoryReview({
+  node,
+  onSaved,
+}: {
+  node: NavCategory;
+  onSaved: () => void;
+}) {
   const [query, setQuery] = useState(""),
     [reference, setReference] = useState(
-      (node.parameter_profiles?.length || 0) > 1 ? "" : String(node.unified_category_id || node.canonical_emag_id || ""),
+      (node.parameter_profiles?.length || 0) > 1
+        ? ""
+        : String(node.unified_category_id || node.canonical_emag_id || ""),
     ),
     [error, setError] = useState(""),
     [busy, setBusy] = useState(false);
@@ -1154,22 +769,42 @@ function CategoryReview({ node, onSaved }: { node: NavCategory; onSaved: () => v
   const choices = useLoad<{ items: ReferenceChoice[]; total: number }>(
     `/reference/navigation/choices/reference?q=${encodeURIComponent(term)}`,
   );
-  const current: ReferenceChoice[] = node.parameter_profiles?.map(p => ({
-    category_id: node.catalog_version_id ? p.source_category_id : undefined,
-    emag_category_id: p.emag_category_id, name: p.name,
-    path_names: [p.name], parameter_count: p.parameter_count,
-  })) || (node.canonical_emag_id ? [{category_id: node.unified_category_id,
-    emag_category_id: node.canonical_emag_id, name: node.reference_name || node.name,
-    path_names: [node.reference_name || node.name]}] : []);
-  const candidates = [...new Map(
-    [...current, ...(node.mapping_candidates || []), ...(choices.data?.items || [])]
-      .map(c => [c.category_id || c.emag_category_id, c]),
-  ).values()];
+  const current: ReferenceChoice[] =
+    node.parameter_profiles?.map((p) => ({
+      category_id: node.catalog_version_id ? p.source_category_id : undefined,
+      emag_category_id: p.emag_category_id,
+      name: p.name,
+      path_names: [p.name],
+      parameter_count: p.parameter_count,
+    })) ||
+    (node.canonical_emag_id
+      ? [
+          {
+            category_id: node.unified_category_id,
+            emag_category_id: node.canonical_emag_id,
+            name: node.reference_name || node.name,
+            path_names: [node.reference_name || node.name],
+          },
+        ]
+      : []);
+  const candidates = [
+    ...new Map(
+      [
+        ...current,
+        ...(node.mapping_candidates || []),
+        ...(choices.data?.items || []),
+      ].map((c) => [c.category_id || c.emag_category_id, c]),
+    ).values(),
+  ];
   async function save(body: object) {
     setBusy(true);
     setError("");
     try {
-      await api(`/reference/navigation/${encodeURIComponent(node.id)}/assignment`, "POST", body);
+      await api(
+        `/reference/navigation/${encodeURIComponent(node.id)}/assignment`,
+        "POST",
+        body,
+      );
       onSaved();
     } catch (e) {
       setError((e as Error).message);
@@ -1180,26 +815,46 @@ function CategoryReview({ node, onSaved }: { node: NavCategory; onSaved: () => v
   return (
     <details>
       <summary>Paraméter-hozzárendelés szerkesztése (adminisztrátor)</summary>
-      {(node.parameter_profiles?.length || 0) > 1 && <p>A kézi forrásválasztás egyetlen profilra cseréli az automatikus hozzárendelést. Visszaállítással az összes ellenőrzött profil ismét elérhető.</p>}
+      {(node.parameter_profiles?.length || 0) > 1 && (
+        <p>
+          A kézi forrásválasztás egyetlen profilra cseréli az automatikus
+          hozzárendelést. Visszaállítással az összes ellenőrzött profil ismét
+          elérhető.
+        </p>
+      )}
       {!node.id.startsWith("ref-") && (
-        <form onSubmit={e => {
-          e.preventDefault();
-          save(node.catalog_version_id
-            ? { category_id: Number(reference) }
-            : { canonical_emag_id: Number(reference) });
-        }}>
+        <form
+          onSubmit={(e) => {
+            e.preventDefault();
+            save(
+              node.catalog_version_id
+                ? { category_id: Number(reference) }
+                : { canonical_emag_id: Number(reference) },
+            );
+          }}
+        >
           <label>
             Paraméterforrás keresése
-            <input value={query} onChange={e => setQuery(e.target.value)} />
+            <input value={query} onChange={(e) => setQuery(e.target.value)} />
           </label>
           <label>
             Paraméterforrás kiválasztása
-            <select aria-label="Paraméterforrás kiválasztása" required
-              value={reference} onChange={e => setReference(e.target.value)}>
+            <select
+              aria-label="Paraméterforrás kiválasztása"
+              required
+              value={reference}
+              onChange={(e) => setReference(e.target.value)}
+            >
               <option value="">Válassz kategóriát</option>
-              {candidates.map(c => (
-                <option key={c.category_id || c.emag_category_id} value={c.category_id || c.emag_category_id}>
-                  {c.path_names.join(" / ")} · eMAG {c.emag_category_id}{c.parameter_count !== undefined ? ` · ${c.parameter_count} paraméter` : ""}
+              {candidates.map((c) => (
+                <option
+                  key={c.category_id || c.emag_category_id}
+                  value={c.category_id || c.emag_category_id}
+                >
+                  {c.path_names.join(" / ")} · eMAG {c.emag_category_id}
+                  {c.parameter_count !== undefined
+                    ? ` · ${c.parameter_count} paraméter`
+                    : ""}
                 </option>
               ))}
             </select>
@@ -1240,7 +895,8 @@ function ShopDetails({
   const who = useLoad<Me>("/auth/me");
   const node = result.data;
   const profiles = node?.parameter_profiles || [];
-  const activeProfile = profiles.find(p => p.emag_category_id === profile) || profiles[0];
+  const activeProfile =
+    profiles.find((p) => p.emag_category_id === profile) || profiles[0];
   const kinds: Record<string, string> = {
     parameter_filter: "Paraméterszűrő",
     brand: "Márkaoldal",
@@ -1286,7 +942,9 @@ function ShopDetails({
         <span className={"badge " + (node.selectable ? "good" : "")}>
           {node.selectable
             ? "Termékbesorolásra választható"
-            : node.kind === "department" || node.kind === "section" || node.inactive
+            : node.kind === "department" ||
+                node.kind === "section" ||
+                node.inactive
               ? "Strukturális / termékbesorolásra nem választható"
               : "Besorolás előtt ellenőrzendő"}
         </span>
@@ -1297,19 +955,36 @@ function ShopDetails({
             esetén pontosíthatja az elhelyezését.
           </p>
         )}
-        {profiles.length > 1 && <p>{profiles.length} külön hozzárendelt paraméterprofil. Megjelenített profil: {activeProfile?.name}.</p>}
+        {profiles.length > 1 && (
+          <p>
+            {profiles.length} külön hozzárendelt paraméterprofil. Megjelenített
+            profil: {activeProfile?.name}.
+          </p>
+        )}
         <div className="facts">
           <span>Alkategóriák / szekciók: {node.children_count}</span>
           <span>
             Paraméterek:{" "}
-            {node.kind === "department" || node.kind === "section" || node.structural_only
+            {node.kind === "department" ||
+            node.kind === "section" ||
+            node.structural_only
               ? "Navigációs gyűjtőpont"
-              : (activeProfile?.parameter_count ?? node.parameter_count ?? "Még nem ellenőrzött")}
+              : (activeProfile?.parameter_count ??
+                node.parameter_count ??
+                "Még nem ellenőrzött")}
           </span>
           {node.parameter_count !== null && (
             <>
-              <span>Kötelező: {activeProfile?.mandatory_parameter_count ?? node.mandatory_parameter_count}</span>
-              <span>Opcionális: {activeProfile?.optional_parameter_count ?? node.optional_parameter_count}</span>
+              <span>
+                Kötelező:{" "}
+                {activeProfile?.mandatory_parameter_count ??
+                  node.mandatory_parameter_count}
+              </span>
+              <span>
+                Opcionális:{" "}
+                {activeProfile?.optional_parameter_count ??
+                  node.optional_parameter_count}
+              </span>
             </>
           )}
         </div>
@@ -1328,45 +1003,93 @@ function ShopDetails({
         )}
         {node.mapping_status === "pending" && node.kind === "category" && (
           <p className="notice">
-            Több lehetséges paraméterforrás található. Az adminisztrátor pontosíthatja a paraméter-hozzárendelést.
+            Több lehetséges paraméterforrás található. Az adminisztrátor
+            pontosíthatja a paraméter-hozzárendelést.
           </p>
         )}
-        {node.archived && <p className="warning">Archivált vagy töröltnek jelölt kategória. A paraméterei megtekinthetők, termékbesorolásra nem választható.</p>}
+        {node.archived && (
+          <p className="warning">
+            Archivált vagy töröltnek jelölt kategória. A paraméterei
+            megtekinthetők, termékbesorolásra nem választható.
+          </p>
+        )}
         {who.data?.permissions.includes("system.manage") &&
-          node.kind === "category" && !node.structural_only && (
-            <CategoryReview key={node.id + "-" + rev} node={node} onSaved={() => {
-              setRev(rev + 1);
-              onMappingUpdated();
-            }} />
+          node.kind === "category" &&
+          !node.structural_only && (
+            <CategoryReview
+              key={node.id + "-" + rev}
+              node={node}
+              onSaved={() => {
+                setRev(rev + 1);
+                onMappingUpdated();
+              }}
+            />
           )}
       </section>
       {node.mapping_status === "confirmed" &&
         ["category", "section"].includes(node.kind) && (
           <>
-            {profiles.length > 1 && <section className="card padded">
-              <label>Paraméterprofil
-                <select aria-label="Paraméterprofil" value={activeProfile?.emag_category_id || ""}
-                  onChange={e => setProfile(Number(e.target.value))}>
-                  {profiles.map(p => <option key={p.emag_category_id} value={p.emag_category_id}>{p.name} · {p.parameter_count} paraméter</option>)}
-                </select>
-              </label>
-              <p>Minden felsorolt profil hozzá van rendelve a kategóriához. A kötelező mezőket és megengedett értékeket profilonként, külön kezeljük.</p>
-            </section>}
-            <Parameters key={`${id}-${rev}-${activeProfile?.emag_category_id || ""}`} navigationId={id}
-              profileEmagId={activeProfile?.emag_category_id} view="all" />
+            {profiles.length > 1 && (
+              <section className="card padded">
+                <label>
+                  Paraméterprofil
+                  <select
+                    aria-label="Paraméterprofil"
+                    value={activeProfile?.emag_category_id || ""}
+                    onChange={(e) => setProfile(Number(e.target.value))}
+                  >
+                    {profiles.map((p) => (
+                      <option
+                        key={p.emag_category_id}
+                        value={p.emag_category_id}
+                      >
+                        {p.name} · {p.parameter_count} paraméter
+                      </option>
+                    ))}
+                  </select>
+                </label>
+                <p>
+                  Minden felsorolt profil hozzá van rendelve a kategóriához. A
+                  kötelező mezőket és megengedett értékeket profilonként, külön
+                  kezeljük.
+                </p>
+              </section>
+            )}
+            <Parameters
+              key={`${id}-${rev}-${activeProfile?.emag_category_id || ""}`}
+              navigationId={id}
+              profileEmagId={activeProfile?.emag_category_id}
+              view="all"
+            />
           </>
         )}
       {!!node.related_parameter_filters?.length && (
         <section className="card padded">
           <h2>Kapcsolódó televíziószűrők</h2>
-          <div className="tablewrap"><table>
-            <thead><tr><th>Szűrő</th><th>Paraméterkapcsolat</th></tr></thead>
-            <tbody>{node.related_parameter_filters.map((filter) => (
-              <tr key={filter.name}><td>{filter.name}</td><td>{filter.match
-                ? `${filter.match.parameter_name}: ${filter.match.value_text}`
-                : filter.status === "ambiguous" ? "Többértelmű paraméterkapcsolat" : "Nincs igazolt paraméterérték"}</td></tr>
-            ))}</tbody>
-          </table></div>
+          <div className="tablewrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Szűrő</th>
+                  <th>Paraméterkapcsolat</th>
+                </tr>
+              </thead>
+              <tbody>
+                {node.related_parameter_filters.map((filter) => (
+                  <tr key={filter.name}>
+                    <td>{filter.name}</td>
+                    <td>
+                      {filter.match
+                        ? `${filter.match.parameter_name}: ${filter.match.value_text}`
+                        : filter.status === "ambiguous"
+                          ? "Többértelmű paraméterkapcsolat"
+                          : "Nincs igazolt paraméterérték"}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </section>
       )}
       {!!node.related_links.length && (
@@ -1436,27 +1159,62 @@ function Categories() {
   return (
     <>
       <p className="notice">
-        A jóváhagyott magyar kategóriafa rögzített: 13 főcsoport, változatlan alkategóriákkal.
-        A forrásadatbázis kizárólag paramétereket és értékeket biztosít; az aktív/inaktív jelzője nem módosítja ezt a fát.
+        A jóváhagyott magyar kategóriafa rögzített: 13 főcsoport, változatlan
+        alkategóriákkal. A forrásadatbázis kizárólag paramétereket és értékeket
+        biztosít; az aktív/inaktív jelzője nem módosítja ezt a fát.
       </p>
       <ErrorBox message={coverage.error} />
       {coverage.data && (
         <div className="reference-metrics">
           {[
             [coverage.data.root_count, "Valós főcsoport"],
-            [coverage.data.reference_coverage?.fixed_category_count ?? "–", "Rögzített kategóriapont"],
-            [coverage.data.reference_coverage?.parameter_linked_category_count ?? "–", "Paraméterprofillal rendelkező kategória"],
-            [coverage.data.reference_coverage?.ambiguous_parameter_binding_count ?? "–", "Bizonytalan paraméter-hozzárendelés", "unclassified"],
-            [coverage.data.reference_coverage?.unavailable_parameter_binding_count ?? "–", "Paraméterforrás még nem érhető el", "unavailable"],
-          ].map(([v, label, filter]) => filter ? (
-            <button type="button" className="card metric-action" key={String(label)} aria-label={`${label} – lista megnyitása`}
-              onClick={() => { setScope(String(filter)); setFocus(null); setOffset(0); setQ(""); setSelected(null); }}>
-              <strong>{v}</strong><small>{label}</small>
-              <span className="metric-link">Lista megnyitása →</span>
-            </button>
-          ) : (
-            <div className="card" key={String(label)}><strong>{v}</strong><small>{label}</small></div>
-          ))}
+            [
+              coverage.data.reference_coverage?.fixed_category_count ?? "–",
+              "Rögzített kategóriapont",
+            ],
+            [
+              coverage.data.reference_coverage
+                ?.parameter_linked_category_count ?? "–",
+              "Paraméterprofillal rendelkező kategória",
+            ],
+            [
+              coverage.data.reference_coverage
+                ?.ambiguous_parameter_binding_count ?? "–",
+              "Bizonytalan paraméter-hozzárendelés",
+              "unclassified",
+            ],
+            [
+              coverage.data.reference_coverage
+                ?.unavailable_parameter_binding_count ?? "–",
+              "Paraméterforrás még nem érhető el",
+              "unavailable",
+            ],
+          ].map(([v, label, filter]) =>
+            filter ? (
+              <button
+                type="button"
+                className="card metric-action"
+                key={String(label)}
+                aria-label={`${label} – lista megnyitása`}
+                onClick={() => {
+                  setScope(String(filter));
+                  setFocus(null);
+                  setOffset(0);
+                  setQ("");
+                  setSelected(null);
+                }}
+              >
+                <strong>{v}</strong>
+                <small>{label}</small>
+                <span className="metric-link">Lista megnyitása →</span>
+              </button>
+            ) : (
+              <div className="card" key={String(label)}>
+                <strong>{v}</strong>
+                <small>{label}</small>
+              </div>
+            ),
+          )}
         </div>
       )}
       <div className="browser-grid">
@@ -1487,17 +1245,26 @@ function Categories() {
               }}
             >
               <option value="tree">Közös kategóriafa</option>
-              <option value="unclassified">Bizonytalan paraméter-hozzárendelések</option>
-              <option value="unavailable">Paraméterforrás nélküli kategóriák</option>
+              <option value="unclassified">
+                Bizonytalan paraméter-hozzárendelések
+              </option>
+              <option value="unavailable">
+                Paraméterforrás nélküli kategóriák
+              </option>
             </select>
           </label>
           {scope === "unclassified" && !query && (
             <p>
-              Csak a több lehetséges paraméterforrással rendelkező kategóriák. A gyűjtőpontokhoz nem szükséges paraméterkapcsolat.
+              Csak a több lehetséges paraméterforrással rendelkező kategóriák. A
+              gyűjtőpontokhoz nem szükséges paraméterkapcsolat.
             </p>
           )}
           {scope === "unavailable" && (
-            <p>Azok a rögzített termékkategóriák, amelyekhez még nincs egyértelmű paraméterforrás. A teljes útvonal látható; a kategóriát megnyitva a paraméter-hozzárendelés szerkeszthető.</p>
+            <p>
+              Azok a rögzített termékkategóriák, amelyekhez még nincs egyértelmű
+              paraméterforrás. A teljes útvonal látható; a kategóriát megnyitva
+              a paraméter-hozzárendelés szerkeszthető.
+            </p>
           )}
           <label>
             Kategóriakeresés
@@ -1567,11 +1334,11 @@ function ReferenceSources() {
       source_key: string;
       outcome: string;
       mapping_status: string;
-  mapping_method: string | null;
-  reference_name: string | null;
-  archived: boolean;
-  inactive: boolean;
-  mapping_candidates: ReferenceChoice[];
+      mapping_method: string | null;
+      reference_name: string | null;
+      archived: boolean;
+      inactive: boolean;
+      mapping_candidates: ReferenceChoice[];
       summary: string;
       evidence_url: string;
       observed_at: string;
@@ -1791,7 +1558,7 @@ function AuditLog() {
     </section>
   );
 }
-function Settings() {
+function Settings({ canManage = true }: { canManage?: boolean }) {
   const [rev, setRev] = useState(0),
     [message, setMessage] = useState("");
   const { data, error } = useLoad<Record<string, string>>("/settings", rev);
@@ -1822,6 +1589,7 @@ function Settings() {
           <label>
             Rendszer megjelenített neve
             <input
+              readOnly={!canManage}
               name="display_name"
               maxLength={1000}
               defaultValue={data.display_name || ""}
@@ -1830,12 +1598,15 @@ function Settings() {
           <label>
             Adminisztrációs megjegyzés
             <textarea
+              readOnly={!canManage}
               name="admin_notice"
               maxLength={1000}
               defaultValue={data.admin_notice || ""}
             />
           </label>
-          <button className="primary">Mentés</button>
+          <button className="primary" disabled={!canManage}>
+            Mentés
+          </button>
         </form>
       )}
       <p role="status">{message}</p>
@@ -1924,8 +1695,83 @@ function App() {
     [error, setError] = useState(""),
     [page, setPage] = useState("dashboard"),
     [password, setPassword] = useState(false);
+  const [invitation, setInvitation] = useState(
+    () =>
+      new URLSearchParams(window.location.hash.slice(1)).get("invite") || "",
+  );
+  const [inviteLogin, setInviteLogin] = useState(false);
+  useEffect(() => {
+    const changed = () => {
+      setInvitation(
+        new URLSearchParams(window.location.hash.slice(1)).get("invite") || "",
+      );
+      setInviteLogin(false);
+    };
+    window.addEventListener("hashchange", changed);
+    return () => window.removeEventListener("hashchange", changed);
+  }, []);
+  const [workspaceQuery, WQ] = useState(""),
+    [workspaceOffset, WO] = useState(0),
+    [workspaceItems, WI] = useState<{ tenant_id: number; name: string }[]>([]);
+  useEffect(() => {
+    WI(me?.workspaces || me?.memberships || []);
+    WQ("");
+    WO(0);
+  }, [me?.tenant_id, JSON.stringify(me?.workspaces)]);
+  useEffect(() => {
+    if (!me?.workspaces) return;
+    let cancelled = false;
+    const timer = setTimeout(
+      () =>
+        api<{ items: { tenant_id: number; name: string }[] }>(
+          `/access/workspaces?q=${encodeURIComponent(workspaceQuery)}&offset=${workspaceOffset}`,
+        )
+          .then((r) => {
+            if (!cancelled)
+              WI((old) => (workspaceOffset ? [...old, ...r.items] : r.items));
+          })
+          .catch((e) => {
+            if (!cancelled) setError(String(e));
+          }),
+      250,
+    );
+    return () => {
+      cancelled = true;
+      clearTimeout(timer);
+    };
+  }, [
+    workspaceQuery,
+    workspaceOffset,
+    me?.tenant_id,
+    JSON.stringify(me?.workspaces),
+  ]);
+  useEffect(() => {
+    if (!me) return;
+    const timer = setInterval(() => refresh().catch(() => {}), 30000);
+    return () => clearInterval(timer);
+  }, [!!me]);
+  async function switchWorkspace(id: number | null) {
+    authGeneration.current++;
+    setLoading(true);
+    setError("");
+    setPage("dashboard");
+    setPassword(false);
+    try {
+      await api("/auth/tenant", "POST", { tenant_id: id });
+      await refresh();
+      WQ("");
+      WO(0);
+    } catch (e) {
+      setError(String(e));
+    } finally {
+      setLoading(false);
+    }
+  }
+  const authGeneration = useRef(0);
   async function refresh() {
+    const generation = ++authGeneration.current;
     const user = await api<Me>("/auth/me");
+    if (generation !== authGeneration.current) return;
     csrf = user.csrf_token;
     setMe(user);
   }
@@ -1934,6 +1780,7 @@ function App() {
       .catch(() => setMe(null))
       .finally(() => setLoading(false));
     const expire = () => {
+      authGeneration.current++;
       csrf = "";
       setMe(null);
       setPassword(false);
@@ -1947,12 +1794,51 @@ function App() {
         <Empty loading />
       </div>
     );
+  if (invitation && !inviteLogin)
+    return (
+      <AcceptInvitation
+        api={api}
+        token={invitation}
+        signedIn={!!me}
+        onLogin={async () => {
+          try {
+            if (me) await api("/auth/logout", "POST");
+          } catch {
+          } finally {
+            authGeneration.current++;
+            csrf = "";
+            setMe(null);
+            setInviteLogin(true);
+          }
+        }}
+        onAccepted={async (requiresLogin: boolean, tid: number | null) => {
+          if (requiresLogin) {
+            try {
+              if (me) await api("/auth/logout", "POST");
+            } catch {
+            } finally {
+              authGeneration.current++;
+              csrf = "";
+              setMe(null);
+            }
+          }
+          window.history.replaceState(null, "", window.location.pathname);
+          setInvitation("");
+          setInviteLogin(false);
+          if (!requiresLogin) {
+            await switchWorkspace(tid);
+          }
+          setPage("dashboard");
+        }}
+      />
+    );
   if (!me)
     return (
       <Login
         onLogin={async () => {
           await refresh();
           setPage("dashboard");
+          setInviteLogin(false);
           setError("");
         }}
       />
@@ -1960,22 +1846,44 @@ function App() {
   const can = (permission: string) => me.permissions.includes(permission);
   const pages = [
     ["dashboard", "◫", "Áttekintés"],
-    ["tenants", "▦", "Ügyfelek"],
-    ...(can("imports.read") ? [["imports", "⇧", "Beszállítói import"]] : []),
-    ...(can("exports.manage") || can("exports.profile") ? [["export-fields", "▤", "Webáruházmotorok / Exportmezők"]] : []),
-    ...(can("users.manage") ? [["users", "♙", "Felhasználók"]] : []),
+    ...(can("tenants.read") ? [["tenants", "▦", "Ügyfelek"]] : []),
+    ...(can("system.users.read") || can("system.roles.read")
+      ? [["access-system", "♙", "Rendszerhozzáférések"]]
+      : []),
+    ...(me.tenant_id && can("members.read")
+      ? [["members", "♙", "Munkatársak és hozzáférések"]]
+      : []),
+    ...(me.tenant_id && can("imports.read")
+      ? [["imports", "⇧", "Beszállítói import"]]
+      : []),
+    ...(can("exports.fields.manage") || (me.tenant_id && can("exports.profile"))
+      ? [["export-fields", "▤", "Webáruházmotorok / Exportmezők"]]
+      : []),
+
     ...(can("reference.read")
       ? [
           ["categories", "⌘", "Kategóriák"],
           ["parameters", "≡", "Paraméterkereső"],
         ]
       : []),
-    ...(can("audit.read") ? [["audit", "◷", "Műveleti napló"]] : []),
-    ...(can("system.manage")
+    ...((me.tenant_id ? can("audit.read") : can("system.audit.read"))
+      ? [["audit", "◷", "Műveleti napló"]]
+      : []),
+    ...(can("system.settings.read")
       ? [["settings", "⚙", "Rendszerbeállítások"]]
       : []),
   ];
   const title = pages.find((p) => p[0] === page)?.[2] || "Áttekintés";
+  const visibleWorkspaces = (
+    workspaceItems.length ? workspaceItems : me.workspaces || me.memberships
+  ).filter(
+    (m) =>
+      !workspaceQuery ||
+      m.name
+        .toLocaleLowerCase("hu")
+        .includes(workspaceQuery.toLocaleLowerCase("hu")),
+  );
+
   return (
     <div className="shell">
       <aside className="sidebar">
@@ -1989,37 +1897,49 @@ function App() {
         </div>
         <div className="workspace">
           <label>
+            Munkaterület keresése
+            <input
+              value={workspaceQuery}
+              onChange={(e) => {
+                WQ(e.target.value);
+                WO(0);
+              }}
+            />
+          </label>
+          <label>
             Munkaterület
             <select
+              aria-label="Munkaterület"
               value={me.tenant_id ?? ""}
-              onChange={async (e) => {
-                setError("");
-                try {
-                  await api("/auth/tenant", "POST", {
-                    tenant_id: e.target.value ? Number(e.target.value) : null,
-                  });
-                  await refresh();
-                  setPage("dashboard");
-                } catch (e) {
-                  setError((e as Error).message);
-                }
-              }}
+              onChange={(e) =>
+                switchWorkspace(e.target.value ? Number(e.target.value) : null)
+              }
             >
-              <option value="" disabled={!me.user.superadmin}>
-                {me.user.superadmin ? "Rendszerszint" : "Válassz ügyfelet"}
+              <option value="" disabled={!(me.system ?? me.user.superadmin)}>
+                {(me.system ?? me.user.superadmin)
+                  ? "Rendszerszint"
+                  : "Válassz ügyfelet"}
               </option>
-              {me.memberships.map((m) => (
+              {visibleWorkspaces.map((m) => (
                 <option key={m.tenant_id} value={m.tenant_id}>
                   {m.name}
                 </option>
               ))}
-              {me.user.superadmin &&
-                me.tenant_id &&
-                !me.memberships.some((m) => m.tenant_id === me.tenant_id) && (
-                  <option value={me.tenant_id}>Ügyfél #{me.tenant_id}</option>
+              {me.workspace &&
+                !visibleWorkspaces.some(
+                  (m) => m.tenant_id === me.workspace?.tenant_id,
+                ) && (
+                  <option value={me.workspace.tenant_id}>
+                    {me.workspace.name}
+                  </option>
                 )}
             </select>
           </label>
+          {workspaceItems.length >= 100 && (
+            <button onClick={() => WO(workspaceOffset + 100)}>
+              További munkaterületek
+            </button>
+          )}
         </div>
         <p className="nav-label">MUNKATERÜLET</p>
         <nav>
@@ -2055,7 +1975,11 @@ function App() {
             <div>
               <strong>{me.user.name}</strong>
               <small>
-                {roleNames[me.role || ""] || "Nincs aktív szerepkör"}
+                {me.roles?.length
+                  ? me.roles.map((r) => r.name).join(", ")
+                  : me.user.superadmin
+                    ? "Superadmin"
+                    : roleNames[me.role || ""] || "Nincs aktív szerepkör"}
               </small>
             </div>
             <button onClick={() => setPassword(true)}>Jelszó</button>
@@ -2064,6 +1988,7 @@ function App() {
                 setError("");
                 try {
                   await api("/auth/logout", "POST");
+                  authGeneration.current++;
                   csrf = "";
                   setMe(null);
                 } catch (e) {
@@ -2075,7 +2000,10 @@ function App() {
             </button>
           </div>
         </header>
-        <main className="content">
+        <main
+          className="content"
+          key={`${me.tenant_id}-${JSON.stringify(me.permissions)}-${JSON.stringify(me.resource_access)}`}
+        >
           <div className="page-heading">
             <div>
               <p className="eyebrow">ADATDÚSÍTÓ / ADMINISZTRÁCIÓ</p>
@@ -2134,14 +2062,50 @@ function App() {
               </p>
             </>
           )}
-          {page === "users" && can("users.manage") && <Users />}
-          {page === "tenants" && <Tenants me={me} />}{" "}
-          {page === "imports" && can("imports.read") && <ImportWorkspace key={me.tenant_id} api={api} canManage={can("imports.manage")} />}
-          {page === "export-fields" && <ExportAdmin key={me.tenant_id} api={api} central={can("exports.manage")} />}
+          {page === "access-system" && (
+            <AccessWorkspace
+              key="system-access"
+              api={api}
+              tenantId={null}
+              superadmin={me.user.superadmin}
+              permissions={me.permissions}
+              onRefresh={refresh}
+            />
+          )}
+          {page === "members" && me.tenant_id && (
+            <AccessWorkspace
+              key={me.tenant_id}
+              api={api}
+              tenantId={me.tenant_id}
+              permissions={me.permissions}
+              onRefresh={refresh}
+            />
+          )}
+          {page === "tenants" && <Tenants me={me} onSwitch={switchWorkspace} />}{" "}
+          {page === "imports" && can("imports.read") && (
+            <ImportWorkspace
+              key={me.tenant_id}
+              api={api}
+              canManage={can("imports.manage")}
+              permissions={me.permissions}
+            />
+          )}
+          {page === "export-fields" && (
+            <ExportAdmin
+              key={me.tenant_id}
+              api={api}
+              central={can("exports.fields.manage")}
+            />
+          )}
           {page === "categories" && can("reference.read") && <Categories />}
           {page === "parameters" && can("reference.read") && <Parameters />}
-          {page === "audit" && can("audit.read") && <AuditLog />}
-          {page === "settings" && can("system.manage") && <Settings />}
+          {page === "audit" &&
+            (me.tenant_id ? can("audit.read") : can("system.audit.read")) && (
+              <AuditLog />
+            )}
+          {page === "settings" && can("system.settings.read") && (
+            <Settings canManage={can("system.settings.manage")} />
+          )}
         </main>
         <footer>
           Adatdúsító · Paksi Informatika
@@ -2153,6 +2117,7 @@ function App() {
           close={() => setPassword(false)}
           onChanged={() => {
             setPassword(false);
+            authGeneration.current++;
             csrf = "";
             setMe(null);
           }}

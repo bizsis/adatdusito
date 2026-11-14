@@ -36,6 +36,7 @@ class User(Base):
 
 class Tenant(Base):
     __tablename__ = "tenants"
+    __table_args__ = (Index("ix_tenant_workspace_names", "active", "name", "id"),)
     id: Mapped[int] = mapped_column(primary_key=True)
     name: Mapped[str] = mapped_column(String(120))
     active: Mapped[bool] = mapped_column(Boolean, default=True)
@@ -100,12 +101,21 @@ class Setting(Base):
 
 
 ROLE_LABELS = {
+    "viewer": "Megtekintő",
     "superadmin": "Superadmin",
     "tenant_admin": "Ügyféladminisztrátor",
     "processor": "Adatfeldolgozó",
     "reviewer": "Ellenőrző",
 }
 ROLE_PERMISSIONS = {
+    "viewer": [
+        "reference.read",
+        "imports.read",
+        "products.read",
+        "exports.read",
+        "companies.read",
+        "webshops.read",
+    ],
     "superadmin": [
         "system.manage",
         "tenants.manage",
@@ -155,6 +165,10 @@ def seed_roles(connection):
             for permission in perms
         ],
     )
+
+    from app.access_control import seed_access
+
+    seed_access(connection)
 
 
 class ReferenceSource(Base):
@@ -323,3 +337,4 @@ class CatalogSourceMapping(Base):
 
 # Register application import tables on the shared metadata.
 from app import import_models as _import_models  # noqa: E402,F401
+from app import access_models as _access_models  # noqa: E402,F401

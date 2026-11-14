@@ -51,10 +51,21 @@ const labels: Record<string, string> = {
 export function ImportWorkspace({
   api,
   canManage,
+  permissions,
 }: {
   api: Request;
   canManage: boolean;
+  permissions?: string[];
 }) {
+  const canCreate = permissions
+    ? permissions.includes("imports.create")
+    : canManage;
+  const canApprove = permissions
+    ? permissions.includes("imports.approve")
+    : canManage;
+  const canCancel = permissions
+    ? permissions.includes("imports.cancel")
+    : canManage;
   const [exportProfiles, EP] = useState<
     { id: number; name: string; fields: Field[] }[]
   >([]);
@@ -133,7 +144,9 @@ export function ImportWorkspace({
   async function refresh() {
     S(await api("/imports/suppliers"));
     R(await api("/imports/runs"));
-    EP(await api("/imports/export-profiles"));
+    if (!permissions || permissions.includes("exports.read"))
+      EP(await api("/imports/export-profiles"));
+    else EP([]);
   }
   function select(r: Run) {
     U(r);
@@ -245,33 +258,35 @@ export function ImportWorkspace({
             ))}
           </select>
         </label>
-        {canManage && (
+        {(canManage || canCreate) && (
           <>
-            <form
-              onSubmit={(e) => {
-                e.preventDefault();
-                act(async () => {
-                  const s = await api<{ id: number }>(
-                    "/imports/suppliers",
-                    "POST",
-                    { name },
-                  );
-                  await refresh();
-                  T(String(s.id));
-                  N("");
-                });
-              }}
-            >
-              <label>
-                Új beszállító neve
-                <input
-                  value={name}
-                  onChange={(e) => N(e.target.value)}
-                  required
-                />
-              </label>
-              <button disabled={busy}>Beszállító létrehozása</button>
-            </form>
+            {canManage && (
+              <form
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  act(async () => {
+                    const s = await api<{ id: number }>(
+                      "/imports/suppliers",
+                      "POST",
+                      { name },
+                    );
+                    await refresh();
+                    T(String(s.id));
+                    N("");
+                  });
+                }}
+              >
+                <label>
+                  Új beszállító neve
+                  <input
+                    value={name}
+                    onChange={(e) => N(e.target.value)}
+                    required
+                  />
+                </label>
+                <button disabled={busy}>Beszállító létrehozása</button>
+              </form>
+            )}
             <details>
               <summary>Haladó fájlbeállítások</summary>
               <label>
@@ -330,7 +345,7 @@ export function ImportWorkspace({
               <input
                 type="file"
                 accept=".csv,.xlsx"
-                disabled={!supplier || busy}
+                disabled={!supplier || busy || !canCreate}
                 onChange={(e) => {
                   const file = e.target.files?.[0];
                   if (!file) return;
@@ -408,7 +423,7 @@ export function ImportWorkspace({
           <a href={`/api/v1/imports/runs/${run.id}/errors.csv`}>
             Hibajegyzék CSV
           </a>
-          {canManage && (
+          {(canManage || canCancel) && (
             <div>
               {(run.state === "processing"
                 ? ["pause", "cancel"]
@@ -421,32 +436,34 @@ export function ImportWorkspace({
                       : ["partial", "completed"].includes(run.state)
                         ? ["retry-errors"]
                         : []
-              ).map((a) => (
-                <button
-                  key={a}
-                  disabled={busy}
-                  onClick={() =>
-                    act(async () =>
-                      U(
-                        await api(
-                          `/imports/runs/${run.id}/actions/${a}`,
-                          "POST",
+              )
+                .filter((a) => (a === "cancel" ? canCancel : canManage))
+                .map((a) => (
+                  <button
+                    key={a}
+                    disabled={busy}
+                    onClick={() =>
+                      act(async () =>
+                        U(
+                          await api(
+                            `/imports/runs/${run.id}/actions/${a}`,
+                            "POST",
+                          ),
                         ),
-                      ),
-                    )
-                  }
-                >
-                  {
+                      )
+                    }
+                  >
                     {
-                      pause: "Szüneteltetés",
-                      cancel: "Megszakítás",
-                      resume: "Folytatás",
-                      analyze: "Elemzés újraindítása",
-                      "retry-errors": "Hibás sorok újrapróbálása",
-                    }[a]
-                  }
-                </button>
-              ))}
+                      {
+                        pause: "Szüneteltetés",
+                        cancel: "Megszakítás",
+                        resume: "Folytatás",
+                        analyze: "Elemzés újraindítása",
+                        "retry-errors": "Hibás sorok újrapróbálása",
+                      }[a]
+                    }
+                  </button>
+                ))}
             </div>
           )}
           {run.state === "awaiting_approval" && (
@@ -644,7 +661,7 @@ export function ImportWorkspace({
                 A célwebáruház-mezők az exportprofil szerint határozhatók meg;
                 árból nem következtetünk eladási árra.
               </p>
-              {canManage && (
+              {canApprove && (
                 <form
                   onSubmit={(e) => {
                     e.preventDefault();

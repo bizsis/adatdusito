@@ -1,5 +1,7 @@
 # Adatdúsító
 
+[CODEX 08 – Testreszabható jogosultságok, munkaterületek és SMTP-meghívások](docs/codex-08-access-control.md). Új migráció: `0007`; a meglévő fiókok, munkamenetek és importadatok megmaradnak. A dokumentum tartalmazza a mentést, kézi VPS-telepítést, ellenőrzést és visszaállítási tervet.
+
 [CODEX 07 – Beszállítói import és exportmező-adminisztráció](docs/codex-07-import-engine.md). A frissítés a saját adatbázis `0006` migrációját igényli.
 
 [Aktuális javítás: 45 termékkategória szerepének helyreállítása, 457 kategória profilokkal](docs/product-role-correction.md).
@@ -16,8 +18,10 @@ Magyar nyelvű, többügyfeles adminfelület FastAPI, React/TypeScript, Celery/R
 
 - Cookie-alapú bejelentkezés, kijelentkezés, 8 órás szerveroldali munkamenet és saját jelszócsere.
 - Scrypt jelszóhash (N=131072, r=8, p=1), CSRF-védelem, Redis-alapú belépési korlátozás.
-- Superadmin, ügyféladminisztrátor, adatfeldolgozó és ellenőrző szerepkör; backend által ellenőrzött jogosultságok.
-- Ügyfelek, felhasználók, tagságok és adminisztrációs napló. Tenantváltás mindig ellenőrzött tagsággal.
+- Testreszabható rendszer- és ügyfélszerepkörök, több szerepkör, egyedi tiltások és engedélyek; kérésenkénti szerveroldali ellenőrzés.
+- Név szerinti, kereshető munkaterületek; superadmin tagság nélkül válthat, rendszerfiókok ügyfélköre all/selected/none. SMTP-meghívások saját jelszóval és tulajdonosi elfogadással.
+- Minimális cég-/webáruház-nyilvántartás és hozzáférési kör. A még erőforrás-kapcsolat nélküli üzleti adatok csak teljes ügyfélkörrel érhetők el.
+- Ügyfelek, felhasználók, tagságok és adminisztrációs napló. Munkaterület-váltás ellenőrzött tagsággal vagy rendszerfiókhoz kiosztott ügyfélkörrel.
 - Közös kategóriafa, automatikus név-/környezetalapú összerendelés, keresés, kötelező/opcionális paraméterek és kurzorral lapozott értéklisták. A pinfo_db továbbra is csak olvasható importforrás.
 - Reszponzív adminfelület, rendszerállapot, bejelentkezéssel védett OpenAPI dokumentáció: `/api/v1/docs`.
 

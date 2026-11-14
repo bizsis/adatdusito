@@ -133,7 +133,7 @@ def observations(
 @router.post("/observations", status_code=201)
 def observe(
     body: ObservationInput,
-    who: Identity = Depends(require("system.manage")),
+    who: Identity = Depends(require("reference.manage")),
     db: Session = Depends(database),
 ):
     if not db.get(ReferenceSource, body.source_key):

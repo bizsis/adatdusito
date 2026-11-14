@@ -11,6 +11,8 @@ from sqlalchemy import delete, func, select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 from app.models import Audit, LoginSession, Membership, Role, Setting, Tenant, User, now
+from app import access_control as ac
+from app.access_models import SystemAccess, AccessRole, AccessBinding, ResourceAccess
 from app.security import (
     COOKIE,
     Identity,
@@ -28,7 +30,7 @@ from app.security import (
 )
 
 router = APIRouter(prefix="/api/v1")
-TenantRole = Literal["tenant_admin", "processor", "reviewer"]
+TenantRole = Literal["tenant_admin", "processor", "reviewer", "viewer"]
 DUMMY_HASH = hash_password(secrets.token_urlsafe(32))
 
 
@@ -183,6 +185,17 @@ def me_data(db, who):
         "role": who.role,
         "permissions": sorted(who.permissions),
         "memberships": memberships(db, who.user.id),
+        "workspaces": ac.workspaces(db, who.user),
+        "system": who.system,
+        "roles": who.roles,
+        "permission_sources": who.permission_sources,
+        "workspace": {
+            "tenant_id": who.session.tenant_id,
+            "name": db.get(Tenant, who.session.tenant_id).name,
+        }
+        if who.session.tenant_id
+        else None,
+        "resource_access": resource_snapshot(db, who),
         "csrf_token": csrf_for(who.token),
         "expires_at": who.session.expires_at.isoformat() + "Z",
     }
@@ -201,7 +214,9 @@ def login(
         raise HTTPException(401, "Hibás email-cím vagy jelszó.")
     choices = memberships(db, user.id)
     tenant_id = (
-        choices[0]["tenant_id"] if len(choices) == 1 and not user.superadmin else None
+        choices[0]["tenant_id"]
+        if len(choices) == 1 and not ac.is_system(db, user)
+        else None
     )
     token = secrets.token_hex(32)
     db.execute(delete(LoginSession).where(LoginSession.expires_at <= now()))
@@ -260,15 +275,10 @@ def switch(
     body: Switch, who: Identity = Depends(identity), db: Session = Depends(database)
 ):
     if body.tenant_id is None:
-        if not who.user.superadmin:
+        if not who.system:
             raise HTTPException(403, "Válassz ügyfelet.")
-    else:
-        tenant = tenant_or_404(db, body.tenant_id)
-        membership = db.get(Membership, (tenant.id, who.user.id))
-        if not tenant.active or (
-            not who.user.superadmin and (not membership or not membership.active)
-        ):
-            raise HTTPException(403, "Nincs ügyfél-hozzáférés.")
+    elif not ac.can_access(db, who.user, body.tenant_id):
+        raise HTTPException(403, "Nincs ügyfél-hozzáférés.")
     who.session.tenant_id = body.tenant_id
     audit(db, who, "auth.tenant_switch", str(body.tenant_id), body.tenant_id)
     db.commit()
@@ -297,20 +307,28 @@ def tenants(
     offset: int = Query(0, ge=0),
     limit: int = Query(25, ge=1, le=100),
 ):
+    ac.need(who, "tenants.read")
     stmt = select(Tenant).order_by(Tenant.id)
     if not who.user.superadmin:
-        stmt = stmt.join(Membership).where(
-            Membership.user_id == who.user.id,
-            Membership.active.is_(True),
-            Tenant.active.is_(True),
-        )
+        account = db.get(SystemAccess, who.user.id)
+        if account and "tenants.suspend" in who.permissions:
+            if account.mode != "all":
+                stmt = stmt.where(
+                    Tenant.id.in_(account.tenants if account.mode == "selected" else [])
+                )
+        else:
+            stmt = stmt.where(
+                Tenant.id.in_(
+                    [x["tenant_id"] for x in ac.workspaces(db, who.user, limit=100000)]
+                )
+            )
     return page(db, stmt, offset, limit, public_tenant)
 
 
 @router.post("/tenants", status_code=201, tags=["Ügyfelek"])
 def create_tenant(
     body: TenantInput,
-    who: Identity = Depends(require("tenants.manage")),
+    who: Identity = Depends(require("tenants.create")),
     db: Session = Depends(database),
 ):
     tenant = Tenant(name=body.name)
@@ -328,11 +346,12 @@ def edit_tenant(
     who: Identity = Depends(identity),
     db: Session = Depends(database),
 ):
-    scope(who, tenant_id)
-    if not who.user.superadmin and "tenant.manage" not in who.permissions:
-        raise HTTPException(403, "Nincs ügyféladminisztrátori jogosultság.")
-    if body.active is not None and not who.user.superadmin:
-        raise HTTPException(403, "Az ügyfél állapotát csak Superadmin módosíthatja.")
+    if not who.system or not ac.system_tenant_scope(db, who.user, tenant_id):
+        scope(who, tenant_id)
+    if body.name is not None:
+        ac.need(who, "tenants.edit")
+    if body.active is not None:
+        ac.need(who, "tenants.suspend")
     tenant = tenant_or_404(db, tenant_id)
     for key, value in body.model_dump(exclude_none=True).items():
         setattr(tenant, key, value)
@@ -350,7 +369,7 @@ def edit_tenant(
 
 @router.get("/users", tags=["Felhasználók"])
 def users(
-    who: Identity = Depends(require("users.manage")),
+    who: Identity = Depends(require("system.users.read")),
     db: Session = Depends(database),
     offset: int = Query(0, ge=0),
     limit: int = Query(25, ge=1, le=100),
@@ -370,9 +389,11 @@ def users(
 @router.post("/users", status_code=201, tags=["Felhasználók"])
 def create_user(
     body: CreateUser,
-    who: Identity = Depends(require("users.manage")),
+    who: Identity = Depends(require("system.users.manage")),
     db: Session = Depends(database),
 ):
+    if body.superadmin:
+        ac.protected_admin(who)
     if db.scalar(select(User.id).where(User.email == body.email)):
         raise HTTPException(409, "Ez az email-cím már használatban van.")
     user = User(
@@ -392,9 +413,14 @@ def create_user(
 def edit_user(
     user_id: int,
     body: UserPatch,
-    who: Identity = Depends(require("users.manage")),
+    who: Identity = Depends(require("system.users.manage")),
     db: Session = Depends(database),
 ):
+    if body.superadmin is not None:
+        ac.protected_admin(who)
+    target = db.get(User, user_id)
+    if target and target.superadmin:
+        ac.protected_admin(who)
     # Serialize global admin transitions to preserve a usable last Superadmin.
     db.scalar(select(Role).where(Role.code == "superadmin").with_for_update())
     user = db.get(User, user_id, populate_existing=True, with_for_update=True)
@@ -416,20 +442,35 @@ def edit_user(
         )
         if count <= 1:
             raise HTTPException(409, "Az utolsó aktív Superadmin nem tiltható le.")
+    if body.active is False or body.superadmin is not None:
+        ac.revoke_pending(db, user.email, None, who.user.id, all_contexts=True)
+    before_flags = {
+        "name": user.name,
+        "active": user.active,
+        "superadmin": user.superadmin,
+    }
     for key, value in body.model_dump(exclude_none=True, exclude={"password"}).items():
         setattr(user, key, value)
     if body.password:
         user.password_hash = hash_password(body.password)
     if body.password or body.active is False or body.superadmin is not None:
         revoke(db, user.id)
-    audit(db, who, "user.update", user.id, fields=list(body.model_fields_set))
+    audit(
+        db,
+        who,
+        "user.update",
+        user.id,
+        fields=list(body.model_fields_set),
+        before=before_flags,
+        after={"name": user.name, "active": user.active, "superadmin": user.superadmin},
+    )
     commit(db)
     return public_user(user)
 
 
 def member_admin(who, tenant_id):
     scope(who, tenant_id)
-    if not who.user.superadmin and "members.manage" not in who.permissions:
+    if "members.manage" not in who.permissions or not who.full_resources:
         raise HTTPException(403, "Nincs felhasználókezelési jogosultság.")
 
 
@@ -438,15 +479,27 @@ def members(
     tenant_id: int,
     who: Identity = Depends(identity),
     db: Session = Depends(database),
+    q: str = Query("", max_length=120),
     offset: int = Query(0, ge=0),
     limit: int = Query(25, ge=1, le=100),
 ):
-    member_admin(who, tenant_id)
+    scope(who, tenant_id)
+    ac.need(who, "members.read")
+    if not who.full_resources:
+        raise HTTPException(403, "Teljes ügyfél-hozzáférés szükséges.")
     tenant_or_404(db, tenant_id)
     stmt = (
         select(User, Membership)
         .join(Membership, Membership.user_id == User.id)
-        .where(Membership.tenant_id == tenant_id)
+        .where(
+            Membership.tenant_id == tenant_id,
+            User.name.contains(q, autoescape=True)
+            | User.email.contains(q, autoescape=True),
+            User.superadmin.is_(False),
+            ~select(SystemAccess.user_id)
+            .where(SystemAccess.user_id == User.id)
+            .exists(),
+        )
         .order_by(User.id)
     )
     total = db.scalar(select(func.count()).select_from(stmt.subquery()))
@@ -470,6 +523,12 @@ def create_member(
 ):
     member_admin(who, tenant_id)
     tenant_or_404(db, tenant_id)
+    ac.need(who, "members.roles.manage")
+    if not who.user.superadmin and not body.superadmin:
+        raise HTTPException(
+            409,
+            "Új és meglévő fiókhoz is az e-mailes meghívást használd; a meghívott saját maga állítja be a jelszavát.",
+        )
     if body.superadmin:
         raise HTTPException(403, "Ezen a végponton nem hozható létre Superadmin.")
     if db.scalar(select(User.id).where(User.email == body.email)):
@@ -492,14 +551,16 @@ def create_member(
 def assign_member(
     tenant_id: int,
     body: MemberInput,
-    who: Identity = Depends(require("users.manage")),
+    who: Identity = Depends(require("system.users.manage")),
     db: Session = Depends(database),
 ):
+    scope(who, tenant_id)
     tenant_or_404(db, tenant_id)
     if not db.get(User, body.user_id):
         raise HTTPException(404, "A felhasználó nem található.")
     if db.get(Membership, (tenant_id, body.user_id)):
         raise HTTPException(409, "A tagság már létezik.")
+    validate_legacy_assignment(db, who, tenant_id, body.role)
     db.add(Membership(tenant_id=tenant_id, user_id=body.user_id, role=body.role))
     audit(db, who, "member.assign", body.user_id, tenant_id, role=body.role)
     commit(db)
@@ -515,6 +576,22 @@ def edit_member(
     db: Session = Depends(database),
 ):
     member_admin(who, tenant_id)
+    if body.role is not None:
+        if (
+            db.scalar(
+                select(func.count())
+                .select_from(AccessBinding)
+                .where(
+                    AccessBinding.user_id == user_id,
+                    AccessBinding.context == f"tenant:{tenant_id}",
+                )
+            )
+            > 1
+        ):
+            raise HTTPException(
+                409, "Több szerepkör esetén az új hozzáférésszerkesztőt használd."
+            )
+        validate_legacy_assignment(db, who, tenant_id, body.role)
     db.scalar(select(Tenant).where(Tenant.id == tenant_id).with_for_update())
     member = db.get(
         Membership, (tenant_id, user_id), populate_existing=True, with_for_update=True
@@ -522,7 +599,7 @@ def edit_member(
     user = db.get(User, user_id)
     if not member:
         raise HTTPException(404, "A tagság nem található.")
-    if user.superadmin and not who.user.superadmin:
+    if ac.is_system(db, user) and not who.user.superadmin:
         raise HTTPException(403, "Superadmin tagságát csak Superadmin módosíthatja.")
     if (
         member.active
@@ -551,10 +628,21 @@ def edit_member(
             raise HTTPException(
                 409, "Az utolsó aktív ügyféladminisztrátor nem távolítható el."
             )
+    ac.revoke_pending(db, user.email, tenant_id, who.user.id)
+    previous_member = {"role": member.role, "active": member.active}
     for key, value in body.model_dump(exclude_none=True).items():
         setattr(member, key, value)
+    if body.role is not None:
+        sync_legacy_role(db, user_id, tenant_id, body.role)
     audit(
-        db, who, "member.update", user_id, tenant_id, fields=list(body.model_fields_set)
+        db,
+        who,
+        "member.update",
+        user_id,
+        tenant_id,
+        fields=list(body.model_fields_set),
+        before=previous_member,
+        after={"role": member.role, "active": member.active},
     )
     commit(db)
     return {
@@ -567,13 +655,32 @@ def edit_member(
 
 @router.get("/audit", tags=["Adminisztráció"])
 def audits(
-    who: Identity = Depends(require("audit.read")),
+    who: Identity = Depends(identity),
     db: Session = Depends(database),
     offset: int = Query(0, ge=0),
     limit: int = Query(25, ge=1, le=100),
 ):
     stmt = select(Audit).order_by(Audit.id.desc())
-    if not who.user.superadmin:
+    if who.session.tenant_id is None:
+        ac.need(who, "system.audit.read")
+        if not who.user.superadmin:
+            from sqlalchemy import or_
+
+            stmt = stmt.where(
+                or_(
+                    Audit.tenant_id.is_(None),
+                    Audit.tenant_id.in_(
+                        [
+                            x["tenant_id"]
+                            for x in ac.workspaces(db, who.user, limit=100000)
+                        ]
+                    ),
+                )
+            )
+    else:
+        ac.need(who, "audit.read")
+        if not who.full_resources:
+            raise HTTPException(403, "Teljes ügyfél-hozzáférés szükséges.")
         stmt = stmt.where(Audit.tenant_id == who.session.tenant_id)
     return page(
         db,
@@ -583,6 +690,12 @@ def audits(
         lambda event: {
             "id": event.id,
             "actor_id": event.actor_id,
+            "actor_name": db.get(User, event.actor_id).name
+            if event.actor_id and db.get(User, event.actor_id)
+            else "Rendszer / meghívott",
+            "tenant_name": db.get(Tenant, event.tenant_id).name
+            if event.tenant_id and db.get(Tenant, event.tenant_id)
+            else "Rendszerszint",
             "tenant_id": event.tenant_id,
             "action": event.action,
             "target": event.target,
@@ -594,7 +707,8 @@ def audits(
 
 @router.get("/settings", tags=["Adminisztráció"])
 def settings(
-    who: Identity = Depends(require("system.manage")), db: Session = Depends(database)
+    who: Identity = Depends(require("system.settings.read")),
+    db: Session = Depends(database),
 ):
     return {setting.key: setting.value for setting in db.scalars(select(Setting))}
 
@@ -603,7 +717,7 @@ def settings(
 def setting(
     key: Literal["display_name", "admin_notice"],
     body: SettingInput,
-    who: Identity = Depends(require("system.manage")),
+    who: Identity = Depends(require("system.settings.manage")),
     db: Session = Depends(database),
 ):
     current = db.get(Setting, key)
@@ -638,7 +752,7 @@ def edit_member_profile(
                 )
             )
         )
-        if user.superadmin or memberships_count != 1:
+        if ac.is_system(db, user) or memberships_count != 1:
             raise HTTPException(
                 403, "Megosztott vagy Superadmin-fiókot csak Superadmin módosíthat."
             )
@@ -661,3 +775,59 @@ def edit_member_profile(
     )
     commit(db)
     return public_user(user)
+
+
+def sync_legacy_role(db, user_id, tenant_id, code):
+    r = db.scalar(
+        select(AccessRole)
+        .where(
+            AccessRole.owner.in_(["template", f"tenant:{tenant_id}"]),
+            AccessRole.code == code,
+        )
+        .order_by(AccessRole.owner.desc())
+    )
+    if r:
+        db.execute(
+            delete(AccessBinding).where(
+                AccessBinding.user_id == user_id,
+                AccessBinding.context == f"tenant:{tenant_id}",
+            )
+        )
+        db.add(
+            AccessBinding(user_id=user_id, context=f"tenant:{tenant_id}", role_id=r.id)
+        )
+        s = db.get(ResourceAccess, (user_id, tenant_id))
+        if not s:
+            s = ResourceAccess(
+                user_id=user_id, tenant_id=tenant_id, mode="all", companies=[], shops=[]
+            )
+            db.add(s)
+        s.roles_managed = True
+
+
+def resource_snapshot(db, who):
+    r = (
+        db.get(ResourceAccess, (who.user.id, who.session.tenant_id))
+        if who.session.tenant_id
+        else None
+    )
+    return {
+        "full": who.full_resources,
+        "companies": r.companies if r else [],
+        "shops": r.shops if r else [],
+    }
+
+
+def validate_legacy_assignment(db, who, tenant_id, code):
+    ac.need(who, "members.roles.manage")
+    r = db.scalar(
+        select(AccessRole)
+        .where(
+            AccessRole.owner.in_(["template", f"tenant:{tenant_id}"]),
+            AccessRole.code == code,
+        )
+        .order_by(AccessRole.owner.desc())
+    )
+    if not r:
+        raise HTTPException(422, "Ismeretlen ügyfélszerepkör.")
+    ac.validate_grants(who, ac.role_permissions(db, r), False)

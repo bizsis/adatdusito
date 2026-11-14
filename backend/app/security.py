@@ -2,18 +2,15 @@ import hashlib
 import hmac
 import os
 import secrets
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from fastapi import Depends, HTTPException, Request
-from sqlalchemy import delete, select
+from sqlalchemy import delete
 from sqlalchemy.orm import Session
 from redis import Redis
 from app.db import engine
 from app.models import (
     Audit,
     LoginSession,
-    Membership,
-    RolePermission,
-    Tenant,
     User,
     now,
 )
@@ -100,6 +97,10 @@ class Identity:
     role: str | None
     permissions: set[str]
     token: str
+    roles: list = field(default_factory=list)
+    permission_sources: dict = field(default_factory=dict)
+    system: bool = False
+    full_resources: bool = True
 
 
 def identity(request: Request, db: Session = Depends(database)):
@@ -110,42 +111,55 @@ def identity(request: Request, db: Session = Depends(database)):
     user = db.get(User, session.user_id)
     if not user or not user.active:
         raise HTTPException(401, "A munkamenet érvénytelen.")
-    role = "superadmin" if user.superadmin else None
-    if session.tenant_id is not None:
-        tenant = db.get(Tenant, session.tenant_id)
-        member = db.get(Membership, (session.tenant_id, user.id))
-        if (
-            not tenant
-            or not tenant.active
-            or (not user.superadmin and (not member or not member.active))
-        ):
-            # The user can still log out or select another valid membership.
-            session.tenant_id = None
-            db.commit()
-            member = None
-        if not user.superadmin:
-            role = member.role if member and session.tenant_id else None
-    permissions = (
-        set(
-            db.scalars(
-                select(RolePermission.permission).where(RolePermission.role == role)
-            )
-        )
-        if role
-        else set()
+    from app.access_control import (
+        can_access,
+        effective,
+        roles_for,
+        is_system,
+        full_resources,
+    )
+
+    if session.tenant_id is not None and not can_access(db, user, session.tenant_id):
+        session.tenant_id = None
+        db.commit()
+    permissions, sources = effective(db, user, session.tenant_id)
+    roles = roles_for(db, user, session.tenant_id)
+    role = (
+        "superadmin"
+        if user.superadmin
+        else (roles[0].legacy_code or roles[0].code)
+        if roles
+        else None
     )
     if request.method not in ("GET", "HEAD", "OPTIONS"):
         if not hmac.compare_digest(
             request.headers.get("X-CSRF-Token", "").encode(), csrf_for(token).encode()
         ):
             raise HTTPException(403, "Érvénytelen CSRF-token.")
-    return Identity(user, session, role, permissions, token)
+    result = Identity(user, session, role, permissions, token)
+    result.roles = [{"id": r.id, "code": r.code, "name": r.name} for r in roles]
+    result.permission_sources = sources
+    result.system = is_system(db, user)
+    result.full_resources = full_resources(db, result)
+    return result
 
 
 def require(permission):
     def check(who: Identity = Depends(identity)):
         if permission not in who.permissions:
             raise HTTPException(403, "Nincs jogosultság ehhez a művelethez.")
+        if (
+            who.session.tenant_id is not None
+            and not who.full_resources
+            and (
+                permission.startswith(("imports.", "products."))
+                or permission in {"exports.profile", "audit.read"}
+            )
+        ):
+            raise HTTPException(
+                403,
+                "A jelenlegi adatok még nem kapcsolódnak céghez/webáruházhoz; teljes ügyfél-hozzáférés szükséges.",
+            )
         return who
 
     return check

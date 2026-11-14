@@ -24,11 +24,17 @@ from app.import_models import (
 from app.import_parser import FIELDS, FINANCIAL, analyze
 from app.import_engine import enqueue, limit
 from app.models import now
+from app.access_control import need
 
 router = APIRouter(prefix="/api/v1/imports", tags=["Beszállítói import"])
 
 
 def tenant(who):
+    if not who.full_resources:
+        raise HTTPException(
+            403,
+            "A még be nem sorolt importadatokhoz teljes ügyfél-hozzáférés szükséges.",
+        )
     if who.session.tenant_id is None:
         raise HTTPException(409, "Válassz ügyfél-munkaterületet.")
     return who.session.tenant_id
@@ -170,7 +176,7 @@ async def upload(
     profile_id: int | None = Form(None),
     settings: str = Form("{}"),
     file: UploadFile = File(...),
-    who=Depends(require("imports.manage")),
+    who=Depends(require("imports.create")),
     db: Session = Depends(database),
 ):
     s = db.get(Supplier, supplier_id)
@@ -295,7 +301,7 @@ class Approval(BaseModel):
 def approve(
     id: int,
     body: Approval,
-    who=Depends(require("imports.manage")),
+    who=Depends(require("imports.approve")),
     db: Session = Depends(database),
 ):
     run = get_run(db, who, id)
@@ -388,9 +394,10 @@ def approve(
 def action(
     id: int,
     action: str,
-    who=Depends(require("imports.manage")),
+    who=Depends(identity),
     db: Session = Depends(database),
 ):
+    need(who, "imports.cancel" if action == "cancel" else "imports.manage")
     run = get_run(db, who, id)
     run = db.scalar(select(ImportRun).where(ImportRun.id == id).with_for_update())
     if action == "pause" and run.state == "processing":
@@ -492,7 +499,7 @@ def source_file(
 def products(
     supplier_id: int,
     offset: int = Query(0, ge=0),
-    who=Depends(require("imports.read")),
+    who=Depends(require("products.read")),
     db: Session = Depends(database),
 ):
     return [
@@ -561,7 +568,7 @@ def validate_fields(fields):
 
 
 @router.get("/engines")
-def engines(who=Depends(identity), db: Session = Depends(database)):
+def engines(who=Depends(require("exports.read")), db: Session = Depends(database)):
     return [
         {"key": e.key, "name": e.name, "version": e.version, "fields": e.fields}
         for e in db.scalars(select(StoreEngine))
@@ -572,7 +579,7 @@ def engines(who=Depends(identity), db: Session = Depends(database)):
 def save_engine(
     key: str,
     body: EngineInput,
-    who=Depends(require("exports.manage")),
+    who=Depends(require("exports.fields.manage")),
     db: Session = Depends(database),
 ):
     if not re.fullmatch(r"[a-z0-9_-]{1,48}", key):
@@ -602,7 +609,7 @@ def save_engine(
 def delete_field(
     key: str,
     field_key: str,
-    who=Depends(require("exports.manage")),
+    who=Depends(require("exports.fields.manage")),
     db: Session = Depends(database),
 ):
     e = db.get(StoreEngine, key)
@@ -620,7 +627,7 @@ def delete_field(
 async def engine_reference(
     key: str,
     file: UploadFile = File(...),
-    who=Depends(require("exports.manage")),
+    who=Depends(require("exports.fields.manage")),
     db: Session = Depends(database),
 ):
     import tempfile
@@ -649,7 +656,7 @@ async def engine_reference(
 
 @router.get("/export-profiles")
 def export_profiles(
-    who=Depends(require("imports.read")), db: Session = Depends(database)
+    who=Depends(require("exports.read")), db: Session = Depends(database)
 ):
     return [
         {
@@ -796,7 +803,7 @@ def expire_source(
 def changes(
     id: int,
     offset: int = Query(0, ge=0),
-    who=Depends(require("imports.read")),
+    who=Depends(require("products.read")),
     db: Session = Depends(database),
 ):
     product = db.get(SupplierProduct, id)

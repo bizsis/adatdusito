@@ -500,7 +500,7 @@ class AssignmentInput(BaseModel):
 def assign_category(
     node_id: str,
     body: AssignmentInput,
-    who: Identity = Depends(require("system.manage")),
+    who: Identity = Depends(require("reference.manage")),
     db: Session = Depends(database),
 ):
     version = catalog_store.active_version(db)

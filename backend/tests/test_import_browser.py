@@ -53,7 +53,10 @@ def test_upload_approve_preview_and_export_admin(
 
     with sync_playwright() as p:
         browser = p.chromium.launch(
-            executable_path="/usr/bin/chromium", args=["--no-sandbox"]
+            executable_path="/usr/bin/chromium"
+            if Path("/usr/bin/chromium").exists()
+            else None,
+            args=["--no-sandbox"],
         )
         page = browser.new_page(viewport={"width": width, "height": height})
         errors = []

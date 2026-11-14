@@ -199,3 +199,7 @@ app.openapi = documented_openapi
 
 from app.import_api import router as import_router
 app.include_router(import_router)
+from app.access_api import router as access_router
+from app.invitations import router as invitation_router
+app.include_router(access_router)
+app.include_router(invitation_router)

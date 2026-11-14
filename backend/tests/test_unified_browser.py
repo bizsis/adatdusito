@@ -139,7 +139,10 @@ def test_unified_category_ui_parameters_values_and_simple_review(
 
     with sync_playwright() as p:
         browser = p.chromium.launch(
-            executable_path="/usr/bin/chromium", args=["--no-sandbox"]
+            executable_path="/usr/bin/chromium"
+            if Path("/usr/bin/chromium").exists()
+            else None,
+            args=["--no-sandbox"],
         )
         page = browser.new_page(viewport={"width": width, "height": height})
         errors = []
@@ -234,9 +237,7 @@ def test_unified_category_ui_parameters_values_and_simple_review(
                 "Háztartási gépek és klíma / Mosógépek és szárítógépek / Elöltöltős mosógépek"
             )
             expect(
-                page.get_by_text(
-                    "Termékbesorolásra választható", exact=True
-                )
+                page.get_by_text("Termékbesorolásra választható", exact=True)
             ).to_be_visible()
         page.get_by_role(
             "button", name="TV és szórakozás alkategóriái", exact=True

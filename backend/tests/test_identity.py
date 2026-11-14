@@ -122,7 +122,9 @@ def test_tenant_admin_scoped_users_and_tenants(environment):
             "role": "reviewer",
         },
     )
-    assert result.status_code == 201
+    # New tenant accounts now require owner-accepted invitations; this legacy
+    # endpoint gives the same non-enumerating response for every email.
+    assert result.status_code == 409
     assert client.get("/api/v1/users").status_code == 403
     assert (
         client.post(
