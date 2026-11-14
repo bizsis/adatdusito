@@ -1,4 +1,4 @@
-# Current architecture (CODEX 08 baseline)
+# Current architecture (CODEX 09 + SECURITY-01 main baseline)
 
 ## Runtime topology
 ```text
@@ -22,7 +22,8 @@ The Docker Compose services are `redis`, `migrate`, `backend`, `worker`, `fronte
 ## Backend modules
 - `app/main.py`: FastAPI entrypoint, routers, security headers, error handling, health checks.
 - `app/api.py`: login/session, tenants, users and legacy-compatible identity/admin API.
-- `app/security.py`: session cookie / CSRF, scrypt, dependency checks.
+- `app/security.py`: session cookie / CSRF, bounded cross-process scrypt, trusted client IP and configurable login throttling.
+- `app/auth_api.py`, `app/oidc_api.py`, `app/registration.py`, `app/auth_service.py`, `app/system_config.py`: MFA/passkey, Google OIDC, account provisioning, structured/secret settings and authentication orchestration.
 - `app/access_control.py`, `access_api.py`, `access_models.py`, `invitations.py`: CODEX 08 RBAC, scoped workspace access, invitation lifecycle.
 - `app/reference.py`, `reference_sources.py`, `category_tree.py`: reference taxonomy and values.
 - `app/catalog_import.py`, `models.py`: versioned application-owned taxonomy.
@@ -39,7 +40,7 @@ The Docker Compose services are `redis`, `migrate`, `backend`, `worker`, `fronte
 6. File uploads, worker results and exports must be tenant-scoped; source originals must be traceable.
 
 ## Key limitations
-Current auth is email/password only. SMTP invitations depend on configured environment variables. AI research, auto-feed schedules, full UNAS API integration and subscription billing are future work.
+Merged code supports password sign-in via email or username, Google OIDC, WebAuthn passkeys, TOTP, recovery codes, user security settings and encrypted SMTP system configuration. External providers, encryption key and migration `0008` require operator setup before VPS operation. AI research, automated feed sync, full UNAS API integration and subscription billing remain future work. Frontend non-JSON 413 error handling is an open follow-up.
 
 ## Architecture change process
 Record breaking or cross-cutting decisions in `docs/decisions/` (ADRs); update this document when code lands. Historical CODEX reports are supporting evidence, not an architecture source of truth.
