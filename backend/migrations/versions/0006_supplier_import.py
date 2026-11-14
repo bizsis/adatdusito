@@ -51,6 +51,7 @@ def upgrade():
             "approved_by", sa.Integer(), sa.ForeignKey("users.id"), nullable=False
         ),
         sa.Column("created_at", sa.DateTime(), nullable=False),
+        sa.UniqueConstraint("tenant_id", "supplier_id", "name", "version"),
     )
     op.create_index("ix_import_profiles_tenant_id", "import_profiles", ["tenant_id"])
     op.create_index(

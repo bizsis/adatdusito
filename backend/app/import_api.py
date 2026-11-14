@@ -167,6 +167,7 @@ def runs(
 @router.post("/runs")
 async def upload(
     supplier_id: int = Form(...),
+    profile_id: int | None = Form(None),
     settings: str = Form("{}"),
     file: UploadFile = File(...),
     who=Depends(require("imports.manage")),
@@ -175,6 +176,13 @@ async def upload(
     s = db.get(Supplier, supplier_id)
     if not s or s.tenant_id != tenant(who):
         raise HTTPException(404, "Beszállító nem található.")
+    selected_profile = db.get(ImportProfile, profile_id) if profile_id else None
+    if profile_id and (
+        not selected_profile
+        or selected_profile.tenant_id != s.tenant_id
+        or selected_profile.supplier_id != s.id
+    ):
+        raise HTTPException(404, "A profil nem található ennél a beszállítónál.")
     filename = (file.filename or "").replace("\\", "/").split("/")[-1][:255]
     if not filename.lower().endswith((".csv", ".xlsx")):
         raise HTTPException(422, "CSV vagy XLSX szükséges.")
@@ -193,6 +201,7 @@ async def upload(
         tenant_id=s.tenant_id,
         supplier_id=s.id,
         filename=filename,
+        profile_id=profile_id,
         config=config,
         state="uploaded",
     )

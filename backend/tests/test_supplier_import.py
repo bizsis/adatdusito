@@ -443,3 +443,22 @@ def test_paged_interpreted_preview_without_writing_products(imports):
     )
     with Session(t) as db:
         assert db.scalar(select(func.count()).select_from(SupplierProduct)) == 0
+
+
+def test_reused_profile_keeps_new_file_format_and_header_positions(imports):
+    c, t, s = imports
+    first = upload(c, s, b"SKU;NAME;QUANTITY\n001;TV;2\n")
+    work(t, first)
+    approve(c, first, automatic=True)
+    work(t, first)
+    second = upload(c, s, b"NAME,QUANTITY,SKU\nTV,2,001\n")
+    work(t, second)
+    r = c.get(f"/api/v1/imports/runs/{second}").json()
+    assert r["state"] == "completed" and r["config"]["delimiter"] == ","
+    assert r["config"]["mapping"] == {"2": "sku", "0": "name", "1": "stock"}
+    assert {x["field"]: x["column"] for x in r["config"]["approved_columns"]} == {
+        "sku": 2,
+        "name": 0,
+        "stock": 1,
+    }
+    assert len(c.get(f"/api/v1/imports/products?supplier_id={s}").json()) == 1

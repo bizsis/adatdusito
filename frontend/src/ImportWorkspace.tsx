@@ -12,6 +12,7 @@ type Column = {
 type Run = {
   id: number;
   supplier_id: number;
+  profile_id?: number | null;
   filename: string;
   state: string;
   cursor: number;
@@ -58,6 +59,7 @@ export function ImportWorkspace({
     { id: number; name: string; fields: Field[] }[]
   >([]);
   const [exportProfile, XP] = useState("");
+  const [chosenProfile, CP] = useState("");
   const [historyOffset, HO] = useState(0);
   const [sourceOffset, SO] = useState(0);
   const [sourcePreview, SP] = useState<{
@@ -102,6 +104,12 @@ export function ImportWorkspace({
         version: number;
         config: {
           mapping: Record<string, string>;
+          currency?: string;
+          price_type?: string;
+          tax_basis?: string;
+          identity_field?: string;
+          feed_type?: string;
+          automatic?: boolean;
           analysis: { headers: string[] };
         };
       }[]
@@ -130,6 +138,17 @@ export function ImportWorkspace({
   function select(r: Run) {
     U(r);
     T(String(r.supplier_id));
+    CP(r.profile_id ? String(r.profile_id) : "");
+    FD({
+      currency: String(r.config.currency || ""),
+      price_type: String(r.config.price_type || ""),
+      tax_basis: String(r.config.tax_basis || ""),
+    });
+    A(false);
+    G("partial");
+    SP({ items: [], has_more: false });
+    J([]);
+
     SH(String(r.config.sheet || ""));
     H(Number(r.config.header_line || 0));
     D(String(r.config.delimiter || ""));
@@ -211,7 +230,13 @@ export function ImportWorkspace({
         {error && <p role="alert">{error}</p>}
         <label>
           Beszállító
-          <select value={supplier} onChange={(e) => T(e.target.value)}>
+          <select
+            value={supplier}
+            onChange={(e) => {
+              T(e.target.value);
+              CP("");
+            }}
+          >
             <option value="">Válassz beszállítót</option>
             {suppliers.map((s) => (
               <option key={s.id} value={s.id}>
@@ -285,6 +310,22 @@ export function ImportWorkspace({
               </label>
             </details>
             <label>
+              Importprofil feltöltéshez
+              <select
+                value={chosenProfile}
+                onChange={(e) => CP(e.target.value)}
+              >
+                <option value="">
+                  Automatikus profilfelismerés / új profil
+                </option>
+                {profiles.map((p) => (
+                  <option key={p.id} value={p.id}>
+                    {p.name} v{p.version}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <label>
               CSV/XLSX fájl
               <input
                 type="file"
@@ -297,6 +338,7 @@ export function ImportWorkspace({
                     const form = new FormData();
                     form.append("file", file);
                     form.append("supplier_id", supplier);
+                    if (chosenProfile) form.append("profile_id", chosenProfile);
                     form.append(
                       "settings",
                       JSON.stringify({
@@ -469,6 +511,14 @@ export function ImportWorkspace({
                         ),
                       );
                       P(p.name);
+                      FD({
+                        currency: p.config.currency || "",
+                        price_type: p.config.price_type || "",
+                        tax_basis: p.config.tax_basis || "",
+                      });
+                      K(p.config.identity_field || "");
+                      G(p.config.feed_type || "partial");
+                      A(p.config.automatic || false);
                     }
                   }}
                 >

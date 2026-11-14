@@ -75,6 +75,9 @@ def advance(db, run_id):
                         .where(
                             ImportProfile.tenant_id == run.tenant_id,
                             ImportProfile.supplier_id == run.supplier_id,
+                            ImportProfile.id == run.profile_id
+                            if run.profile_id
+                            else True,
                         )
                         .order_by(ImportProfile.id.desc())
                     )
@@ -129,11 +132,15 @@ def advance(db, run_id):
                         run.profile_id = p.id
                         if p.config.get("automatic") and not drift:
                             run.config = {
-                                **config,
                                 **{
                                     k: v for k, v in p.config.items() if k != "analysis"
                                 },
+                                **config,
                                 "mapping": mapping,
+                                "approved_columns": [
+                                    {**c, "column": headers.index(c["header"])}
+                                    for c in p.config.get("approved_columns", [])
+                                ],
                             }
                             run.approved_by = p.approved_by
                             run.state = "processing"

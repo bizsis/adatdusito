@@ -15,6 +15,7 @@ class Supplier(Base):
 
 class ImportProfile(Base):
     __tablename__ = "import_profiles"
+    __table_args__ = (UniqueConstraint("tenant_id", "supplier_id", "name", "version"),)
     id: Mapped[int] = mapped_column(primary_key=True)
     tenant_id: Mapped[int] = mapped_column(ForeignKey("tenants.id"), index=True)
     supplier_id: Mapped[int] = mapped_column(
