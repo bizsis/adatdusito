@@ -20,9 +20,9 @@ router = APIRouter(prefix="/api/v1/auth/register", tags=["E-mailes regisztráci�
 
 def quota(request):
     day = datetime.now(timezone.utc).strftime("%Y%m%d")
-    from app.security import digest
+    from app.security import client_ip, digest
 
-    peer = digest(request.client.host if request.client else "unknown")
+    peer = digest(client_ip(request))
     try:
         r = Redis.from_url(
             os.environ["REDIS_URL"], socket_connect_timeout=2, socket_timeout=2
@@ -105,7 +105,7 @@ class Confirm(BaseModel):
 def confirm(body: Confirm, request: Request, db: Session = Depends(database)):
     if not config(db, "auth")["registration"]:
         raise HTTPException(403, "A regisztráció nincs engedélyezve.")
-    throttle(request, db, "register-confirm")
+    throttle(request, db, "register-confirm", per_client=True)
     c = consume(db, body.token, ["registration"])
     if db.scalar(select(User.id).where(User.email == c.payload["email"])):
         raise HTTPException(409, "A fiók már létezik. Jelentkezz be.")

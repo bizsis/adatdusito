@@ -21,6 +21,7 @@ from app.security import (
     hash_password,
     identity,
     limit_login as limit_login,
+    login_guard,
     require,
     revoke,
     scope,
@@ -206,15 +207,13 @@ def login(
 ):
     from app.system_config import config
     from app.auth_service import complete_login
+    from app.security import rate_configuration
 
     if not config(db, "auth")["password"]:
         raise HTTPException(403, "A jelszavas bejelentkezés le van tiltva.")
     identifier = (body.identifier or body.email or "").strip().casefold()
     if not identifier:
         raise HTTPException(422, "Felhasználónév vagy e-mail-cím szükséges.")
-    from app.auth_api import throttle
-
-    throttle(request, db, identifier)
     user = db.scalar(
         select(User)
         .where(
@@ -224,11 +223,24 @@ def login(
         )
         .with_for_update()
     )
+    # SECURITY-01: progressive account+client-IP protection with the
+    # configurable policy. Email and username share one account subject, and
+    # there is no account-wide hard lockout (see security.LoginGuard).
+    policy = rate_configuration.set(config(db, "security"))
+    try:
+        guard = login_guard(
+            request, f"user:{user.id}" if user else f"identifier:{identifier}"
+        )
+    finally:
+        rate_configuration.reset(policy)
+    guard.check()
     valid = verify_password(body.password, user.password_hash if user else DUMMY_HASH)
     if not user or not valid or not user.active:
+        guard.failure()
         db.add(Audit(action="auth.login_failed", target=digest(identifier), details={}))
         db.commit()
         raise HTTPException(401, "Hibás felhasználónév, e-mail-cím vagy jelszó.")
+    guard.success()
     return complete_login(db, user, request, response, "password")
 
 

@@ -7,8 +7,21 @@ from contextlib import contextmanager
 from app.main import app
 from app.models import Base, User, Tenant, Membership, seed_roles
 from app.security import database, hash_password
-from app import api, reference
+from app import api, reference, security
 from app.db import enforce_reference_readonly
+
+
+class NoLoginGuard:
+    """Login throttling is covered by test_login_protection.py."""
+
+    def check(self):
+        pass
+
+    def failure(self):
+        pass
+
+    def success(self):
+        pass
 
 
 @pytest.fixture(scope="session")
@@ -120,7 +133,9 @@ def environment(
         )
         db.commit()
     app.dependency_overrides[database] = get_database
-    monkeypatch.setattr(api, "limit_login", lambda *args: None)
+    monkeypatch.setattr(api, "limit_login", lambda *args, **kwargs: None)
+    monkeypatch.setattr(api, "login_guard", lambda *args: NoLoginGuard())
+    monkeypatch.setattr(security, "limit_failures", lambda *args, **kwargs: None)
     monkeypatch.setenv("APP_ORIGIN", "https://testserver")
     ref_engine = create_engine(
         "sqlite://", connect_args={"check_same_thread": False}, poolclass=StaticPool

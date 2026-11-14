@@ -64,13 +64,29 @@ class WebRegister(WebProof):
     name: str = Field(min_length=1, max_length=120)
 
 
-def throttle(request, db, key):
+def throttle(request, db, key, per_client=False):
+    """Configurable attempt limit; see app.security.limit_login.
+
+    Keys that do not name a user or a challenge must pass per_client=True,
+    otherwise one client could exhaust the shared counter for everyone.
+    """
     from app import api
     from app.security import rate_configuration
 
     token = rate_configuration.set(config(db, "security"))
     try:
-        api.limit_login(request, key)
+        api.limit_login(request, key, per_client=per_client)
+    finally:
+        rate_configuration.reset(token)
+
+
+def failure_limit(request, db, key, record=False):
+    """Failure-only, per client address budget (app.security.limit_failures)."""
+    from app.security import limit_failures, rate_configuration
+
+    token = rate_configuration.set(config(db, "security"))
+    try:
+        limit_failures(request, key, record)
     finally:
         rate_configuration.reset(token)
 
@@ -333,6 +349,10 @@ def pending_complete(
 ):
     throttle(request, db, "mfa:" + digest(body.token))
     c = consume(db, body.token, ["mfa_login"], use=False)
+    # A fresh challenge comes with every password login, so the per-token
+    # counter alone would allow unlimited code guesses: also limit failed
+    # codes per user and client address (SECURITY-01).
+    failure_limit(request, db, "mfa:user:" + str(c.user_id))
     user = user_for(db, c.user_id)
     if not config(db, "auth").get(c.payload["method"]):
         raise HTTPException(403, "Ez a bejelentkezési mód időközben letiltásra került.")
@@ -340,6 +360,7 @@ def pending_complete(
     if not enabled_totp(db, user.id):
         codes = confirm_totp(db, user, body.code)
     elif not verify_factor(db, user, body.code):
+        failure_limit(request, db, "mfa:user:" + str(user.id), record=True)
         raise HTTPException(403, "A második faktor hibás.")
     c.used = True
     result = issue_session(db, user, request, response, c.payload["method"], True)
@@ -523,7 +544,7 @@ class PasskeyOptions(Input):
 def login_options(
     body: PasskeyOptions, request: Request, db: Session = Depends(database)
 ):
-    throttle(request, db, "passkey-begin")
+    throttle(request, db, "passkey-begin", per_client=True)
     if not config(db, "auth")["passkey"]:
         raise HTTPException(403, "A passkey nincs engedélyezve.")
     who = identity(request, db) if body.reauth else None
