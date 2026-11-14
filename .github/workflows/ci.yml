@@ -1,45 +1,236 @@
 name: Adatdúsító CI
+
+# Test partition (every test file runs in exactly one job):
+#   backend    backend/tests + scripts/tests, except *_browser.py and the menu export test
+#   browser    backend/tests/*_browser.py + scripts/tests/*_browser.py (Chromium)
+#   menu-export scripts/tests/test_emag_menu_export.py with only the tool's own deps
+# See docs/development/CI.md.
+
 on:
   push:
-    branches: [main, feat/codex-02-admin]
+    branches: [main]
   pull_request:
+  workflow_dispatch:
+
 permissions:
   contents: read
+
+concurrency:
+  group: ci-${{ github.event.pull_request.number || github.ref }}
+  # Superseded PR pushes are cancelled; every main commit gets a full run.
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+env:
+  PYTHON_VERSION: "3.12" # matches backend/Dockerfile
+  NODE_VERSION: "22" # matches frontend/Dockerfile
+  PIP_DISABLE_PIP_VERSION_CHECK: "1"
+  PYTHONDONTWRITEBYTECODE: "1"
+
 jobs:
-  tests-and-builds:
-    runs-on: ubuntu-latest
+  backend:
+    name: Backend tests
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with:
-          python-version: '3.12'
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: pip
+          cache-dependency-path: backend/requirements.lock
+      - name: Install locked dependencies exactly (no resolver) and verify consistency
+        run: |
+          python -m pip install --no-deps -r backend/requirements.lock
+          python -m pip check
+      - name: Run backend and tooling tests
+        env:
+          PYTHONPATH: backend
+        run: >-
+          python -m pytest -q -ra --durations=15
+          backend/tests scripts/tests
+          --ignore-glob='*_browser.py'
+          --ignore=scripts/tests/test_emag_menu_export.py
+          --junitxml=reports/backend.xml
+      - name: Test summary
+        if: always()
+        run: python .github/scripts/ci_report.py junit reports/backend.xml --title "Backend tests" --summary
+      - name: Keep test report on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: backend-test-report
+          path: reports/
+          retention-days: 7
+          if-no-files-found: ignore
+
+  browser:
+    name: Browser tests (Playwright, Chromium)
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
           cache: pip
           cache-dependency-path: |
             backend/requirements.lock
             scripts/browser-requirements.txt
       - uses: actions/setup-node@v4
         with:
-          node-version: '22'
+          node-version: ${{ env.NODE_VERSION }}
           cache: npm
           cache-dependency-path: frontend/package-lock.json
       - name: Install backend and browser test dependencies
         run: python -m pip install -r backend/requirements.lock -r scripts/browser-requirements.txt
+      - name: Cache Playwright browsers
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ hashFiles('scripts/browser-requirements.txt') }}
       - name: Install Chromium and system dependencies
         run: python -m playwright install --with-deps chromium
-      - name: Build frontend for browser tests
-        run: npm ci && npm run build
+      - name: Build frontend bundle served by the browser tests
         working-directory: frontend
-      - name: Run full backend and browser regression suite
-        run: PYTHONPATH=backend python -m pytest -q backend/tests scripts/tests
-      - run: docker build -t adatdusito-ci-backend backend
-      - run: docker build -t adatdusito-ci-frontend frontend
-  menu-export-tests:
-    runs-on: ubuntu-latest
+        # Type checking runs in the frontend job; only the bundle is needed here.
+        run: npm ci --no-audit --no-fund && npx vite build
+      - name: Run browser tests
+        env:
+          PYTHONPATH: backend
+        run: >-
+          python -m pytest -q -ra --durations=10
+          backend/tests/*_browser.py scripts/tests/*_browser.py
+          --junitxml=reports/browser.xml
+      - name: Test summary
+        if: always()
+        run: python .github/scripts/ci_report.py junit reports/browser.xml --title "Browser tests" --summary
+      - name: Keep test report on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: browser-test-report
+          path: |
+            reports/
+            test-results/
+          retention-days: 7
+          if-no-files-found: ignore
+
+  menu-export:
+    name: eMAG menu export tool (standalone)
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with:
-          python-version: '3.12'
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: pip
+          cache-dependency-path: scripts/browser-requirements.txt
+      # Deliberately without backend dependencies: the tool runs on Windows
+      # machines with only Playwright installed.
       - run: python -m pip install pytest==9.0.1 -r scripts/browser-requirements.txt
+      - name: Cache Playwright browsers
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ hashFiles('scripts/browser-requirements.txt') }}
       - run: python -m playwright install --with-deps chromium
-      - run: python -m pytest -q scripts/tests/test_emag_menu_export.py
+      - name: Run menu export tests
+        run: python -m pytest -q -ra scripts/tests/test_emag_menu_export.py --junitxml=reports/menu-export.xml
+      - name: Test summary
+        if: always()
+        run: python .github/scripts/ci_report.py junit reports/menu-export.xml --title "Menu export tool" --summary
+      - name: Keep test report on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: menu-export-test-report
+          path: reports/
+          retention-days: 7
+          if-no-files-found: ignore
+
+  frontend:
+    name: Frontend type check and build
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - run: npm ci --no-audit --no-fund
+      - name: TypeScript type check (tsc --noEmit, frontend/tsconfig.json)
+        run: npx tsc --noEmit -p tsconfig.json --pretty false
+      - name: Production build
+        run: npx vite build
+
+  eslint:
+    name: ESLint (advisory)
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    # Advisory until ESLint is part of frontend/package.json (frontend owner).
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+          cache-dependency-path: .github/linters/package-lock.json
+      - run: npm ci --no-audit --no-fund --prefix .github/linters
+      - name: Lint frontend/src (report only)
+        run: |
+          mkdir -p reports
+          .github/linters/node_modules/.bin/eslint -c .github/linters/eslint.config.mjs \
+            -f json -o reports/eslint.json frontend/src || true
+      - name: ESLint summary
+        run: python3 .github/scripts/ci_report.py eslint reports/eslint.json --summary
+
+  docker:
+    name: Docker images
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: docker/setup-buildx-action@v3
+      - name: Build backend image
+        uses: docker/build-push-action@v6
+        with:
+          context: backend
+          push: false
+          tags: adatdusito-ci-backend
+          cache-from: type=gha,scope=backend
+          cache-to: type=gha,scope=backend,mode=max
+      - name: Build frontend image
+        uses: docker/build-push-action@v6
+        with:
+          context: frontend
+          push: false
+          tags: adatdusito-ci-frontend
+          cache-from: type=gha,scope=frontend
+          cache-to: type=gha,scope=frontend,mode=max
+
+  ci-ok:
+    # Single required status for branch protection; ESLint is advisory.
+    name: CI result
+    if: always()
+    needs: [backend, browser, menu-export, frontend, docker]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 2
+    steps:
+      - name: All required jobs succeeded
+        env:
+          NEEDS: ${{ toJSON(needs) }}
+        run: |
+          python3 - <<'PY'
+          import json, os, sys
+          results = {name: job["result"] for name, job in json.loads(os.environ["NEEDS"]).items()}
+          print("required jobs:", results)
+          bad = {name: result for name, result in results.items() if result != "success"}
+          sys.exit(f"failed: {bad}" if bad else 0)
+          PY
