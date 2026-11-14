@@ -278,6 +278,8 @@ def test_unified_category_ui_parameters_values_and_simple_review(
         assert page.get_by_label("Szülőkategória keresése", exact=True).count() == 0
         assert page.evaluate(
             "document.documentElement.scrollWidth <= window.innerWidth"
+        ), page.evaluate(
+            "Array.from(document.querySelectorAll('body *')).filter(e=>e.getBoundingClientRect().right>innerWidth+1).slice(0,18).map(e=>({tag:e.tagName,cls:e.className,width:e.getBoundingClientRect().width,text:e.textContent.slice(0,80)}))"
         )
         assert not errors
         browser.close()

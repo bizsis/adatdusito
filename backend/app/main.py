@@ -45,13 +45,27 @@ async def security_headers(request: Request, call_next):
     response = await call_next(request)
     response.headers["X-Content-Type-Options"] = "nosniff"
     response.headers["X-Frame-Options"] = "DENY"
-    response.headers["Referrer-Policy"] = "same-origin"
+    response.headers["Referrer-Policy"] = (
+        "no-referrer"
+        if request.url.path == "/api/v1/auth/google/callback"
+        else "same-origin"
+    )
     response.headers["Cache-Control"] = "no-store"
     return response
 
 
 @app.exception_handler(HTTPException)
 async def http_error(request, error):
+    if (
+        request.url.path == "/api/v1/auth/google/callback"
+        and "text/html" in request.headers.get("accept", "")
+    ):
+        from fastapi.responses import RedirectResponse
+        from urllib.parse import quote
+
+        return RedirectResponse(
+            "/#auth_error=" + quote(str(error.detail)), status_code=303
+        )
     return JSONResponse(
         {"error": {"code": str(error.status_code), "message": error.detail}},
         status_code=error.status_code,
@@ -172,7 +186,20 @@ def documented_openapi():
         for method, operation in operations.items():
             if method not in ("get", "post", "put", "patch", "delete"):
                 continue
-            if path.startswith("/api/v1/") and path != "/api/v1/auth/login":
+            if path.startswith("/api/v1/") and path not in {
+                "/api/v1/auth/login",
+                "/api/v1/auth/methods",
+                "/api/v1/auth/mfa/setup",
+                "/api/v1/auth/mfa/complete",
+                "/api/v1/auth/passkeys/login/options",
+                "/api/v1/auth/passkeys/login/verify",
+                "/api/v1/auth/google/start",
+                "/api/v1/auth/google/callback",
+                "/api/v1/auth/register",
+                "/api/v1/auth/register/confirm",
+                "/api/v1/invitations/inspect",
+                "/api/v1/invitations/accept",
+            }:
                 operation["security"] = [{"SessionCookie": []}]
                 for status, message in [
                     ("401", "Bejelentkezés szükséges"),
@@ -198,8 +225,28 @@ def documented_openapi():
 app.openapi = documented_openapi
 
 from app.import_api import router as import_router
+
 app.include_router(import_router)
 from app.access_api import router as access_router
 from app.invitations import router as invitation_router
+
 app.include_router(access_router)
 app.include_router(invitation_router)
+
+from app.auth_api import router as auth09_router
+from app.settings_api import router as settings09_router
+from app.oidc_api import router as oidc_router
+from app.registration import router as registration_router
+
+app.include_router(auth09_router)
+app.include_router(settings09_router)
+app.include_router(oidc_router)
+app.include_router(registration_router)
+
+from app.workspace_views import router as workspace_views_router
+
+app.include_router(workspace_views_router)
+
+from app.auth_logging import install_auth_log_filter
+
+install_auth_log_filter()

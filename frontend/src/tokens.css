@@ -1,0 +1,26 @@
+:root {
+  --app-bg: #f7f9fc;
+  --surface: #ffffff;
+  --border: #e7edf4;
+  --primary: #0d9488;
+  --primary-hover: #0f766e;
+  --info: #3b82f6;
+  --text: #172b4d;
+  --muted: #64748b;
+  --success: #16a34a;
+  --warning: #f59e0b;
+  --danger: #dc2626;
+  --teal-soft: #eaf8f5;
+  --info-soft: #eff6ff;
+  --warning-soft: #fffbeb;
+  --danger-soft: #fef2f2;
+  --radius: 10px;
+  --shadow: 0 3px 14px #172b4d06;
+  --focus: 0 0 0 3px #3b82f630;
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-6: 24px;
+  --space-8: 32px;
+}

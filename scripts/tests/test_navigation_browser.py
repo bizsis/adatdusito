@@ -99,7 +99,10 @@ def test_verified_roots_lazy_children_and_separate_review(width, height):
 
     with sync_playwright() as p:
         browser = p.chromium.launch(
-            executable_path="/usr/bin/chromium", args=["--no-sandbox"]
+            executable_path="/usr/bin/chromium"
+            if Path("/usr/bin/chromium").exists()
+            else None,
+            args=["--no-sandbox"],
         )
         page = browser.new_page(viewport={"width": width, "height": height})
         errors = []

@@ -1,3 +1,5 @@
+import { dateTime } from "./ui";
+import { Help } from "./ui";
 import React, { useState, useEffect } from "react";
 type Request = <T>(url: string, method?: string, body?: unknown) => Promise<T>;
 type Column = {
@@ -235,7 +237,10 @@ export function ImportWorkspace({
   return (
     <>
       <section className="card padded">
-        <h2>Beszállítói import</h2>
+        <h2 className="field-title">
+          Beszállítói import
+          <Help topic="importMapping" />
+        </h2>
         <p>
           Feltöltés → felismerés → megfeleltetés → jóváhagyás. AI-kredit nélkül
           is használható.
@@ -846,9 +851,11 @@ export function ImportWorkspace({
 export function ExportAdmin({
   api,
   central,
+  canProfile = true,
 }: {
   api: Request;
   central: boolean;
+  canProfile?: boolean;
 }) {
   const [engines, S] = useState<
       { key: string; name: string; version: number; fields: Field[] }[]
@@ -876,7 +883,10 @@ export function ExportAdmin({
   };
   return (
     <section className="card padded">
-      <h2>Webáruházmotorok → Exportmezők</h2>
+      <h2 className="field-title">
+        Webáruházmotorok → Exportmezők
+        <Help topic="export" />
+      </h2>
       {error && <p role="alert">{error}</p>}
       {message && <p role="status">{message}</p>}
       <label>
@@ -948,163 +958,167 @@ export function ExportAdmin({
           </p>
         </>
       )}
-      <div className="table-wrap">
-        <table>
-          <thead>
-            <tr>
-              <th>Technikai azonosító</th>
-              <th>Oszlopnév</th>
-              <th>Típus</th>
-              <th>Kötelező</th>
-              <th>Belső mező</th>
-              <th>Alapérték</th>
-              <th>Értéklista</th>
-              <th>Validáció</th>
-              <th></th>
-            </tr>
-          </thead>
-          <tbody>
-            {fields.map((f, i) => (
-              <tr key={i}>
-                {(["key", "label"] as const).map((k) => (
-                  <td key={k}>
-                    <input
-                      aria-label={`${k} ${i}`}
-                      value={f[k]}
-                      onChange={(e) =>
-                        F(
-                          fields.map((x, j) =>
-                            j === i ? { ...x, [k]: e.target.value } : x,
-                          ),
-                        )
-                      }
-                    />
-                  </td>
-                ))}
-                <td>
-                  <select
-                    value={f.type}
-                    onChange={(e) =>
-                      F(
-                        fields.map((x, j) =>
-                          j === i ? { ...x, type: e.target.value } : x,
-                        ),
-                      )
-                    }
-                  >
-                    {["text", "number", "date", "boolean"].map((t) => (
-                      <option key={t}>{t}</option>
-                    ))}
-                  </select>
-                </td>
-                <td>
-                  <input
-                    aria-label={`Kötelező ${i}`}
-                    type="checkbox"
-                    checked={f.required}
-                    onChange={(e) =>
-                      F(
-                        fields.map((x, j) =>
-                          j === i ? { ...x, required: e.target.checked } : x,
-                        ),
-                      )
-                    }
-                  />
-                </td>
-                {(["internal_field", "default"] as const).map((k) => (
-                  <td key={k}>
-                    <input
-                      aria-label={`${k} ${i}`}
-                      value={f[k] || ""}
-                      onChange={(e) =>
-                        F(
-                          fields.map((x, j) =>
-                            j === i ? { ...x, [k]: e.target.value } : x,
-                          ),
-                        )
-                      }
-                    />
-                  </td>
-                ))}
-                <td>
-                  <input
-                    aria-label={`Értéklista ${i}`}
-                    value={(f.allowed || []).join(";")}
-                    onChange={(e) =>
-                      F(
-                        fields.map((x, j) =>
-                          j === i
-                            ? {
-                                ...x,
-                                allowed: e.target.value
-                                  .split(";")
-                                  .filter(Boolean),
-                              }
-                            : x,
-                        ),
-                      )
-                    }
-                  />
-                </td>
-                <td>
-                  <select
-                    value={f.validation || ""}
-                    onChange={(e) =>
-                      F(
-                        fields.map((x, j) =>
-                          j === i ? { ...x, validation: e.target.value } : x,
-                        ),
-                      )
-                    }
-                  >
-                    {["", "url", "email", "gtin", "nonnegative"].map((v) => (
-                      <option key={v}>{v}</option>
-                    ))}
-                  </select>
-                </td>
-                <td>
-                  <button onClick={() => F(fields.filter((_, j) => j !== i))}>
-                    Eltávolítás
-                  </button>
-                </td>
+      <fieldset className="fieldless" disabled={!central && !canProfile}>
+        <div className="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Technikai azonosító</th>
+                <th>Oszlopnév</th>
+                <th>Típus</th>
+                <th>Kötelező</th>
+                <th>Belső mező</th>
+                <th>Alapérték</th>
+                <th>Értéklista</th>
+                <th>Validáció</th>
+                <th></th>
               </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-      <button
-        onClick={() =>
-          F([
-            ...fields,
-            {
-              key: "field_" + fields.length,
-              label: "Új mező",
-              type: "text",
-              required: false,
-            },
-          ])
-        }
-      >
-        Mező hozzáadása
-      </button>
-      <button
-        onClick={() =>
-          act(async () => {
-            if (central) {
-              await api("/imports/engines/" + key, "PUT", { name, fields });
-              await load();
-            } else {
-              await api("/imports/export-profiles", "POST", {
-                engine_key: key,
-                name,
-                fields,
-              });
-            }
-          })
-        }
-      >
-        {central ? "Központi definíció mentése" : "Saját exportprofil mentése"}
-      </button>
+            </thead>
+            <tbody>
+              {fields.map((f, i) => (
+                <tr key={i}>
+                  {(["key", "label"] as const).map((k) => (
+                    <td key={k}>
+                      <input
+                        aria-label={`${k} ${i}`}
+                        value={f[k]}
+                        onChange={(e) =>
+                          F(
+                            fields.map((x, j) =>
+                              j === i ? { ...x, [k]: e.target.value } : x,
+                            ),
+                          )
+                        }
+                      />
+                    </td>
+                  ))}
+                  <td>
+                    <select
+                      value={f.type}
+                      onChange={(e) =>
+                        F(
+                          fields.map((x, j) =>
+                            j === i ? { ...x, type: e.target.value } : x,
+                          ),
+                        )
+                      }
+                    >
+                      {["text", "number", "date", "boolean"].map((t) => (
+                        <option key={t}>{t}</option>
+                      ))}
+                    </select>
+                  </td>
+                  <td>
+                    <input
+                      aria-label={`Kötelező ${i}`}
+                      type="checkbox"
+                      checked={f.required}
+                      onChange={(e) =>
+                        F(
+                          fields.map((x, j) =>
+                            j === i ? { ...x, required: e.target.checked } : x,
+                          ),
+                        )
+                      }
+                    />
+                  </td>
+                  {(["internal_field", "default"] as const).map((k) => (
+                    <td key={k}>
+                      <input
+                        aria-label={`${k} ${i}`}
+                        value={f[k] || ""}
+                        onChange={(e) =>
+                          F(
+                            fields.map((x, j) =>
+                              j === i ? { ...x, [k]: e.target.value } : x,
+                            ),
+                          )
+                        }
+                      />
+                    </td>
+                  ))}
+                  <td>
+                    <input
+                      aria-label={`Értéklista ${i}`}
+                      value={(f.allowed || []).join(";")}
+                      onChange={(e) =>
+                        F(
+                          fields.map((x, j) =>
+                            j === i
+                              ? {
+                                  ...x,
+                                  allowed: e.target.value
+                                    .split(";")
+                                    .filter(Boolean),
+                                }
+                              : x,
+                          ),
+                        )
+                      }
+                    />
+                  </td>
+                  <td>
+                    <select
+                      value={f.validation || ""}
+                      onChange={(e) =>
+                        F(
+                          fields.map((x, j) =>
+                            j === i ? { ...x, validation: e.target.value } : x,
+                          ),
+                        )
+                      }
+                    >
+                      {["", "url", "email", "gtin", "nonnegative"].map((v) => (
+                        <option key={v}>{v}</option>
+                      ))}
+                    </select>
+                  </td>
+                  <td>
+                    <button onClick={() => F(fields.filter((_, j) => j !== i))}>
+                      Eltávolítás
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+        <button
+          onClick={() =>
+            F([
+              ...fields,
+              {
+                key: "field_" + fields.length,
+                label: "Új mező",
+                type: "text",
+                required: false,
+              },
+            ])
+          }
+        >
+          Mező hozzáadása
+        </button>
+        <button
+          onClick={() =>
+            act(async () => {
+              if (central) {
+                await api("/imports/engines/" + key, "PUT", { name, fields });
+                await load();
+              } else {
+                await api("/imports/export-profiles", "POST", {
+                  engine_key: key,
+                  name,
+                  fields,
+                });
+              }
+            })
+          }
+        >
+          {central
+            ? "Központi definíció mentése"
+            : "Saját exportprofil mentése"}
+        </button>
+      </fieldset>
       <p>Tényleges UNAS-export ebben a modulban nem készül.</p>
     </section>
   );

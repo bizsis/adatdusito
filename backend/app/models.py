@@ -26,7 +26,15 @@ class Base(DeclarativeBase):
 class User(Base):
     __tablename__ = "users"
     id: Mapped[int] = mapped_column(primary_key=True)
-    email: Mapped[str] = mapped_column(String(254), unique=True)
+    email: Mapped[str | None] = mapped_column(String(254), unique=True)
+    username: Mapped[str] = mapped_column(
+        String(80),
+        unique=True,
+        default=lambda: "user-" + __import__("secrets").token_hex(12),
+    )
+    email_verified: Mapped[bool] = mapped_column(default=False)
+    must_change_password: Mapped[bool] = mapped_column(default=False)
+    mfa_reset_required: Mapped[bool] = mapped_column(default=False)
     name: Mapped[str] = mapped_column(String(120))
     password_hash: Mapped[str] = mapped_column(String(512))
     active: Mapped[bool] = mapped_column(Boolean, default=True)
@@ -39,6 +47,7 @@ class Tenant(Base):
     __table_args__ = (Index("ix_tenant_workspace_names", "active", "name", "id"),)
     id: Mapped[int] = mapped_column(primary_key=True)
     name: Mapped[str] = mapped_column(String(120))
+    onboarding_state: Mapped[str] = mapped_column(String(32), default="existing")
     active: Mapped[bool] = mapped_column(Boolean, default=True)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=now)
 
@@ -79,6 +88,10 @@ class LoginSession(Base):
     )
     created_at: Mapped[datetime] = mapped_column(DateTime, default=now)
     expires_at: Mapped[datetime] = mapped_column(DateTime, index=True)
+
+    auth_method: Mapped[str] = mapped_column(String(24), default="password")
+    mfa_verified: Mapped[bool] = mapped_column(default=False)
+    reauthenticated_at: Mapped[datetime | None] = mapped_column(DateTime)
 
 
 class Audit(Base):
@@ -338,3 +351,5 @@ class CatalogSourceMapping(Base):
 # Register application import tables on the shared metadata.
 from app import import_models as _import_models  # noqa: E402,F401
 from app import access_models as _access_models  # noqa: E402,F401
+
+from app import auth_models as _auth_models  # noqa: E402,F401

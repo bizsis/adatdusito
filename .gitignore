@@ -8,3 +8,5 @@ dist/
 .cloud-state/
 .menu-venv/
 /emag-menu-exports/
+# Operator-owned Compose override (e.g. secret mounts), never environment secrets.
+/compose.override.yaml

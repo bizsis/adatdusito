@@ -6,6 +6,7 @@ import secrets
 import tempfile
 import time
 from contextlib import contextmanager
+from contextvars import ContextVar
 from dataclasses import dataclass, field
 from functools import lru_cache
 from ipaddress import ip_address, ip_network
@@ -22,6 +23,9 @@ from app.models import (
 )
 
 COOKIE = "adatdusito_session"
+# Security policy (system_config "security") for the current request; set by
+# app.auth_api.throttle() and the password login.
+rate_configuration = ContextVar("rate_configuration", default={})
 
 # scrypt parameters are part of the stored hash contract: changing them would
 # invalidate existing passwords. One derivation needs 128 * r * N = 128 MiB.
@@ -222,17 +226,65 @@ def _too_many(retry_after=LOGIN_WINDOW):
     )
 
 
-def limit_login(request: Request, email: str):
-    """Generic attempt throttle (used for invitation tokens)."""
+def _remaining(redis, key, default):
+    """Seconds until the counter expires, for Retry-After."""
+    try:
+        ttl = int(redis.ttl(key))
+    except Exception:
+        return default
+    return ttl if ttl > 0 else default
+
+
+def _policy():
+    """Configured attempts/window (system settings "security"), with defaults."""
+    policy = rate_configuration.get()
+    attempts = int(policy.get("login_attempts", 10))
+    window = int(policy.get("login_window_minutes", 15)) * 60
+    return attempts, window
+
+
+def limit_login(request: Request, email: str, per_client: bool = False):
+    """Generic attempt throttle for auth flows other than password login.
+
+    ``email`` is the subject key (user id, challenge token, ...). Subjects that
+    are not specific to a user or token (e.g. "passkey-begin") must use
+    ``per_client=True``: a shared key would let anyone exhaust it and deny the
+    flow to every user. Limits follow the configurable security policy.
+    """
+    attempts, window = _policy()
     try:
         redis = _redis()
+        ip = client_ip(request)
+        subject = f"{email}|{ip}" if per_client else email
         keys = [
-            (f"login:account:{digest(email)}", 10),
-            (f"login:peer:{digest(client_ip(request))}", 300),
+            (f"login:account:{digest(subject)}", attempts),
+            (f"login:peer:{digest(ip)}", max(300, attempts * 30)),
         ]
         for key, maximum in keys:
-            if _hit(redis, key) > maximum:
-                raise _too_many()
+            if _hit(redis, key, window) > maximum:
+                raise _too_many(_remaining(redis, key, window))
+    except HTTPException:
+        raise
+    except Exception:
+        raise HTTPException(503, "A bejelentkezés átmenetileg nem elérhető.")
+
+
+def limit_failures(request: Request, key: str, record: bool = False):
+    """Failure-only budget per subject and client address.
+
+    Call with record=False before verifying a secret (refuses once the budget
+    is spent, so the guess is never evaluated) and with record=True after a
+    failed verification. Successful attempts are free, so a legitimate user is
+    not throttled by their own logins. Uses the configurable policy.
+    """
+    attempts, window = _policy()
+    counter = f"login:fail:subject:{digest(key + '|' + client_ip(request))}"
+    try:
+        redis = _redis()
+        if record:
+            _hit(redis, counter, window)
+        elif int(redis.get(counter) or 0) >= attempts:
+            raise _too_many(_remaining(redis, counter, window))
     except HTTPException:
         raise
     except Exception:
@@ -242,8 +294,8 @@ def limit_login(request: Request, email: str):
 class LoginGuard:
     """Progressive, risk-based password-login protection.
 
-    Counters (15-minute windows, Redis, shared by all workers):
-    - email+IP attempts: the main brute-force brake. Only the attacker's own
+    Counters (policy window, default 15 minutes; Redis, shared by all workers):
+    - account+IP attempts (policy login_attempts, default 10): the main brute-force brake. Only the attacker's own
       address is blocked, so a remote attacker cannot lock the owner out.
       Cleared on successful login.
     - IP attempts / IP failures: one address spraying many accounts.
@@ -277,8 +329,16 @@ class LoginGuard:
     SEVERE_WINDOW = 3600
     KNOWN_TTL = 30 * 24 * 3600
 
-    def __init__(self, redis, email, ip):
+    def __init__(self, redis, email, ip, attempts=None, window=None):
         self.redis = redis
+        # Configurable security policy (CODEX 09 settings: login_attempts 3-20,
+        # login_window_minutes 5-60); class constants are the defaults.
+        if attempts is not None:
+            self.PAIR_LIMIT = int(attempts)
+            self.PAIR_LIMIT_ELEVATED = min(self.PAIR_LIMIT_ELEVATED, self.PAIR_LIMIT)
+            self.IP_ATTEMPTS = max(self.IP_ATTEMPTS, self.PAIR_LIMIT * 30)
+        self.window = int(window) if window else LOGIN_WINDOW
+        self.severe_window = max(self.SEVERE_WINDOW, self.window)
         account, address = digest(email), digest(ip)
         self.pair = f"login:pair:{digest(account + '|' + address)}"
         self.known = f"login:known:{digest(account + '|' + address)}"
@@ -288,7 +348,7 @@ class LoginGuard:
 
     def _block(self, key):
         ttl = self.redis.ttl(key)
-        raise _too_many(ttl if ttl and ttl > 0 else LOGIN_WINDOW)
+        raise _too_many(ttl if ttl and ttl > 0 else self.window)
 
     def _safely(self, operation):
         try:
@@ -303,14 +363,15 @@ class LoginGuard:
             r = self.redis
             known = r.get(self.known) is not None
             failures = int(r.get(self.account) or 0)
-            if _hit(r, self.ip_attempts) > self.IP_ATTEMPTS:
+            if _hit(r, self.ip_attempts, self.window) > self.IP_ATTEMPTS:
                 self._block(self.ip_attempts)
             if int(r.get(self.ip_failures) or 0) >= self.IP_FAILURES:
                 self._block(self.ip_failures)
             limit = self.pair_limit(known, failures)
             # A severe attack also stretches a fresh unknown address's window,
             # so each attacking address gets one guess per hour, not per 15 min.
-            window = self.SEVERE_WINDOW if limit == self.PAIR_LIMIT_SEVERE else LOGIN_WINDOW
+            severe = limit == self.PAIR_LIMIT_SEVERE and not known
+            window = self.severe_window if severe else self.window
             if _hit(r, self.pair, window) > limit:
                 self._block(self.pair)
 
@@ -325,8 +386,8 @@ class LoginGuard:
 
     def failure(self):
         def run():
-            _hit(self.redis, self.account)
-            _hit(self.redis, self.ip_failures)
+            _hit(self.redis, self.account, self.window)
+            _hit(self.redis, self.ip_failures, self.window)
 
         self._safely(run)
 
@@ -340,12 +401,18 @@ class LoginGuard:
         self._safely(run)
 
 
-def login_guard(request: Request, email: str):
+def login_guard(request: Request, subject: str):
+    """LoginGuard for the password login, using the current security policy.
+
+    ``subject`` identifies the account (``user:<id>`` when it exists, so email
+    and username logins share counters; otherwise the normalized identifier).
+    """
+    attempts, window = _policy()
     try:
         redis = _redis()
     except Exception:
         raise HTTPException(503, "A bejelentkezés átmenetileg nem elérhető.")
-    return LoginGuard(redis, email, client_ip(request))
+    return LoginGuard(redis, subject, client_ip(request), attempts, window)
 
 
 @dataclass
@@ -369,6 +436,30 @@ def identity(request: Request, db: Session = Depends(database)):
     user = db.get(User, session.user_id)
     if not user or not user.active:
         raise HTTPException(401, "A munkamenet érvénytelen.")
+    from app.system_config import config
+    from app.auth_service import needs_mfa
+    from datetime import timedelta
+
+    policy = config(db, "security")
+    if session.created_at + timedelta(hours=policy["session_hours"]) <= now():
+        raise HTTPException(401, "A munkamenet lejárt.")
+    mfa_pending = needs_mfa(db, user) and not session.mfa_verified
+    restricted = mfa_pending or user.must_change_password
+    safe_paths = {
+        "/api/v1/auth/me",
+        "/api/v1/auth/logout",
+        "/api/v1/auth/password",
+        "/api/v1/auth/security",
+        "/api/v1/auth/reauth",
+        "/api/v1/auth/totp/setup",
+        "/api/v1/auth/totp/confirm",
+        "/api/v1/auth/passkeys/login/options",
+        "/api/v1/auth/passkeys/login/verify",
+    }
+    if restricted and request.url.path not in safe_paths:
+        raise HTTPException(
+            403, "A folytatáshoz jelszócsere vagy második faktor beállítása szükséges."
+        )
     from app.access_control import (
         can_access,
         effective,
@@ -381,6 +472,22 @@ def identity(request: Request, db: Session = Depends(database)):
         session.tenant_id = None
         db.commit()
     permissions, sources = effective(db, user, session.tenant_id)
+    if restricted:
+        permissions = set()
+    if session.tenant_id is not None:
+        from app.models import Tenant
+
+        tenant = db.get(Tenant, session.tenant_id)
+        if tenant and tenant.onboarding_state == "pending_subscription":
+            permissions &= {
+                "reference.read",
+                "tenants.read",
+                "companies.read",
+                "webshops.read",
+            }
+            for code, source in sources.items():
+                if code not in permissions:
+                    source.update(allowed=False, scope="pending_subscription")
     roles = roles_for(db, user, session.tenant_id)
     role = (
         "superadmin"
@@ -395,6 +502,7 @@ def identity(request: Request, db: Session = Depends(database)):
         ):
             raise HTTPException(403, "Érvénytelen CSRF-token.")
     result = Identity(user, session, role, permissions, token)
+    result.mfa_required = mfa_pending
     result.roles = [{"id": r.id, "code": r.code, "name": r.name} for r in roles]
     result.permission_sources = sources
     result.system = is_system(db, user)

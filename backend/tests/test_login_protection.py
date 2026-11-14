@@ -266,8 +266,10 @@ def test_api_spoofed_forwarded_header_does_not_bypass_limit(environment, redis, 
 
 def test_api_owner_logs_in_from_unseen_address_during_severe_attack(environment, redis, monkeypatch):
     monkeypatch.setattr(api, "login_guard", security.login_guard)
-    for _ in range(150):  # 150 distributed failures already recorded for the account
-        security._hit(redis, LoginGuard(redis, VICTIM, "x").account)
+    # 150 distributed failures already recorded for the account. Since CODEX 09
+    # the password-login subject is the user id (shared by email and username).
+    for _ in range(150):
+        security._hit(redis, LoginGuard(redis, "user:1", "x").account)
     # Severe mode is active: a fresh attacker address gets exactly one guess.
     attacker = from_address("203.0.113.200")
     assert post_login(attacker, "wrong-password").status_code == 401

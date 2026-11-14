@@ -1,5 +1,7 @@
 # Adatdúsító
 
+[CODEX 09 – Cloud & Teal UI, strukturált rendszerbeállítások, SMTP, felhasználónév, Google OIDC, passkey és TOTP 2FA](docs/codex-09-ui-system-settings-auth.md). Új migráció: `0008`; a titkosított beállításokhoz külön, üzemeltetői kulcsfájl szükséges. Teljes mentési, telepítési, szolgáltatói konfigurációs és visszaállítási útmutató a dokumentumban.
+
 [CODEX 08 – Testreszabható jogosultságok, munkaterületek és SMTP-meghívások](docs/codex-08-access-control.md). Új migráció: `0007`; a meglévő fiókok, munkamenetek és importadatok megmaradnak. A dokumentum tartalmazza a mentést, kézi VPS-telepítést, ellenőrzést és visszaállítási tervet.
 
 [CODEX 07 – Beszállítói import és exportmező-adminisztráció](docs/codex-07-import-engine.md). A frissítés a saját adatbázis `0006` migrációját igényli.
@@ -16,7 +18,9 @@ Magyar nyelvű, többügyfeles adminfelület FastAPI, React/TypeScript, Celery/R
 
 ## Funkciók
 
-- Cookie-alapú bejelentkezés, kijelentkezés, 8 órás szerveroldali munkamenet és saját jelszócsere.
+- Cookie-alapú bejelentkezés felhasználónévvel vagy e-maillel, konfigurálható (alapból 8 órás) munkamenet, saját jelszócsere és munkamenet-visszavonás.
+- Google OIDC explicit fiókösszekapcsolással, passkey/WebAuthn UV-ellenőrzéssel, TOTP és egyszer használható helyreállítási kódok. A 2FA alapból nem kötelező; szerepkörönként szabályozható.
+- Cloud & Teal világos felület, Lucide ikonok, közös jogosultsági táblák és magyar súgók. Titkosított, élő SMTP-konfiguráció és külön Audit menüpont.
 - Scrypt jelszóhash (N=131072, r=8, p=1), CSRF-védelem, Redis-alapú belépési korlátozás.
 - Testreszabható rendszer- és ügyfélszerepkörök, több szerepkör, egyedi tiltások és engedélyek; kérésenkénti szerveroldali ellenőrzés.
 - Név szerinti, kereshető munkaterületek; superadmin tagság nélkül válthat, rendszerfiókok ügyfélköre all/selected/none. SMTP-meghívások saját jelszóval és tulajdonosi elfogadással.

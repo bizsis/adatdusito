@@ -2,10 +2,7 @@
 
 import os
 import secrets
-import smtplib
-import ssl
 from datetime import timedelta
-from email.message import EmailMessage
 from fastapi import APIRouter, Depends, HTTPException, Request
 from pydantic import BaseModel, Field, ConfigDict
 from sqlalchemy import select
@@ -26,31 +23,15 @@ router = APIRouter(prefix="/api/v1/invitations", tags=["Meghívások"])
 
 
 def send_email(email, token, workspace):
-    host = os.getenv("SMTP_HOST")
-    if not host:
-        raise RuntimeError("SMTP nincs konfigurálva.")
-    mode = os.getenv("SMTP_SECURITY", "starttls")
-    if mode not in ("starttls", "tls", "none"):
-        raise RuntimeError("Hibás SMTP-biztonsági mód.")
-    message = EmailMessage()
-    message["From"] = os.environ["SMTP_FROM"]
-    message["To"] = email
-    message["Subject"] = "Adatdúsító – munkaterületi meghívás"
+    from app.mail_service import transport, mail_database
+
     origin = os.getenv("APP_ORIGIN", "https://dev.pinfo.hu").rstrip("/")
-    message.set_content(
-        f"Meghívást kaptál ehhez a munkaterülethez: {workspace}.\n\nElfogadás: {origin}/#invite={token}\n\nHa nem vártad ezt a meghívást, hagyd figyelmen kívül. A link egyszer használható és korlátozott ideig érvényes."
+    transport(
+        mail_database.get(),
+        email,
+        "Adatdúsító – munkaterületi meghívás",
+        f"Meghívást kaptál ehhez a munkaterülethez: {workspace}.\n\nElfogadás: {origin}/#invite={token}\n\nA link egyszer használható, korlátozott ideig érvényes.",
     )
-    port = int(os.getenv("SMTP_PORT", "465" if mode == "tls" else "587"))
-    cls = smtplib.SMTP_SSL if mode == "tls" else smtplib.SMTP
-    tls_options = {"context": ssl.create_default_context()} if mode == "tls" else {}
-    with cls(host, port, timeout=10, **tls_options) as smtp:
-        smtp.ehlo()
-        if mode == "starttls":
-            smtp.starttls(context=ssl.create_default_context())
-            smtp.ehlo()
-        if os.getenv("SMTP_USER"):
-            smtp.login(os.environ["SMTP_USER"], os.environ["SMTP_PASSWORD"])
-        smtp.send_message(message)
 
 
 def authorize(who, tid):
@@ -85,7 +66,13 @@ def deliver(db, invite, token):
         else "Paksi Informatika"
     )
     try:
-        send_email(invite.email, token, workspace)
+        from app.mail_service import mail_database
+
+        context_token = mail_database.set(db)
+        try:
+            send_email(invite.email, token, workspace)
+        finally:
+            mail_database.reset(context_token)
     except Exception:
         invite.delivery = "failed"
         db.commit()
@@ -144,7 +131,11 @@ def invite(
         access=body.model_dump(exclude={"email"}),
         token_hash=digest(token),
         expires_at=now()
-        + timedelta(hours=max(1, min(168, int(os.getenv("INVITE_TTL_HOURS", "48"))))),
+        + timedelta(
+            hours=__import__("app.system_config", fromlist=["config"]).config(
+                db, "security"
+            )["invite_ttl_hours"]
+        ),
         actor_id=who.user.id,
     )
     db.add(i)
@@ -170,7 +161,9 @@ def resend(id: int, who=Depends(identity), db: Session = Depends(database)):
     token = secrets.token_urlsafe(32)
     i.token_hash = digest(token)
     i.expires_at = now() + timedelta(
-        hours=max(1, min(168, int(os.getenv("INVITE_TTL_HOURS", "48"))))
+        hours=__import__("app.system_config", fromlist=["config"]).config(
+            db, "security"
+        )["invite_ttl_hours"]
     )
     i.delivery = "pending"
     audit(db, who, "access.invite_resend", i.id, i.tenant_id)
@@ -268,8 +261,12 @@ def accept(body: AcceptInput, request: Request, db: Session = Depends(database))
     else:
         if not body.name or not body.name.strip() or not body.password:
             raise HTTPException(422, "Név és saját jelszó megadása szükséges.")
+        from app.system_config import password_policy
+
+        password_policy(db, body.password)
         user = User(
             email=i.email,
+            email_verified=True,
             name=body.name.strip(),
             password_hash=hash_password(body.password),
         )
