@@ -1,23 +1,25 @@
 # Security model and current hardening backlog
 
-## Current controls (CODEX 08)
+## Current controls (CODEX 09 + SECURITY-01 merged in Git; VPS rollout pending)
 - scrypt password hashes (`N=131072,r=8,p=1`), constant-time password check comparison.
 - SHA-256 hashes of random session tokens in DB; HttpOnly, Secure and SameSite=Strict cookies in HTTPS deployments.
 - CSRF token and Origin verification for mutating requests; login throttling via Redis.
 - Server-enforced RBAC: system and tenant roles, union of grants, explicit deny precedence, tenant/company/store scopes; audit and superadmin protection.
-- One-time hashed invite tokens, expiry, audit and revocation. SMTP is configured using environment variables.
+- One-time hashed invite tokens, expiry, audit and revocation. CODEX 09 supports encrypted SMTP and Google OIDC secrets through system settings with legacy environment-variable fallback; operational encryption key deployment is required.
 - Read-only eMAG reference connection and tenant scoping for application data.
 
-## SECURITY-01 issues under review (not yet marked fixed)
-1. **scrypt memory exhaustion**: ~128 MiB per concurrent calculation; bound concurrency across hash/verify paths without weakening existing hashes. Local semaphore only protects one process; verify actual worker topology.
-2. **Account lockout abuse**: existing `login:account:{email}` low threshold blocks legitimate user; redesign combined credential/client throttling and distributed attack mitigation; avoid easy global lockout. Validate real client IP handling through trusted reverse proxies.
-3. **Upload limit mismatch**: application 50 MB; frontend Nginx 51m; repository host Nginx 20m. Verify ACTIVE VPS configuration and standardize proxy body allowance; frontend needs clear Hungarian 413 error.
-4. **HSTS**: not present in inspected repository HTTPS Nginx config; consider `max-age=31536000` without `preload`/`includeSubDomains` after HTTPS policy review.
-5. `/api/v1/system/status` currently accessible to authenticated users; tighten for operational staff.
-6. Password change revokes sessions including current session; UI must explain the resulting re-login.
+## SECURITY-01 status
+Merged in PR #1 (`c5502c38`): scrypt lock-file slots shared across Uvicorn processes in one container (default 2), bounded queue with 503/Retry-After; progressive account/IP login throttling that avoids global hard account lockout; trusted reverse-proxy IP handling and MFA failure counters; repository host Nginx 51m limit and HSTS `max-age=31536000` without subdomain/preload scope. The Nginx template is **not proof that the live host has been updated**.
 
-## Planned auth (NOT live at CODEX 08)
-Username-based optional-email system accounts, TOTP with recovery codes, passkeys/WebAuthn, Google OIDC, MFA policy administration, SMTP settings UI. Authenticate and authorize on server; preserve existing user identity and membership data.
+## Residual security and UX follow-ups
+1. Frontend still needs a clear Hungarian response to HTML HTTP 413 from Nginx.
+2. Audit whether `/api/v1/system/status` should be accessible only to operational staff.
+3. Review dependency advisories (PyJWT, python-multipart, FastAPI/Starlette compatibility) with reproducible lockfile updates.
+4. Verify lock directory, trusted proxy CIDRs, TLS/HSTS prerequisites and real-IP behavior on actual VPS before deployment.
+5. A strong distributed botnet can attempt one guess per fresh IP during severe account targeting; require/configure MFA where risk warrants it.
+
+## CODEX 09 authentication implementation
+Merged code supports username-based system accounts with optional email, TOTP/recovery codes, multiple WebAuthn passkeys, Google OIDC, MFA policies, SMTP settings UI and session management. These require configuration, secure encryption key handling, migration `0008` and rollout validation; do not describe as already deployed.
 
 ## Incident and secret-handling rules
 - Never commit `.env`, secret tokens, passwords, private keys, real user data or invite URLs.
