@@ -7,7 +7,7 @@
 - Compose project `adatdusito-dev`; services `redis`, `migrate`, `backend`, `worker`, `frontend`.
 - External network `adatdusito-dev-net`; host MySQL outside Compose.
 - `.env` excluded from Git; `APP_DATABASE_URL` must target app database; `REFERENCE_DATABASE_URL` must access `pinfo_db` read-only.
-- Check `APP_ORIGIN=https://dev.pinfo.hu`, `COOKIE_SECURE=true` and SMTP transport if sending invitations.
+- Check `APP_ORIGIN=https://dev.pinfo.hu`, `COOKIE_SECURE=true`, CODEX 09's encryption-key requirements, and SMTP/OIDC provider configuration before enabling those methods. See `docs/codex-09-ui-system-settings-auth.md` for complete setup and recovery.
 
 ## Deployment protocol
 1. Verify clean tracked working tree, current revision, import jobs completed and disk capacity.
@@ -28,5 +28,10 @@ Read the specific version migration notes FIRST. For CODEX 08, `docs/codex-08-ac
 - Review authentication failures, worker issues, backup integrity, database growth and disk pressure.
 - Do not publish `docker compose config` output or backup locations with secrets.
 
-## Known issue
-Repository host Nginx body limit is 20m while internal proxy is 51m and app is 50 MB at CODEX 08 baseline. SECURITY-01 work is planned to align these; do not assume the checked-in host config reflects the live VPS.
+## Required CODEX 09 + SECURITY-01 rollout checks
+- **New Alembic `0008_settings_auth`** must be applied only after verified app database backup and a confirmed rollback plan. Preserve the matching encryption key independently; loss of key can make stored SMTP/OIDC/TOTP secrets unrecoverable.
+- Git template sets host body limit 51m, HSTS max-age 31536000 and secure real-IP forwarding; inspect real host `nginx -T`, certificate renewal, ingress and Docker proxy network CIDRs before applying.
+- Run `nginx -t` before reloading host Nginx. Confirm frontend Nginx forwards the trusted client address without overwriting it.
+- Verify email/username password login, MFA and recovery, Google/passkey only when explicitly configured, and import workflow after backend/worker rebuild.
+- Do **not** deploy based on this summary alone. Follow `docs/codex-09-ui-system-settings-auth.md` and SECURITY-01 PR instructions for exact commands and rollback.
+- Frontend user-facing handling of non-JSON Nginx 413 remains an open task.
