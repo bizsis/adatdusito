@@ -1,4 +1,5 @@
 import { auditLabel } from "./help";
+import { readApiResponse, apiErrorMessage } from "./apiResponse";
 import { dateTime } from "./ui";
 import React, { useEffect, useState, useRef } from "react";
 import { createRoot } from "react-dom/client";
@@ -185,11 +186,11 @@ async function api<T>(
       ? { body: body instanceof FormData ? body : JSON.stringify(body) }
       : {}),
   });
-  const data = response.status === 204 ? null : await response.json();
+  const data = await readApiResponse(response);
   if (!response.ok) {
     if (response.status === 401 && url !== "/auth/login")
       window.dispatchEvent(new Event("session-expired"));
-    throw new Error(data?.error?.message || "A művelet sikertelen.");
+    throw new Error(apiErrorMessage(response.status, data));
   }
   return data;
 }
