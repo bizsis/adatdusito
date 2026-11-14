@@ -10,10 +10,12 @@ PYTHONPATH=backend python -m pytest -q backend/tests scripts/tests
 ```
 Use isolated MySQL fixtures and `scripts/cloud-install.sh` / `scripts/cloud-start.sh` only in disposable cloud/local test environments. **Never run cloud fixtures on VPS.**
 
-## Current GitHub Actions observations
-- `.github/workflows/ci.yml` runs `backend/tests`, builds frontend and both Docker images.
-- A separate job runs `scripts/tests/test_emag_menu_export.py`.
-- This workflow does not yet run every `scripts/tests` test in CI, nor an explicit frontend lint/type-check step. It is a documented gap, not a passing claim.
+## Current GitHub Actions (QUALITY-01 merged)
+- `.github/workflows/ci.yml` runs independent backend, Chromium browser, eMAG export, frontend TypeScript check/build, Docker image build, advisory ESLint and aggregate `CI result` jobs.
+- All applicable test files are allocated once; new test files are picked up automatically. GitHub Actions preserves job summaries and failure artifacts (7 days).
+- `.github/workflows/dependency-audit.yml` runs advisory Python/npm vulnerability audits; findings require separate triage.
+- Last reviewed SECURITY-01 integration CI on `205a074`: 265 backend, 16 browser, 14 menu-export tests according to the developer, seven GitHub Actions jobs successful.
+- For CI ownership/commands see [CI.md](CI.md) from QUALITY-01.
 
 ## Minimum pull request checks
 - Existing backend tests and any affected browser tests.
@@ -21,7 +23,7 @@ Use isolated MySQL fixtures and `scripts/cloud-install.sh` / `scripts/cloud-star
 - For permissions: test direct API access across tenants and scopes, revoked permissions in active sessions, deny precedence and system staff boundary.
 - For schema changes: forward migration, idempotent upgrade, and safe rollback on disposable MySQL 8.
 - For ingestion: CSV/XLSX headers/mappings, exact join keys, financial ambiguity, chunked processing, size and decompression limits.
-- For auth: throttling, CSRF/Origin, secrets, password/session regression, MFA only once implemented.
+- For auth: throttling, CSRF/Origin, secrets, password/session regression, TOTP, recovery, Google OIDC and passkey flows.
 - For UI: keyboard navigation, mobile viewport, user-facing Hungarian strings and 413 error parsing.
 
 ## Test-count caution
