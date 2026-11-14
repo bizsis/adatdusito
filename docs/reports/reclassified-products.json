@@ -1,0 +1,958 @@
+[
+  {
+    "node_id": "web-item-114-3490",
+    "path": [
+      "Háztartási gépek és klíma",
+      "Mosógépek és szárítógépek",
+      "Elöltöltős mosógépek"
+    ],
+    "profiles": [
+      {
+        "emag_category_id": 385,
+        "expected_name": "Mosógépek",
+        "source_parent_emag_id": 3967,
+        "source_path": [
+          "Háztartási készülékek",
+          "Mosás és szárítás",
+          "Mosógépek"
+        ]
+      }
+    ]
+  },
+  {
+    "node_id": "web-item-114-3491",
+    "path": [
+      "Háztartási gépek és klíma",
+      "Mosógépek és szárítógépek",
+      "Felültöltős mosógépek"
+    ],
+    "profiles": [
+      {
+        "emag_category_id": 385,
+        "expected_name": "Mosógépek",
+        "source_parent_emag_id": 3967,
+        "source_path": [
+          "Háztartási készülékek",
+          "Mosás és szárítás",
+          "Mosógépek"
+        ]
+      }
+    ]
+  },
+  {
+    "node_id": "web-item-114-3492",
+    "path": [
+      "Háztartási gépek és klíma",
+      "Mosógépek és szárítógépek",
+      "Mosó-szárítógépek"
+    ],
+    "profiles": [
+      {
+        "emag_category_id": 385,
+        "expected_name": "Mosógépek",
+        "source_parent_emag_id": 3967,
+        "source_path": [
+          "Háztartási készülékek",
+          "Mosás és szárítás",
+          "Mosógépek"
+        ]
+      }
+    ]
+  },
+  {
+    "node_id": "web-item-114-4237",
+    "path": [
+      "Háztartási gépek és klíma",
+      "Mosogatógépek",
+      "Keskeny mosogatógépek"
+    ],
+    "profiles": [
+      {
+        "emag_category_id": 411,
+        "expected_name": "Mosogatógépek",
+        "source_parent_emag_id": 3967,
+        "source_path": [
+          "Háztartási készülékek",
+          "Mosás és szárítás",
+          "Mosogatógépek"
+        ]
+      }
+    ]
+  },
+  {
+    "node_id": "web-item-114-3502",
+    "path": [
+      "Háztartási gépek és klíma",
+      "Páraelszívók"
+    ],
+    "profiles": [
+      {
+        "emag_category_id": 525,
+        "expected_name": "Páraelszívók",
+        "source_parent_emag_id": 3965,
+        "source_path": [
+          "Háztartási készülékek",
+          "Főzés",
+          "Páraelszívók"
+        ]
+      }
+    ]
+  },
+  {
+    "node_id": "web-item-114-3508",
+    "path": [
+      "Háztartási gépek és klíma",
+      "Beépíthető készülékek",
+      "Beépíthető mosogatógépek"
+    ],
+    "profiles": [
+      {
+        "emag_category_id": 411,
+        "expected_name": "Mosogatógépek",
+        "source_parent_emag_id": 3967,
+        "source_path": [
+          "Háztartási készülékek",
+          "Mosás és szárítás",
+          "Mosogatógépek"
+        ]
+      }
+    ]
+  },
+  {
+    "node_id": "web-item-114-3750",
+    "path": [
+      "Háztartási gépek és klíma",
+      "Beépíthető készülékek",
+      "Beépíthető mikrohullámú sütők"
+    ],
+    "profiles": [
+      {
+        "emag_category_id": 363,
+        "expected_name": "Mikrohullámú sütők",
+        "source_parent_emag_id": 3965,
+        "source_path": [
+          "Háztartási készülékek",
+          "Főzés",
+          "Mikrohullámú sütők"
+        ]
+      }
+    ]
+  },
+  {
+    "node_id": "web-item-114-3751",
+    "path": [
+      "Háztartási gépek és klíma",
+      "Porszívók és vasalók",
+      "Porzsákos porszívók"
+    ],
+    "profiles": [
+      {
+        "emag_category_id": 58,
+        "expected_name": "Porszívók",
+        "source_parent_emag_id": 402,
+        "source_path": [
+          "Kis háztartási gépek és tartozékok",
+          "Háztartás",
+          "Porszívók"
+        ]
+      }
+    ]
+  },
+  {
+    "node_id": "web-item-114-3819",
+    "path": [
+      "Háztartási gépek és klíma",
+      "Porszívók és vasalók",
+      "Porzsák nélküli porszívók"
+    ],
+    "profiles": [
+      {
+        "emag_category_id": 58,
+        "expected_name": "Porszívók",
+        "source_parent_emag_id": 402,
+        "source_path": [
+          "Kis háztartási gépek és tartozékok",
+          "Háztartás",
+          "Porszívók"
+        ]
+      }
+    ]
+  },
+  {
+    "node_id": "web-item-114-3752",
+    "path": [
+      "Háztartási gépek és klíma",
+      "Porszívók és vasalók",
+      "Álló porszívók"
+    ],
+    "profiles": [
+      {
+        "emag_category_id": 58,
+        "expected_name": "Porszívók",
+        "source_parent_emag_id": 402,
+        "source_path": [
+          "Kis háztartási gépek és tartozékok",
+          "Háztartás",
+          "Porszívók"
+        ]
+      }
+    ]
+  },
+  {
+    "node_id": "web-item-114-3820",
+    "path": [
+      "Háztartási gépek és klíma",
+      "Porszívók és vasalók",
+      "Robotporszívók"
+    ],
+    "profiles": [
+      {
+        "emag_category_id": 58,
+        "expected_name": "Porszívók",
+        "source_parent_emag_id": 402,
+        "source_path": [
+          "Kis háztartási gépek és tartozékok",
+          "Háztartás",
+          "Porszívók"
+        ]
+      }
+    ]
+  },
+  {
+    "node_id": "web-item-114-3753",
+    "path": [
+      "Háztartási gépek és klíma",
+      "Kávékészítés",
+      "Automata eszpresszó kávéfőzők"
+    ],
+    "profiles": [
+      {
+        "emag_category_id": 32,
+        "expected_name": "Eszpresszó kávéfőzők",
+        "source_parent_emag_id": 846,
+        "source_path": [
+          "Kis háztartási gépek és tartozékok",
+          "Kávékészítés",
+          "Eszpresszó kávéfőzők"
+        ]
+      }
+    ]
+  },
+  {
+    "node_id": "web-item-114-3754",
+    "path": [
+      "Háztartási gépek és klíma",
+      "Kávékészítés",
+      "Kapszulás kávéfőzők"
+    ],
+    "profiles": [
+      {
+        "emag_category_id": 32,
+        "expected_name": "Eszpresszó kávéfőzők",
+        "source_parent_emag_id": 846,
+        "source_path": [
+          "Kis háztartási gépek és tartozékok",
+          "Kávékészítés",
+          "Eszpresszó kávéfőzők"
+        ]
+      }
+    ]
+  },
+  {
+    "node_id": "web-item-43-3697",
+    "path": [
+      "TV és szórakozás",
+      "eBook olvasók és tartozékok"
+    ],
+    "profiles": [
+      {
+        "emag_category_id": 103,
+        "expected_name": "eBook olvasók",
+        "source_parent_emag_id": 808,
+        "source_path": [
+          "Audio & E-Books",
+          "eBook olvasók & tartozékok",
+          "eBook olvasók"
+        ]
+      },
+      {
+        "emag_category_id": 313,
+        "expected_name": "eBook olvasó tartozékok",
+        "source_parent_emag_id": 808,
+        "source_path": [
+          "Audio & E-Books",
+          "eBook olvasók & tartozékok",
+          "eBook olvasó tartozékok"
+        ]
+      }
+    ]
+  },
+  {
+    "node_id": "web-item-43-4021",
+    "path": [
+      "TV és szórakozás",
+      "Konzolok és játékok",
+      "Hordozható játékkonzolok"
+    ],
+    "profiles": [
+      {
+        "emag_category_id": 152,
+        "expected_name": "Hardver konzolok",
+        "source_parent_emag_id": 762,
+        "source_path": [
+          "Játékkonzol",
+          "Hardver konzolok"
+        ]
+      }
+    ]
+  },
+  {
+    "node_id": "web-item-1-4244",
+    "path": [
+      "Telefon, Tablet, Laptop",
+      "Telefonok",
+      "Klasszikus mobiltelefonok"
+    ],
+    "profiles": [
+      {
+        "emag_category_id": 15,
+        "expected_name": "Mobiltelefonok",
+        "source_parent_emag_id": 754,
+        "source_path": [
+          "Telefonok és Internet",
+          "Mobiltelefonok"
+        ]
+      }
+    ]
+  },
+  {
+    "node_id": "web-item-1-3180",
+    "path": [
+      "Telefon, Tablet, Laptop",
+      "Laptopok",
+      "Laptopok Windows-szal"
+    ],
+    "profiles": [
+      {
+        "emag_category_id": 14,
+        "expected_name": "Laptop / Notebook",
+        "source_parent_emag_id": 1486,
+        "source_path": [
+          "Laptopok és tartozékok",
+          "Laptop / Notebook"
+        ]
+      }
+    ]
+  },
+  {
+    "node_id": "web-item-7-3683",
+    "path": [
+      "Számítástechnika",
+      "Gaming",
+      "Gamer PC-k"
+    ],
+    "profiles": [
+      {
+        "emag_category_id": 6,
+        "expected_name": "Asztali számítógép",
+        "source_parent_emag_id": 1485,
+        "source_path": [
+          "Asztali számitógépek PC",
+          "Asztali számítógép"
+        ]
+      }
+    ]
+  },
+  {
+    "node_id": "web-item-7-3827",
+    "path": [
+      "Számítástechnika",
+      "Gaming",
+      "Gamer laptopok"
+    ],
+    "profiles": [
+      {
+        "emag_category_id": 14,
+        "expected_name": "Laptop / Notebook",
+        "source_parent_emag_id": 1486,
+        "source_path": [
+          "Laptopok és tartozékok",
+          "Laptop / Notebook"
+        ]
+      }
+    ]
+  },
+  {
+    "node_id": "web-item-7-3684",
+    "path": [
+      "Számítástechnika",
+      "Gaming",
+      "Gamer monitorok"
+    ],
+    "profiles": [
+      {
+        "emag_category_id": 5,
+        "expected_name": "LCD & LED monitorok",
+        "source_parent_emag_id": 1512,
+        "source_path": [
+          "LED Monitorok",
+          "LCD & LED monitorok"
+        ]
+      }
+    ]
+  },
+  {
+    "node_id": "web-item-7-3829",
+    "path": [
+      "Számítástechnika",
+      "Gaming",
+      "Gamer billentyűzetek"
+    ],
+    "profiles": [
+      {
+        "emag_category_id": 10,
+        "expected_name": "Billentyűzetek",
+        "source_parent_emag_id": 662,
+        "source_path": [
+          "PC perifériák",
+          "Perifériák",
+          "Billentyűzetek"
+        ]
+      }
+    ]
+  },
+  {
+    "node_id": "web-item-7-3830",
+    "path": [
+      "Számítástechnika",
+      "Gaming",
+      "Gamer egérpad"
+    ],
+    "profiles": [
+      {
+        "emag_category_id": 54,
+        "expected_name": "Egérpad",
+        "source_parent_emag_id": 662,
+        "source_path": [
+          "PC perifériák",
+          "Perifériák",
+          "Egérpad"
+        ]
+      }
+    ]
+  },
+  {
+    "node_id": "web-item-7-3831",
+    "path": [
+      "Számítástechnika",
+      "Gaming",
+      "Gamer egér"
+    ],
+    "profiles": [
+      {
+        "emag_category_id": 11,
+        "expected_name": "Egér",
+        "source_parent_emag_id": 662,
+        "source_path": [
+          "PC perifériák",
+          "Perifériák",
+          "Egér"
+        ]
+      }
+    ]
+  },
+  {
+    "node_id": "web-item-29-4260",
+    "path": [
+      "Fotó-Videó, Okos eszközök",
+      "Okosórák",
+      "Android kompatibilis okosórák"
+    ],
+    "profiles": [
+      {
+        "emag_category_id": 2920,
+        "expected_name": "Okosórák",
+        "source_parent_emag_id": 2431,
+        "source_path": [
+          "Okos eszközök",
+          "Okosórák"
+        ]
+      }
+    ]
+  },
+  {
+    "node_id": "web-item-29-4261",
+    "path": [
+      "Fotó-Videó, Okos eszközök",
+      "Okosórák",
+      "iOS kompatibilis okosórák"
+    ],
+    "profiles": [
+      {
+        "emag_category_id": 2920,
+        "expected_name": "Okosórák",
+        "source_parent_emag_id": 2431,
+        "source_path": [
+          "Okos eszközök",
+          "Okosórák"
+        ]
+      }
+    ]
+  },
+  {
+    "node_id": "web-item-173-4297",
+    "path": [
+      "Otthon, barkács, kert",
+      "Világítás és elektronika",
+      "Okos izzók"
+    ],
+    "profiles": [
+      {
+        "emag_category_id": 365,
+        "expected_name": "Izzók",
+        "source_parent_emag_id": 364,
+        "source_path": [
+          "Világítás & Elektronika",
+          "Izzók"
+        ]
+      }
+    ]
+  },
+  {
+    "node_id": "web-item-173-4008",
+    "path": [
+      "Otthon, barkács, kert",
+      "Dekorációk"
+    ],
+    "profiles": [
+      {
+        "emag_category_id": 1567,
+        "expected_name": "Dekorációs kiegészítők",
+        "source_parent_emag_id": 1547,
+        "source_path": [
+          "Otthoni dekorációk",
+          "Belső dekorációk",
+          "Dekorációs kiegészítők"
+        ]
+      },
+      {
+        "emag_category_id": 3903,
+        "expected_name": "Fali dekorációk",
+        "source_parent_emag_id": 3427,
+        "source_path": [
+          "Otthoni dekorációk",
+          "Díszítések",
+          "Fali dekorációk"
+        ]
+      }
+    ]
+  },
+  {
+    "node_id": "web-item-173-4125",
+    "path": [
+      "Otthon, barkács, kert",
+      "Konyha és felszolgálás",
+      "Főzőedények"
+    ],
+    "profiles": [
+      {
+        "emag_category_id": 146,
+        "expected_name": "Serpenyő",
+        "source_parent_emag_id": 1603,
+        "source_path": [
+          "Household",
+          "Főzőedények",
+          "Serpenyő"
+        ]
+      },
+      {
+        "emag_category_id": 147,
+        "expected_name": "Fazekak és lábasok",
+        "source_parent_emag_id": 1603,
+        "source_path": [
+          "Household",
+          "Főzőedények",
+          "Fazekak és lábasok"
+        ]
+      },
+      {
+        "emag_category_id": 1606,
+        "expected_name": "Hőálló edények",
+        "source_parent_emag_id": 1603,
+        "source_path": [
+          "Household",
+          "Főzőedények",
+          "Hőálló edények"
+        ]
+      },
+      {
+        "emag_category_id": 2664,
+        "expected_name": "Multifunkciós főzőedények",
+        "source_parent_emag_id": 850,
+        "source_path": [
+          "Kis háztartási gépek és tartozékok",
+          "Sütés & főzés",
+          "Multifunkciós főzőedények"
+        ]
+      }
+    ]
+  },
+  {
+    "node_id": "web-item-173-3778",
+    "path": [
+      "Otthon, barkács, kert",
+      "Konyha és felszolgálás",
+      "Vízszűrő kancsók és tartozékok"
+    ],
+    "profiles": [
+      {
+        "emag_category_id": 520,
+        "expected_name": "Vízszűrő kancsók",
+        "source_parent_emag_id": 3008,
+        "source_path": [
+          "Household",
+          "Vízszűrők",
+          "Vízszűrő kancsók"
+        ]
+      },
+      {
+        "emag_category_id": 3674,
+        "expected_name": "Vízszűrő kancsó tartozékok",
+        "source_parent_emag_id": 3008,
+        "source_path": [
+          "Household",
+          "Vízszűrők",
+          "Vízszűrő kancsó tartozékok"
+        ]
+      }
+    ]
+  },
+  {
+    "node_id": "web-item-199-2725",
+    "path": [
+      "Játékok, Baba, Mama",
+      "BABA-MAMA",
+      "Babakocsik és hordozók"
+    ],
+    "profiles": [
+      {
+        "emag_category_id": 1359,
+        "expected_name": "Babakocsik és tartozékok",
+        "source_parent_emag_id": 1358,
+        "source_path": [
+          "Árucikkek a legkisebbeknek",
+          "Babakocsik, bútorok és kiegészítők",
+          "Babakocsik és tartozékok"
+        ]
+      },
+      {
+        "emag_category_id": 3257,
+        "expected_name": "Babahordozó eszközök",
+        "source_parent_emag_id": 1358,
+        "source_path": [
+          "Árucikkek a legkisebbeknek",
+          "Babakocsik, bútorok és kiegészítők",
+          "Babahordozó eszközök"
+        ]
+      }
+    ]
+  },
+  {
+    "node_id": "web-item-199-3264",
+    "path": [
+      "Játékok, Baba, Mama",
+      "BABA-MAMA",
+      "Babajátékok",
+      "Interaktív babajátékok"
+    ],
+    "profiles": [
+      {
+        "emag_category_id": 3290,
+        "expected_name": "Interaktív babajátékok",
+        "source_parent_emag_id": 3190,
+        "source_path": [
+          "Játék",
+          "Baba játékok",
+          "Interaktív babajátékok"
+        ]
+      }
+    ]
+  },
+  {
+    "node_id": "web-item-199-3265",
+    "path": [
+      "Játékok, Baba, Mama",
+      "BABA-MAMA",
+      "Babajátékok",
+      "Tevékenységi központok és játszószőnyegek"
+    ],
+    "profiles": [
+      {
+        "emag_category_id": 3278,
+        "expected_name": "Baba tevékenységi játékközpont",
+        "source_parent_emag_id": 3190,
+        "source_path": [
+          "Játék",
+          "Baba játékok",
+          "Baba tevékenységi játékközpont"
+        ]
+      }
+    ]
+  },
+  {
+    "node_id": "web-item-199-4313",
+    "path": [
+      "Játékok, Baba, Mama",
+      "JÁTÉKOK",
+      "Társasjátékok",
+      "Gyerek társasjátékok"
+    ],
+    "profiles": [
+      {
+        "emag_category_id": 1209,
+        "expected_name": "Társasjátékok",
+        "source_parent_emag_id": 861,
+        "source_path": [
+          "Játék",
+          "Társas-és puzzle játékok",
+          "Társasjátékok"
+        ]
+      }
+    ]
+  },
+  {
+    "node_id": "web-item-199-4314",
+    "path": [
+      "Játékok, Baba, Mama",
+      "JÁTÉKOK",
+      "Társasjátékok",
+      "Családi társasjátékok"
+    ],
+    "profiles": [
+      {
+        "emag_category_id": 1209,
+        "expected_name": "Társasjátékok",
+        "source_parent_emag_id": 861,
+        "source_path": [
+          "Játék",
+          "Társas-és puzzle játékok",
+          "Társasjátékok"
+        ]
+      }
+    ]
+  },
+  {
+    "node_id": "web-item-199-4315",
+    "path": [
+      "Játékok, Baba, Mama",
+      "JÁTÉKOK",
+      "Társasjátékok",
+      "Felnőtt társasjátékok"
+    ],
+    "profiles": [
+      {
+        "emag_category_id": 1209,
+        "expected_name": "Társasjátékok",
+        "source_parent_emag_id": 861,
+        "source_path": [
+          "Játék",
+          "Társas-és puzzle játékok",
+          "Társasjátékok"
+        ]
+      }
+    ]
+  },
+  {
+    "node_id": "web-item-199-4128",
+    "path": [
+      "Játékok, Baba, Mama",
+      "JÁTÉKOK",
+      "LEGO felnőtteknek"
+    ],
+    "profiles": [
+      {
+        "emag_category_id": 1187,
+        "expected_name": "Építőkészletek",
+        "source_parent_emag_id": 864,
+        "source_path": [
+          "Játék",
+          "Építő szettek és kockák",
+          "Építőkészletek"
+        ]
+      }
+    ]
+  },
+  {
+    "node_id": "web-item-83-2994",
+    "path": [
+      "Szépségápolás",
+      "Parfümök"
+    ],
+    "profiles": [
+      {
+        "emag_category_id": 1241,
+        "expected_name": "Parfüm",
+        "source_parent_emag_id": 3753,
+        "source_path": [
+          "Perfumes",
+          "Parfüm"
+        ]
+      }
+    ]
+  },
+  {
+    "node_id": "web-item-83-4339",
+    "path": [
+      "Szépségápolás",
+      "Szépségápolási készülékek",
+      "IPL tartós szőrtelenítők"
+    ],
+    "profiles": [
+      {
+        "emag_category_id": 63,
+        "expected_name": "Epilátorok",
+        "source_parent_emag_id": 1514,
+        "source_path": [
+          "Személyi ápolás készülékek",
+          "Epilatoare, tuns si ras",
+          "Epilátorok"
+        ]
+      }
+    ]
+  },
+  {
+    "node_id": "web-item-165-4041",
+    "path": [
+      "Sport és utazás",
+      "Kerékpározás",
+      "Felnőtt kerékpárok"
+    ],
+    "profiles": [
+      {
+        "emag_category_id": 1809,
+        "expected_name": "Kerékpárok",
+        "source_parent_emag_id": 1695,
+        "source_path": [
+          "Kerékpározás",
+          "Kerékpárok"
+        ]
+      }
+    ]
+  },
+  {
+    "node_id": "web-item-165-4042",
+    "path": [
+      "Sport és utazás",
+      "Kerékpározás",
+      "Gyerek kerékpárok"
+    ],
+    "profiles": [
+      {
+        "emag_category_id": 1809,
+        "expected_name": "Kerékpárok",
+        "source_parent_emag_id": 1695,
+        "source_path": [
+          "Kerékpározás",
+          "Kerékpárok"
+        ]
+      }
+    ]
+  },
+  {
+    "node_id": "web-item-79-4347",
+    "path": [
+      "Könyvek, Filmek és Irodaszerek",
+      "Filmek, zene",
+      "Bakelit lemezek"
+    ],
+    "profiles": [
+      {
+        "emag_category_id": 604,
+        "expected_name": "Hanglemezek és zenei CD-k",
+        "source_parent_emag_id": 869,
+        "source_path": [
+          "Könyvek_",
+          "Média",
+          "Hanglemezek és zenei CD-k"
+        ]
+      }
+    ]
+  },
+  {
+    "node_id": "web-item-79-3439",
+    "path": [
+      "Könyvek, Filmek és Irodaszerek",
+      "Írás és rajzolás",
+      "Füzetek"
+    ],
+    "profiles": [
+      {
+        "emag_category_id": 2606,
+        "expected_name": "Füzetek",
+        "source_parent_emag_id": 2653,
+        "source_path": [
+          "Irodaszerek",
+          "Iskolai cikkek és kellékek",
+          "Füzetek"
+        ]
+      }
+    ]
+  },
+  {
+    "node_id": "web-item-512-3833",
+    "path": [
+      "Autó- és motor felszerelések",
+      "Gumiabroncsok",
+      "Nyári gumik"
+    ],
+    "profiles": [
+      {
+        "emag_category_id": 1412,
+        "expected_name": "Gumiabroncsok",
+        "source_parent_emag_id": 1411,
+        "source_path": [
+          "Gumiabroncsok és felnik",
+          "Gumiabroncsok"
+        ]
+      }
+    ]
+  },
+  {
+    "node_id": "web-item-512-3834",
+    "path": [
+      "Autó- és motor felszerelések",
+      "Gumiabroncsok",
+      "Téli gumik"
+    ],
+    "profiles": [
+      {
+        "emag_category_id": 1412,
+        "expected_name": "Gumiabroncsok",
+        "source_parent_emag_id": 1411,
+        "source_path": [
+          "Gumiabroncsok és felnik",
+          "Gumiabroncsok"
+        ]
+      }
+    ]
+  },
+  {
+    "node_id": "web-item-512-3832",
+    "path": [
+      "Autó- és motor felszerelések",
+      "Gumiabroncsok",
+      "Négyévszakos"
+    ],
+    "profiles": [
+      {
+        "emag_category_id": 1412,
+        "expected_name": "Gumiabroncsok",
+        "source_parent_emag_id": 1411,
+        "source_path": [
+          "Gumiabroncsok és felnik",
+          "Gumiabroncsok"
+        ]
+      }
+    ]
+  }
+]

@@ -1,5 +1,7 @@
 # Adatdúsító · CODEX 05
 
+[Aktuális javítás: 45 termékkategória szerepének helyreállítása, 457 kategória profilokkal](docs/product-role-correction.md).
+
 **Aktuális működés:** a felhasználó által jóváhagyott magyar kategóriafa rögzített: 13 főcsoport, összesen 583 pont (a TV-antennák pontját külön kérésre eltávolítottuk). A forrásadatbázis paramétereket és értékeket biztosít; `is_allowed` jelzője nem módosítja a fa láthatóságát vagy a paraméter-hozzárendelést. Új forráskategóriák nem bővítik a felhasználói fát. A már betöltött értékeket nem kell újraimportálni vagy aktiválni. [CODEX 05: rögzített fa, egységes paraméterszerkesztő, lefedettség](docs/codex05.md).
 
 [Aktuális paraméter-hozzárendelési jelentés: 412/412 termékkategória, külön profilok](docs/reviewed-parameter-profiles.md).

@@ -1,0 +1,1029 @@
+[
+  {
+    "id": "web-dept-114",
+    "path": [
+      "Háztartási gépek és klíma"
+    ],
+    "reason": "Főcsoport, több termékkört összefogó navigáció vagy általános bolt/témakör; nem konkrét terméktípus."
+  },
+  {
+    "id": "web-item-114-3487",
+    "path": [
+      "Háztartási gépek és klíma",
+      "Mosógépek és szárítógépek"
+    ],
+    "reason": "Főcsoport, több termékkört összefogó navigáció vagy általános bolt/témakör; nem konkrét terméktípus."
+  },
+  {
+    "id": "web-item-114-3494",
+    "path": [
+      "Háztartási gépek és klíma",
+      "Hűtők és fagyasztók"
+    ],
+    "reason": "Főcsoport, több termékkört összefogó navigáció vagy általános bolt/témakör; nem konkrét terméktípus."
+  },
+  {
+    "id": "web-item-114-3501",
+    "path": [
+      "Háztartási gépek és klíma",
+      "Mosogatógépek"
+    ],
+    "reason": "Főcsoport, több termékkört összefogó navigáció vagy általános bolt/témakör; nem konkrét terméktípus."
+  },
+  {
+    "id": "web-item-114-3503",
+    "path": [
+      "Háztartási gépek és klíma",
+      "Tűzhelyek, főzőlapok és mikrohullámú sütők"
+    ],
+    "reason": "Főcsoport, több termékkört összefogó navigáció vagy általános bolt/témakör; nem konkrét terméktípus."
+  },
+  {
+    "id": "web-item-114-3504",
+    "path": [
+      "Háztartási gépek és klíma",
+      "Beépíthető készülékek"
+    ],
+    "reason": "Főcsoport, több termékkört összefogó navigáció vagy általános bolt/témakör; nem konkrét terméktípus."
+  },
+  {
+    "id": "web-item-114-3510",
+    "path": [
+      "Háztartási gépek és klíma",
+      "Hűtő-fűtő berendezések és vízmelegítők"
+    ],
+    "reason": "Főcsoport, több termékkört összefogó navigáció vagy általános bolt/témakör; nem konkrét terméktípus."
+  },
+  {
+    "id": "web-item-114-3515",
+    "path": [
+      "Háztartási gépek és klíma",
+      "Porszívók és vasalók"
+    ],
+    "reason": "Főcsoport, több termékkört összefogó navigáció vagy általános bolt/témakör; nem konkrét terméktípus."
+  },
+  {
+    "id": "web-item-114-3518",
+    "path": [
+      "Háztartási gépek és klíma",
+      "Kávékészítés"
+    ],
+    "reason": "Főcsoport, több termékkört összefogó navigáció vagy általános bolt/témakör; nem konkrét terméktípus."
+  },
+  {
+    "id": "web-item-114-3521",
+    "path": [
+      "Háztartási gépek és klíma",
+      "Konyhai kisgépek"
+    ],
+    "reason": "Főcsoport, több termékkört összefogó navigáció vagy általános bolt/témakör; nem konkrét terméktípus."
+  },
+  {
+    "id": "web-dept-43",
+    "path": [
+      "TV és szórakozás"
+    ],
+    "reason": "Főcsoport, több termékkört összefogó navigáció vagy általános bolt/témakör; nem konkrét terméktípus."
+  },
+  {
+    "id": "web-item-43-3725",
+    "path": [
+      "TV és szórakozás",
+      "TV tartozékok"
+    ],
+    "reason": "Főcsoport, több termékkört összefogó navigáció vagy általános bolt/témakör; nem konkrét terméktípus."
+  },
+  {
+    "id": "web-item-43-3733",
+    "path": [
+      "TV és szórakozás",
+      "Projektorok és tartozékok"
+    ],
+    "reason": "Főcsoport, több termékkört összefogó navigáció vagy általános bolt/témakör; nem konkrét terméktípus."
+  },
+  {
+    "id": "web-item-43-3551",
+    "path": [
+      "TV és szórakozás",
+      "Házimozi és audió rendszerek"
+    ],
+    "reason": "Főcsoport, több termékkört összefogó navigáció vagy általános bolt/témakör; nem konkrét terméktípus."
+  },
+  {
+    "id": "web-item-43-3573",
+    "path": [
+      "TV és szórakozás",
+      "Lejátszók, hangfalak, fej- és fülhallgatók"
+    ],
+    "reason": "Főcsoport, több termékkört összefogó navigáció vagy általános bolt/témakör; nem konkrét terméktípus."
+  },
+  {
+    "id": "web-item-43-3581",
+    "path": [
+      "TV és szórakozás",
+      "Konzolok és játékok"
+    ],
+    "reason": "Főcsoport, több termékkört összefogó navigáció vagy általános bolt/témakör; nem konkrét terméktípus."
+  },
+  {
+    "id": "web-dept-1",
+    "path": [
+      "Telefon, Tablet, Laptop"
+    ],
+    "reason": "Főcsoport, több termékkört összefogó navigáció vagy általános bolt/témakör; nem konkrét terméktípus."
+  },
+  {
+    "id": "web-item-1-3681",
+    "path": [
+      "Telefon, Tablet, Laptop",
+      "Telefonok"
+    ],
+    "reason": "Főcsoport, több termékkört összefogó navigáció vagy általános bolt/témakör; nem konkrét terméktípus."
+  },
+  {
+    "id": "web-item-1-3680",
+    "path": [
+      "Telefon, Tablet, Laptop",
+      "Mobiltelefon tartozékok"
+    ],
+    "reason": "Főcsoport, több termékkört összefogó navigáció vagy általános bolt/témakör; nem konkrét terméktípus."
+  },
+  {
+    "id": "web-item-1-3184",
+    "path": [
+      "Telefon, Tablet, Laptop",
+      "Laptopok"
+    ],
+    "reason": "Főcsoport, több termékkört összefogó navigáció vagy általános bolt/témakör; nem konkrét terméktípus."
+  },
+  {
+    "id": "web-item-1-3186",
+    "path": [
+      "Telefon, Tablet, Laptop",
+      "Laptop tartozékok"
+    ],
+    "reason": "Főcsoport, több termékkört összefogó navigáció vagy általános bolt/témakör; nem konkrét terméktípus."
+  },
+  {
+    "id": "web-item-1-3154",
+    "path": [
+      "Telefon, Tablet, Laptop",
+      "Tabletek és tartozékok"
+    ],
+    "reason": "Főcsoport, több termékkört összefogó navigáció vagy általános bolt/témakör; nem konkrét terméktípus."
+  },
+  {
+    "id": "web-item-1-4248",
+    "path": [
+      "Telefon, Tablet, Laptop",
+      "Okosórák és okos eszközök, aktivitásmérők"
+    ],
+    "reason": "Főcsoport, több termékkört összefogó navigáció vagy általános bolt/témakör; nem konkrét terméktípus."
+  },
+  {
+    "id": "web-dept-7",
+    "path": [
+      "Számítástechnika"
+    ],
+    "reason": "Főcsoport, több termékkört összefogó navigáció vagy általános bolt/témakör; nem konkrét terméktípus."
+  },
+  {
+    "id": "web-item-7-3629",
+    "path": [
+      "Számítástechnika",
+      "Asztali PC és monitorok"
+    ],
+    "reason": "Főcsoport, több termékkört összefogó navigáció vagy általános bolt/témakör; nem konkrét terméktípus."
+  },
+  {
+    "id": "web-item-7-3631",
+    "path": [
+      "Számítástechnika",
+      "Gaming"
+    ],
+    "reason": "Főcsoport, több termékkört összefogó navigáció vagy általános bolt/témakör; nem konkrét terméktípus."
+  },
+  {
+    "id": "web-item-7-3661",
+    "path": [
+      "Számítástechnika",
+      "Szoftverek"
+    ],
+    "reason": "Főcsoport, több termékkört összefogó navigáció vagy általános bolt/témakör; nem konkrét terméktípus."
+  },
+  {
+    "id": "web-item-7-3633",
+    "path": [
+      "Számítástechnika",
+      "PC alkatrészek"
+    ],
+    "reason": "Főcsoport, több termékkört összefogó navigáció vagy általános bolt/témakör; nem konkrét terméktípus."
+  },
+  {
+    "id": "web-item-7-3653",
+    "path": [
+      "Számítástechnika",
+      "Hálózatok és megfigyelő rendszerek"
+    ],
+    "reason": "Főcsoport, több termékkört összefogó navigáció vagy általános bolt/témakör; nem konkrét terméktípus."
+  },
+  {
+    "id": "web-item-7-3642",
+    "path": [
+      "Számítástechnika",
+      "Perifériák"
+    ],
+    "reason": "Főcsoport, több termékkört összefogó navigáció vagy általános bolt/témakör; nem konkrét terméktípus."
+  },
+  {
+    "id": "web-item-7-3905",
+    "path": [
+      "Számítástechnika",
+      "Projektorok és tartozékok"
+    ],
+    "reason": "Főcsoport, több termékkört összefogó navigáció vagy általános bolt/témakör; nem konkrét terméktípus."
+  },
+  {
+    "id": "web-item-7-3657",
+    "path": [
+      "Számítástechnika",
+      "Nyomtatók, szkennerek és fogyóanyagok"
+    ],
+    "reason": "Főcsoport, több termékkört összefogó navigáció vagy általános bolt/témakör; nem konkrét terméktípus."
+  },
+  {
+    "id": "web-dept-29",
+    "path": [
+      "Fotó-Videó, Okos eszközök"
+    ],
+    "reason": "Főcsoport, több termékkört összefogó navigáció vagy általános bolt/témakör; nem konkrét terméktípus."
+  },
+  {
+    "id": "web-item-29-3616",
+    "path": [
+      "Fotó-Videó, Okos eszközök",
+      "Fényképezőgépek"
+    ],
+    "reason": "Főcsoport, több termékkört összefogó navigáció vagy általános bolt/témakör; nem konkrét terméktípus."
+  },
+  {
+    "id": "web-item-29-3599",
+    "path": [
+      "Fotó-Videó, Okos eszközök",
+      "Fényképezőgép tartozékok"
+    ],
+    "reason": "Főcsoport, több termékkört összefogó navigáció vagy általános bolt/témakör; nem konkrét terméktípus."
+  },
+  {
+    "id": "web-item-29-3817",
+    "path": [
+      "Fotó-Videó, Okos eszközök",
+      "Akció- és videókamerák"
+    ],
+    "reason": "Főcsoport, több termékkört összefogó navigáció vagy általános bolt/témakör; nem konkrét terméktípus."
+  },
+  {
+    "id": "web-item-29-3803",
+    "path": [
+      "Fotó-Videó, Okos eszközök",
+      "Kamera tartozékok"
+    ],
+    "reason": "Főcsoport, több termékkört összefogó navigáció vagy általános bolt/témakör; nem konkrét terméktípus."
+  },
+  {
+    "id": "web-item-29-3850",
+    "path": [
+      "Fotó-Videó, Okos eszközök",
+      "Távcsövek és optikai eszközök"
+    ],
+    "reason": "Főcsoport, több termékkört összefogó navigáció vagy általános bolt/témakör; nem konkrét terméktípus."
+  },
+  {
+    "id": "web-item-29-3868",
+    "path": [
+      "Fotó-Videó, Okos eszközök",
+      "Okos eszközök"
+    ],
+    "reason": "Főcsoport, több termékkört összefogó navigáció vagy általános bolt/témakör; nem konkrét terméktípus."
+  },
+  {
+    "id": "web-dept-615",
+    "path": [
+      "Szupermarket"
+    ],
+    "reason": "Főcsoport, több termékkört összefogó navigáció vagy általános bolt/témakör; nem konkrét terméktípus."
+  },
+  {
+    "id": "web-item-615-4198",
+    "path": [
+      "Szupermarket",
+      "Online élelmiszerbolt"
+    ],
+    "reason": "Főcsoport, több termékkört összefogó navigáció vagy általános bolt/témakör; nem konkrét terméktípus."
+  },
+  {
+    "id": "web-item-615-4085",
+    "path": [
+      "Szupermarket",
+      "Alkoholmentes italok"
+    ],
+    "reason": "Főcsoport, több termékkört összefogó navigáció vagy általános bolt/témakör; nem konkrét terméktípus."
+  },
+  {
+    "id": "web-item-615-4084",
+    "path": [
+      "Szupermarket",
+      "Alkoholos italok"
+    ],
+    "reason": "Főcsoport, több termékkört összefogó navigáció vagy általános bolt/témakör; nem konkrét terméktípus."
+  },
+  {
+    "id": "web-item-615-3933",
+    "path": [
+      "Szupermarket",
+      "Online drogéria"
+    ],
+    "reason": "Főcsoport, több termékkört összefogó navigáció vagy általános bolt/témakör; nem konkrét terméktípus."
+  },
+  {
+    "id": "web-item-615-4072",
+    "path": [
+      "Szupermarket",
+      "Online drogéria",
+      "Dermokozmetika"
+    ],
+    "reason": "Főcsoport, több termékkört összefogó navigáció vagy általános bolt/témakör; nem konkrét terméktípus."
+  },
+  {
+    "id": "web-item-615-3922",
+    "path": [
+      "Szupermarket",
+      "Online drogéria",
+      "Higiéniai termékek"
+    ],
+    "reason": "Főcsoport, több termékkört összefogó navigáció vagy általános bolt/témakör; nem konkrét terméktípus."
+  },
+  {
+    "id": "web-item-615-3859",
+    "path": [
+      "Szupermarket",
+      "Ajándékötletek"
+    ],
+    "reason": "Főcsoport, több termékkört összefogó navigáció vagy általános bolt/témakör; nem konkrét terméktípus."
+  },
+  {
+    "id": "web-item-615-3891",
+    "path": [
+      "Szupermarket",
+      "Kisállattartás"
+    ],
+    "reason": "Főcsoport, több termékkört összefogó navigáció vagy általános bolt/témakör; nem konkrét terméktípus."
+  },
+  {
+    "id": "web-dept-173",
+    "path": [
+      "Otthon, barkács, kert"
+    ],
+    "reason": "Főcsoport, több termékkört összefogó navigáció vagy általános bolt/témakör; nem konkrét terméktípus."
+  },
+  {
+    "id": "web-item-173-3292",
+    "path": [
+      "Otthon, barkács, kert",
+      "Kert"
+    ],
+    "reason": "Főcsoport, több termékkört összefogó navigáció vagy általános bolt/témakör; nem konkrét terméktípus."
+  },
+  {
+    "id": "web-item-173-3289",
+    "path": [
+      "Otthon, barkács, kert",
+      "Szerszámgépek"
+    ],
+    "reason": "Főcsoport, több termékkört összefogó navigáció vagy általános bolt/témakör; nem konkrét terméktípus."
+  },
+  {
+    "id": "web-item-173-3295",
+    "path": [
+      "Otthon, barkács, kert",
+      "Szaniterek"
+    ],
+    "reason": "Főcsoport, több termékkört összefogó navigáció vagy általános bolt/témakör; nem konkrét terméktípus."
+  },
+  {
+    "id": "web-item-173-3299",
+    "path": [
+      "Otthon, barkács, kert",
+      "Világítás és elektronika"
+    ],
+    "reason": "Főcsoport, több termékkört összefogó navigáció vagy általános bolt/témakör; nem konkrét terméktípus."
+  },
+  {
+    "id": "web-item-173-3317",
+    "path": [
+      "Otthon, barkács, kert",
+      "Bútorok"
+    ],
+    "reason": "Főcsoport, több termékkört összefogó navigáció vagy általános bolt/témakör; nem konkrét terméktípus."
+  },
+  {
+    "id": "web-item-173-3302",
+    "path": [
+      "Otthon, barkács, kert",
+      "Konyha és felszolgálás"
+    ],
+    "reason": "Főcsoport, több termékkört összefogó navigáció vagy általános bolt/témakör; nem konkrét terméktípus."
+  },
+  {
+    "id": "web-item-173-3306",
+    "path": [
+      "Otthon, barkács, kert",
+      "Textiláruk"
+    ],
+    "reason": "Főcsoport, több termékkört összefogó navigáció vagy általános bolt/témakör; nem konkrét terméktípus."
+  },
+  {
+    "id": "web-item-173-3312",
+    "path": [
+      "Otthon, barkács, kert",
+      "Tisztítás és karbantartás"
+    ],
+    "reason": "Főcsoport, több termékkört összefogó navigáció vagy általános bolt/témakör; nem konkrét terméktípus."
+  },
+  {
+    "id": "web-dept-199",
+    "path": [
+      "Játékok, Baba, Mama"
+    ],
+    "reason": "Főcsoport, több termékkört összefogó navigáció vagy általános bolt/témakör; nem konkrét terméktípus."
+  },
+  {
+    "id": "web-item-199-2493",
+    "path": [
+      "Játékok, Baba, Mama",
+      "BABA-MAMA"
+    ],
+    "reason": "Főcsoport, több termékkört összefogó navigáció vagy általános bolt/témakör; nem konkrét terméktípus."
+  },
+  {
+    "id": "web-item-199-4206",
+    "path": [
+      "Játékok, Baba, Mama",
+      "BABA-MAMA",
+      "Bababolt"
+    ],
+    "reason": "Főcsoport, több termékkört összefogó navigáció vagy általános bolt/témakör; nem konkrét terméktípus."
+  },
+  {
+    "id": "web-item-199-2494",
+    "path": [
+      "Játékok, Baba, Mama",
+      "BABA-MAMA",
+      "Baba ételek és tartozékok"
+    ],
+    "reason": "Főcsoport, több termékkört összefogó navigáció vagy általános bolt/témakör; nem konkrét terméktípus."
+  },
+  {
+    "id": "web-item-199-2499",
+    "path": [
+      "Játékok, Baba, Mama",
+      "BABA-MAMA",
+      "Higiénia és ápolási termékek"
+    ],
+    "reason": "Főcsoport, több termékkört összefogó navigáció vagy általános bolt/témakör; nem konkrét terméktípus."
+  },
+  {
+    "id": "web-item-199-2512",
+    "path": [
+      "Játékok, Baba, Mama",
+      "BABA-MAMA",
+      "Gyerekszoba"
+    ],
+    "reason": "Főcsoport, több termékkört összefogó navigáció vagy általános bolt/témakör; nem konkrét terméktípus."
+  },
+  {
+    "id": "web-item-199-3263",
+    "path": [
+      "Játékok, Baba, Mama",
+      "BABA-MAMA",
+      "Babajátékok"
+    ],
+    "reason": "Főcsoport, több termékkört összefogó navigáció vagy általános bolt/témakör; nem konkrét terméktípus."
+  },
+  {
+    "id": "web-item-199-2479",
+    "path": [
+      "Játékok, Baba, Mama",
+      "JÁTÉKOK"
+    ],
+    "reason": "Főcsoport, több termékkört összefogó navigáció vagy általános bolt/témakör; nem konkrét terméktípus."
+  },
+  {
+    "id": "web-item-199-4208",
+    "path": [
+      "Játékok, Baba, Mama",
+      "JÁTÉKOK",
+      "Játék bolt"
+    ],
+    "reason": "Főcsoport, több termékkört összefogó navigáció vagy általános bolt/témakör; nem konkrét terméktípus."
+  },
+  {
+    "id": "web-item-199-3266",
+    "path": [
+      "Játékok, Baba, Mama",
+      "JÁTÉKOK",
+      "Szerepjátékok"
+    ],
+    "reason": "Főcsoport, több termékkört összefogó navigáció vagy általános bolt/témakör; nem konkrét terméktípus."
+  },
+  {
+    "id": "web-item-199-3269",
+    "path": [
+      "Játékok, Baba, Mama",
+      "JÁTÉKOK",
+      "Lányos játékok"
+    ],
+    "reason": "Főcsoport, több termékkört összefogó navigáció vagy általános bolt/témakör; nem konkrét terméktípus."
+  },
+  {
+    "id": "web-item-199-3270",
+    "path": [
+      "Játékok, Baba, Mama",
+      "JÁTÉKOK",
+      "Fiús játékok"
+    ],
+    "reason": "Főcsoport, több termékkört összefogó navigáció vagy általános bolt/témakör; nem konkrét terméktípus."
+  },
+  {
+    "id": "web-item-199-3720",
+    "path": [
+      "Játékok, Baba, Mama",
+      "JÁTÉKOK",
+      "Kreatív és készségfejlesztő játékok"
+    ],
+    "reason": "Főcsoport, több termékkört összefogó navigáció vagy általános bolt/témakör; nem konkrét terméktípus."
+  },
+  {
+    "id": "web-item-199-2484",
+    "path": [
+      "Játékok, Baba, Mama",
+      "JÁTÉKOK",
+      "Kültéri játékok"
+    ],
+    "reason": "Főcsoport, több termékkört összefogó navigáció vagy általános bolt/témakör; nem konkrét terméktípus."
+  },
+  {
+    "id": "web-item-199-4320",
+    "path": [
+      "Játékok, Baba, Mama",
+      "JÁTÉKOK",
+      "Gyerek ruhák, cipők, kiegészítők"
+    ],
+    "reason": "Főcsoport, több termékkört összefogó navigáció vagy általános bolt/témakör; nem konkrét terméktípus."
+  },
+  {
+    "id": "web-dept-1023",
+    "path": [
+      "Divat, ékszerek és kiegészítők"
+    ],
+    "reason": "Főcsoport, több termékkört összefogó navigáció vagy általános bolt/témakör; nem konkrét terméktípus."
+  },
+  {
+    "id": "web-item-1023-3243",
+    "path": [
+      "Divat, ékszerek és kiegészítők",
+      "NŐI DIVAT"
+    ],
+    "reason": "Főcsoport, több termékkört összefogó navigáció vagy általános bolt/témakör; nem konkrét terméktípus."
+  },
+  {
+    "id": "web-item-1023-2917",
+    "path": [
+      "Divat, ékszerek és kiegészítők",
+      "NŐI DIVAT",
+      "Női ruházat"
+    ],
+    "reason": "Főcsoport, több termékkört összefogó navigáció vagy általános bolt/témakör; nem konkrét terméktípus."
+  },
+  {
+    "id": "web-item-1023-2926",
+    "path": [
+      "Divat, ékszerek és kiegészítők",
+      "NŐI DIVAT",
+      "Női cipők"
+    ],
+    "reason": "Főcsoport, több termékkört összefogó navigáció vagy általános bolt/témakör; nem konkrét terméktípus."
+  },
+  {
+    "id": "web-item-1023-2935",
+    "path": [
+      "Divat, ékszerek és kiegészítők",
+      "NŐI DIVAT",
+      "Női kiegészítők"
+    ],
+    "reason": "Főcsoport, több termékkört összefogó navigáció vagy általános bolt/témakör; nem konkrét terméktípus."
+  },
+  {
+    "id": "web-item-1023-3244",
+    "path": [
+      "Divat, ékszerek és kiegészítők",
+      "FÉRFI DIVAT"
+    ],
+    "reason": "Főcsoport, több termékkört összefogó navigáció vagy általános bolt/témakör; nem konkrét terméktípus."
+  },
+  {
+    "id": "web-item-1023-2942",
+    "path": [
+      "Divat, ékszerek és kiegészítők",
+      "FÉRFI DIVAT",
+      "Férfi ruházat"
+    ],
+    "reason": "Főcsoport, több termékkört összefogó navigáció vagy általános bolt/témakör; nem konkrét terméktípus."
+  },
+  {
+    "id": "web-item-1023-2949",
+    "path": [
+      "Divat, ékszerek és kiegészítők",
+      "FÉRFI DIVAT",
+      "Férfi cipők"
+    ],
+    "reason": "Főcsoport, több termékkört összefogó navigáció vagy általános bolt/témakör; nem konkrét terméktípus."
+  },
+  {
+    "id": "web-item-1023-2955",
+    "path": [
+      "Divat, ékszerek és kiegészítők",
+      "FÉRFI DIVAT",
+      "Férfi kiegészítők"
+    ],
+    "reason": "Főcsoport, több termékkört összefogó navigáció vagy általános bolt/témakör; nem konkrét terméktípus."
+  },
+  {
+    "id": "web-item-1023-3125",
+    "path": [
+      "Divat, ékszerek és kiegészítők",
+      "GYERMEK DIVAT"
+    ],
+    "reason": "Főcsoport, több termékkört összefogó navigáció vagy általános bolt/témakör; nem konkrét terméktípus."
+  },
+  {
+    "id": "web-item-1023-3119",
+    "path": [
+      "Divat, ékszerek és kiegészítők",
+      "SPORTCIPŐK ÉS RUHÁZAT"
+    ],
+    "reason": "Főcsoport, több termékkört összefogó navigáció vagy általános bolt/témakör; nem konkrét terméktípus."
+  },
+  {
+    "id": "web-item-1023-4058",
+    "path": [
+      "Divat, ékszerek és kiegészítők",
+      "STRANDRUHÁZAT"
+    ],
+    "reason": "Főcsoport, több termékkört összefogó navigáció vagy általános bolt/témakör; nem konkrét terméktípus."
+  },
+  {
+    "id": "web-dept-83",
+    "path": [
+      "Szépségápolás"
+    ],
+    "reason": "Főcsoport, több termékkört összefogó navigáció vagy általános bolt/témakör; nem konkrét terméktípus."
+  },
+  {
+    "id": "web-item-83-4187",
+    "path": [
+      "Szépségápolás",
+      "Dermokozmetika bolt"
+    ],
+    "reason": "Főcsoport, több termékkört összefogó navigáció vagy általános bolt/témakör; nem konkrét terméktípus."
+  },
+  {
+    "id": "web-item-83-4204",
+    "path": [
+      "Szépségápolás",
+      "Hajápolás és sminkbolt"
+    ],
+    "reason": "Főcsoport, több termékkört összefogó navigáció vagy általános bolt/témakör; nem konkrét terméktípus."
+  },
+  {
+    "id": "web-item-83-4138",
+    "path": [
+      "Szépségápolás",
+      "Szépségápolás"
+    ],
+    "reason": "Főcsoport, több termékkört összefogó navigáció vagy általános bolt/témakör; nem konkrét terméktípus."
+  },
+  {
+    "id": "web-item-83-3262",
+    "path": [
+      "Szépségápolás",
+      "Dekorkozmetika"
+    ],
+    "reason": "Főcsoport, több termékkört összefogó navigáció vagy általános bolt/témakör; nem konkrét terméktípus."
+  },
+  {
+    "id": "web-item-83-2715",
+    "path": [
+      "Szépségápolás",
+      "Száj- és fogápolás"
+    ],
+    "reason": "Főcsoport, több termékkört összefogó navigáció vagy általános bolt/témakör; nem konkrét terméktípus."
+  },
+  {
+    "id": "web-item-83-4210",
+    "path": [
+      "Szépségápolás",
+      "Erotika"
+    ],
+    "reason": "Főcsoport, több termékkört összefogó navigáció vagy általános bolt/témakör; nem konkrét terméktípus."
+  },
+  {
+    "id": "web-item-83-4158",
+    "path": [
+      "Szépségápolás",
+      "Wellness és egészségügy"
+    ],
+    "reason": "Főcsoport, több termékkört összefogó navigáció vagy általános bolt/témakör; nem konkrét terméktípus."
+  },
+  {
+    "id": "web-item-83-2808",
+    "path": [
+      "Szépségápolás",
+      "Szépségápolási készülékek"
+    ],
+    "reason": "Főcsoport, több termékkört összefogó navigáció vagy általános bolt/témakör; nem konkrét terméktípus."
+  },
+  {
+    "id": "web-dept-165",
+    "path": [
+      "Sport és utazás"
+    ],
+    "reason": "Főcsoport, több termékkört összefogó navigáció vagy általános bolt/témakör; nem konkrét terméktípus."
+  },
+  {
+    "id": "web-item-165-4220",
+    "path": [
+      "Sport és utazás",
+      "Sportbolt"
+    ],
+    "reason": "Főcsoport, több termékkört összefogó navigáció vagy általános bolt/témakör; nem konkrét terméktípus."
+  },
+  {
+    "id": "web-item-165-3215",
+    "path": [
+      "Sport és utazás",
+      "Bőröndök és utazótáskák"
+    ],
+    "reason": "Főcsoport, több termékkört összefogó navigáció vagy általános bolt/témakör; nem konkrét terméktípus."
+  },
+  {
+    "id": "web-item-165-4029",
+    "path": [
+      "Sport és utazás",
+      "Edzőgépek"
+    ],
+    "reason": "Főcsoport, több termékkört összefogó navigáció vagy általános bolt/témakör; nem konkrét terméktípus."
+  },
+  {
+    "id": "web-item-165-3212",
+    "path": [
+      "Sport és utazás",
+      "Fitnesz"
+    ],
+    "reason": "Főcsoport, több termékkört összefogó navigáció vagy általános bolt/témakör; nem konkrét terméktípus."
+  },
+  {
+    "id": "web-item-165-3218",
+    "path": [
+      "Sport és utazás",
+      "Csapat és ütős sportok"
+    ],
+    "reason": "Főcsoport, több termékkört összefogó navigáció vagy általános bolt/témakör; nem konkrét terméktípus."
+  },
+  {
+    "id": "web-item-165-4050",
+    "path": [
+      "Sport és utazás",
+      "Szabadidős sport termékek"
+    ],
+    "reason": "Főcsoport, több termékkört összefogó navigáció vagy általános bolt/témakör; nem konkrét terméktípus."
+  },
+  {
+    "id": "web-item-165-3221",
+    "path": [
+      "Sport és utazás",
+      "Még több sport és szabadidő"
+    ],
+    "reason": "Főcsoport, több termékkört összefogó navigáció vagy általános bolt/témakör; nem konkrét terméktípus."
+  },
+  {
+    "id": "web-item-165-4038",
+    "path": [
+      "Sport és utazás",
+      "Még több sport és szabadidő",
+      "Túrázás és kemping"
+    ],
+    "reason": "Főcsoport, több termékkört összefogó navigáció vagy általános bolt/témakör; nem konkrét terméktípus."
+  },
+  {
+    "id": "web-item-165-3222",
+    "path": [
+      "Sport és utazás",
+      "Még több sport és szabadidő",
+      "Horgászat"
+    ],
+    "reason": "Főcsoport, több termékkört összefogó navigáció vagy általános bolt/témakör; nem konkrét terméktípus."
+  },
+  {
+    "id": "web-item-165-3236",
+    "path": [
+      "Sport és utazás",
+      "Még több sport és szabadidő",
+      "Vízisportok"
+    ],
+    "reason": "Főcsoport, több termékkört összefogó navigáció vagy általános bolt/témakör; nem konkrét terméktípus."
+  },
+  {
+    "id": "web-item-165-3223",
+    "path": [
+      "Sport és utazás",
+      "Még több sport és szabadidő",
+      "Küzdősportok"
+    ],
+    "reason": "Főcsoport, több termékkört összefogó navigáció vagy általános bolt/témakör; nem konkrét terméktípus."
+  },
+  {
+    "id": "web-item-165-4037",
+    "path": [
+      "Sport és utazás",
+      "Még több sport és szabadidő",
+      "Beltéri sportok"
+    ],
+    "reason": "Főcsoport, több termékkört összefogó navigáció vagy általános bolt/témakör; nem konkrét terméktípus."
+  },
+  {
+    "id": "web-item-165-3214",
+    "path": [
+      "Sport és utazás",
+      "Sportcipők, ruházat és kiegészítők"
+    ],
+    "reason": "Főcsoport, több termékkört összefogó navigáció vagy általános bolt/témakör; nem konkrét terméktípus."
+  },
+  {
+    "id": "web-item-165-3216",
+    "path": [
+      "Sport és utazás",
+      "Kerékpározás"
+    ],
+    "reason": "Főcsoport, több termékkört összefogó navigáció vagy általános bolt/témakör; nem konkrét terméktípus."
+  },
+  {
+    "id": "web-item-165-4027",
+    "path": [
+      "Sport és utazás",
+      "Táplálékkiegészítők és vitaminok"
+    ],
+    "reason": "Főcsoport, több termékkört összefogó navigáció vagy általános bolt/témakör; nem konkrét terméktípus."
+  },
+  {
+    "id": "web-item-165-4358",
+    "path": [
+      "Sport és utazás",
+      "Téli sportok"
+    ],
+    "reason": "Főcsoport, több termékkört összefogó navigáció vagy általános bolt/témakör; nem konkrét terméktípus."
+  },
+  {
+    "id": "web-dept-79",
+    "path": [
+      "Könyvek, Filmek és Irodaszerek"
+    ],
+    "reason": "Főcsoport, több termékkört összefogó navigáció vagy általános bolt/témakör; nem konkrét terméktípus."
+  },
+  {
+    "id": "web-item-79-3326",
+    "path": [
+      "Könyvek, Filmek és Irodaszerek",
+      "Online könyvesbolt"
+    ],
+    "reason": "Főcsoport, több termékkört összefogó navigáció vagy általános bolt/témakör; nem konkrét terméktípus."
+  },
+  {
+    "id": "web-item-79-3428",
+    "path": [
+      "Könyvek, Filmek és Irodaszerek",
+      "Online könyvesbolt",
+      "Irodalom"
+    ],
+    "reason": "Főcsoport, több termékkört összefogó navigáció vagy általános bolt/témakör; nem konkrét terméktípus."
+  },
+  {
+    "id": "web-item-79-3422",
+    "path": [
+      "Könyvek, Filmek és Irodaszerek",
+      "Online könyvesbolt",
+      "Gyerekkönyvek"
+    ],
+    "reason": "Főcsoport, több termékkört összefogó navigáció vagy általános bolt/témakör; nem konkrét terméktípus."
+  },
+  {
+    "id": "web-item-79-3430",
+    "path": [
+      "Könyvek, Filmek és Irodaszerek",
+      "Online könyvesbolt",
+      "Család, szülők és gyermeknevelés"
+    ],
+    "reason": "Főcsoport, több termékkört összefogó navigáció vagy általános bolt/témakör; nem konkrét terméktípus."
+  },
+  {
+    "id": "web-item-79-3431",
+    "path": [
+      "Könyvek, Filmek és Irodaszerek",
+      "Online könyvesbolt",
+      "Hobbi és szabadidő"
+    ],
+    "reason": "Főcsoport, több termékkört összefogó navigáció vagy általános bolt/témakör; nem konkrét terméktípus."
+  },
+  {
+    "id": "web-item-79-3432",
+    "path": [
+      "Könyvek, Filmek és Irodaszerek",
+      "Online könyvesbolt",
+      "Utazás"
+    ],
+    "reason": "Főcsoport, több termékkört összefogó navigáció vagy általános bolt/témakör; nem konkrét terméktípus."
+  },
+  {
+    "id": "web-item-79-3823",
+    "path": [
+      "Könyvek, Filmek és Irodaszerek",
+      "Online könyvesbolt",
+      "Sikerkönyvek"
+    ],
+    "reason": "Főcsoport, több termékkört összefogó navigáció vagy általános bolt/témakör; nem konkrét terméktípus."
+  },
+  {
+    "id": "web-item-79-3825",
+    "path": [
+      "Könyvek, Filmek és Irodaszerek",
+      "Online könyvesbolt",
+      "Könyvek"
+    ],
+    "reason": "Főcsoport, több termékkört összefogó navigáció vagy általános bolt/témakör; nem konkrét terméktípus."
+  },
+  {
+    "id": "web-item-79-3327",
+    "path": [
+      "Könyvek, Filmek és Irodaszerek",
+      "Filmek, zene"
+    ],
+    "reason": "Főcsoport, több termékkört összefogó navigáció vagy általános bolt/témakör; nem konkrét terméktípus."
+  },
+  {
+    "id": "web-item-79-3328",
+    "path": [
+      "Könyvek, Filmek és Irodaszerek",
+      "Iroda"
+    ],
+    "reason": "Főcsoport, több termékkört összefogó navigáció vagy általános bolt/témakör; nem konkrét terméktípus."
+  },
+  {
+    "id": "web-item-79-3340",
+    "path": [
+      "Könyvek, Filmek és Irodaszerek",
+      "Iskolaszerek"
+    ],
+    "reason": "Főcsoport, több termékkört összefogó navigáció vagy általános bolt/témakör; nem konkrét terméktípus."
+  },
+  {
+    "id": "web-dept-512",
+    "path": [
+      "Autó- és motor felszerelések"
+    ],
+    "reason": "Főcsoport, több termékkört összefogó navigáció vagy általános bolt/témakör; nem konkrét terméktípus."
+  },
+  {
+    "id": "web-item-512-3350",
+    "path": [
+      "Autó- és motor felszerelések",
+      "Autós műszaki cikkek"
+    ],
+    "reason": "Főcsoport, több termékkört összefogó navigáció vagy általános bolt/témakör; nem konkrét terméktípus."
+  },
+  {
+    "id": "web-item-512-3356",
+    "path": [
+      "Autó- és motor felszerelések",
+      "Autófelszerelések"
+    ],
+    "reason": "Főcsoport, több termékkört összefogó navigáció vagy általános bolt/témakör; nem konkrét terméktípus."
+  },
+  {
+    "id": "web-item-512-3371",
+    "path": [
+      "Autó- és motor felszerelések",
+      "Motorok és elektromos járművek"
+    ],
+    "reason": "Főcsoport, több termékkört összefogó navigáció vagy általános bolt/témakör; nem konkrét terméktípus."
+  }
+]

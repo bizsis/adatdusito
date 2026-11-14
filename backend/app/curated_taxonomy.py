@@ -81,7 +81,8 @@ def apply_taxonomy(base, spec=None):
             raise ValueError("Curated node identity conflicts with existing menu")
         used.add(key)
         item["id"] = key
-        structural_only = bool(
+        product_role = item.get("role") == "product"
+        structural_only = not product_role and bool(
             item.get("structural")
             or (
                 original
@@ -100,6 +101,8 @@ def apply_taxonomy(base, spec=None):
         kind = (
             "department"
             if parent_id is None
+            else "category"
+            if product_role
             else "section"
             if structural_only
             else original["kind"]

@@ -73,6 +73,7 @@ type ReferenceChoice = {
   parameter_count?: number;
 };
 type Parameter = {
+  category_constraint?: { operator: string; value_text: string };
   id: number;
   parameter_id?: number;
   category_parameter_id?: number;
@@ -1028,6 +1029,7 @@ function Parameters({
                 <tr key={p.id}>
                   <td>
                     <strong>{p.name}</strong>
+                    {p.category_constraint && <small>Kategóriamegkötés: {p.category_constraint.value_text}</small>}
                     <small>
                       eMAG #{p.emag_parameter_id} · Belső #{p.id}
                       {!categoryId && ` · ${p.category_name}`}

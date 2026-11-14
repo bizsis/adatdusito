@@ -214,7 +214,7 @@ def test_unified_category_ui_parameters_values_and_simple_review(
             [re.compile(r"^unmanaged#")]
         )
         if owned:
-            # The declared filter-derived node is lazy, structural and retained.
+            # The filter-derived product is lazy and selectable.
             assert (
                 page.locator("button.tree-name")
                 .filter(has_text="Elöltöltős mosógépek")
@@ -235,7 +235,7 @@ def test_unified_category_ui_parameters_values_and_simple_review(
             )
             expect(
                 page.get_by_text(
-                    "Strukturális / termékbesorolásra nem választható", exact=True
+                    "Termékbesorolásra választható", exact=True
                 )
             ).to_be_visible()
         page.get_by_role(

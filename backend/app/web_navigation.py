@@ -352,6 +352,7 @@ def parameters(
     db: Session = Depends(database),
 ):
     from app.parameter_profiles import choose_profile
+    from app.category_constraints import annotate_parameters
 
     version = catalog_store.active_version(db)
     if version:
@@ -366,22 +367,28 @@ def parameters(
             for r in nav.owned_categories.values()
             if r.source_id == internal
         )
-        return catalog_store.parameters(
-            db, version, category_id, q, mandatory, "all", offset, limit
+        return annotate_parameters(
+            node_id,
+            catalog_store.parameters(
+                db, version, category_id, q, mandatory, "all", offset, limit
+            ),
         )
     nav, _, tree = resolved(db)
     require_node(nav, node_id)
     internal = choose_profile(nav, node_id, profile_emag_id)
     if internal is None:
         return {"items": [], "total": 0, "offset": offset, "limit": limit}
-    return list_parameters(
-        category_id=internal,
-        q=q,
-        mandatory=mandatory,
-        view="all",
-        offset=offset,
-        limit=limit,
-        db=db,
+    return annotate_parameters(
+        node_id,
+        list_parameters(
+            category_id=internal,
+            q=q,
+            mandatory=mandatory,
+            view="all",
+            offset=offset,
+            limit=limit,
+            db=db,
+        ),
     )
 
 

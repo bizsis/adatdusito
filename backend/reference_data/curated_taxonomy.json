@@ -1,6 +1,6 @@
 {
   "format": "adatdusito.curated-taxonomy.v1",
-  "version": "05.1",
+  "version": "05.2",
   "source": "Felhasználó által megadott, 13 menüképből átírt hierarchia; nem új webes adatgyűjtés.",
   "input_sha256": "a2dc1e30897a5aa484f13c0bcf411cdf72ac0647b5e8bc883be3ba8c2d9006a5",
   "roots": [
@@ -13,12 +13,14 @@
             {
               "name": "Elöltöltős mosógépek",
               "children": [],
-              "id": "web-item-114-3490"
+              "id": "web-item-114-3490",
+              "role": "product"
             },
             {
               "name": "Felültöltős mosógépek",
               "children": [],
-              "id": "web-item-114-3491"
+              "id": "web-item-114-3491",
+              "role": "product"
             },
             {
               "name": "Szárítógépek",
@@ -28,7 +30,8 @@
             {
               "name": "Mosó-szárítógépek",
               "children": [],
-              "id": "web-item-114-3492"
+              "id": "web-item-114-3492",
+              "role": "product"
             }
           ],
           "id": "web-item-114-3487"
@@ -70,7 +73,8 @@
             {
               "name": "Keskeny mosogatógépek",
               "children": [],
-              "id": "web-item-114-4237"
+              "id": "web-item-114-4237",
+              "role": "product"
             }
           ],
           "id": "web-item-114-3501"
@@ -78,7 +82,8 @@
         {
           "name": "Páraelszívók",
           "children": [],
-          "id": "web-item-114-3502"
+          "id": "web-item-114-3502",
+          "role": "product"
         },
         {
           "name": "Tűzhelyek, főzőlapok és mikrohullámú sütők",
@@ -117,12 +122,14 @@
             {
               "name": "Beépíthető mosogatógépek",
               "children": [],
-              "id": "web-item-114-3508"
+              "id": "web-item-114-3508",
+              "role": "product"
             },
             {
               "name": "Beépíthető mikrohullámú sütők",
               "children": [],
-              "id": "web-item-114-3750"
+              "id": "web-item-114-3750",
+              "role": "product"
             }
           ],
           "id": "web-item-114-3504"
@@ -159,22 +166,26 @@
             {
               "name": "Porzsákos porszívók",
               "children": [],
-              "id": "web-item-114-3751"
+              "id": "web-item-114-3751",
+              "role": "product"
             },
             {
               "name": "Porzsák nélküli porszívók",
               "children": [],
-              "id": "web-item-114-3819"
+              "id": "web-item-114-3819",
+              "role": "product"
             },
             {
               "name": "Álló porszívók",
               "children": [],
-              "id": "web-item-114-3752"
+              "id": "web-item-114-3752",
+              "role": "product"
             },
             {
               "name": "Robotporszívók",
               "children": [],
-              "id": "web-item-114-3820"
+              "id": "web-item-114-3820",
+              "role": "product"
             },
             {
               "name": "Vasalók és gőzállomások",
@@ -190,12 +201,14 @@
             {
               "name": "Automata eszpresszó kávéfőzők",
               "children": [],
-              "id": "web-item-114-3753"
+              "id": "web-item-114-3753",
+              "role": "product"
             },
             {
               "name": "Kapszulás kávéfőzők",
               "children": [],
-              "id": "web-item-114-3754"
+              "id": "web-item-114-3754",
+              "role": "product"
             }
           ],
           "id": "web-item-114-3518"
@@ -354,7 +367,8 @@
         {
           "name": "eBook olvasók és tartozékok",
           "children": [],
-          "id": "web-item-43-3697"
+          "id": "web-item-43-3697",
+          "role": "product"
         },
         {
           "name": "Konzolok és játékok",
@@ -367,7 +381,8 @@
             {
               "name": "Hordozható játékkonzolok",
               "children": [],
-              "id": "web-item-43-4021"
+              "id": "web-item-43-4021",
+              "role": "product"
             },
             {
               "name": "Konzol és PC játékok",
@@ -414,7 +429,8 @@
             {
               "name": "Klasszikus mobiltelefonok",
               "children": [],
-              "id": "web-item-1-4244"
+              "id": "web-item-1-4244",
+              "role": "product"
             }
           ],
           "id": "web-item-1-3681"
@@ -486,7 +502,8 @@
             {
               "name": "Laptopok Windows-szal",
               "children": [],
-              "id": "web-item-1-3180"
+              "id": "web-item-1-3180",
+              "role": "product"
             }
           ],
           "id": "web-item-1-3184"
@@ -607,17 +624,20 @@
             {
               "name": "Gamer PC-k",
               "children": [],
-              "id": "web-item-7-3683"
+              "id": "web-item-7-3683",
+              "role": "product"
             },
             {
               "name": "Gamer laptopok",
               "children": [],
-              "id": "web-item-7-3827"
+              "id": "web-item-7-3827",
+              "role": "product"
             },
             {
               "name": "Gamer monitorok",
               "children": [],
-              "id": "web-item-7-3684"
+              "id": "web-item-7-3684",
+              "role": "product"
             },
             {
               "name": "Gamer székek",
@@ -627,17 +647,20 @@
             {
               "name": "Gamer billentyűzetek",
               "children": [],
-              "id": "web-item-7-3829"
+              "id": "web-item-7-3829",
+              "role": "product"
             },
             {
               "name": "Gamer egérpad",
               "children": [],
-              "id": "web-item-7-3830"
+              "id": "web-item-7-3830",
+              "role": "product"
             },
             {
               "name": "Gamer egér",
               "children": [],
-              "id": "web-item-7-3831"
+              "id": "web-item-7-3831",
+              "role": "product"
             }
           ],
           "id": "web-item-7-3631"
@@ -990,12 +1013,14 @@
             {
               "name": "Android kompatibilis okosórák",
               "children": [],
-              "id": "web-item-29-4260"
+              "id": "web-item-29-4260",
+              "role": "product"
             },
             {
               "name": "iOS kompatibilis okosórák",
               "children": [],
-              "id": "web-item-29-4261"
+              "id": "web-item-29-4261",
+              "role": "product"
             },
             {
               "name": "Okosóra kiegészítők",
@@ -1430,7 +1455,8 @@
             {
               "name": "Okos izzók",
               "children": [],
-              "id": "web-item-173-4297"
+              "id": "web-item-173-4297",
+              "role": "product"
             },
             {
               "name": "Lámpák",
@@ -1510,7 +1536,8 @@
         {
           "name": "Dekorációk",
           "children": [],
-          "id": "web-item-173-4008"
+          "id": "web-item-173-4008",
+          "role": "product"
         },
         {
           "name": "Konyha és felszolgálás",
@@ -1518,7 +1545,8 @@
             {
               "name": "Főzőedények",
               "children": [],
-              "id": "web-item-173-4125"
+              "id": "web-item-173-4125",
+              "role": "product"
             },
             {
               "name": "Étkészletek",
@@ -1538,7 +1566,8 @@
             {
               "name": "Vízszűrő kancsók és tartozékok",
               "children": [],
-              "id": "web-item-173-3778"
+              "id": "web-item-173-3778",
+              "role": "product"
             }
           ],
           "id": "web-item-173-3302"
@@ -1650,7 +1679,8 @@
             {
               "name": "Babakocsik és hordozók",
               "children": [],
-              "id": "web-item-199-2725"
+              "id": "web-item-199-2725",
+              "role": "product"
             },
             {
               "name": "Gyerekszoba",
@@ -1669,12 +1699,14 @@
                 {
                   "name": "Interaktív babajátékok",
                   "children": [],
-                  "id": "web-item-199-3264"
+                  "id": "web-item-199-3264",
+                  "role": "product"
                 },
                 {
                   "name": "Tevékenységi központok és játszószőnyegek",
                   "children": [],
-                  "id": "web-item-199-3265"
+                  "id": "web-item-199-3265",
+                  "role": "product"
                 }
               ],
               "id": "web-item-199-3263"
@@ -1760,17 +1792,20 @@
                 {
                   "name": "Gyerek társasjátékok",
                   "children": [],
-                  "id": "web-item-199-4313"
+                  "id": "web-item-199-4313",
+                  "role": "product"
                 },
                 {
                   "name": "Családi társasjátékok",
                   "children": [],
-                  "id": "web-item-199-4314"
+                  "id": "web-item-199-4314",
+                  "role": "product"
                 },
                 {
                   "name": "Felnőtt társasjátékok",
                   "children": [],
-                  "id": "web-item-199-4315"
+                  "id": "web-item-199-4315",
+                  "role": "product"
                 }
               ],
               "id": "web-item-199-3692"
@@ -1804,7 +1839,8 @@
             {
               "name": "LEGO felnőtteknek",
               "children": [],
-              "id": "web-item-199-4128"
+              "id": "web-item-199-4128",
+              "role": "product"
             },
             {
               "name": "Kültéri játékok",
@@ -2147,7 +2183,8 @@
         {
           "name": "Parfümök",
           "children": [],
-          "id": "web-item-83-2994"
+          "id": "web-item-83-2994",
+          "role": "product"
         },
         {
           "name": "Szépségápolás",
@@ -2325,7 +2362,8 @@
             {
               "name": "IPL tartós szőrtelenítők",
               "children": [],
-              "id": "web-item-83-4339"
+              "id": "web-item-83-4339",
+              "role": "product"
             },
             {
               "name": "Hajvasalók",
@@ -2568,12 +2606,14 @@
             {
               "name": "Felnőtt kerékpárok",
               "children": [],
-              "id": "web-item-165-4041"
+              "id": "web-item-165-4041",
+              "role": "product"
             },
             {
               "name": "Gyerek kerékpárok",
               "children": [],
-              "id": "web-item-165-4042"
+              "id": "web-item-165-4042",
+              "role": "product"
             },
             {
               "name": "Kerékpár alkatrészek és kiegészítők",
@@ -2707,7 +2747,8 @@
             {
               "name": "Bakelit lemezek",
               "children": [],
-              "id": "web-item-79-4347"
+              "id": "web-item-79-4347",
+              "role": "product"
             }
           ],
           "id": "web-item-79-3327"
@@ -2810,7 +2851,8 @@
             {
               "name": "Füzetek",
               "children": [],
-              "id": "web-item-79-3439"
+              "id": "web-item-79-3439",
+              "role": "product"
             },
             {
               "name": "Tűfilcek",
@@ -2985,17 +3027,20 @@
             {
               "name": "Nyári gumik",
               "children": [],
-              "id": "web-item-512-3833"
+              "id": "web-item-512-3833",
+              "role": "product"
             },
             {
               "name": "Téli gumik",
               "children": [],
-              "id": "web-item-512-3834"
+              "id": "web-item-512-3834",
+              "role": "product"
             },
             {
               "name": "Négyévszakos",
               "children": [],
-              "id": "web-item-512-3832"
+              "id": "web-item-512-3832",
+              "role": "product"
             }
           ],
           "id": "web-item-512-3357"
@@ -3052,7 +3097,7 @@
     "8K"
   ],
   "issues": [],
-  "structural_filter_policy": "A név szerint előírt, szűrőeredetű menüpontok csak strukturális navigációk; automatikus pontos paraméterazonosság és termékbesorolás nélkül. Felhasználó megerősítette.",
+  "structural_filter_policy": "A rögzített termékszerep elsődleges; a forráshivatkozás típusa nem határozza meg a termékbesorolhatóságot.",
   "retired_nodes": [
     {
       "id": "web-item-43-3550",

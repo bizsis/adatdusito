@@ -65,14 +65,14 @@ def test_all_missing_and_zero_parameter_cases_have_reviewed_donors_without_chang
     before = deepcopy(tree.rows)
     nav = resolve_fixed(navigation(), tree)
     assert len(nav.nodes) == 583 and len(nav.roots) == 13
-    assert len(nav.bindings) == 412 and len(nav.parameter_donors) == 412
+    assert len(nav.bindings) == 457 and len(nav.parameter_donors) == 457
     assert nav.reference_coverage["unavailable_parameter_binding_count"] == 0
     assert nav.reference_coverage["ambiguous_parameter_binding_count"] == 0
-    assert nav.reference_coverage["categories_with_parameter_set"] == 412
-    assert nav.reference_coverage["parameter_profile_count"] == 503
-    assert nav.reference_coverage["multi_profile_category_count"] == 18
+    assert nav.reference_coverage["categories_with_parameter_set"] == 457
+    assert nav.reference_coverage["parameter_profile_count"] == 555
+    assert nav.reference_coverage["multi_profile_category_count"] == 23
     assert nav.profile_warnings == [] and tree.rows == before
-    assert len(reviewed_bindings()["rules"]) == 412
+    assert len(reviewed_bindings()["rules"]) == 457
     for key, donors in nav.parameter_donors.items():
         assert all(tree.counts[c]["total"] > 0 for c in donors)
         assert len(donors) == len(set(donors))

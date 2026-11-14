@@ -147,8 +147,8 @@ def test_required_paths_context_and_aliases_do_not_bind_generic_names_in_wrong_b
         "Mosógépek és szárítógépek",
         "Elöltöltős mosógépek",
     )
-    assert nav.nodes[wash]["structural_only"] and wash not in nav.bindings
-    assert nav.nodes[wash]["kind"] == "section"
+    assert not nav.nodes[wash]["structural_only"]
+    assert nav.nodes[wash]["kind"] == "category"
     assert all(
         n["name"] not in specification()["excluded_tv_filters"]
         for k, n in nav.nodes.items()
