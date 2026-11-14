@@ -8,8 +8,8 @@ This is the **living documentation** entrypoint. CODEX release notes remain in t
 - [System architecture](architecture/ARCHITECTURE.md) — runtime topology and trust boundaries.
 - [Database](architecture/DATABASE.md) — application and read-only reference schemas.
 - [API overview](architecture/API.md) — endpoint families; use runtime OpenAPI for exact contracts.
-- [Security](security/SECURITY.md) — existing controls and SECURITY-01 backlog.
-- [Testing](development/TESTING.md) — test commands, CI coverage and gaps.
+- [Security](security/SECURITY.md) — CODEX 09 + SECURITY-01 controls and open risk items.
+- [Testing](development/TESTING.md) and [CI details](development/CI.md) — QUALITY-01 test pipeline and audit.
 - [Deployment](operations/DEPLOYMENT.md) and [operations](operations/OPERATIONS.md).
 
 ## Functional modules
@@ -17,7 +17,7 @@ This is the **living documentation** entrypoint. CODEX release notes remain in t
 - [AI engine](modules/AI-ENGINE.md) — design only.
 - [UNAS integration](modules/UNAS-INTEGRATION.md) — export config exists; full API sync planned.
 - [Subscription, billing and AI credits](modules/BILLING.md) — approved business design, not implemented.
-- [UI design](development/UI-DESIGN.md) — CODEX 09 design target, not yet shipped.
+- [UI design](development/UI-DESIGN.md) — CODEX 09 merged design, VPS deployment pending.
 - [User guide](user/USER-GUIDE.md) — currently available operational paths, subject to UI changes.
 
 ## Decisions
@@ -28,5 +28,6 @@ This is the **living documentation** entrypoint. CODEX release notes remain in t
 ## Historical implementation reports
 - [CODEX 07 import engine](codex-07-import-engine.md)
 - [CODEX 08 access control](codex-08-access-control.md)
+- [CODEX 09 UI, system settings and authentication](codex-09-ui-system-settings-auth.md)
 
 **Documentation rules:** mark capability status explicitly as Implemented / Deployed / In progress / Planned; no placeholders that imply working features. Validate changes against source code. Document releases and architecture changes in PRs. Never publish secrets or real customer records.
