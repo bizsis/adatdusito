@@ -5,20 +5,21 @@
 ## Purpose
 A multi-tenant Hungarian SaaS to convert inconsistent supplier CSV/XLSX product feeds into structured, reviewable, reusable product information and eventually UNAS-compatible exports. Typical journey: supplier feed → reliable identification and matching → controlled taxonomy/parameter mapping → optional AI-assisted research → human approval → export/synchronization.
 
-## Implemented baseline (CODEX 07–08)
+## Implemented baseline (CODEX 07–09 + SECURITY-01, merged to Git)
 - FastAPI, SQLAlchemy/Alembic, MySQL 8, React/TypeScript/Vite, Celery/Redis, Docker Compose.
-- Cookie sessions, scrypt password hashes, CSRF/Origin checks, admin audit.
+- Cookie sessions, scrypt password hashes with cross-process concurrency cap, CSRF/Origin checks, progressive account/IP throttling, admin audit.
 - Tenants, system/tenant roles, multi-role grants, explicit allow/deny, scoped system users, workspace switching, companies/webshops as minimal permission resources; invitation and SMTP sending when configured.
 - Fixed approved Hungarian category tree with 13 first-level groups; eMAG database is read-only reference. Application-owned versioned catalog is separate.
 - Supplier CSV/XLSX import, saved profiles, field mapping, preview, approval, runs, product/change records and export-field/profile administration.
+- CODEX 09 Cloud & Teal UI, structured and encrypted SMTP settings, email/username sign-in, Google OIDC, WebAuthn/passkeys, TOTP and recovery codes, session management and restricted onboarding registration (default off). Migration `0008` required for deployment.
 
 These capabilities are derived from `backend/app/{main,api,security,access_control,import_api,models}.py`, CODEX 07/08 notes. Deploy confirmation and individual external integrations still require runtime verification.
 
 ## Planned — not production functionality
 - AI research/enrichment (multiple models and providers), validation, Hungarian product content, images, hybrid approval.
 - Product identity/deduplication, robust automated supplier sync, complete UNAS export/API synchronizer.
-- Public self-service signup and trials, subscription packages, credit billing, payment and invoice provider integrations.
-- Google OIDC, TOTP/recovery codes and passkeys/WebAuthn (targeted for CODEX 09, not part of CODEX 08).
+- Complete self-service trial/entitlement lifecycle, subscription packages, credit billing, payment and invoice provider integrations. Basic restricted-workspace registration is merged but disabled by default.
+- External identity-provider setup and production activation of CODEX 09 sign-in methods (code merged, not yet deployed to VPS).
 
 ## Business invariants
 1. Strong tenant isolation, also for import files, worker jobs, exports and caches.
