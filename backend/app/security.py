@@ -1,7 +1,11 @@
+import fcntl
 import hashlib
 import hmac
 import os
 import secrets
+import tempfile
+import time
+from contextlib import contextmanager
 from dataclasses import dataclass, field
 from fastapi import Depends, HTTPException, Request
 from sqlalchemy import delete
@@ -17,12 +21,91 @@ from app.models import (
 
 COOKIE = "adatdusito_session"
 
+# scrypt parameters are part of the stored hash contract: changing them would
+# invalidate existing passwords. One derivation needs 128 * r * N = 128 MiB.
+SCRYPT_N = 131072
+SCRYPT_R = 8
+SCRYPT_P = 1
+SCRYPT_MAXMEM = 268435456
+
+
+class HashCapacityError(HTTPException):
+    """All password-hash slots are busy; the client should retry shortly."""
+
+    def __init__(self, retry_after=5):
+        super().__init__(
+            503,
+            "A szerver most túlterhelt. Próbáld újra néhány másodperc múlva.",
+            headers={"Retry-After": str(retry_after)},
+        )
+
+
+def _hash_slots():
+    return max(1, int(os.getenv("SCRYPT_CONCURRENCY", "2")))
+
+
+def _hash_queue_timeout():
+    return max(0.0, float(os.getenv("SCRYPT_QUEUE_TIMEOUT", "5")))
+
+
+def _hash_lock_dir():
+    return os.getenv(
+        "SCRYPT_LOCK_DIR", os.path.join(tempfile.gettempdir(), "adatdusito-scrypt")
+    )
+
+
+@contextmanager
+def hash_slot():
+    """Bound concurrent scrypt work across threads AND processes.
+
+    Each slot is an advisory flock() on its own file. flock() conflicts between
+    separate open file descriptions, so threads of one Uvicorn worker and
+    several worker processes (``--workers`` / WEB_CONCURRENCY) sharing the
+    container's temp directory all compete for the same SCRYPT_CONCURRENCY
+    slots. The kernel releases a slot automatically if a process dies.
+    """
+    slots = _hash_slots()
+    deadline = time.monotonic() + _hash_queue_timeout()
+    directory = _hash_lock_dir()
+    os.makedirs(directory, mode=0o700, exist_ok=True)
+    while True:
+        for index in range(slots):
+            fd = os.open(
+                os.path.join(directory, f"slot-{index}.lock"),
+                os.O_RDWR | os.O_CREAT,
+                0o600,
+            )
+            try:
+                fcntl.flock(fd, fcntl.LOCK_EX | fcntl.LOCK_NB)
+            except BlockingIOError:
+                os.close(fd)
+                continue
+            try:
+                yield
+            finally:
+                fcntl.flock(fd, fcntl.LOCK_UN)
+                os.close(fd)
+            return
+        if time.monotonic() >= deadline:
+            raise HashCapacityError()
+        time.sleep(0.02)
+
+
+def _scrypt(password, salt):
+    with hash_slot():
+        return hashlib.scrypt(
+            password.encode(),
+            salt=salt,
+            n=SCRYPT_N,
+            r=SCRYPT_R,
+            p=SCRYPT_P,
+            maxmem=SCRYPT_MAXMEM,
+        )
+
 
 def hash_password(password):
     salt = secrets.token_bytes(16)
-    key = hashlib.scrypt(
-        password.encode(), salt=salt, n=131072, r=8, p=1, maxmem=268435456
-    )
+    key = _scrypt(password, salt)
     return f"scrypt${salt.hex()}${key.hex()}"
 
 
@@ -31,17 +114,15 @@ def verify_password(password, encoded):
         scheme, salt, expected = encoded.split("$")
         if scheme != "scrypt":
             return False
-        actual = hashlib.scrypt(
-            password.encode(),
-            salt=bytes.fromhex(salt),
-            n=131072,
-            r=8,
-            p=1,
-            maxmem=268435456,
-        )
-        return hmac.compare_digest(actual.hex(), expected)
+        salt = bytes.fromhex(salt)
+    except (ValueError, TypeError, AttributeError):
+        return False
+    # Malformed hashes are rejected before taking a slot; capacity errors propagate.
+    try:
+        actual = _scrypt(password, salt)
     except (ValueError, TypeError):
         return False
+    return hmac.compare_digest(actual.hex(), expected)
 
 
 def digest(value):
