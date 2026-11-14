@@ -23,6 +23,7 @@ from app.security import (
     hash_password,
     identity,
     limit_login,
+    login_guard,
     require,
     revoke,
     scope,
@@ -205,13 +206,16 @@ def me_data(db, who):
 def login(
     body: Login, request: Request, response: Response, db: Session = Depends(database)
 ):
-    limit_login(request, body.email)
+    guard = login_guard(request, body.email)
+    guard.check()
     user = db.scalar(select(User).where(User.email == body.email).with_for_update())
     valid = verify_password(body.password, user.password_hash if user else DUMMY_HASH)
     if not user or not valid or not user.active:
+        guard.failure()
         db.add(Audit(action="auth.login_failed", target=digest(body.email), details={}))
         db.commit()
         raise HTTPException(401, "Hibás email-cím vagy jelszó.")
+    guard.success()
     choices = memberships(db, user.id)
     tenant_id = (
         choices[0]["tenant_id"]

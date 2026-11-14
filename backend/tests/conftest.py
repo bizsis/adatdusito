@@ -11,6 +11,19 @@ from app import api, reference
 from app.db import enforce_reference_readonly
 
 
+class NoLoginGuard:
+    """Login throttling is covered by test_login_protection.py."""
+
+    def check(self):
+        pass
+
+    def failure(self):
+        pass
+
+    def success(self):
+        pass
+
+
 @pytest.fixture(scope="session")
 def password_hash():
     return hash_password("Test-password-2026!")
@@ -121,6 +134,7 @@ def environment(
         db.commit()
     app.dependency_overrides[database] = get_database
     monkeypatch.setattr(api, "limit_login", lambda *args: None)
+    monkeypatch.setattr(api, "login_guard", lambda *args: NoLoginGuard())
     monkeypatch.setenv("APP_ORIGIN", "https://testserver")
     ref_engine = create_engine(
         "sqlite://", connect_args={"check_same_thread": False}, poolclass=StaticPool
