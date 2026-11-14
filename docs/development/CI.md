@@ -56,16 +56,30 @@ It audits:
 - The raw JSON reports are kept as an artifact for 14 days.
 - The job never fails because of findings. Setting `FAIL_ON_ACTIONABLE: "true"` in the workflow makes actionable findings blocking once the backlog is cleared.
 
-**Baseline on `main` @ `1d613fe` (2026-11-14)**. Both remediations change files owned by others and need the Vezér's assignment:
+**Status after DEPENDENCY-01 (`claude/dependency-01`, based on `main` @ `25fa33c`).** The baseline on `1d613fe` reported 27 actionable runtime findings, 1 disputed no-fix finding and 2 dev-only packages. Every runtime finding was checked against the advisory text and the package changelog. The upgraded lock has **0 actionable** and **0 runtime-nofix** findings:
 
-| Class | Package | Current | Fixed in | Note |
+| Package | Before → after | Advisories closed | Reachability in this app | Compatibility notes |
 |---|---|---|---|---|
-| actionable | PyJWT | 2.10.1 | 2.15.0 | 16 advisories. Used by the OIDC login (`backend/app/oidc_api.py`). Highest priority. |
-| actionable | python-multipart | 0.0.20 | 0.0.31 | 6 advisories. Parses every upload (supplier import). |
-| actionable | starlette | 0.49.3 | 1.3.1 | 5 advisories. **Major upgrade**: needs a compatible FastAPI release, so plan it together with `fastapi`. |
-| runtime-nofix | PyJWT | 2.10.1 | — | PYSEC-2025-183 (CVE-2025-45768), disputed upstream |
-| dev-only | pytest | 9.0.1 | 9.0.3 | test runner; also installed in the backend image through the shared lock |
-| dev-only | vite | 7.2.2 | 7.3.8 | 10 dev-server advisories. Production serves the static build through Nginx, so this affects developer machines running `npm run dev`. |
+| PyJWT | 2.10.1 → **2.15.1** | 16 with a fix (2.12.0–2.15.0) and the disputed CVE-2025-45768, which no longer matches | Google ID-token verification (`oidc_api.claims`): `PyJWKClient` with a fixed HTTPS URL, RS256 only. Tokens arrive from Google's token endpoint over TLS, so most HMAC/JWK-confusion advisories were not exploitable, but `crit` handling, non-Base64URL signature segments and JWKS refresh/DoS behaviour applied. | No API change for the calls used. Since 2.11 `iss` must be a string. Covered by `test_dependency_oidc_jwt.py`, which uses the real `PyJWKClient` path. |
+| python-multipart | 0.0.20 → **0.0.32** | 6 (fixes in 0.0.22–0.0.31) | Every multipart upload (supplier import, export reference workbook) and urlencoded form goes through Starlette into this parser: header-count, preamble/epilogue, negative Content-Length and separator DoS issues were reachable without login on Form endpoints. The path-traversal advisory needs `UPLOAD_KEEP_FILENAME`, which is not used here. | 0.0.32 adds only a boundary-scan speed-up over 0.0.31. 0.0.33 is not used (drops Python 3.10, changes `parse_options_header` output). Covered by `test_dependency_multipart.py`. |
+| starlette | 0.49.3 → **1.3.1** | 5 | **Host/path injection into `request.url` was reachable**: `security.identity()` compares `request.url.path` with the safe paths of restricted sessions (forced password change, pending MFA), and a forged Host header unlocked other endpoints. Also the urlencoded `max_fields` bypass. `HTTPEndpoint` and Windows `StaticFiles` are not used. | Must be upgraded together with FastAPI. |
+| fastapi | 0.121.1 → **0.141.1** | — (needed for Starlette ≥ 1.0) | — | 0.141.1 is the newest FastAPI released while 1.3.1 was the current Starlette. Breaking changes since 0.121 were checked: no `on_event`, no `fastapi.security` classes, Pydantic v2 only. JSON bodies now require `Content-Type: application/json` (0.132), which the frontend always sends. Covered by `test_dependency_starlette.py`. |
+
+Still open (dev-only): **pytest 9.0.1** (PYSEC-2026-1845: a `/tmp/pytest-of-<user>` local issue, fixed in 9.0.3). It is a test runner, but it ships in the backend image through the shared lock. Moving test-only packages out of the runtime lock is the cleaner follow-up. **vite 7.2.2 → 7.3.8** is dev-only and frontend-owned.
+
+### Lock maintenance procedure (reproducible)
+
+`backend/requirements.lock` is the complete runtime set: 53 pinned distributions installed with `--no-deps`. To change it:
+1. Edit only the pins that must change, never "upgrade everything".
+2. Check that the lock is complete and that the resolver would choose exactly these versions under Python 3.12 (the Docker/CI interpreter):
+   ```bash
+   python3.12 -m venv /tmp/lockcheck && /tmp/lockcheck/bin/pip install -U pip
+   /tmp/lockcheck/bin/pip install --dry-run --ignore-installed --report /tmp/report.json -r backend/requirements.lock
+   # every package in report["install"] must be in the lock with the same version, and vice versa
+   /tmp/lockcheck/bin/pip install --no-deps -r backend/requirements.lock && /tmp/lockcheck/bin/pip check
+   ```
+3. Run the audit: `pip-audit -r backend/requirements.lock --no-deps --disable-pip`.
+4. Run the full CI.
 
 ## Test reports and artifacts
 
