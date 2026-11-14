@@ -89,7 +89,7 @@ def test_upload_approve_preview_and_export_admin(
         )
         expect(page.get_by_text('"stock": "-2.5"', exact=False)).to_be_visible()
         page.get_by_role("navigation").get_by_role(
-            "button", name="Webáruházmotorok / Exportmezők", exact=True
+            "button", name="Export", exact=True
         ).click()
         page.get_by_role("button", name="Mező hozzáadása").click()
         page.get_by_label("key 0", exact=True).fill("sku")

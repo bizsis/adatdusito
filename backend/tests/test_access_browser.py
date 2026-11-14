@@ -10,7 +10,7 @@ from app import invitations
 from conftest import login
 
 
-def browser_page(p, client, width, height):
+def browser_page(p, client, width, height, origin="http://access.test"):
     dist = Path(__file__).resolve().parents[2] / "frontend/dist"
     browser = p.chromium.launch(
         executable_path="/usr/bin/chromium"
@@ -53,7 +53,7 @@ def browser_page(p, client, width, height):
                 content_type=mimetypes.guess_type(f.name)[0] or "text/plain",
             )
 
-    page.route("http://access.test/**", route)
+    page.route(origin + "/**", route)
     return browser, page, errors, paths
 
 
@@ -175,7 +175,9 @@ def test_invitation_owner_sets_password_and_logs_in(
         page.get_by_role(
             "button", name="Tovább a bejelentkezéshez / munkaterülethez", exact=True
         ).click()
-        page.locator("input[type=email]").fill("browser-invite@example.hu")
+        page.get_by_label("Felhasználónév vagy e-mail-cím").fill(
+            "browser-invite@example.hu"
+        )
         page.locator("input[type=password]").fill("Own-browser-password!")
         page.get_by_role("button", name="Bejelentkezés →", exact=True).click()
         expect(page.get_by_label("Munkaterület", exact=True)).to_have_value("1")

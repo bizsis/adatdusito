@@ -2,7 +2,7 @@
 
 from fastapi import APIRouter, Depends, HTTPException, Query
 from pydantic import BaseModel, Field, ConfigDict
-from sqlalchemy import select, delete
+from sqlalchemy import select, delete, func
 from sqlalchemy.orm import Session
 from app.security import identity, database, require, audit
 from app.models import User, Tenant, Membership, Audit
@@ -35,7 +35,7 @@ def admin(who, tenant_id, permission="members.roles.manage"):
             raise HTTPException(403, "Ehhez teljes ügyfél-hozzáférés szükséges.")
 
 
-def role_dto(db, r):
+def role_dto(db, r, tenant_id=None):
     return {
         "id": r.id,
         "owner": r.owner,
@@ -45,6 +45,18 @@ def role_dto(db, r):
             ac.CATALOG if r.protected else ac.role_permissions(db, r) & ac.CATALOG
         ),
         "protected": r.protected,
+        "users_count": db.scalar(
+            select(func.count(User.id)).where(User.superadmin.is_(True))
+        )
+        if r.protected
+        else db.scalar(
+            select(func.count(func.distinct(AccessBinding.user_id))).where(
+                AccessBinding.role_id == r.id,
+                AccessBinding.context == context(tenant_id)
+                if tenant_id is not None
+                else True,
+            )
+        ),
     }
 
 
@@ -93,7 +105,7 @@ def roles(
         else set()
     )
     return [
-        role_dto(db, r)
+        role_dto(db, r, tenant_id)
         for r in items
         if not (r.owner == "template" and r.code in overridden)
     ]
@@ -128,7 +140,7 @@ def create_role(
     db.flush()
     audit(db, who, "access.role_create", r.id, tenant_id, after=body.model_dump())
     db.commit()
-    return role_dto(db, r)
+    return role_dto(db, r, tenant_id)
 
 
 def target_role(db, id, tenant_id):
@@ -156,7 +168,7 @@ def edit_role(
     if body.code == "superadmin":
         raise HTTPException(403, "Védett szerepkör.")
     r = target_role(db, id, tenant_id)
-    before = role_dto(db, r)
+    before = role_dto(db, r, tenant_id)
     ac.validate_grants(who, body.permissions, tenant_id is None)
     if not who.user.superadmin and not ac.role_permissions(db, r) <= who.permissions:
         raise HTTPException(403, "A szerepkör meghaladja a delegálási jogosultságot.")
@@ -172,6 +184,25 @@ def edit_role(
         )
         db.add(r)
         db.flush()
+        # A local role copy must retain a template's centrally mandated MFA.
+        from app.system_config import config, store
+        from app.models import Role
+
+        db.scalar(select(Role).where(Role.code == "superadmin").with_for_update())
+        mfa_policy = config(db, "mfa")
+        if original.id in mfa_policy["required_roles"]:
+            mfa_policy["required_roles"] = sorted(
+                set(mfa_policy["required_roles"]) | {r.id}
+            )
+            store(db, "mfa", mfa_policy)
+            audit(
+                db,
+                who,
+                "settings09.mfa_inherit",
+                r.id,
+                tenant_id,
+                source_role_id=original.id,
+            )
         for b in db.scalars(
             select(AccessBinding).where(
                 AccessBinding.context == context(tenant_id),
@@ -231,7 +262,7 @@ def edit_role(
         after=body.model_dump(),
     )
     db.commit()
-    return role_dto(db, r)
+    return role_dto(db, r, tenant_id)
 
 
 @router.delete("/roles/{id}")
@@ -243,13 +274,22 @@ def delete_role(
 ):
     admin(who, tenant_id)
     r = target_role(db, id, tenant_id)
+    from app.system_config import config
+
+    if r.id in config(db, "mfa")["required_roles"]:
+        raise HTTPException(
+            409,
+            "A szerepkörhöz kötelező MFA-szabály tartozik; előbb a rendszerbeállításban kell rendezni.",
+        )
     if r.owner == "template" or db.scalar(
         select(AccessBinding.user_id).where(AccessBinding.role_id == id).limit(1)
     ):
         raise HTTPException(
             409, "Beépített vagy használatban lévő szerepkör nem törölhető."
         )
-    audit(db, who, "access.role_delete", id, tenant_id, before=role_dto(db, r))
+    audit(
+        db, who, "access.role_delete", id, tenant_id, before=role_dto(db, r, tenant_id)
+    )
     db.delete(r)
     db.commit()
     return {"deleted": True}
@@ -419,7 +459,9 @@ def user_state(db, user, tenant_id):
             else None,
             "superadmin": user.superadmin,
         },
-        "roles": [role_dto(db, r) for r in ac.roles_for(db, user, tenant_id)],
+        "roles": [
+            role_dto(db, r, tenant_id) for r in ac.roles_for(db, user, tenant_id)
+        ],
         "exceptions": [
             {"permission": e.permission, "allowed": e.allowed}
             for e in db.scalars(
@@ -772,6 +814,7 @@ def system_users(
         .where(
             User.name.contains(q, autoescape=True)
             | User.email.contains(q, autoescape=True)
+            | User.username.contains(q, autoescape=True)
         )
         .order_by(User.name)
     )
@@ -781,6 +824,7 @@ def system_users(
                 "id": u.id,
                 "name": u.name,
                 "email": u.email,
+                "username": u.username,
                 "active": u.active,
                 "superadmin": u.superadmin,
             }

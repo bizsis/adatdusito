@@ -1,4 +1,10 @@
+import { dateTime } from "./ui";
 import React, { useEffect, useState } from "react";
+import { Pencil, Trash2, Plus, Save } from "lucide-react";
+import { PermissionMatrix, IconButton, Help } from "./ui";
+import { CreateSystemUser, AdminPasswordReset } from "./AuthViews";
+import { permissionDescriptions, auditLabel } from "./help";
+import { PermissionOverrides } from "./permissions";
 type Api = <T>(url: string, method?: string, body?: unknown) => Promise<T>;
 type Role = {
   id: number;
@@ -7,6 +13,7 @@ type Role = {
   name: string;
   permissions: string[];
   protected: boolean;
+  users_count?: number;
 };
 type Permission = {
   code: string;
@@ -18,7 +25,8 @@ type Permission = {
 type Person = {
   id: number;
   name: string;
-  email: string;
+  email: string | null;
+  username?: string;
   active: boolean;
   superadmin: boolean;
   membership_active?: boolean;
@@ -250,9 +258,13 @@ export function AccessWorkspace({
       {system ? (
         <>
           <label>
-            Ügyfélhozzáférés
+            <span className="field-title">
+              Ügyfélhozzáférés
+              <Help topic="scope" />
+            </span>
             <select
               value={tenantMode}
+              aria-label="Ügyfélhozzáférés"
               onChange={(e) => TM(e.target.value)}
               disabled={!userWrite || (system && !can("tenants.access.manage"))}
             >
@@ -305,9 +317,13 @@ export function AccessWorkspace({
       ) : (
         <>
           <label>
-            Adathozzáférés
+            <span className="field-title">
+              Adathozzáférés
+              <Help topic="scope" />
+            </span>
             <select
               value={resourceMode}
+              aria-label="Adathozzáférés"
               onChange={(e) => RM(e.target.value)}
               disabled={!userWrite || (system && !can("tenants.access.manage"))}
             >
@@ -351,10 +367,13 @@ export function AccessWorkspace({
   const groups = [...new Set(catalog.map((p) => p.group))];
   return (
     <section className="card padded">
-      <h2>{system ? "Rendszerhozzáférések" : "Munkatársak és hozzáférések"}</h2>
+      <h2 className="field-title">
+        {system ? "Rendszerhozzáférések" : "Munkatársak és hozzáférések"}
+        <Help topic="roles" />
+      </h2>
       {error && <p role="alert">{error}</p>}
       {notice && <p role="status">{notice}</p>}
-      <div>
+      <div className="tabs">
         {[
           [userRead, "users", system ? "Rendszerfelhasználók" : "Munkatársak"],
           [roleRead, "roles", "Szerepkörök"],
@@ -366,6 +385,7 @@ export function AccessWorkspace({
           .map(([, k, label]) => (
             <button
               key={String(k)}
+              aria-pressed={tab === k}
               onClick={() => {
                 T(String(k));
                 US(null);
@@ -388,6 +408,16 @@ export function AccessWorkspace({
       </div>
       {tab === "users" && (
         <>
+          {system && userWrite && (
+            <CreateSystemUser
+              api={api}
+              roles={roles}
+              onCreated={async () => {
+                UR((x) => x + 1);
+                await load();
+              }}
+            />
+          )}
           <label>
             {system
               ? "Név/e-mail keresése (3 karaktertől globális adminisztrátori keresés)"
@@ -405,7 +435,7 @@ export function AccessWorkspace({
               <thead>
                 <tr>
                   <th>Név</th>
-                  <th>E-mail</th>
+                  <th>Felhasználónév / e-mail</th>
                   <th>Állapot</th>
                   <th></th>
                 </tr>
@@ -414,16 +444,21 @@ export function AccessWorkspace({
                 {users.map((u) => (
                   <tr key={u.id}>
                     <td>{u.name}</td>
-                    <td>{u.email}</td>
+                    <td>
+                      {u.username && <small>{u.username}</small>}
+                      {u.email || "Nincs e-mail-cím"}
+                    </td>
                     <td>
                       {u.active && u.membership_active !== false
                         ? "Aktív"
                         : "Inaktív"}
                     </td>
                     <td>
-                      <button onClick={() => act(() => openUser(u.id))}>
-                        Hozzáférések: {u.name}
-                      </button>
+                      <IconButton
+                        icon={Pencil}
+                        label={`Hozzáférések: ${u.name}`}
+                        onClick={() => act(() => openUser(u.id))}
+                      />
                     </td>
                   </tr>
                 ))}
@@ -460,51 +495,17 @@ export function AccessWorkspace({
               {scopeFields}
               <details>
                 <summary>Egyedi engedélyek és tiltások</summary>
-                {groups.map((g) => (
-                  <fieldset key={g}>
-                    <legend>{groupName(g)}</legend>
-                    {catalog
-                      .filter((p) => p.group === g && (system || p.delegatable))
-                      .map((p) => (
-                        <label key={p.code}>
-                          {p.label}
-                          <select
-                            aria-label={`Kivétel: ${p.code}`}
-                            disabled={!userWrite || !canAssign}
-                            value={
-                              deny.includes(p.code)
-                                ? "deny"
-                                : allow.includes(p.code)
-                                  ? "allow"
-                                  : "inherit"
-                            }
-                            onChange={(e) => {
-                              AL(
-                                allow
-                                  .filter((x) => x !== p.code)
-                                  .concat(
-                                    e.target.value === "allow" ? [p.code] : [],
-                                  ),
-                              );
-                              DE(
-                                deny
-                                  .filter((x) => x !== p.code)
-                                  .concat(
-                                    e.target.value === "deny" ? [p.code] : [],
-                                  ),
-                              );
-                            }}
-                          >
-                            <option value="inherit">
-                              Szerepkörből örökölt
-                            </option>
-                            <option value="allow">Egyedi engedélyezés</option>
-                            <option value="deny">Egyedi tiltás</option>
-                          </select>
-                        </label>
-                      ))}
-                  </fieldset>
-                ))}
+                <PermissionOverrides
+                  catalog={catalog}
+                  allow={allow}
+                  deny={deny}
+                  disabled={!userWrite || !canAssign}
+                  system={system}
+                  onChange={(a, d) => {
+                    AL(a);
+                    DE(d);
+                  }}
+                />
               </details>
               {userWrite && (
                 <button
@@ -622,11 +623,14 @@ export function AccessWorkspace({
               </button>
             </details>
           )}
+          {system && superadmin && (
+            <AdminPasswordReset api={api} id={user.user.id} />
+          )}
           <h4>Jogosultsági előzmények</h4>
           <ul>
             {history.map((h, i) => (
               <li key={i}>
-                {new Date(h.created_at).toLocaleString("hu-HU")} · {h.action}
+                {dateTime(h.created_at)} · {auditLabel(h.action)}
                 <details>
                   <summary>Változás</summary>
                   <pre>{JSON.stringify(h.details, null, 2)}</pre>
@@ -638,35 +642,78 @@ export function AccessWorkspace({
       )}
       {tab === "roles" && (
         <>
-          <ul>
-            {roles.map((r) => (
-              <li key={r.id}>
-                {r.name} ·{" "}
-                {r.protected
-                  ? "Védett"
-                  : r.owner === "template"
-                    ? "Beépített ügyfélszerepkör"
-                    : "Egyedi szerepkör"}{" "}
-                <button onClick={() => roleEdit(r)}>Megnyitás: {r.name}</button>
-                {roleWrite && !r.protected && r.owner !== "template" && (
-                  <button
-                    disabled={busy}
-                    onClick={() =>
-                      act(async () => {
-                        await api(`/access/roles/${r.id}` + suffix, "DELETE");
-                        await load();
-                        roleEdit(null);
-                      })
-                    }
-                  >
-                    Szerepkör törlése
-                  </button>
-                )}
-              </li>
-            ))}
-          </ul>
+          <div className="table-wrap">
+            <table className="role-table">
+              <thead>
+                <tr>
+                  <th>Szerepkör neve</th>
+                  <th>Típusa</th>
+                  <th>Felhasználók</th>
+                  <th>Állapot</th>
+                  <th>Műveletek</th>
+                </tr>
+              </thead>
+              <tbody>
+                {roles.map((r) => (
+                  <tr key={r.id}>
+                    <td>
+                      <strong>{r.name}</strong>
+                    </td>
+                    <td>
+                      {r.owner === "system"
+                        ? "Rendszerszerepkör"
+                        : r.owner === "template"
+                          ? "Ügyfélszerepkör-sablon"
+                          : "Saját ügyfélszerepkör"}
+                    </td>
+                    <td>{r.users_count ?? 0}</td>
+                    <td>
+                      <span
+                        className={
+                          "badge " + (r.protected ? "protected" : "good")
+                        }
+                      >
+                        {r.protected ? "Védett" : "Aktív"}
+                      </span>
+                    </td>
+                    <td>
+                      <div className="actions">
+                        <IconButton
+                          icon={Pencil}
+                          label={`Megnyitás: ${r.name}`}
+                          onClick={() => roleEdit(r)}
+                        />
+                        {roleWrite &&
+                          !r.protected &&
+                          r.owner !== "template" && (
+                            <IconButton
+                              icon={Trash2}
+                              label={`Szerepkör törlése: ${r.name}`}
+                              disabled={busy}
+                              onClick={() =>
+                                act(async () => {
+                                  await api(
+                                    `/access/roles/${r.id}` + suffix,
+                                    "DELETE",
+                                  );
+                                  await load();
+                                  roleEdit(null);
+                                })
+                              }
+                            />
+                          )}
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
           {roleWrite && (
-            <button onClick={() => roleEdit(null)}>Új szerepkör</button>
+            <button onClick={() => roleEdit(null)}>
+              <Plus size={16} />
+              Új szerepkör
+            </button>
           )}
           <form
             onSubmit={(e) => {
@@ -704,31 +751,18 @@ export function AccessWorkspace({
                 pattern="[a-z][a-z0-9_]{1,47}"
                 disabled={!roleWrite || editingRole?.protected}
               />
+              <small>
+                Belső, egyedi azonosító: kisbetű, szám és aláhúzás. A
+                felhasználók számára a szerepkör neve jelenik meg.
+              </small>
             </label>
-            {groups.map((g) => (
-              <fieldset key={g}>
-                <legend>{groupName(g)}</legend>
-                {catalog
-                  .filter((p) => p.group === g && (system || p.delegatable))
-                  .map((p) => (
-                    <label key={p.code}>
-                      <input
-                        type="checkbox"
-                        disabled={!roleWrite || editingRole?.protected}
-                        checked={rolePerms.includes(p.code)}
-                        onChange={(e) =>
-                          RP(
-                            e.target.checked
-                              ? [...rolePerms, p.code]
-                              : rolePerms.filter((x) => x !== p.code),
-                          )
-                        }
-                      />
-                      {p.label}
-                    </label>
-                  ))}
-              </fieldset>
-            ))}
+            <PermissionMatrix
+              catalog={catalog}
+              value={rolePerms}
+              onChange={RP}
+              disabled={!roleWrite || editingRole?.protected}
+              system={system}
+            />
             {roleWrite && !editingRole?.protected && (
               <button disabled={busy}>Szerepkör mentése</button>
             )}
@@ -757,7 +791,8 @@ export function AccessWorkspace({
                       {p.level === "system"
                         ? "Rendszerszintű, ügyfélhez nem delegálható"
                         : "Ügyfélszintre delegálható"}
-                      <small>{p.code}</small>
+                      <p>{permissionDescriptions[p.code]}</p>
+                      <small>Technikai jogosultságkód: {p.code}</small>
                     </li>
                   ))}
               </ul>
@@ -821,7 +856,7 @@ export function AccessWorkspace({
                   : i.delivery === "failed"
                     ? "Küldési hiba"
                     : "Küldésre vár"}{" "}
-                · {new Date(i.expires_at).toLocaleString("hu-HU")}
+                · {dateTime(i.expires_at)}
                 {["pending", "expired"].includes(i.state) && (
                   <>
                     <button

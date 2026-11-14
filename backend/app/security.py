@@ -2,6 +2,7 @@ import hashlib
 import hmac
 import os
 import secrets
+from contextvars import ContextVar
 from dataclasses import dataclass, field
 from fastapi import Depends, HTTPException, Request
 from sqlalchemy import delete
@@ -16,6 +17,7 @@ from app.models import (
 )
 
 COOKIE = "adatdusito_session"
+rate_configuration = ContextVar("rate_configuration", default={})
 
 
 def hash_password(password):
@@ -64,25 +66,29 @@ def limit_login(request: Request, email: str):
         redis = Redis.from_url(
             os.environ["REDIS_URL"], socket_connect_timeout=2, socket_timeout=2
         )
+        policy = rate_configuration.get()
+        attempts = policy.get("login_attempts", 10)
+        window = policy.get("login_window_minutes", 15) * 60
         keys = [
-            (f"login:account:{digest(email)}", 10),
+            (f"login:account:{digest(email)}", attempts),
             (
                 f"login:peer:{digest(request.client.host if request.client else 'unknown')}",
-                300,
+                max(300, attempts * 30),
             ),
         ]
         for key, maximum in keys:
             # Atomic increment+expiry; survives multiple API workers.
             count = redis.eval(
-                "local n=redis.call('INCR',KEYS[1]); if n==1 then redis.call('EXPIRE',KEYS[1],900) end; return n",
+                "local n=redis.call('INCR',KEYS[1]); if n==1 then redis.call('EXPIRE',KEYS[1],ARGV[1]) end; return n",
                 1,
                 key,
+                window,
             )
             if count > maximum:
                 raise HTTPException(
                     429,
-                    "Túl sok belépési kísérlet. Próbáld újra 15 perc múlva.",
-                    headers={"Retry-After": "900"},
+                    "Túl sok belépési kísérlet. Próbáld újra a korlátozási idő lejárta után.",
+                    headers={"Retry-After": str(window)},
                 )
     except HTTPException:
         raise
@@ -111,6 +117,30 @@ def identity(request: Request, db: Session = Depends(database)):
     user = db.get(User, session.user_id)
     if not user or not user.active:
         raise HTTPException(401, "A munkamenet érvénytelen.")
+    from app.system_config import config
+    from app.auth_service import needs_mfa
+    from datetime import timedelta
+
+    policy = config(db, "security")
+    if session.created_at + timedelta(hours=policy["session_hours"]) <= now():
+        raise HTTPException(401, "A munkamenet lejárt.")
+    mfa_pending = needs_mfa(db, user) and not session.mfa_verified
+    restricted = mfa_pending or user.must_change_password
+    safe_paths = {
+        "/api/v1/auth/me",
+        "/api/v1/auth/logout",
+        "/api/v1/auth/password",
+        "/api/v1/auth/security",
+        "/api/v1/auth/reauth",
+        "/api/v1/auth/totp/setup",
+        "/api/v1/auth/totp/confirm",
+        "/api/v1/auth/passkeys/login/options",
+        "/api/v1/auth/passkeys/login/verify",
+    }
+    if restricted and request.url.path not in safe_paths:
+        raise HTTPException(
+            403, "A folytatáshoz jelszócsere vagy második faktor beállítása szükséges."
+        )
     from app.access_control import (
         can_access,
         effective,
@@ -123,6 +153,22 @@ def identity(request: Request, db: Session = Depends(database)):
         session.tenant_id = None
         db.commit()
     permissions, sources = effective(db, user, session.tenant_id)
+    if restricted:
+        permissions = set()
+    if session.tenant_id is not None:
+        from app.models import Tenant
+
+        tenant = db.get(Tenant, session.tenant_id)
+        if tenant and tenant.onboarding_state == "pending_subscription":
+            permissions &= {
+                "reference.read",
+                "tenants.read",
+                "companies.read",
+                "webshops.read",
+            }
+            for code, source in sources.items():
+                if code not in permissions:
+                    source.update(allowed=False, scope="pending_subscription")
     roles = roles_for(db, user, session.tenant_id)
     role = (
         "superadmin"
@@ -137,6 +183,7 @@ def identity(request: Request, db: Session = Depends(database)):
         ):
             raise HTTPException(403, "Érvénytelen CSRF-token.")
     result = Identity(user, session, role, permissions, token)
+    result.mfa_required = mfa_pending
     result.roles = [{"id": r.id, "code": r.code, "name": r.name} for r in roles]
     result.permission_sources = sources
     result.system = is_system(db, user)

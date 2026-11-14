@@ -1,6 +1,52 @@
+import { auditLabel } from "./help";
+import { dateTime } from "./ui";
 import React, { useEffect, useState, useRef } from "react";
 import { createRoot } from "react-dom/client";
+import "@fontsource/inter/latin-400.css";
+import "@fontsource/inter/latin-ext-400.css";
+import "@fontsource/inter/latin-600.css";
+import "@fontsource/inter/latin-ext-600.css";
+import "@fontsource/inter/latin-700.css";
+import "@fontsource/inter/latin-ext-700.css";
+import "./tokens.css";
 import "./style.css";
+import { SystemSettings } from "./SystemSettings";
+import { AuthLogin, SecurityCenter, RegistrationConfirm } from "./AuthViews";
+import { ProductData } from "./ProductData";
+import { Help, setDisplayTimezone } from "./ui";
+import {
+  LayoutDashboard,
+  Building2,
+  Users,
+  ShieldCheck,
+  Settings2,
+  ScrollText,
+  FileUp,
+  FileDown,
+  PackageSearch,
+  Network,
+  ListFilter,
+  LockKeyhole,
+  type LucideIcon,
+} from "lucide-react";
+function NavIcon({ name }: { name: string }) {
+  const icons: Record<string, LucideIcon> = {
+    dashboard: LayoutDashboard,
+    tenants: Building2,
+    members: Users,
+    "access-system": ShieldCheck,
+    settings: Settings2,
+    audit: ScrollText,
+    imports: FileUp,
+    "export-fields": FileDown,
+    products: PackageSearch,
+    categories: Network,
+    parameters: ListFilter,
+    security: LockKeyhole,
+  };
+  const Icon = icons[name] || PackageSearch;
+  return <Icon size={19} aria-hidden />;
+}
 import { AccessWorkspace, AcceptInvitation } from "./AccessWorkspace";
 import { ImportWorkspace, ExportAdmin } from "./ImportWorkspace";
 
@@ -8,17 +54,24 @@ type Role = "tenant_admin" | "processor" | "reviewer" | "viewer";
 type User = {
   id: number;
   name: string;
-  email: string;
+  email: string | null;
+  username?: string;
+  must_change_password?: boolean;
   active: boolean;
   superadmin: boolean;
 };
 type Tenant = { id: number; name: string; active: boolean };
 type Member = User & { role: Role; membership_active: boolean };
 type Me = {
+  mfa_required?: boolean;
   user: User;
   tenant_id: number | null;
   workspaces?: { tenant_id: number; name: string }[];
-  workspace?: { tenant_id: number; name: string } | null;
+  workspace?: {
+    tenant_id: number;
+    name: string;
+    onboarding_state?: string;
+  } | null;
   system?: boolean;
   roles?: { id: number; name: string; code: string }[];
   resource_access?: { full: boolean; companies?: number[]; shops?: number[] };
@@ -272,80 +325,18 @@ function Modal({
 }
 
 function Login({ onLogin }: { onLogin: () => Promise<void> }) {
-  const [error, setError] = useState(""),
-    [busy, setBusy] = useState(false);
   return (
-    <div className="login">
-      <section>
-        <div className="brandmark">
-          A<span>+</span>
-        </div>
-        <p className="eyebrow">PAKSI INFORMATIKA</p>
-        <h1>Adatdúsító</h1>
-        <p className="muted">Jelentkezz be a munkaterületedre.</p>
-        <form
-          onSubmit={async (e) => {
-            e.preventDefault();
-            const fd = new FormData(e.currentTarget);
-            setBusy(true);
-            setError("");
-            try {
-              const result = await api<{ csrf_token: string }>(
-                "/auth/login",
-                "POST",
-                { email: fd.get("email"), password: fd.get("password") },
-              );
-              csrf = result.csrf_token;
-              await onLogin();
-            } catch (e) {
-              setError((e as Error).message);
-            } finally {
-              setBusy(false);
-            }
-          }}
-        >
-          <label>
-            Email-cím
-            <input
-              required
-              name="email"
-              type="email"
-              autoComplete="username"
-              maxLength={254}
-            />
-          </label>
-          <label>
-            Jelszó
-            <input
-              required
-              name="password"
-              type="password"
-              autoComplete="current-password"
-              maxLength={128}
-            />
-          </label>
-          <ErrorBox message={error} />
-          <button className="primary" disabled={busy}>
-            {busy ? "Bejelentkezés…" : "Bejelentkezés →"}
-          </button>
-        </form>
-        <p className="small muted">Fejlesztői adminisztrációs felület</p>
-      </section>
-      <aside>
-        <span>
-          RENDSZEREZETT ADATOK.
-          <br />
-          ÁTLÁTHATÓ MUNKA.
-        </span>
-        <p>
-          Ügyfelek, felhasználók és kategória és termékparaméter
-          referenciaadatok egy helyen.
-        </p>
-        <div className="orbit">→</div>
-      </aside>
-    </div>
+    <AuthLogin
+      api={api}
+      initialMfa={new URLSearchParams(location.hash.slice(1)).get("mfa") || ""}
+      onAuthenticated={async (value) => {
+        csrf = value;
+        await onLogin();
+      }}
+    />
   );
 }
+
 function Tenants({
   me,
   onSwitch,
@@ -616,7 +607,7 @@ function Parameters({
           </label>
         </div>
         <ErrorBox message={error} />
-        <div className="tablewrap">
+        <div className="table-wrap">
           <table>
             <thead>
               <tr>
@@ -1066,7 +1057,7 @@ function ShopDetails({
       {!!node.related_parameter_filters?.length && (
         <section className="card padded">
           <h2>Kapcsolódó televíziószűrők</h2>
-          <div className="tablewrap">
+          <div className="table-wrap">
             <table>
               <thead>
                 <tr>
@@ -1095,7 +1086,7 @@ function ShopDetails({
       {!!node.related_links.length && (
         <section className="card padded">
           <h2>Kapcsolódó linkek – nem külön termékkategóriák</h2>
-          <div className="tablewrap">
+          <div className="table-wrap">
             <table>
               <thead>
                 <tr>
@@ -1389,7 +1380,7 @@ function ReferenceSources() {
             </strong>
             <p>{o.summary}</p>
             <small>
-              {new Date(o.observed_at).toLocaleString("hu-HU")} ·{" "}
+              {dateTime(o.observed_at)} ·{" "}
               <a href={o.evidence_url} target="_blank" rel="noreferrer">
                 Forráshivatkozás
               </a>
@@ -1519,6 +1510,10 @@ function AuditLog() {
       id: number;
       created_at: string;
       actor_id: number;
+      actor_name?: string;
+      tenant_name?: string;
+      target_name?: string | null;
+      details?: unknown;
       tenant_id: number | null;
       action: string;
       target: string;
@@ -1528,7 +1523,7 @@ function AuditLog() {
     <section className="card padded">
       <h2>Adminisztrációs napló</h2>
       <ErrorBox message={error} />
-      <div className="tablewrap">
+      <div className="table-wrap">
         <table>
           <thead>
             <tr>
@@ -1541,12 +1536,21 @@ function AuditLog() {
           <tbody>
             {data?.items.map((a) => (
               <tr key={a.id}>
-                <td>{new Date(a.created_at).toLocaleString("hu-HU")}</td>
-                <td>{a.action}</td>
-                <td>#{a.actor_id ?? "–"}</td>
+                <td>{dateTime(a.created_at)}</td>
                 <td>
-                  {a.target}
-                  {a.tenant_id && ` · Ügyfél #${a.tenant_id}`}
+                  {auditLabel(a.action)}
+                  <details>
+                    <summary>Technikai eseménykód</summary>
+                    <code>{a.action}</code>
+                    {a.details != null && (
+                      <pre>{JSON.stringify(a.details, null, 2)}</pre>
+                    )}
+                  </details>
+                </td>
+                <td>{a.actor_name || "Rendszer"}</td>
+                <td>
+                  {a.target_name || `Erőforrás-azonosító: ${a.target}`}
+                  <small>{a.tenant_name || "Rendszerszint"}</small>
                 </td>
               </tr>
             ))}
@@ -1558,61 +1562,7 @@ function AuditLog() {
     </section>
   );
 }
-function Settings({ canManage = true }: { canManage?: boolean }) {
-  const [rev, setRev] = useState(0),
-    [message, setMessage] = useState("");
-  const { data, error } = useLoad<Record<string, string>>("/settings", rev);
-  return (
-    <section className="card padded">
-      <h2>Rendszerkonfiguráció</h2>
-      <p className="muted">
-        Nyilvános szöveges beállítások. API-kulcsokat és jelszavakat itt ne adj
-        meg.
-      </p>
-      <ErrorBox message={error} />
-      {data && (
-        <form
-          key={rev}
-          onSubmit={async (e) => {
-            e.preventDefault();
-            const fd = new FormData(e.currentTarget);
-            try {
-              for (const key of ["display_name", "admin_notice"])
-                await api(`/settings/${key}`, "PUT", { value: fd.get(key) });
-              setMessage("A beállítások mentve.");
-              setRev(rev + 1);
-            } catch (e) {
-              setMessage((e as Error).message);
-            }
-          }}
-        >
-          <label>
-            Rendszer megjelenített neve
-            <input
-              readOnly={!canManage}
-              name="display_name"
-              maxLength={1000}
-              defaultValue={data.display_name || ""}
-            />
-          </label>
-          <label>
-            Adminisztrációs megjegyzés
-            <textarea
-              readOnly={!canManage}
-              name="admin_notice"
-              maxLength={1000}
-              defaultValue={data.admin_notice || ""}
-            />
-          </label>
-          <button className="primary" disabled={!canManage}>
-            Mentés
-          </button>
-        </form>
-      )}
-      <p role="status">{message}</p>
-    </section>
-  );
-}
+
 function Password({
   close,
   onChanged,
@@ -1690,6 +1640,28 @@ function Password({
   );
 }
 function App() {
+  const [branding, BR] = useState({
+    display_name: "Adatdúsító",
+    system_name: "Paksi Informatika",
+    environment: "development",
+    timezone: "Europe/Budapest",
+  });
+  async function refreshBranding() {
+    const r = await api<{ branding: typeof branding }>("/auth/methods");
+    if (!r.branding || typeof r.branding.display_name !== "string") return;
+    BR(r.branding);
+    setDisplayTimezone(r.branding.timezone);
+    document.title = r.branding.display_name;
+  }
+  useEffect(() => {
+    refreshBranding().catch(() => {});
+    if (location.hash === "#security") setPage("security");
+    const authError = new URLSearchParams(location.hash.slice(1)).get(
+      "auth_error",
+    );
+    if (authError) setError(authError);
+  }, []);
+
   const [me, setMe] = useState<Me | null>(null),
     [loading, setLoading] = useState(true),
     [error, setError] = useState(""),
@@ -1832,7 +1804,12 @@ function App() {
         }}
       />
     );
-  if (!me)
+  const registrationToken = new URLSearchParams(location.hash.slice(1)).get(
+    "register",
+  );
+  if (registrationToken)
+    return <RegistrationConfirm api={api} token={registrationToken} />;
+  if (!me || me.mfa_required)
     return (
       <Login
         onLogin={async () => {
@@ -1845,35 +1822,40 @@ function App() {
     );
   const can = (permission: string) => me.permissions.includes(permission);
   const pages = [
-    ["dashboard", "◫", "Áttekintés"],
-    ...(can("tenants.read") ? [["tenants", "▦", "Ügyfelek"]] : []),
-    ...(can("system.users.read") || can("system.roles.read")
-      ? [["access-system", "♙", "Rendszerhozzáférések"]]
+    ["dashboard", "", "Áttekintés"],
+    ...(can("tenants.read") ? [["tenants", "", "Ügyfelek"]] : []),
+    ...((me.tenant_id && can("products.read")) || can("reference.read")
+      ? [["products", "", "Termékadatok"]]
       : []),
-    ...(me.tenant_id && can("members.read")
-      ? [["members", "♙", "Munkatársak és hozzáférések"]]
-      : []),
-    ...(me.tenant_id && can("imports.read")
-      ? [["imports", "⇧", "Beszállítói import"]]
-      : []),
-    ...(can("exports.fields.manage") || (me.tenant_id && can("exports.profile"))
-      ? [["export-fields", "▤", "Webáruházmotorok / Exportmezők"]]
-      : []),
-
     ...(can("reference.read")
       ? [
-          ["categories", "⌘", "Kategóriák"],
-          ["parameters", "≡", "Paraméterkereső"],
+          ["categories", "", "Kategóriák"],
+          ["parameters", "", "Paraméterkereső"],
         ]
       : []),
-    ...((me.tenant_id ? can("audit.read") : can("system.audit.read"))
-      ? [["audit", "◷", "Műveleti napló"]]
+    ...(me.tenant_id && can("imports.read")
+      ? [["imports", "", "Beszállítói import"]]
+      : []),
+    ...(can("exports.fields.manage") || can("exports.read")
+      ? [["export-fields", "", "Export"]]
+      : []),
+    ...(can("system.users.read") || can("system.roles.read")
+      ? [["access-system", "", "Rendszerhozzáférések"]]
+      : []),
+    ...(me.tenant_id && can("members.read")
+      ? [["members", "", "Munkatársak és hozzáférések"]]
       : []),
     ...(can("system.settings.read")
-      ? [["settings", "⚙", "Rendszerbeállítások"]]
+      ? [["settings", "", "Rendszerbeállítások"]]
+      : []),
+    ...((me.tenant_id ? can("audit.read") : can("system.audit.read"))
+      ? [["audit", "", "Napló / Audit"]]
       : []),
   ];
-  const title = pages.find((p) => p[0] === page)?.[2] || "Áttekintés";
+  const title =
+    page === "security"
+      ? "Hitelesítés és 2FA"
+      : pages.find((p) => p[0] === page)?.[2] || "Áttekintés";
   const visibleWorkspaces = (
     workspaceItems.length ? workspaceItems : me.workspaces || me.memberships
   ).filter(
@@ -1892,7 +1874,8 @@ function App() {
             A<span>+</span>
           </div>
           <div>
-            Adatdúsító<small>PAKSI INFORMATIKA</small>
+            {branding.display_name}
+            <small>{branding.system_name}</small>
           </div>
         </div>
         <div className="workspace">
@@ -1946,21 +1929,29 @@ function App() {
           {pages.map(([key, icon, label]) => (
             <button
               key={key}
-              className={page === key ? "active" : ""}
+              className={
+                (page === key ? "active " : "") +
+                (["categories", "parameters"].includes(key) ? "nested" : "")
+              }
               aria-current={page === key ? "page" : undefined}
               onClick={() => {
                 setPage(key);
                 setError("");
               }}
             >
-              <span aria-hidden>{icon}</span>
+              <span aria-hidden>
+                <NavIcon name={key} />
+              </span>
               {label}
             </button>
           ))}
         </nav>
         <div className="sidebar-bottom">
-          <span className="status-dot ok" /> Fejlesztői környezet
-          <small>CODEX 03A · Referencia</small>
+          <span className="status-dot ok" />{" "}
+          {branding.environment === "production"
+            ? "Üzemi környezet"
+            : "Fejlesztői környezet"}
+          <small>Biztonságos közös munkaterület</small>
         </div>
       </aside>
       <div className="main">
@@ -1982,6 +1973,10 @@ function App() {
                     : roleNames[me.role || ""] || "Nincs aktív szerepkör"}
               </small>
             </div>
+            <button onClick={() => setPage("security")}>
+              <LockKeyhole size={16} />
+              Biztonság
+            </button>
             <button onClick={() => setPassword(true)}>Jelszó</button>
             <button
               onClick={async () => {
@@ -2009,9 +2004,17 @@ function App() {
               <p className="eyebrow">ADATDÚSÍTÓ / ADMINISZTRÁCIÓ</p>
               <h1>{title}</h1>
             </div>
-            <span className="badge environment">FEJLESZTŐI</span>
+            <span className="badge environment">
+              {branding.environment === "production" ? "ÜZEMI" : "FEJLESZTŐI"}
+            </span>
           </div>
           <ErrorBox message={error} />
+          {me.workspace?.onboarding_state === "pending_subscription" && (
+            <p className="notice">
+              Munkaterületed létrejött. Az előfizetés beállításáig a
+              feldolgozási funkciók nem aktívak.
+            </p>
+          )}
           {page === "dashboard" && (
             <>
               <section className="welcome">
@@ -2037,7 +2040,9 @@ function App() {
                     className="card quick"
                     onClick={() => setPage("categories")}
                   >
-                    <span>⌘</span>
+                    <span>
+                      <Network size={24} />
+                    </span>
                     <h2>Kategóriák</h2>
                     <p>Hierarchia, paraméterek és megengedett értékek.</p>
                     <b>Referenciaböngésző →</b>
@@ -2047,7 +2052,9 @@ function App() {
                   className="card quick"
                   onClick={() => setPage("tenants")}
                 >
-                  <span>▦</span>
+                  <span>
+                    <Building2 size={24} />
+                  </span>
                   <h2>Ügyfelek</h2>
                   <p>Szervezetek és felhasználói hozzáférések.</p>
                   <b>Ügyfelek megnyitása →</b>
@@ -2095,6 +2102,7 @@ function App() {
               key={me.tenant_id}
               api={api}
               central={can("exports.fields.manage")}
+              canProfile={Boolean(me.tenant_id && can("exports.profile"))}
             />
           )}
           {page === "categories" && can("reference.read") && <Categories />}
@@ -2104,17 +2112,44 @@ function App() {
               <AuditLog />
             )}
           {page === "settings" && can("system.settings.read") && (
-            <Settings canManage={can("system.settings.manage")} />
+            <SystemSettings
+              api={api}
+              canManage={can("system.settings.manage")}
+              superadmin={me.user.superadmin}
+              onChanged={async () => {
+                await refreshBranding();
+                await refresh();
+              }}
+            />
           )}
+          {page === "security" && (
+            <SecurityCenter
+              api={api}
+              superadmin={me.user.superadmin}
+              onLogout={() => {
+                authGeneration.current++;
+                csrf = "";
+                setMe(null);
+              }}
+            />
+          )}
+          {page === "products" &&
+            (me.tenant_id && can("products.read") ? (
+              <ProductData api={api} />
+            ) : can("reference.read") ? (
+              <Categories />
+            ) : null)}
         </main>
         <footer>
           Adatdúsító · Paksi Informatika
           <span>Biztonságos, ügyfelenként elkülönített munkaterület</span>
         </footer>
       </div>
-      {password && (
+      {(password || me.user.must_change_password) && (
         <Password
-          close={() => setPassword(false)}
+          close={() => {
+            if (!me.user.must_change_password) setPassword(false);
+          }}
           onChanged={() => {
             setPassword(false);
             authGeneration.current++;

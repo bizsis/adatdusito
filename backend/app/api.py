@@ -1,16 +1,14 @@
 """Versioned identity and administration API; tenant authorization is server-side."""
 
-import os
 import re
 import secrets
-from datetime import timedelta
 from typing import Literal
 from fastapi import APIRouter, Depends, HTTPException, Query, Request, Response
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 from sqlalchemy import delete, func, select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
-from app.models import Audit, LoginSession, Membership, Role, Setting, Tenant, User, now
+from app.models import Audit, Membership, Role, Setting, Tenant, User
 from app import access_control as ac
 from app.access_models import SystemAccess, AccessRole, AccessBinding, ResourceAccess
 from app.security import (
@@ -22,7 +20,7 @@ from app.security import (
     digest,
     hash_password,
     identity,
-    limit_login,
+    limit_login as limit_login,
     require,
     revoke,
     scope,
@@ -48,8 +46,13 @@ class Input(BaseModel):
 
 
 class Login(Input):
-    email: str = Field(max_length=254)
+    email: str | None = Field(default=None, max_length=254)
+    identifier: str | None = Field(default=None, max_length=254)
     password: str = Field(min_length=1, max_length=128)
+
+
+class CreateUser(Login):
+    email: str = Field(max_length=254)
 
     @field_validator("email")
     @classmethod
@@ -59,14 +62,6 @@ class Login(Input):
             raise ValueError("Érvénytelen email-cím.")
         return value
 
-    @field_validator("password", mode="before")
-    @classmethod
-    def preserve_password(cls, value):
-        # Password whitespace is significant.
-        return value
-
-
-class CreateUser(Login):
     password: str = Field(min_length=12, max_length=128)
     name: str = Field(min_length=1, max_length=120)
     superadmin: bool = False
@@ -124,6 +119,8 @@ def public_user(user):
     return {
         "id": user.id,
         "email": user.email,
+        "username": user.username,
+        "must_change_password": user.must_change_password,
         "name": user.name,
         "active": user.active,
         "superadmin": user.superadmin,
@@ -181,6 +178,7 @@ def memberships(db, user_id):
 def me_data(db, who):
     return {
         "user": public_user(who.user),
+        "mfa_required": getattr(who, "mfa_required", False),
         "tenant_id": who.session.tenant_id,
         "role": who.role,
         "permissions": sorted(who.permissions),
@@ -192,6 +190,7 @@ def me_data(db, who):
         "workspace": {
             "tenant_id": who.session.tenant_id,
             "name": db.get(Tenant, who.session.tenant_id).name,
+            "onboarding_state": db.get(Tenant, who.session.tenant_id).onboarding_state,
         }
         if who.session.tenant_id
         else None,
@@ -205,52 +204,32 @@ def me_data(db, who):
 def login(
     body: Login, request: Request, response: Response, db: Session = Depends(database)
 ):
-    limit_login(request, body.email)
-    user = db.scalar(select(User).where(User.email == body.email).with_for_update())
+    from app.system_config import config
+    from app.auth_service import complete_login
+
+    if not config(db, "auth")["password"]:
+        raise HTTPException(403, "A jelszavas bejelentkezés le van tiltva.")
+    identifier = (body.identifier or body.email or "").strip().casefold()
+    if not identifier:
+        raise HTTPException(422, "Felhasználónév vagy e-mail-cím szükséges.")
+    from app.auth_api import throttle
+
+    throttle(request, db, identifier)
+    user = db.scalar(
+        select(User)
+        .where(
+            User.email == identifier
+            if "@" in identifier
+            else User.username == identifier
+        )
+        .with_for_update()
+    )
     valid = verify_password(body.password, user.password_hash if user else DUMMY_HASH)
     if not user or not valid or not user.active:
-        db.add(Audit(action="auth.login_failed", target=digest(body.email), details={}))
+        db.add(Audit(action="auth.login_failed", target=digest(identifier), details={}))
         db.commit()
-        raise HTTPException(401, "Hibás email-cím vagy jelszó.")
-    choices = memberships(db, user.id)
-    tenant_id = (
-        choices[0]["tenant_id"]
-        if len(choices) == 1 and not ac.is_system(db, user)
-        else None
-    )
-    token = secrets.token_hex(32)
-    db.execute(delete(LoginSession).where(LoginSession.expires_at <= now()))
-    old = request.cookies.get(COOKIE)
-    if old:
-        db.execute(delete(LoginSession).where(LoginSession.token_hash == digest(old)))
-    db.add(
-        LoginSession(
-            token_hash=digest(token),
-            user_id=user.id,
-            tenant_id=tenant_id,
-            expires_at=now() + timedelta(hours=8),
-        )
-    )
-    db.add(
-        Audit(
-            actor_id=user.id,
-            tenant_id=tenant_id,
-            action="auth.login",
-            target=str(user.id),
-            details={},
-        )
-    )
-    db.commit()
-    response.set_cookie(
-        COOKIE,
-        token,
-        max_age=28800,
-        secure=os.getenv("COOKIE_SECURE", "true").lower() != "false",
-        httponly=True,
-        samesite="strict",
-        path="/",
-    )
-    return {"csrf_token": csrf_for(token)}
+        raise HTTPException(401, "Hibás felhasználónév, e-mail-cím vagy jelszó.")
+    return complete_login(db, user, request, response, "password")
 
 
 @router.get("/auth/me", tags=["Hitelesítés"])
@@ -294,7 +273,15 @@ def change_password(
     db.refresh(who.user, with_for_update=True)
     if not verify_password(body.current_password, who.user.password_hash):
         raise HTTPException(400, "A jelenlegi jelszó hibás.")
+    from app.system_config import password_policy
+
+    password_policy(db, body.password)
+    from app.auth_service import needs_mfa, recent
+
+    if needs_mfa(db, who.user):
+        recent(who, db)
     who.user.password_hash = hash_password(body.password)
+    who.user.must_change_password = False
     audit(db, who, "user.password_change", who.user.id, who.session.tenant_id)
     revoke(db, who.user.id)
     db.commit()
@@ -380,6 +367,7 @@ def users(
         .where(
             User.email.contains(q, autoescape=True)
             | User.name.contains(q, autoescape=True)
+            | User.username.contains(q, autoescape=True)
         )
         .order_by(User.id)
     )
@@ -392,6 +380,11 @@ def create_user(
     who: Identity = Depends(require("system.users.manage")),
     db: Session = Depends(database),
 ):
+    from app.auth_service import recent
+    from app.system_config import password_policy
+
+    recent(who, db)
+    password_policy(db, body.password)
     if body.superadmin:
         ac.protected_admin(who)
     if db.scalar(select(User.id).where(User.email == body.email)):
@@ -404,6 +397,11 @@ def create_user(
     )
     db.add(user)
     db.flush()
+    if body.superadmin:
+        from app.settings_api import ensure_admin_methods
+        from app.system_config import config
+
+        ensure_admin_methods(db, config(db, "auth"))
     audit(db, who, "user.create", user.id)
     commit(db)
     return public_user(user)
@@ -418,9 +416,15 @@ def edit_user(
 ):
     if body.superadmin is not None:
         ac.protected_admin(who)
+        from app.auth_service import recent
+
+        recent(who, db)
     target = db.get(User, user_id)
     if target and target.superadmin:
         ac.protected_admin(who)
+        from app.auth_service import recent
+
+        recent(who, db)
     # Serialize global admin transitions to preserve a usable last Superadmin.
     db.scalar(select(Role).where(Role.code == "superadmin").with_for_update())
     user = db.get(User, user_id, populate_existing=True, with_for_update=True)
@@ -452,7 +456,19 @@ def edit_user(
     for key, value in body.model_dump(exclude_none=True, exclude={"password"}).items():
         setattr(user, key, value)
     if body.password:
+        from app.auth_service import recent
+        from app.system_config import password_policy
+
+        recent(who, db)
+        password_policy(db, body.password)
         user.password_hash = hash_password(body.password)
+        user.must_change_password = True
+    if body.active is not None or body.superadmin is not None:
+        db.flush()
+        from app.settings_api import ensure_admin_methods
+        from app.system_config import config
+
+        ensure_admin_methods(db, config(db, "auth"))
     if body.password or body.active is False or body.superadmin is not None:
         revoke(db, user.id)
     audit(
@@ -536,6 +552,11 @@ def create_member(
             409,
             "Az email-cím nem használható. Meglévő felhasználót Superadmin rendelhet ügyfélhez.",
         )
+    from app.auth_service import recent
+    from app.system_config import password_policy
+
+    recent(who, db)
+    password_policy(db, body.password)
     user = User(
         email=body.email, name=body.name, password_hash=hash_password(body.password)
     )
@@ -653,6 +674,42 @@ def edit_member(
     }
 
 
+def audit_target_name(db, event):
+    code = event.action
+    id = (
+        int(event.target)
+        if event.target.isascii() and event.target.isdigit() and len(event.target) < 19
+        else None
+    )
+    if code in {"tenant.create", "tenant.update", "auth.tenant_switch"}:
+        item = db.get(Tenant, id) if id is not None else None
+        return (
+            item.name
+            if item
+            else "Rendszerszint"
+            if code == "auth.tenant_switch"
+            else None
+        )
+    if code.startswith(("user.", "member.", "auth09.")) or code in {
+        "auth.login",
+        "auth.logout",
+        "access.user_update",
+        "access.system_resources",
+        "access.invite_accept",
+    }:
+        item = db.get(User, id) if id is not None else None
+        return item.name if item else None
+    if code.startswith("access.role_"):
+        item = db.get(AccessRole, id) if id is not None else None
+        return item.name if item else None
+    if code.startswith("access.invite_"):
+        from app.access_models import Invitation
+
+        item = db.get(Invitation, id) if id is not None else None
+        return item.email if item else None
+    return None
+
+
 @router.get("/audit", tags=["Adminisztráció"])
 def audits(
     who: Identity = Depends(identity),
@@ -699,6 +756,7 @@ def audits(
             "tenant_id": event.tenant_id,
             "action": event.action,
             "target": event.target,
+            "target_name": audit_target_name(db, event),
             "details": event.details,
             "created_at": event.created_at.isoformat() + "Z",
         },
@@ -710,7 +768,12 @@ def settings(
     who: Identity = Depends(require("system.settings.read")),
     db: Session = Depends(database),
 ):
-    return {setting.key: setting.value for setting in db.scalars(select(Setting))}
+    return {
+        setting.key: setting.value
+        for setting in db.scalars(
+            select(Setting).where(Setting.key.in_(["display_name", "admin_notice"]))
+        )
+    }
 
 
 @router.put("/settings/{key}", tags=["Adminisztráció"])
@@ -763,7 +826,13 @@ def edit_member_profile(
     if body.name is not None:
         user.name = body.name
     if body.password:
+        from app.auth_service import recent
+        from app.system_config import password_policy
+
+        recent(who, db)
+        password_policy(db, body.password)
         user.password_hash = hash_password(body.password)
+        user.must_change_password = True
         revoke(db, user_id)
     audit(
         db,

@@ -29,8 +29,8 @@ jobs:
       - name: Build frontend for browser tests
         run: npm ci && npm run build
         working-directory: frontend
-      - name: Run backend and browser tests
-        run: PYTHONPATH=backend python -m pytest -q backend/tests
+      - name: Run full backend and browser regression suite
+        run: PYTHONPATH=backend python -m pytest -q backend/tests scripts/tests
       - run: docker build -t adatdusito-ci-backend backend
       - run: docker build -t adatdusito-ci-frontend frontend
   menu-export-tests:
