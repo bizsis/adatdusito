@@ -6,13 +6,13 @@
 
 ## Main application entities (code-verified)
 Identity and tenancy in `backend/app/models.py`:
-- `users`: global identity, email, name, scrypt hash, active/superadmin flags.
+- `users`: global identity, unique username, optional email, name, scrypt hash, active/superadmin flags, email verification, forced password change and MFA-reset flags.
 - `tenants`: subscribing customer workspace.
 - `memberships`: legacy tenant role membership; retained for compatibility.
 - `roles`, `permissions`, `role_permissions`: original permission system and aliases.
-- `login_sessions`: hashed session token, selected tenant, expiry.
+- `login_sessions`: hashed session token, selected tenant, expiry, authentication method, MFA-verified and reauthentication timestamps.
 - `audit_events`: actor/context/action/details/timestamp.
-- `system_settings`: present string settings.
+- `system_settings`: legacy compatibility settings; CODEX 09 adds structured and encrypted settings tables.
 
 CODEX 08 / migration `0007`, `backend/app/access_models.py`:
 - `access_roles`, `access_bindings`: scoped configurable roles and multiple grants.
@@ -33,9 +33,19 @@ Versioned reference/catalog classes in `backend/app/models.py`:
   `CatalogValue`, `CatalogSourceMapping`.
 Additional reference-source and observation entities exist.
 
+CODEX 09 / migration `0008_settings_auth`:
+- `system_configuration`: validated categorized non-secret configuration.
+- `system_secret_settings`: encrypted SMTP/OIDC secrets.
+- `auth_challenges`: short-lived one-use hashed challenges.
+- `external_identities`: explicit provider identity bindings.
+- `user_passkeys`: public credential metadata and counters (not private keys).
+- `user_totp_devices`: encrypted TOTP secrets and anti-replay counters.
+- `user_recovery_codes`: hashes of one-use recovery codes.
+- `tenants.onboarding_state`: legacy tenants remain `existing`.
+
 ## Migration discipline
-- Existing baseline: Alembic `0007` after CODEX 08. Reserve the next revision centrally; parallel agents must not both create `0008`.
-- New schema only in `adatdusito_dev`; do not modify original `0001`–`0007` history.
+- Current code baseline: Alembic `0008_settings_auth` after CODEX 09; next revision `0009` must be centrally assigned. **VPS migration status is not confirmed; do not equate merged code with deployed schema.**
+- New schema only in `adatdusito_dev`; do not modify original `0001`–`0008` migration history.
 - Include forward/backward compatibility for app deployments, preserving tenants, users, sessions, memberships, supplier profiles and product data.
 - Run migration on disposable MySQL 8 first. Take and validate a full app DB backup before VPS migration.
 - Avoid irreversible destructive downgrade or silent data dropping; test data migration for legacy memberships.
