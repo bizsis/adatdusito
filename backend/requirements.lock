@@ -43,7 +43,7 @@ vine==5.1.0
 wcwidth==0.9.4
 openpyxl==3.1.5
 et_xmlfile==2.0.0
-python-multipart==0.0.20
+python-multipart==0.0.32
 
 PyJWT==2.15.1
 webauthn==2.7.0
