@@ -478,12 +478,16 @@ def delete_category_map(
 
 @router.get("/product-jobs/{id}")
 def product_job(id: int, who=Depends(require("products.read")), db: Session = Depends(database)):
+    from app import bulk_operations
+
     job = db.get(ProductJob, id)
-    kinds = (product_jobs.KIND, product_jobs.PARAM_KIND)
+    kinds = (product_jobs.KIND, product_jobs.PARAM_KIND, *bulk_operations.KINDS)
     if job is None or job.kind not in kinds or job.tenant_id != tenant(who):
         raise HTTPException(404, "A háttérfeladat nem található.")
     if job.kind == product_jobs.PARAM_KIND:
         return product_jobs.parameter_job_dto(job)
+    if job.kind in bulk_operations.KINDS:
+        return bulk_operations.operation_dto(job)
     return product_jobs.job_dto(job)
 
 
@@ -508,3 +512,7 @@ def internal_categories(
 from app.parameter_views import router as parameter_router  # noqa: E402
 
 router.include_router(parameter_router)
+# CATEGORY-03C bulk selection / preview / apply / preparation approval.
+from app.bulk_views import router as bulk_router  # noqa: E402
+
+router.include_router(bulk_router)
