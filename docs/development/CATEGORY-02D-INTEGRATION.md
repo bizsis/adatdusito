@@ -115,3 +115,43 @@ A 50 003-as adatsor izolált tesztfixture, nem egyszeri 50 003-as import. Nincs
 állományszintű 50 000-es korlátozás vagy memóriaigényes teljes termékletöltés.
 MySQL-terhelésmérés, VPS/Nginx/HTTPS telepítési teszt nem történt; ezekre nincs
 engedély ebből a feladatból. A helyi futás nem azonos a GitHub Actions futásával.
+
+## Végleges helyi eredmények
+
+A CI jelenlegi felosztása szerint, az integrációs ág `048b39a` kódján:
+
+| Feladat | Eredmény |
+| --- | --- |
+| Teljes backend + eszközteszt | **389 sikeres**, 0 kihagyott; 295,66 s |
+| Teljes browser job | **81 sikeres**, 0 kihagyott; 539,29 s |
+| Külön menu-export job | **14 sikeres**, 0 kihagyott; 11,11 s |
+| Frontend lint, TypeScript/Vite | Sikeres; Docker buildben Node 22 alatt is |
+| Lintkonfiguráció-tesztek | **3 sikeres** helyben és Node 22 alatt |
+| Függőségellenőrzés | 49 runtime + 4 test-only pin; resolver agrees |
+| npm audit, dev-függőségekkel | **0 sérülékenység** |
+| Backend/frontend Docker build | Mindkettő sikeres |
+| Backend runtime | `pip check`, alkalmazásimport, tesztfájlok kizárása sikeres |
+
+Összesen 484 külön Python-teszt és 3 külön lintteszt; a célzott debugfutásokat
+nem számoljuk hozzá új tesztként. A két meglévő Starlette/httpx/AnyIO deprecation
+figyelmeztetés megmarad. Az új 25 browser-eset a teljes 81-es csomag része.
+
+Mért/ellenőrzött adatmennyiség: **457 választható kategória**, 13 változatlan
+főcsoport; 100+100+100+100+57 kategória/oldal; **50 003 tényleges tárolt termék**,
+25 termék/DOM-oldal, terméklistaválasz <100 000 bájt. Ez nem MySQL-sebességmérés.
+
+A tesztág feltöltve GitHubra. A draft PR létrehozási kísérlete
+`POST https://api.github.com/graphql: Forbidden` (HTTP 403) hibával blokkolt.
+**Távoli GitHub Actions-sikert nem állítunk**: a fenti eredmények a helyi,
+a CI-feladatokat követő futásokból származnak. A #21 által kért fallback:
+
+- [Integrációs ág](https://github.com/bizsis/adatdusito/tree/codex/category-02d-integration)
+- [PR létrehozása](https://github.com/bizsis/adatdusito/pull/new/codex/category-02d-integration)
+- [Kész PR-leírás](CATEGORY-02D-PR.md)
+- Saját integrációs commitok: `74f4c64` (két PR egyesítése a tesztágon),
+  `048b39a` (frontendjavítások és 25 új teszt), majd a végső eredményeket rögzítő
+  dokumentációs commit.
+
+Main-merge és VPS-művelet nem történt. A backend változatlan a PR #18 pontos
+commitjához képest; az új frontendváltozások és tesztek az integrációs ágban vannak,
+a #18/#19 ágát nem írtuk át.
