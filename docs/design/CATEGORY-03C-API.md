@@ -1,7 +1,7 @@
 # CATEGORY-03C – API/DTO-szerződés: tömeges paraméter-előkészítés és előkészítési jóváhagyás
 
 - **Feladat:** [#28](https://github.com/bizsis/adatdusito/issues/28). Alap: CATEGORY-03A (#26, `c05746d`). UX-forrás: `docs/design/CATEGORY-01B-UX.md` S6–S7 (Codex).
-- **Státusz:** szerződés; az implementáció a `claude/category-03c-bulk` ágon készül. Késznek csak az a végpont tekinthető, amelyet a PR „Implementált” listája annak jelöl.
+- **Státusz:** **implementálva és tesztelve** a `claude/category-03c-bulk` ágon. Minden itt leírt végpont működik. Tesztek: `backend/tests/test_bulk_preparation.py`, `test_category03c_migration.py`. MySQL-mérés: a dokumentum végén.
 - **Additív:** a 03A végpontjai és mezői változatlanok. A 03A egyéni `preview`/`apply` és a `parameter-runs` továbbra is működik; a 03C a **kiválasztott halmazra** kötött, tokenes, ellenőrzött tömeges útvonalat adja hozzá.
 - Nincs AI-hívás, kutatás, kredit, fizetés, képkeresés, UNAS-export vagy telepítés. Az előkészítési jóváhagyás **csak** a későbbi kutatás bemenetét rögzíti.
 
@@ -92,6 +92,7 @@ A zárolt helyek egy `eligible` terméken belül sem íródnak: `blocked_locked`
 **Művelet DTO** (előnézet, alkalmazás és előkészítési ellenőrzés közös alakja):
 ```json
 {"id": 77, "kind": "bulk_preview|bulk_apply|preparation_check", "state": "pending|running|completed|cancelled|failed",
+ "stopped_reason": null,
  "stalled": false, "selection_id": 41, "preview_id": null, "expires_at": "…",
  "total": 18234, "processed": 18234, "runs": 1, "run_limit": 50000,
  "outcomes": {"eligible": 15000, "unchanged": 3000, "skipped_pending_review": 20,
@@ -106,7 +107,10 @@ A zárolt helyek egy `eligible` terméken belül sem íródnak: `blocked_locked`
 - `slots`/`new_slots`: a ténylegesen érintett termékek tételes összege (nem becslés). `new_slots.missing` = újonnan létrejövő üres donorhely (a későbbi kutatás célja).
 - `accepted_present`: változatlanul megmaradó, már kitöltött hely.
 - `source_overwrites`: meglévő, nem üres érték másik forrásból történő felülírása. A motor szabálya szerint **mindig 0**; a szerver kiszámolja és közli, hogy a kliens ellenőrizhesse.
-- `processed`/`total` pontos haladás (a `total` ismert, mert a kiválasztás rögzített).
+- `processed`/`total` pontos haladás (a `total` ismert, mert a kiválasztás rögzített). Alkalmazásnál a `total` a még alkalmazandó tételek száma a futás indításakor.
+- Az `outcomes` csak az előforduló kulcsokat tartalmazza; a hiányzó kulcs 0-t jelent.
+- A `runs` a megkezdett feldolgozási futások száma. Futáshatáron a feladat újra sorba áll, és ugyanott folytatódik.
+- Ismételt kérés esetén (azonos idempotenciakulcs és tartalom) a válasz `"replayed": true` mezőt is tartalmaz.
 
 ### `GET /api/v1/workspace/product-jobs/{id}/items` (`products.read`)
 
@@ -140,9 +144,15 @@ Termékenkénti `apply_outcome`:
 | `unchanged` | időközben már nem volt mit alkalmazni |
 | `stale` | a termék revíziója változott az előnézet óta: **kihagyva**, új előnézet kell |
 | `changed_since_preview` | ugyanazon revízió mellett a számított változás eltér (pl. új alias, katalógusváltás): kihagyva |
-| `cancelled` | a futást megszakították, mielőtt ide ért |
-| `permission_revoked` | a létrehozó jogát visszavonták; a futás leállt, a már alkalmazott rész megmarad |
-| `error` | hiba ennél a terméknél; a többi halad |
+| `error` | hiba ennél a terméknél; a többi halad. Új alkalmazási futás újrapróbálja. |
+
+A futás egészére vonatkozó leállást a DTO `stopped_reason` mezője jelzi; a fel nem dolgozott tételek `apply_outcome` értéke üres marad:
+
+| `stopped_reason` | Állapot | Jelentés |
+|---|---|---|
+| `cancelled_by_user` | `cancelled` | megszakították; a már alkalmazott rész megmarad |
+| `permission_revoked` | `cancelled` | a létrehozó elvesztette a `products.parameters` vagy `products.bulk` jogát vagy a tenant-hozzáférését. Ezt minden írási köteg előtt ellenőrizzük. |
+| `catalog_unavailable` | `failed` | nincs aktív katalógus; a futás folytatható, ha helyreáll |
 
 Az alkalmazás számlálói (`outcomes`): `applied`, `unchanged`, `stale`, `changed_since_preview`, `error`, plus a `slots`, `new_slots`, `source_overwrites` (0). Részleges siker = `completed` állapot nem nulla `stale`/`error` értékkel; **nem** „minden mentve”.
 
@@ -242,3 +252,50 @@ Body: `{"expected_version": 1, "reason": "…"}` (az ok kötelező). Állapot `r
 ## Ami nem része ennek a fázisnak
 
 AI-kutatás, kalkuláció, kredit, fizetés, képkeresés, UNAS-export; kategória/donor tömeges módosítása (a 02A kategóriatérkép marad erre); a jóváhagyás nem indít semmit.
+
+## Adatmodell, migráció és visszaállítás
+
+- **0011** (`backend/migrations/versions/0011_bulk_preparation.py`), additív, a 0010 után.
+  - Új táblák:
+    - `product_selections`: a token SHA-256 lenyomata egyedi;
+    - `product_selection_items`: PK (`selection_id`, `product_id`) + revízió;
+    - `product_operation_items`: PK (`job_id`, `product_id`); indexek (`job_id`, `outcome`, `product_id`) és (`apply_job_id`, `apply_outcome`, `product_id`);
+    - `preparation_approvals`: egyedi (`tenant_id`, `idempotency_key`);
+    - `preparation_approval_items`: index (`tenant_id`, `product_id`, `approval_id`).
+  - `product_jobs`: `created_by`, `idempotency_key`, `request_hash`, egyedi (`tenant_id`, `kind`, `idempotency_key`).
+  - Jogok: `products.bulk`, `products.prepare.approve`.
+- A worker a `products.operation` feladatot a `app.product_jobs` modulon keresztül tölti be. `worker.py` módosítás nem kell.
+- Telepítés:
+  1. adatbázis-mentés;
+  2. `docker compose run --rm migrate`;
+  3. `docker compose restart backend worker`.
+- Elakadt futás folytatása: `POST /product-jobs/{id}/resume` vagy `docker compose exec backend python -m app.product_jobs`.
+- **Downgrade:** csak jóváhagyás nélkül fut. Ekkor törli az új táblákat és a tömeges futások sorait (ezek műveleti előzmények). Jóváhagyás esetén `RuntimeError` keletkezik, és a 0011 előtti mentést kell visszaállítani.
+
+## Mérés (MySQL 8.0.46, helyi, eldobható szerver)
+
+`scripts/mysql_category03c_check.py` – csak loopback hoston, üres adatbázison fut. Tilos a VPS-en, közös vagy `pinfo_db` adatbázison futtatni.
+
+```bash
+export APP_DATABASE_URL='mysql+pymysql://root:scratch@127.0.0.1:33306/adatdusito_dev'
+cd backend && PYTHONPATH=. python ../scripts/mysql_category03c_check.py --products 60000
+```
+
+Mért eredmény (2026-11-16): 60 000 besorolt termék, 30 paraméteres donor, futáskorlát 50 000, tehát **2 futás** feladatonként.
+
+| Lépés | Idő | Eredmény |
+|---|---:|---|
+| kiválasztás (teljes szűrt halmaz, kérésen belül) | 1,69 s | 60 000 tétel |
+| tömeges előnézet (háttér, 2 futás) | 145,1 s | 60 000 `eligible`, 1 860 000 új hely, `source_overwrites` 0, írás nincs |
+| tömeges alkalmazás (háttér, 2 futás) | 644,1 s | 60 000 `applied`, `source_overwrites` 0 |
+| ismételt kérés azonos kulccsal | 0,00 s | ugyanaz a futás (`replayed`) |
+| újrapróbálás új kulccsal | 0,10 s | 0 hátralévő tétel |
+| előkészítési ellenőrzés (háttér, 2 futás) | 263,2 s | 40 000 `approvable`, 20 000 `blocked` (`unit_conflict`) |
+| jóváhagyás létrehozása (kérésen belül, 1000-es darabokban) | 2,55 s | 40 000 tétel, 1 040 000 kutatandó hiány |
+| jóváhagyás élő érvényessége | 0,07 s | 40 000 érvényes |
+| újramérés | 0,93 s | – |
+| downgrade-védelem | 0,02 s | megtagadva |
+
+A kérésen belüli lépések (kiválasztás, jóváhagyás) lineárisan nőnek. 250 000 termékes kiválasztásnál ez nagyságrendileg 7–16 s; minden SQL-utasítás rövid (5000/1000 soros darabok). Ezt nem mértük, ezért nem garancia.
+
+Ezek egy gép mérései, nem garanciák.
