@@ -56,7 +56,7 @@ def contract_page(presentation_build):
             return
         state['reads'].append((u.path, q))
         if u.path.endswith('/internal-categories'):
-            result = {'items': [node], 'total': 412, 'offset': int(q.get('offset', ['0'])[0]), 'limit': 100}
+            result = {'items': [node], 'total': 457, 'offset': int(q.get('offset', ['0'])[0]), 'limit': 100}
         elif u.path.endswith('/category-maps'):
             result = {'items': [{'source_category': item['source_category'], 'product_count': 20, 'map': state['map'], 'suggestions': []}], 'next_cursor': None}
         elif u.path.endswith('/products/7'):

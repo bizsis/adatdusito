@@ -1,4 +1,5 @@
 import React, { lazy, Suspense, useEffect, useState, useMemo } from "react";
+import { validateProductEnvelope } from "./classification/validateContract";
 import { Panel } from "./ui";
 import { createCategory02Presentation } from "./classification/category02Api";
 import type { Products, Request } from "./classification/category02Contract";
@@ -79,13 +80,16 @@ function ImportedProductData({
       field_labels: Record<string, string>;
     } | null>(null),
     [item, I] = useState<Product | null>(null),
-    [error, E] = useState("");
+    [error, E] = useState(""),
+    [retry, R] = useState(0);
   useEffect(() => {
     let cancelled = false;
     D(null);
+    E("");
     I(null);
     api<NonNullable<typeof data>>("/workspace/products?cursor=" + cursor)
       .then((r) => {
+        validateProductEnvelope(r);
         if (!cancelled) D(r);
       })
       .catch((e) => {
@@ -94,7 +98,7 @@ function ImportedProductData({
     return () => {
       cancelled = true;
     };
-  }, [api, cursor]);
+  }, [api, cursor, retry]);
   if (data && "status_counts" in data)
     return (
       <BoundClassification
@@ -114,6 +118,7 @@ function ImportedProductData({
         {error && (
           <p className="error" role="alert">
             {error}
+            <button onClick={() => R(retry + 1)}>Újrapróbálás</button>
           </p>
         )}
         <div className="table-wrap">

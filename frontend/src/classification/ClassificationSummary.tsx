@@ -49,6 +49,11 @@ export function ClassificationSummary({ product }: { product: ProductCard }) {
       <details>
         <summary>Belső paraméterforrás</summary>
         <p>{product.donorText || "Nincs ellenőrzött paraméterdonor."}</p>
+        <p>
+          A kategóriabesorolás nem jelenti a donorprofil vagy a későbbi
+          automatikus dúsítás jóváhagyását. A kétes paraméterforrások külön
+          felülvizsgálatot igényelnek.
+        </p>
       </details>
     </div>
   );

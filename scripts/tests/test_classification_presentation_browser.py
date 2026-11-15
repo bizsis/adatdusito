@@ -96,7 +96,7 @@ def presentation_page(presentation_build):
         elif operation == "choices":
             options = [tv, monitor] if body["parent"] else [group, tv, monitor]
             options = [c for c in options if body["search"].casefold() in c["title"].casefold()]
-            result = {"items": options, "next": None, "total": 412}
+            result = {"items": options, "next": None, "total": 457}
         elif operation == "selection":
             result = {"handle": "test-filter-snapshot", "count": 125000}
         elif operation == "preview":

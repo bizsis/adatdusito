@@ -119,7 +119,8 @@ export function ClassificationEditor({
       <p className="notice">
         A belső besorolás és paraméterdonor kiválasztása nem módosítja az
         eredeti saját kategóriát vagy értékeket. A mentett kézi döntés védelmét
-        a szerver biztosítja.
+        a szerver biztosítja. A kategória kiválasztása nem jelenti a donorprofil
+        vagy a későbbi automatikus dúsítás jóváhagyását.
       </p>
       {ports.resetSupported && (
         <label>
@@ -195,6 +196,7 @@ export function ClassificationEditor({
       <label>
         Módosítás indoka
         <textarea
+          maxLength={500}
           value={reason}
           disabled={busy}
           onChange={(e) => {
@@ -224,6 +226,9 @@ export function ClassificationEditor({
         </label>
       )}
       {error && <p role="alert">{error}</p>}
+      {error && !conflict && (
+        <button onClick={onRefresh}>Friss adatok betöltése</button>
+      )}
       {conflict && (
         <div className="notice">
           <p>

@@ -33,7 +33,7 @@ export type ProductItem = {
   classification: {
     status: "auto_classified" | "needs_review";
     origin: string;
-    method: string;
+    method: string | null;
     reason_codes: string[];
     navigation_node_id: string | null;
     navigation_path: string[] | null;
@@ -47,7 +47,7 @@ export type ProductItem = {
       score: number | null;
     }[];
     locked: boolean;
-    rule_version: string;
+    rule_version: string | null;
     decided_by: number | null;
     decided_at: string | null;
   };
@@ -86,7 +86,7 @@ export type CategoryMap = {
     navigation_path: string[] | null;
     donor_emag_category_id: number | null;
     revision: number;
-    reason: string;
+    reason: string | null;
     decided_by: number | null;
     decided_at: string | null;
   };

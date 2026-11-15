@@ -1,3 +1,10 @@
+import {
+  validateProducts,
+  validateDetail,
+  validateMaps,
+  validateInternalPage,
+  validateMapWrite,
+} from "./validateContract";
 import { ApiHttpError } from "../apiResponse";
 import type {
   CategoryMap,
@@ -81,7 +88,7 @@ function product(
       .map((a) => choice(a.navigation_node_id, a.path)),
     origin: origins[c.origin] || c.origin,
     protectedEdit: c.locked,
-    auditText: `Revízió: ${item.revision} · Szabály: ${c.rule_version} · Döntés: ${c.decided_at || "–"} · Döntéshozó: ${c.decided_by ?? "rendszer"}`,
+    auditText: `Revízió: ${item.revision} · Szabály: ${c.rule_version || "Még nincs"} · Döntés: ${c.decided_at || "–"} · Döntéshozó: ${c.decided_by ?? "rendszer"}`,
     donorText: c.donor_name
       ? `${c.donor_name} (${c.donor_emag_category_id})`
       : "Nincs kiválasztott paraméterprofil",
@@ -151,6 +158,7 @@ export function createCategory02Presentation(
       undefined,
       signal,
     );
+    validateInternalPage(result);
     result.items.forEach((n) => nodes.set(n.navigation_node_id, n));
     return {
       items: result.items.map((n) =>
@@ -208,6 +216,7 @@ export function createCategory02Presentation(
                 undefined,
                 signal,
               );
+        validateProducts(result);
         bootstrap = null;
         labels = result.field_labels;
         const counts = result.status_counts;
@@ -237,6 +246,7 @@ export function createCategory02Presentation(
           undefined,
           signal,
         );
+        validateDetail(d);
         const card = product(d, labels, d);
         // Resolve only the selected detail's alternatives, never every product in a page.
         for (const alt of card.alternatives) {
@@ -263,6 +273,7 @@ export function createCategory02Presentation(
           undefined,
           signal,
         );
+        validateMaps(result);
         return {
           items: result.items.map(mapping),
           next: result.next_cursor === null ? null : String(result.next_cursor),
@@ -284,6 +295,7 @@ export function createCategory02Presentation(
                 undefined,
                 signal,
               );
+              validateDetail(fresh);
               if (!fresh.capabilities.classify)
                 throw new Error("Nincs jogosultság a besorolás módosításához.");
               if (fresh.revision !== old.revision)
@@ -365,7 +377,7 @@ export function createCategory02Presentation(
               const donor = intent.donorKey ? Number(intent.donorKey) : null;
               if (intent.target.kind === "product") {
                 const old = intent.target.context as ProductItem;
-                await api<ProductDetail>(
+                const saved = await api<ProductDetail>(
                   `/workspace/products/${old.id}/classification`,
                   "PATCH",
                   {
@@ -381,6 +393,7 @@ export function createCategory02Presentation(
                   },
                   signal,
                 );
+                validateDetail(saved);
                 return intent.action === "reset"
                   ? "A kézi védelem feloldva, az automatikus besorolás frissült."
                   : "A kézi besorolás mentve és zárolva.";
@@ -410,7 +423,8 @@ export function createCategory02Presentation(
                     },
                 signal,
               );
-              return `Kategóriatérkép mentve. Újrabesorolt termékek: ${result.products_changed.toLocaleString("hu-HU")}; védett, kihagyott: ${result.locked_skipped.toLocaleString("hu-HU")}.`;
+              validateMapWrite(result);
+              return `${intent.action === "reset" ? "Kategóriatérkép törölve" : intent.action === "reject" ? "Kategóriatérkép elutasítva" : "Kategóriatérkép mentve"}. Újrabesorolt termékek: ${result.products_changed.toLocaleString("hu-HU")}; védett, kihagyott: ${result.locked_skipped.toLocaleString("hu-HU")}.`;
             })
         : undefined,
     },

@@ -228,6 +228,9 @@ function Workspace({ ports, access }: ClassificationPresentation) {
         </div>
         {message && <p role="status">{message}</p>}
         {error && <p role="alert">{error}</p>}
+        {(page.error || mappings.error || detail.error) && (
+          <button onClick={refresh}>Adatok újratöltése</button>
+        )}
         {tab === "products" ? (
           <>
             <div className="filters">
