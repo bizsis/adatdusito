@@ -507,3 +507,69 @@ def test_search_text_follows_reimport_and_backfill(imports):
     with Session(t) as db:
         assert backfill(db)["search_text_filled"] == 5
     assert skus(products(c, q="okos")) == ["00012"]
+
+
+# --- CATEGORY-02C: donors awaiting review never feed automatic enrichment ----
+
+WASHER_DRYER = "web-item-114-3492"  # Mosó-szárítógépek -> 385 Mosógépek (pending_review)
+PENDING_NODES = {"web-item-114-3492": 385, "web-item-114-3820": 58, "web-item-83-4339": 63}
+
+
+def test_pending_review_donors_are_marked_and_never_defaulted():
+    cats = pc.internal_categories()
+    for node, donor in PENDING_NODES.items():
+        assert [(d["emag_category_id"], d["review_state"]) for d in cats[node]["donors"]] == [
+            (donor, "pending_review")
+        ]
+        assert pc.default_donor(node) is None
+        assert pc.parameter_profile_state(node, None) == "pending_review"
+        assert pc.parameter_profile_state(node, donor) == "pending_review"
+    # The same donor stays reviewed for its other, verified nodes.
+    assert pc.default_donor(WASHER) == 385
+    assert pc.parameter_profile_state(WASHER, 385) == "ready"
+    # Multi-profile nodes always require an explicit choice before enrichment.
+    multi = multi_donor_node()
+    assert pc.default_donor(multi) is None
+    assert pc.parameter_profile_state(multi, None) == "choice_required"
+    first = pc.internal_categories()[multi]["donors"][0]["emag_category_id"]
+    assert pc.parameter_profile_state(multi, first) == "ready"
+    pending = {(k, d["emag_category_id"]) for k, n in cats.items() for d in n["donors"]
+               if d["review_state"] != "reviewed"}
+    assert pending == set(PENDING_NODES.items())
+
+
+def test_category_map_to_pending_donor_node_classifies_but_keeps_enrichment_closed(imports):
+    c, t, s = imports
+    run(c, t, s, csv(["001", "A", "Gépek/MosóSzárító", "", "", ""]))
+    sc = c.get("/api/v1/workspace/category-maps").json()["items"][0]["source_category"]["id"]
+    r = c.put(f"/api/v1/workspace/category-maps/{sc}",
+              json={"expected_revision": None, "state": "approved", "navigation_node_id": WASHER_DRYER})
+    assert r.status_code == 200, r.text
+    m = r.json()["map"]
+    assert m["donor_emag_category_id"] is None and m["parameter_profile_state"] == "pending_review"
+    cls = products(c)["items"][0]["classification"]
+    # The category decision itself (CATEGORY-02A) is unchanged ...
+    assert cls["status"] == "auto_classified" and cls["navigation_node_id"] == WASHER_DRYER
+    # ... but no donor is stored automatically and the enrichment gate is closed.
+    assert cls["donor_emag_category_id"] is None
+    assert cls["parameter_profile_state"] == "pending_review"
+    assert "parameter_profile_pending_review" in cls["reason_codes"]
+
+
+def test_explicit_manual_pending_donor_is_stored_but_gate_stays_closed(imports):
+    c, t, s = imports
+    run(c, t, s, csv(["001", "A", "Valami", "", "", ""]))
+    pid = first_id(c)
+    rev = detail(c, pid)["revision"]
+    r = patch(c, pid, expected_revision=rev, action="set", navigation_node_id=WASHER_DRYER,
+              donor_emag_category_id=385)
+    assert r.status_code == 200, r.text
+    cls = r.json()["classification"]
+    assert cls["donor_emag_category_id"] == 385 and cls["locked"]
+    assert cls["parameter_profile_state"] == "pending_review"
+    assert cls["reason_codes"] == ["manual_decision", "parameter_profile_pending_review"]
+    # A reviewed single donor is ready.
+    r = patch(c, pid, expected_revision=r.json()["revision"], action="set", navigation_node_id=WASHER)
+    cls = r.json()["classification"]
+    assert (cls["donor_emag_category_id"], cls["parameter_profile_state"]) == (385, "ready")
+    assert cls["reason_codes"] == ["manual_decision"]

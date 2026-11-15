@@ -70,6 +70,7 @@
 | `category_map_rejected` | a kategóriatérképet elutasították |
 | `category_map_target_unavailable` | a térkép célkategóriája már nem érhető el |
 | `parameter_profile_choice_required` | a belső kategóriának több donorprofilja van, választani kell |
+| `parameter_profile_pending_review` | a donorprofil ellenőrzésre vár (CATEGORY-02C); automatikusan nem rendelődik hozzá, paraméterdúsításra nem használható |
 | `calibrated_rule` | kalibrált szabály döntött |
 | `not_classified_yet` | még nincs besorolás |
 
@@ -141,6 +142,7 @@ A `status_counts` a többi szűrőt figyelembe veszi, a `status` szűrőt nem, �
     "navigation_node_id": "web-item-114-3490",
     "navigation_path": ["Háztartási gépek és klíma", "Mosógépek és szárítógépek", "Elöltöltős mosógépek"],
     "donor_emag_category_id": 385, "donor_name": "Mosógépek", "donor_choices": [],
+    "parameter_profile_state": "ready",
     "confidence": null, "alternatives": [], "locked": false,
     "rule_version": "category-02a.1", "decided_by": null, "decided_at": "2026-11-15T19:00:00"
   },
@@ -149,7 +151,17 @@ A `status_counts` a többi szűrőt figyelembe veszi, a `status` szűrőt nem, �
 ```
 - A `source_category` értéke `null`, ha a terméknek nincs saját kategóriája.
 - Az `alternatives[]` legfeljebb 3 elemű: `{"navigation_node_id", "path": [...], "score": null}`.
-- A `donor_choices[]` csak többprofilos belső kategóriánál nem üres: `{"emag_category_id", "name"}`.
+- A `donor_choices[]` csak többprofilos belső kategóriánál nem üres: `{"emag_category_id", "name", "review_state"}`.
+- `parameter_profile_state` (CATEGORY-02C, új mező) – a paraméterdúsítási kapu állapota:
+
+  | Érték | Jelentés |
+  |---|---|
+  | `ready` | a donor ki van választva, a kategóriához tartozik és ellenőrzött; **csak ez** használható (jövőbeli) automatikus paraméterdúsításra |
+  | `choice_required` | többprofilos kategória, nincs kifejezett profilválasztás |
+  | `pending_review` | a donor ellenőrzésre vár (`backend/reference_data/donor_review.json`); kézi választással tárolható, de a kapu zárva marad |
+  | `none` | nincs belső kategória vagy nincs donor |
+
+  A `review_state` értéke donoronként `reviewed` vagy `pending_review`. Ellenőrzésre váró donort automatikus döntés (kategóriatérkép, kalibrált szabály) soha nem tárol; a besorolás maga változatlan.
 
 ### `GET /api/v1/workspace/products/{id}`
 
@@ -220,7 +232,7 @@ Törli a térképet, és újra besorolja a nem zárolt termékeket. Elavult rev�
 
 Választólista a belső besoroláshoz.
 - Paraméterek: `q` (ékezet-független részszöveg az útvonalban), `offset`, `limit` (≤ 100).
-- Válasz: `{"items": [{"navigation_node_id", "name", "path": [...], "donors": [{"emag_category_id", "name"}]}], "total", "offset", "limit", "rule_version"}`
+- Válasz: `{"items": [{"navigation_node_id", "name", "path": [...], "donors": [{"emag_category_id", "name", "review_state"}]}], "total", "offset", "limit", "rule_version"}`
 
 ### `GET` / `PUT /api/v1/system/settings/classification`
 

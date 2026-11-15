@@ -53,6 +53,7 @@ def classification_dto(c):
             "donor_emag_category_id": None,
             "donor_name": None,
             "donor_choices": [],
+            "parameter_profile_state": "none",
             "confidence": None,
             "alternatives": [],
             "locked": False,
@@ -76,6 +77,9 @@ def classification_dto(c):
             None,
         ),
         "donor_choices": donors if len(donors) > 1 else [],
+        "parameter_profile_state": pc.parameter_profile_state(
+            c.navigation_node_id, c.donor_emag_category_id
+        ),
         "confidence": float(c.confidence) if c.confidence is not None else None,
         "alternatives": c.alternatives or [],
         "locked": c.locked,
@@ -256,9 +260,7 @@ def set_classification(
         current.origin = "manual"
         current.method = "manual"
         current.rule_version = pc.RULE_VERSION
-        current.reason_codes = ["manual_decision"]
-        if donor is None and len(pc.internal_category(body.navigation_node_id)["donors"]) > 1:
-            current.reason_codes = ["manual_decision", "parameter_profile_choice_required"]
+        current.reason_codes = ["manual_decision", *pc.donor_reasons(body.navigation_node_id, donor)]
         current.navigation_node_id = body.navigation_node_id
         current.donor_emag_category_id = donor
         current.confidence = None
@@ -304,6 +306,9 @@ def map_dto(m):
         "navigation_node_id": m.navigation_node_id,
         "navigation_path": node["path"] if node else None,
         "donor_emag_category_id": m.donor_emag_category_id,
+        "parameter_profile_state": pc.parameter_profile_state(
+            m.navigation_node_id, m.donor_emag_category_id
+        ) if m.state == "approved" else "none",
         "revision": m.revision,
         "reason": m.reason,
         "decided_by": m.decided_by,

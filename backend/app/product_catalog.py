@@ -14,9 +14,11 @@ Principles (issue #16):
 """
 
 import hashlib
+import json
 import re
 import unicodedata
 from functools import lru_cache
+from pathlib import Path
 
 from fastapi import HTTPException
 from sqlalchemy import select, update
@@ -38,6 +40,7 @@ STATUS_LABELS = {AUTO: "Automatikusan besorolt", REVIEW: "Ellenőrzést igényel
 # against a labelled gold set is reviewed; uncalibrated methods never auto-apply.
 CALIBRATED_PRECISION: dict[str, float] = {}
 DEFAULT_AUTO_THRESHOLD = 0.98
+PENDING = "pending_review"
 RUN_PRODUCT_LIMIT = 50_000
 SEPARATORS = re.compile(r"\s*(?:>|»|/|\||\\)\s*")
 UNIT = re.compile(r"^(?P<label>.*?)\s*[\(\[]\s*(?P<unit>[^()\[\]]{1,24}?)\s*[\)\]]\s*$")
@@ -63,6 +66,7 @@ def internal_categories():
         }
     )
     rules = {r["node_id"]: r for r in reviewed_bindings()["rules"]}
+    review = donor_review()
     result = {}
     for key, node in fixed.items():
         if node["kind"] != "category" or node.get("structural_only"):
@@ -73,11 +77,62 @@ def internal_categories():
             "path": [fixed[p]["name"] for p in nav.path(key)],
             "path_ids": nav.path(key),
             "donors": [
-                {"emag_category_id": d["emag_category_id"], "name": d["expected_name"]}
+                {
+                    "emag_category_id": d["emag_category_id"],
+                    "name": d["expected_name"],
+                    "review_state": review.get((key, d["emag_category_id"]), "reviewed"),
+                }
                 for d in rules.get(key, {}).get("donors", [])
             ],
         }
+    unknown = set(review) - {(k, d["emag_category_id"]) for k, n in result.items() for d in n["donors"]}
+    if unknown:
+        raise ValueError(f"donor_review.json names donors outside the bindable tree: {sorted(unknown)}")
     return result
+
+
+@lru_cache(maxsize=1)
+def donor_review():
+    """CATEGORY-02C: donors whose parameter scope still awaits human approval."""
+    path = Path(__file__).resolve().parents[1] / "reference_data/donor_review.json"
+    data = json.loads(path.read_text(encoding="utf-8"))
+    states = set(data["states"])
+    result = {}
+    for entry in data["entries"]:
+        if entry["state"] not in states:
+            raise ValueError(f"Unknown donor review state: {entry['state']}")
+        result[(entry["node_id"], entry["emag_category_id"])] = entry["state"]
+    return result
+
+
+def donor_state(node_id, donor):
+    node = internal_category(node_id)
+    for d in node["donors"] if node else []:
+        if d["emag_category_id"] == donor:
+            return d["review_state"]
+    return None
+
+
+def parameter_profile_state(node_id, donor):
+    """Gate for any (future) automatic parameter enrichment of one product.
+
+    ready          -> the donor is chosen, belongs to the node and is reviewed
+    choice_required-> several profiles, none chosen explicitly
+    pending_review -> the donor (or the node's only donor) awaits approval
+    none           -> no classification target or no donor at all
+    Only "ready" may ever feed automatic parameter enrichment.
+    """
+    node = internal_category(node_id)
+    if node is None or not node["donors"]:
+        return "none"
+    if donor is None:
+        if len(node["donors"]) > 1:
+            return "choice_required"
+        return "pending_review" if node["donors"][0]["review_state"] == PENDING else "none"
+    state = donor_state(node_id, donor)
+    if state is None:
+        return "none"
+    return "ready" if state == "reviewed" else "pending_review"
 
 
 def internal_category(node_id):
@@ -85,10 +140,20 @@ def internal_category(node_id):
 
 
 def default_donor(node_id):
+    """The donor an automatic decision may store: the only, reviewed one."""
     node = internal_category(node_id)
-    if node and len(node["donors"]) == 1:
+    if node and len(node["donors"]) == 1 and node["donors"][0]["review_state"] != PENDING:
         return node["donors"][0]["emag_category_id"]
     return None
+
+
+def donor_reasons(node_id, donor):
+    state = parameter_profile_state(node_id, donor)
+    if state == "choice_required":
+        return ["parameter_profile_choice_required"]
+    if state == "pending_review":
+        return ["parameter_profile_pending_review"]
+    return []
 
 
 def validate_target(node_id, donor):
@@ -285,8 +350,7 @@ def decide(db, product, maps, threshold, source_text):
                         navigation_node_id=None, donor_emag_category_id=None,
                         reason_codes=reasons, alternatives=[], confidence=None,
                         map_revision=category_map.revision)
-        if donor is None and len(node["donors"]) > 1:
-            reasons.append("parameter_profile_choice_required")
+        reasons += donor_reasons(category_map.navigation_node_id, donor)
         return dict(status=AUTO, origin="category_map", method="category_map",
                     navigation_node_id=category_map.navigation_node_id,
                     donor_emag_category_id=donor, reason_codes=reasons,
@@ -307,7 +371,7 @@ def decide(db, product, maps, threshold, source_text):
         key = candidates[0]
         return dict(status=AUTO, origin="suggestion", method="exact_name_match",
                     navigation_node_id=key, donor_emag_category_id=default_donor(key),
-                    reason_codes=["calibrated_rule"],
+                    reason_codes=["calibrated_rule", *donor_reasons(key, default_donor(key))],
                     alternatives=[alternative(k) for k in candidates[:3]],
                     confidence=CALIBRATED_PRECISION["exact_name_match"], map_revision=None)
     else:

@@ -1,0 +1,42 @@
+{
+  "format": "adatdusito.donor-review.v1",
+  "version": 1,
+  "issue": "CATEGORY-02C (#20)",
+  "policy": "A pending_review jelölésű donor a kategória-besorolást nem változtatja meg, de automatikusan soha nem rendelődik termékhez, és paraméterdúsításra nem használható, amíg a Tulajdonos/Vezér jóvá nem hagyja. Kézi, kifejezett donorválasztás tárolható, a dúsítási kapu ekkor is zárva marad.",
+  "states": {
+    "reviewed": "Ellenőrzött donor (alapértelmezés minden, itt nem szereplő donorra).",
+    "pending_review": "Bizonyíték hiányzik arra, hogy a donor paraméterkészlete leírja a termékkört; automatikus donorválasztás és paraméterdúsítás tiltott."
+  },
+  "entries": [
+    {
+      "node_id": "web-item-114-3492",
+      "path": ["Háztartási gépek és klíma", "Mosógépek és szárítógépek", "Mosó-szárítógépek"],
+      "emag_category_id": 385,
+      "donor_name": "Mosógépek",
+      "state": "pending_review",
+      "reason_code": "donor_scope_narrower_than_product",
+      "evidence": "A referenciaexportban nincs külön mosó-szárítógép kategória. A donor (385, 45 paraméter) a mosógép-termékkör; a szárítási funkció paramétereit (pl. szárítási kapacitás, szárítási program) a meglévő bizonyíték nem igazolja. A külön Szárítógépek (673, 31 paraméter) profil nincs a szabályban.",
+      "open_question": "Elég-e a 385-ös profil, kell-e mellé a 673-as Szárítógépek külön választható profilként, vagy maradjon donor nélkül?"
+    },
+    {
+      "node_id": "web-item-114-3820",
+      "path": ["Háztartási gépek és klíma", "Porszívók és vasalók", "Robotporszívók"],
+      "emag_category_id": 58,
+      "donor_name": "Porszívók",
+      "state": "pending_review",
+      "reason_code": "donor_scope_narrower_than_product",
+      "evidence": "A referenciaexportban nincs külön robotporszívó kategória. A donor (58, 27 paraméter) a hagyományos porszívó-termékkör; a robot-specifikus jellemzők (navigáció, akkumulátor-üzemidő, dokkoló, felmosás) lefedettsége nem igazolt.",
+      "open_question": "Jóváhagyható-e az 58-as Porszívók profil robotporszívókra, vagy más donor/donor nélküli állapot kell?"
+    },
+    {
+      "node_id": "web-item-83-4339",
+      "path": ["Szépségápolás", "Szépségápolási készülékek", "IPL tartós szőrtelenítők"],
+      "emag_category_id": 63,
+      "donor_name": "Epilátorok",
+      "state": "pending_review",
+      "reason_code": "donor_technology_differs",
+      "evidence": "A referenciaexportban nincs külön IPL kategória. A donor (63, 26 paraméter) mechanikus epilátorok termékköre; az IPL-készülékek (fényimpulzus, villanásszám, bőrtónus-érzékelő) eltérő technológiájúak, a paraméterek alkalmazhatósága nem igazolt.",
+      "open_question": "Jóváhagyható-e a 63-as Epilátorok profil IPL-készülékekre?"
+    }
+  ]
+}
