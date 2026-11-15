@@ -10,6 +10,8 @@ on:
     paths:
       - backend/requirements.lock
       - backend/requirements.txt
+      - backend/requirements-test.in
+      - backend/requirements-test.lock
       - scripts/browser-requirements.txt
       - frontend/package.json
       - frontend/package-lock.json
@@ -55,6 +57,9 @@ jobs:
           mkdir -p reports
           pip-audit -r backend/requirements.lock --no-deps --disable-pip \
             -f json -o reports/pip-backend.json || test $? -eq 1
+          # Test-only additions (never in images): reported as dev-only.
+          pip-audit -r backend/requirements-test.lock --no-deps --disable-pip \
+            -f json -o reports/pip-backend-test.json || test $? -eq 1
           pip-audit -r scripts/browser-requirements.txt \
             -f json -o reports/pip-browser-tests.json || test $? -eq 1
       - name: Audit npm dependencies
@@ -70,6 +75,7 @@ jobs:
           if [ "$FAIL_ON_ACTIONABLE" = "true" ]; then args+=(--fail-on-actionable); fi
           python .github/scripts/ci_report.py audit --summary "${args[@]}" \
             --pip backend=reports/pip-backend.json \
+            --pip backend-test=reports/pip-backend-test.json \
             --pip browser-tests=reports/pip-browser-tests.json \
             --npm-runtime reports/npm-runtime.json --npm-all reports/npm-all.json \
             | tee reports/dependency-report.md

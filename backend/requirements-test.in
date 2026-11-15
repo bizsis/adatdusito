@@ -1,0 +1,5 @@
+# Test-only dependencies (CI and local test runs; never installed in images).
+# Resolved against requirements.lock by scripts/compile-requirements.sh into
+# requirements-test.lock, which lists only the packages not already in the
+# runtime lock. Install both: pip install --no-deps -r requirements.lock -r requirements-test.lock
+pytest==9.0.3

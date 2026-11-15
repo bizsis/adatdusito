@@ -7,7 +7,7 @@ Subcommands:
          dependency vulnerabilities, classified as
            actionable  runtime dependency with a fixed version available
            runtime-nofix  runtime dependency, no fix published yet (assess/monitor)
-           dev-only    test/build tooling not shipped on the request path
+           dev-only    test/build tooling not shipped in the images
   eslint REPORT.json                   ESLint rule counts (advisory)
 
 The report is printed to stdout; with --summary it is also appended to
@@ -24,9 +24,12 @@ import sys
 import xml.etree.ElementTree as ET
 from pathlib import Path
 
-# Python packages in backend/requirements.lock that only the test suite uses.
-# They still ship in the backend image, but are not reachable from requests.
-PYTHON_TEST_ONLY = {"pytest", "iniconfig", "pluggy", "pygments", "playwright", "pyee"}
+# Only the "backend" pip report is runtime: since SECURITY-02 it is audited from
+# backend/requirements.lock, which holds exactly what the images install. Every
+# other pip report (backend-test, browser-tests) is test tooling. No package is
+# reclassified by name, so a test tool that slips into the runtime lock is
+# reported as runtime, never hidden.
+RUNTIME_PIP_LABELS = {"backend"}
 
 
 def norm(name):
@@ -101,7 +104,7 @@ def pip_findings(label, path):
                 "id": vuln["id"],
                 "aliases": sorted(a for a in vuln.get("aliases", []) if a.startswith(("CVE", "GHSA"))),
                 "fix": vuln.get("fix_versions") or [],
-                "dev": norm(dependency["name"]) in PYTHON_TEST_ONLY or label != "backend",
+                "dev": label not in RUNTIME_PIP_LABELS,
             }
     return list(found.values())
 

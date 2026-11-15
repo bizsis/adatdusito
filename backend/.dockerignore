@@ -1,3 +1,9 @@
 .venv
 __pycache__
 .pytest_cache
+# Test code and test-only dependency files are not part of the runtime image.
+tests
+requirements-test.in
+requirements-test.lock
+scripts/compile-requirements.sh
+scripts/check_requirements.py
