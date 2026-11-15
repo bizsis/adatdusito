@@ -1,4 +1,4 @@
-/** CATEGORY-02A contract, PR #18 / 9017dd0. No tenant identifiers are sent. */
+/** CATEGORY-02A contract, PR #18 / 8c5db11. No tenant identifiers are sent. */
 export type Request = <T>(
   path: string,
   method?: string,

@@ -6,16 +6,19 @@ Feladat: [#17](https://github.com/bizsis/adatdusito/issues/17). Ág:
 ## Szerződés és függőség
 
 A produkciós adapter a [PR #18](https://github.com/bizsis/adatdusito/pull/18)
-`9017dd0abf5b701265dd232314674095baed9775` commitjában publikált
+`8c5db11c091668188ea4ddcd6e1195ea8cc29af2` commitjában publikált
 `docs/design/CATEGORY-02A-API.md` és az ottani implementáció alapján készült.
 Ez a frontend PR nem tartalmazza Claude backendváltoztatásait. A backend előtti
 telepítésnél a régi, additív mezők nélküli terméklista továbbra is működik;
 a besorolási nézet az új `status_counts` válaszmezővel kapcsol be, üres listánál is.
 
 A [koordinációs döntés](https://github.com/bizsis/adatdusito/issues/17#issuecomment-6900517240)
-szerint nincs új általános bulk/preview API ebben a körben. A terméknév/SKU/EAN
-kereső Claude dokumentált és megvalósított `q` kiegészítésére vár; addig nincs
-aktív, működést színlelő kereső. A kategóriatérképekhez sincs szöveges keresési
+szerint nincs új általános bulk/preview API ebben a körben. Claude `8c5db11`
+kiegészítése már dokumentálja és megvalósítja a `GET /workspace/products?q=...`
+név/SKU/EAN (GTIN) keresést; a frontend ezt aktiválja, 120 karakteres mezővel,
+300 ms késleltetéssel és keresésváltáskor törölt kurzorral. A keresés szűrőkkel és
+lapozással együtt szerveroldali, nincs kliensoldali teljesállomány-szűrés.
+A kategóriatérképekhez sincs szöveges keresési
 paraméter a jelenlegi szerződésben, ezért ott csak a lapozás aktív.
 
 ## Elkészült
@@ -61,7 +64,6 @@ paraméter a jelenlegi szerződésben, ezért ott csak a lapozás aktív.
 
 ## Tudatosan nem aktív / külön fázis
 
-- Terméknév/SKU/EAN kereső: a PR #18 `q` kiegészítésére vár.
 - Tetszőleges termékhalmaz és összes szűrt találat tömeges írása: nincs API;
   produkcióban nincs aktív vezérlő. A kategóriatérkép szerveres újrabesorolása működik.
 - Teljes termékállományra érvényes szerveroldali előnézet és paraméter-diff:
@@ -79,7 +81,7 @@ A tesztadapter URL-jei és szintetikus sikerválaszai nem kerülnek az éles bun
 - `test_classification_presentation_browser.py`: 16 izolált UI-regresszió;
   két státusz, mobil/asztal, callback-szűrés, lapozás, előnézet, 409, csak olvasás,
   késői tenantválasz, callback nélküli írás tiltása, alternatívák, mock küszöb.
-- `test_classification_contract_browser.py`: 7 böngészőteszt a publikált wire DTO-val;
+- `test_classification_contract_browser.py`: 8 böngészőteszt a publikált wire DTO-val;
   valódi produkciós adapter, exact PATCH/revízió/donor payload, 409, capability,
   helyi előnézet és térképválasz pontos darabszámai. Ez HTTP-mock, nem backendbizonyíték.
 - `test_classification_api_integration_browser.py`: 2 reszponzív teszt **valódi
@@ -111,13 +113,19 @@ Backend, migráció, függőséglock, `.env`, Docker Compose/external hálózat 
 VPS-konfiguráció nem változik. A teszteket a meglévő CI fájlmintái felveszik.
 Kiadás: PR #18 backendje és 0009 migrációja szükséges az új funkciókhoz; ehhez a
 frontendhez nincs saját migráció. Visszaállítás: a frontend PR visszavonható, a
-backend additív válasza a korábbi terméklista mezőit is megőrzi.
+backend additív válasza a korábbi terméklista mezőit is megőrzi. A régi termékek
+kereshetőségéhez a PR #18 saját `product_backfill` előkészítése szükséges; ezt a
+frontend nem indítja el és nem helyettesíti. MySQL-terhelésmérés nem történt.
 
 ## Helyi ellenőrzési eredmények
 
 - Frontendág backend/eszközteszt-csomag: **364 sikeres**.
-- PR #18 `9017dd0` + frontend izolált backend/eszközteszt-csomag: **383 sikeres**.
-- Produkciós API-adapter HTTP-mock böngészőtesztek: **7 sikeres**.
+- Teljes böngészős/eszközregresszió a keresés előtti állapoton: **66 sikeres,
+  2 kihagyott** (a két valódi API-esethez még hiányzó backend); azóta a kibővített
+  keresős adaptercsomag külön újrafuttatva.
+- PR #18 `9017dd0` + frontend izolált backend/eszközteszt-csomag: **383 sikeres**;
+  a keresési kiegészítés (`8c5db11`) teljes újrafuttatásának eredménye külön rögzítendő.
+- Produkciós API-adapter HTTP-mock böngészőtesztek: **8 sikeres**.
 - Valódi API-integráció: **2 sikeres**, 390 és 1440 px; friss teljes eredmény
   a PR átadásakor. A sima frontendágon a backendfüggőség miatt kifejezetten skip.
 - ESLint, TypeScript és Vite build; lintszabályok **3 sikeres** tesztje.

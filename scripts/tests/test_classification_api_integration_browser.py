@@ -5,7 +5,7 @@ Fixture databases are isolated SQLite. Never contacts a VPS or reference server.
 import importlib.util
 import mimetypes
 from pathlib import Path
-from urllib.parse import urlparse
+from urllib.parse import parse_qs, urlparse
 import pytest
 from playwright.sync_api import expect, sync_playwright
 
@@ -18,7 +18,7 @@ extra_reference_categories = _fixtures.extra_reference_categories
 extra_reference_parameters = _fixtures.extra_reference_parameters
 extra_reference_values = _fixtures.extra_reference_values
 environment = _fixtures.environment
-pytestmark = pytest.mark.skipif(importlib.util.find_spec('app.product_catalog') is None, reason='Requires CATEGORY-02A backend PR #18 (9017dd0); no invented fallback API.')
+pytestmark = pytest.mark.skipif(importlib.util.find_spec('app.product_catalog') is None, reason='Requires CATEGORY-02A backend PR #18 (8c5db11); no invented fallback API.')
 
 
 def import_rows(client, engine, supplier):
@@ -68,6 +68,13 @@ def test_real_api_manual_map_inheritance_lock_and_settings(environment, monkeypa
         page.route('http://category-api.test/**', route)
         page.goto('http://category-api.test/')
         page.get_by_role('navigation').get_by_role('button', name='Termékadatok', exact=True).click()
+        with page.expect_response(lambda r: urlparse(r.url).path.endswith('/workspace/products') and parse_qs(urlparse(r.url).query).get('q') == ['Alpha']):
+            page.get_by_label('Termék keresése', exact=True).fill('Alpha')
+        expect(page.get_by_role('button', name='Mosógép Beta részletei', exact=True)).to_have_count(0)
+        expect(page.get_by_role('button', name='Mosógép Alpha részletei', exact=True)).to_be_visible()
+        with page.expect_response(lambda r: urlparse(r.url).path.endswith('/workspace/products') and 'q' not in parse_qs(urlparse(r.url).query)):
+            page.get_by_label('Termék keresése', exact=True).fill('')
+        expect(page.get_by_role('button', name='Mosógép Beta részletei', exact=True)).to_be_visible()
         page.get_by_role('button', name='Mosógép Alpha részletei', exact=True).click()
         expect(page.get_by_role('button', name='Besorolás szerkesztése', exact=True)).to_be_visible()
         page.get_by_role('button', name='Besorolás szerkesztése', exact=True).click()

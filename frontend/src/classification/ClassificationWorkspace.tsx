@@ -240,6 +240,7 @@ function Workspace({ ports, access }: ClassificationPresentation) {
                       filter({ ...filters, search: e.target.value })
                     }
                     placeholder="Név, cikkszám vagy EAN"
+                    maxLength={120}
                   />
                 </label>
               )}

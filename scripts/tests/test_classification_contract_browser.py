@@ -99,7 +99,7 @@ def test_actual_dto_read_capabilities_filters_and_lazy_choices(contract_page, wi
     page.set_viewport_size({'width': width, 'height': 1000})
     open_detail(page)
     expect(page.get_by_text('2100 · A legutóbbi fájlból hiányzott', exact=True)).to_be_visible()
-    expect(page.get_by_label('Termék keresése', exact=True)).to_have_count(0)
+    expect(page.get_by_label('Termék keresése', exact=True)).to_be_visible()
     expect(page.get_by_role('button', name='Aktuális oldal kijelölése')).to_have_count(0)
     page.get_by_label('Besorolási státusz', exact=True).select_option('review')
     expect(page.get_by_role('button', name='Mosógép Alpha részletei')).to_be_visible()
@@ -174,4 +174,19 @@ def test_actual_cursor_category_filter_and_confidence_ratio(contract_page):
     page.get_by_role('button', name='Kiválasztás: Elöltöltős mosógépek', exact=True).click()
     expect(page.get_by_role('button', name='Mosógép Alpha részletei', exact=True)).to_be_visible()
     assert any(q.get('navigation_node_id') == ['web-item-114-3490'] and q.get('cursor') == ['0'] for _, q in state['reads'])
+    assert not state['writes']
+
+
+def test_documented_search_uses_q_on_server_and_resets_cursor(contract_page):
+    page, state = contract_page
+    page.goto('http://contract.test/?contract')
+    page.get_by_role('button', name='Következő termékek', exact=True).click()
+    expect(page.get_by_role('button', name='Előző termékek', exact=True)).to_be_enabled()
+    search = page.get_by_label('Termék keresése', exact=True)
+    expect(search).to_have_attribute('maxlength', '120')
+    with page.expect_request(lambda r: urlparse(r.url).path.endswith('/workspace/products') and parse_qs(urlparse(r.url).query).get('q') == ['00001 50%_']):
+        search.fill('00001 50%_')
+    expect(page.get_by_text('Termékek betöltése…', exact=True)).to_have_count(0)
+    expect(page.get_by_role('button', name='Mosógép Alpha részletei', exact=True)).to_be_visible()
+    assert any(q.get('q') == ['00001 50%_'] and q.get('cursor') == ['0'] for _, q in state['reads'])
     assert not state['writes']

@@ -63,7 +63,9 @@ function product(
   return {
     key: String(item.id),
     title: String(item.fields.name || "Név nélküli termék"),
-    identifier: String(item.fields.sku || item.fields.ean || "–"),
+    identifier: String(
+      item.fields.sku || item.fields.gtin || item.fields.ean || "–",
+    ),
     source: item.supplier_name,
     originalCategory: item.source_category?.path || "",
     ownCategory: item.source_category?.path || "",
@@ -179,15 +181,12 @@ export function createCategory02Presentation(
       manageThreshold: false,
     },
     ports: {
-      features: { productSearch: false, mappingSearch: false },
+      features: { productSearch: true, mappingSearch: false },
       mappingPropagation: "always",
       resetSupported: true,
       products: async (filters, cursor, signal) => {
-        if (filters.search)
-          throw new Error(
-            "A szerződés még nem tartalmaz termékkeresési API-t.",
-          );
         const q = new URLSearchParams({ cursor: cursor || "0", limit: "25" });
+        if (filters.search.trim()) q.set("q", filters.search);
         if (filters.group !== "all")
           q.set(
             "status",
@@ -198,6 +197,7 @@ export function createCategory02Presentation(
         const result =
           bootstrap &&
           !cursor &&
+          !filters.search.trim() &&
           filters.group === "all" &&
           !filters.category &&
           !filters.source
@@ -275,6 +275,7 @@ export function createCategory02Presentation(
               throw new Error("Válassz belső kategóriát.");
             let affected: number;
             let before: string;
+            let donorBefore: string;
             if (intent.target.kind === "product") {
               const old = intent.target.context as ProductItem;
               const fresh = await api<ProductDetail>(
@@ -289,6 +290,12 @@ export function createCategory02Presentation(
                 throw new ClassificationConflict(
                   "A termék megváltozott. Töltsd újra a friss adatokat.",
                 );
+              donorBefore =
+                fresh.classification.donor_name ||
+                String(
+                  fresh.classification.donor_emag_category_id ??
+                    "Nincs kiválasztva",
+                );
               affected = 1;
               before =
                 fresh.classification.navigation_path?.join(" / ") ||
@@ -297,6 +304,9 @@ export function createCategory02Presentation(
               const old = intent.target.context as CategoryMap;
               if (intent.action === "reset" && !old.map)
                 throw new Error("Nincs törölhető kategóriatérkép.");
+              donorBefore = String(
+                old.map?.donor_emag_category_id ?? "Nincs kiválasztva",
+              );
               affected = old.product_count;
               before =
                 old.map?.navigation_path?.join(" / ") || "Nincs jóváhagyva";
@@ -317,6 +327,18 @@ export function createCategory02Presentation(
               canApply: true,
               localOnly: true,
               changes: [
+                {
+                  label: "Paraméterprofil",
+                  before: donorBefore,
+                  after:
+                    intent.action === "reset" || intent.action === "reject"
+                      ? "Szerveroldali újraértékelés"
+                      : intent.donorKey
+                        ? intent.category?.donors?.find(
+                            (d) => d.key === intent.donorKey,
+                          )?.title || intent.donorKey
+                        : "Egyetlen profil esetén automatikus; több profilnál még kiválasztandó",
+                },
                 {
                   label: "Belső kategória",
                   before,
