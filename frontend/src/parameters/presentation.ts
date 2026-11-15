@@ -1,5 +1,6 @@
+import type { ReactNode } from "react";
 /** CATEGORY-03B presentation props/callbacks, NOT HTTP DTOs or proposed endpoints.
- * Real adapters, permissions, server snapshots and revisions await CATEGORY-03A.
+ * liveApi/liveContract adapt the implemented CATEGORY-03A subset; mocks stay in tests.
  */
 export type ParameterStatus =
   | "present"
@@ -35,7 +36,7 @@ export type ParameterRow = {
   own: {
     key: string;
     title: string;
-    required: boolean;
+    required: boolean | null;
     value: ParameterValue;
   } | null;
   donor: {
@@ -47,6 +48,9 @@ export type ParameterRow = {
     constraint: string;
   } | null;
   additionalSources?: { key: string; title: string; value: ParameterValue }[];
+  storedValue?: string | null;
+  storedUnit?: string | null;
+  storedOrigin?: string;
   correction: string | null;
   aliasSuggestion: string | null;
   locked: boolean;
@@ -187,6 +191,10 @@ export type ParameterServices = {
   };
 };
 export type ParameterWorkspaceProps = ParameterServices & {
+  renderDetails?: (row: ParameterRow, refresh: () => void) => ReactNode;
+  allowSourcePreparation?: boolean;
+  allowProfileChoice?: boolean;
+  preparationActionLabel?: string;
   workspaceKey: string;
   product: {
     key: string;

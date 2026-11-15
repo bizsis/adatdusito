@@ -87,6 +87,10 @@ function Workspace({
   access,
   product,
   workspaceKey,
+  renderDetails,
+  allowSourcePreparation = false,
+  allowProfileChoice = true,
+  preparationActionLabel,
 }: ParameterWorkspaceProps) {
   const [filters, setFilters] = useState<ParameterFilters>(initial);
   const query = usePresentationSearch(filters.search);
@@ -319,7 +323,7 @@ function Workspace({
                       ? "Ellenőrzött profil"
                       : "Felülvizsgálandó profil"}
                   </span>
-                  {access.edit && writable && (
+                  {access.edit && writable && allowProfileChoice && (
                     <button
                       disabled={waiting}
                       onClick={() =>
@@ -334,14 +338,16 @@ function Workspace({
               ))}
             </details>
             <div className="actions">
-              {access.edit && writable && profile?.review === "approved" && (
-                <button
-                  disabled={waiting}
-                  onClick={() => prepare("add_missing")}
-                >
-                  Hiányzó üres helyek előnézete
-                </button>
-              )}
+              {access.edit &&
+                writable &&
+                (profile?.review === "approved" || allowSourcePreparation) && (
+                  <button
+                    disabled={waiting}
+                    onClick={() => prepare("add_missing")}
+                  >
+                    {preparationActionLabel || "Hiányzó üres helyek előnézete"}
+                  </button>
+                )}
               {access.bulk && writable && ports.snapshot && (
                 <button disabled={waiting || selecting} onClick={selectScope}>
                   Termékkör rögzítése tömeges előnézethez
@@ -406,9 +412,11 @@ function Workspace({
                             <strong>{r.own.title}</strong>
                             <small>
                               Saját kulcs: {r.own.key} ·{" "}
-                              {r.own.required
-                                ? "Saját profil szerint kötelező"
-                                : "Saját profil szerint opcionális"}
+                              {r.own.required === null
+                                ? "Saját profil kötelezősége nem ismert"
+                                : r.own.required
+                                  ? "Saját profil szerint kötelező"
+                                  : "Saját profil szerint opcionális"}
                             </small>
                             <Value value={r.own.value} />
                           </>
@@ -449,6 +457,13 @@ function Workspace({
                         )}
                       </td>
                       <td data-label="Megőrzés és javítás">
+                        {r.storedValue !== undefined && (
+                          <p>
+                            Tárolt helyérték:{" "}
+                            {r.storedValue ?? "Nincs tárolt érték"}{" "}
+                            {r.storedUnit || ""} · {r.storedOrigin || ""}
+                          </p>
+                        )}
                         <p>
                           Javított érték: {r.correction ?? "Nincs kézi javítás"}
                         </p>
@@ -559,6 +574,7 @@ function Workspace({
           title={`Paraméterrészlet: ${focused.own?.title || focused.donor?.title || focused.key}`}
         >
           {focused.own && <Value value={focused.own.value} />}
+          {renderDetails?.(focused, refresh)}
           {focused.donor && ports.values && (
             <ParameterValues
               key={focused.key}

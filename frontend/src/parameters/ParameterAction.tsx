@@ -103,7 +103,7 @@ export function ParameterAction({
     } catch (e) {
       if (!c.signal.aborted) {
         setError(e instanceof Error ? e.message : "A módosítás nem menthető.");
-        setStale(e instanceof ParameterRevisionConflict);
+        setStale(true);
         setPreview(null);
       }
     } finally {
@@ -134,7 +134,7 @@ export function ParameterAction({
       )}
       {stale && (
         <p className="notice">
-          A revízió vagy a pillanatkép megváltozott. Új lekérés és új előnézet
+          A művelet eredménye nem igazolható. Új lekérés és új előnézet
           szükséges; nincs automatikus újramentés.
         </p>
       )}
