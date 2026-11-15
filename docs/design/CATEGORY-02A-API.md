@@ -220,13 +220,31 @@ Az ügyfél saját kategóriái és a hozzájuk tartozó térkép.
 ```
 - Új térképnél `expected_revision: null`, meglévőnél az aktuális revízió. Eltérés → **409**.
 - `state: rejected` mellett kategória nem adható meg.
-- A mentés után a saját kategória **nem zárolt** termékei azonnal, kötegekben újra besorolódnak.
-- Válasz: `{"source_category", "map", "products_changed", "locked_skipped"}`.
-- Egyetlen összesítő `product_events` (`kind: category_map`) és `audit_events` bejegyzés keletkezik.
+- A térképdöntés azonnal véglegesül. Utána a saját kategória **nem zárolt** termékei újra besorolódnak (CATEGORY-02C):
+  - legfeljebb **2000** termékig a kérésen belül, 500-as kötegekben (`reapply.mode: "sync"`);
+  - e fölött folytatható háttérfeladatban (`reapply.mode: "queued"`), így a kérés nem fut bele a proxy időkorlátjába, és nem tart tízezres sorzárakat az importtal szemben.
+- Válasz: `{"source_category", "map", "products_changed", "locked_skipped", "reapply"}`.
+  - `reapply`: `{"mode": "sync"|"queued", "state", "job_id", "total"[, "enqueue_failed": true]}`.
+  - Háttérfeladatnál a `products_changed` és a `locked_skipped` értéke `null`; a végleges számokat a `GET /product-jobs/{job_id}` adja.
+  - `enqueue_failed: true`: a sorkezelő nem volt elérhető; a feladat `pending` marad, és `python -m app.product_jobs` folytatja.
+- Egyetlen összesítő `product_events` (`kind: category_map`) és `audit_events` bejegyzés keletkezik; háttérfeladatnál a befejezéskor egy `category_map_reapplied` esemény is.
+- Ugyanarra a saját kategóriára hozott újabb döntés a futó feladatot `superseded` állapotba teszi; a végállapot mindig a legutóbbi térképet tükrözi. A háttérfeladat futása alatt a kategória termékei részben még a korábbi döntés szerint látszanak (kötegenként véglegesül).
 
 ### `DELETE /api/v1/workspace/category-maps/{source_category_id}?expected_revision=N` (`products.classify`)
 
-Törli a térképet, és újra besorolja a nem zárolt termékeket. Elavult revízió → 409.
+Törli a térképet, és újra besorolja a nem zárolt termékeket (ugyanazzal a `reapply` szabállyal, mint a `PUT`). Elavult revízió → 409.
+
+### `GET /api/v1/workspace/product-jobs/{id}` (`products.read`)
+
+A kategóriatérkép háttérbeli újrabesorolásának állapota (CATEGORY-02C). Más bérlő feladata → 404.
+```json
+{"id": 7, "kind": "category_map_reapply", "state": "running", "stalled": false,
+ "source_category_id": 12, "map_revision": 3, "total": 18000, "processed": 6500,
+ "products_changed": 6400, "locked_skipped": 100, "error": null,
+ "created_at": "…", "updated_at": "…"}
+```
+- `state`: `pending` | `running` | `completed` | `superseded`. `stalled: true`, ha a futó feladat bérlete lejárt (a worker leállt); `python -m app.product_jobs` folytatja.
+- Javasolt lekérdezési gyakoriság a felületen: 2–5 másodperc, amíg `pending`/`running`.
 
 ### `GET /api/v1/workspace/internal-categories`
 

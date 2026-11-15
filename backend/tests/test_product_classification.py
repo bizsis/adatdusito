@@ -573,3 +573,115 @@ def test_explicit_manual_pending_donor_is_stored_but_gate_stays_closed(imports):
     cls = r.json()["classification"]
     assert (cls["donor_emag_category_id"], cls["parameter_profile_state"]) == (385, "ready")
     assert cls["reason_codes"] == ["manual_decision"]
+
+
+# --- CATEGORY-02C: large own categories are re-applied in a background job ---
+
+from app import product_jobs  # noqa: E402
+from app.product_models import ProductEvent, ProductJob  # noqa: E402
+
+
+@pytest.fixture
+def queued(monkeypatch):
+    sent = []
+    monkeypatch.setattr(product_jobs, "SYNC_REAPPLY_LIMIT", 3)
+    monkeypatch.setattr(product_jobs, "enqueue", sent.append)
+    return sent
+
+
+def five(c, t, s, category="Gépek/Nagy"):
+    run(c, t, s, csv(*[[f"00{i}", f"T{i}", category, "", "", ""] for i in range(5)]))
+    return c.get("/api/v1/workspace/category-maps").json()["items"][0]["source_category"]["id"]
+
+
+def put_map(c, sc, expected=None, **body):
+    r = c.put(f"/api/v1/workspace/category-maps/{sc}", json={"expected_revision": expected, **body})
+    assert r.status_code == 200, r.text
+    return r.json()
+
+
+def test_small_category_map_is_still_reapplied_synchronously(imports):
+    c, t, s = imports
+    run(c, t, s, csv(["001", "A", "Gépek/Mosó", "", "", ""]))
+    sc = c.get("/api/v1/workspace/category-maps").json()["items"][0]["source_category"]["id"]
+    body = put_map(c, sc, state="approved", navigation_node_id=WASHER)
+    assert body["reapply"] == {"mode": "sync", "state": "completed", "job_id": None, "total": 1}
+    assert body["products_changed"] == 1
+
+
+def test_large_category_map_is_queued_resumable_and_skips_locked(imports, queued):
+    c, t, s = imports
+    sc = five(c, t, s)
+    locked = first_id(c)
+    patch(c, locked, expected_revision=detail(c, locked)["revision"], action="set",
+          navigation_node_id="web-item-114-3491")
+    body = put_map(c, sc, state="approved", navigation_node_id=WASHER)
+    job_id = body["reapply"]["job_id"]
+    assert body["reapply"]["mode"] == "queued" and body["reapply"]["total"] == 5
+    assert body["products_changed"] is None and queued == [job_id]
+    # The map decision is committed at once; products follow in the job.
+    assert products(c)["status_counts"]["auto_classified"] == 1  # only the locked one
+    with Session(t) as db:
+        assert product_jobs.advance(db, job_id, batch=2, max_batches=1) == "pending"
+    state = c.get(f"/api/v1/workspace/product-jobs/{job_id}").json()
+    assert (state["state"], state["processed"], state["total"]) == ("pending", 2, 5)
+    with Session(t) as db:  # a stopped worker resumes after the last batch
+        assert product_jobs.advance(db, job_id, batch=2) == "completed"
+    state = c.get(f"/api/v1/workspace/product-jobs/{job_id}").json()
+    assert (state["processed"], state["products_changed"], state["locked_skipped"]) == (5, 4, 1)
+    data = products(c, navigation_node_id=WASHER)
+    assert data["status_counts"]["auto_classified"] == 4
+    assert detail(c, locked)["classification"]["navigation_node_id"] == "web-item-114-3491"
+    with Session(t) as db:
+        done = db.scalars(select(ProductEvent).where(ProductEvent.kind == "category_map_reapplied")).all()
+        assert len(done) == 1 and done[0].after["products_changed"] == 4
+        # Re-running a completed job is a no-op.
+        assert product_jobs.advance(db, job_id) == "completed"
+
+
+def test_newer_map_decision_supersedes_running_job(imports, queued):
+    c, t, s = imports
+    sc = five(c, t, s)
+    first = put_map(c, sc, state="approved", navigation_node_id=WASHER)
+    with Session(t) as db:
+        product_jobs.advance(db, first["reapply"]["job_id"], batch=2, max_batches=1)
+    second = put_map(c, sc, expected=first["map"]["revision"], state="rejected")
+    with Session(t) as db:
+        assert db.get(ProductJob, first["reapply"]["job_id"]).state == "superseded"
+        assert product_jobs.advance(db, first["reapply"]["job_id"]) == "superseded"
+        assert product_jobs.advance(db, second["reapply"]["job_id"]) == "completed"
+    counts = products(c)["status_counts"]
+    assert counts == {"auto_classified": 0, "needs_review": 5}
+
+
+def test_broker_outage_leaves_job_pending_and_cli_resumes(imports, monkeypatch):
+    c, t, s = imports
+    monkeypatch.setattr(product_jobs, "SYNC_REAPPLY_LIMIT", 3)
+
+    def down(job_id):
+        raise ConnectionError("redis down")
+
+    monkeypatch.setattr(product_jobs, "enqueue", down)
+    sc = five(c, t, s)
+    body = put_map(c, sc, state="approved", navigation_node_id=WASHER)
+    assert body["reapply"]["mode"] == "queued"
+    job_id = body["reapply"]["job_id"]
+    assert c.get(f"/api/v1/workspace/product-jobs/{job_id}").json()["state"] == "pending"
+    import app.db
+
+    monkeypatch.setattr(app.db, "engine", lambda reference=False: t)
+    assert product_jobs.main([]) == 0
+    assert c.get(f"/api/v1/workspace/product-jobs/{job_id}").json()["state"] == "completed"
+    assert products(c)["status_counts"]["auto_classified"] == 5
+    assert c.get("/api/v1/workspace/product-jobs/999999").status_code == 404
+
+
+def test_backfill_cli_opens_a_real_session(imports, monkeypatch):
+    """Regression: main() passed the engine factory itself to Session()."""
+    from app import product_backfill
+    import app.db
+
+    c, t, s = imports
+    run(c, t, s, csv(["001", "A", "Gépek/Mosó", "", "", ""]))
+    monkeypatch.setattr(app.db, "engine", lambda reference=False: t)
+    assert product_backfill.main(["--batch", "10"]) == 0

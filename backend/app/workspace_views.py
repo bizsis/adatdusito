@@ -14,6 +14,7 @@ from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
 from app import product_catalog as pc
+from app import product_jobs
 from app.import_api import tenant
 from app.import_models import Supplier, SupplierProduct
 from app.import_parser import FIELDS
@@ -22,13 +23,13 @@ from app.product_models import (
     CategoryMap,
     ProductClassification,
     ProductEvent,
+    ProductJob,
     ProductSourceCategory,
 )
 from app.security import audit, database, require
 
 router = APIRouter(prefix="/api/v1/workspace", tags=["Termékadatok"])
 MAX_PAGE = 100
-BATCH = 500
 
 
 # --- DTOs -------------------------------------------------------------------
@@ -377,38 +378,37 @@ def source_category_for(db, who, id):
     return row
 
 
-def reapply(db, who, source, before, after, reason):
-    """Re-run the automatic decision for every unlocked product of one own category."""
-    maps = pc.maps_for(db, source.tenant_id)
-    threshold = pc.auto_threshold(db)
-    changed = skipped = cursor = 0
-    while True:
-        batch = list(
-            db.scalars(
-                select(SupplierProduct)
-                .where(
-                    SupplierProduct.tenant_id == source.tenant_id,
-                    SupplierProduct.source_category_id == source.id,
-                    SupplierProduct.id > cursor,
-                )
-                .order_by(SupplierProduct.id)
-                .limit(BATCH)
-            )
-        )
-        if not batch:
-            break
-        for p in batch:
-            current = db.get(ProductClassification, p.id)
-            if current is not None and current.locked:
-                skipped += 1
-            elif pc.classify(db, p, maps, threshold, source.path_text, record_event=False):
-                changed += 1
-        cursor = batch[-1].id
-        db.flush()
+def reapply(db, who, source, before, after, reason, map_revision):
+    """Re-run the automatic decision for the unlocked products of one own category.
+
+    Small own categories are re-applied inside the request; larger ones get a
+    resumable background job (app.product_jobs) so the request stays short.
+    """
+    total = product_jobs.product_count(db, source)
+    if total <= product_jobs.SYNC_REAPPLY_LIMIT:
+        for old in product_jobs.active_jobs(db, source.tenant_id, source.id):
+            old.state, old.lease_until, old.task_token = "superseded", None, None
+        counters = product_jobs.reapply_now(db, source)
+        info = {"mode": "sync", "state": "completed", "job_id": None, "total": total}
+        summary = {"products_changed": counters["products_changed"],
+                   "locked_skipped": counters["locked_skipped"]}
+    else:
+        job = product_jobs.create_job(db, source, map_revision, total)
+        info = {"mode": "queued", "state": job.state, "job_id": job.id, "total": total}
+        summary = {"products_changed": None, "locked_skipped": None, "reapply_job_id": job.id}
     db.add(ProductEvent(tenant_id=source.tenant_id, source_category_id=source.id, kind="category_map",
                         actor_id=who.user.id, reason=reason, before=before,
-                        after={**(after or {}), "products_changed": changed, "locked_skipped": skipped}))
-    return changed, skipped
+                        after={**(after or {}), **summary}))
+    return summary["products_changed"], summary["locked_skipped"], info
+
+
+def finish_map_change(db, info):
+    db.commit()
+    if info["job_id"] is not None:
+        try:
+            product_jobs.enqueue(info["job_id"])
+        except Exception:  # broker down: the job stays pending and resumable
+            info["enqueue_failed"] = True
 
 
 @router.put("/category-maps/{source_category_id}")
@@ -441,12 +441,15 @@ def put_category_map(
     current.decided_by = who.user.id
     current.decided_at = now()
     db.flush()
-    changed, skipped = reapply(db, who, source, before, map_dto(current), body.reason)
+    changed, skipped, info = reapply(db, who, source, before, map_dto(current), body.reason,
+                                     current.revision)
     audit(db, who, "products.category_map", str(source.id), source.tenant_id, before=before,
-          after=map_dto(current), products_changed=changed, locked_skipped=skipped)
-    db.commit()
-    return {"source_category": category_ref(source), "map": map_dto(current),
-            "products_changed": changed, "locked_skipped": skipped}
+          after=map_dto(current), products_changed=changed, locked_skipped=skipped,
+          reapply_job_id=info["job_id"])
+    result = {"source_category": category_ref(source), "map": map_dto(current),
+              "products_changed": changed, "locked_skipped": skipped, "reapply": info}
+    finish_map_change(db, info)
+    return result
 
 
 @router.delete("/category-maps/{source_category_id}")
@@ -463,12 +466,22 @@ def delete_category_map(
     before = map_dto(current)
     db.delete(current)
     db.flush()
-    changed, skipped = reapply(db, who, source, before, None, None)
+    changed, skipped, info = reapply(db, who, source, before, None, None, None)
     audit(db, who, "products.category_map_deleted", str(source.id), source.tenant_id,
-          before=before, products_changed=changed, locked_skipped=skipped)
-    db.commit()
-    return {"source_category": category_ref(source), "map": None,
-            "products_changed": changed, "locked_skipped": skipped}
+          before=before, products_changed=changed, locked_skipped=skipped,
+          reapply_job_id=info["job_id"])
+    result = {"source_category": category_ref(source), "map": None,
+              "products_changed": changed, "locked_skipped": skipped, "reapply": info}
+    finish_map_change(db, info)
+    return result
+
+
+@router.get("/product-jobs/{id}")
+def product_job(id: int, who=Depends(require("products.read")), db: Session = Depends(database)):
+    job = db.get(ProductJob, id)
+    if job is None or job.kind != product_jobs.KIND or job.tenant_id != tenant(who):
+        raise HTTPException(404, "A háttérfeladat nem található.")
+    return product_jobs.job_dto(job)
 
 
 @router.get("/internal-categories")

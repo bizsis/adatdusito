@@ -123,7 +123,7 @@ def main(argv=None):
     args = parser.parse_args(argv)
     from app.db import engine
 
-    with Session(engine) as db:
+    with Session(engine()) as db:
         print(run(db, batch=max(1, min(args.batch, 5000))))
     return 0
 
