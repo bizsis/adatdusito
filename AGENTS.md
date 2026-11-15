@@ -31,7 +31,8 @@ A Vezér frissíti. Utolsó módosítás: SECURITY-01 / CODEX 09, 2026-11.
 
 | Terület | Fájlgazda |
 |---|---|
-| `backend/app/security.py`, biztonsági backend-tesztek (`backend/tests/test_login_protection.py`, `test_password_hash_capacity.py`, `test_deploy_nginx.py`) | Claude |
+| `backend/app/security.py`, biztonsági backend-tesztek (`backend/tests/test_login_protection.py`, `test_password_hash_capacity.py`, `test_deploy_nginx.py`, `test_restricted_session_gate.py`, `test_dependency_*.py`) | Claude |
+| Python-függőségfájlok: `backend/requirements*.{txt,in,lock}`, `backend/scripts/compile-requirements.sh`, `backend/scripts/check_requirements.py`, `backend/Dockerfile`, `backend/.dockerignore`; a CI backend-, browser- és menu-export jobjainak telepítési lépései | Claude |
 | `deploy/nginx/*` (külső Nginx deploykonfiguráció) | Claude |
 | SECURITY-01 érintett pontjai: `backend/app/api.py` login-végpont, `backend/app/auth_api.py` `throttle()`/`failure_limit()` és a passkey/MFA korlátozási hívások, `backend/app/oidc_api.py` és `backend/app/registration.py` korlátozási sorai, `backend/tests/conftest.py` stubok, `backend/tests/test_security_integration.py`, `.env.example` biztonsági változói | Claude (csak ebben a feladatban) |
 | `AGENTS.md`, `CLAUDE.md` | Claude (a tartalmi döntéseket a Vezér hozza) |
@@ -41,7 +42,7 @@ A Vezér frissíti. Utolsó módosítás: SECURITY-01 / CODEX 09, 2026-11.
 ## Fejlesztési és tesztelési parancsok
 
 ```bash
-python3.12 -m venv .venv && .venv/bin/pip install -r backend/requirements.lock
+python3.12 -m venv .venv && .venv/bin/pip install --no-deps -r backend/requirements.lock -r backend/requirements-test.lock
 PYTHONPATH=backend .venv/bin/pytest -q backend/tests          # kötelező minden PR előtt
 (cd frontend && npm ci && npm run build)                      # frontendváltozásnál
 .venv/bin/pip install -r scripts/browser-requirements.txt     # böngészőtesztekhez (Chromium)
