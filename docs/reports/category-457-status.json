@@ -1,0 +1,1709 @@
+{
+  "format": "adatdusito.category-457-status.v1",
+  "issue": "CATEGORY-02C (#20)",
+  "inputs_sha256": {
+    "reviewed_parameter_profiles_json": "89dda597276f6b0f51cd51c4fe1c22fb1680534d866df19033c2c03efffb3e69",
+    "reviewed_parameter_bindings_json": "fc5dbc98446da9878318b7f220d37c01d5631a3852978b150a9df5496097b9a1",
+    "donor_review_json": "aec6c3f59c30872a98df709afa0cc674e06c9bc9e7fccae15b7f1ab64fc18649",
+    "emag_categories_export_tsv": "053a18a26713ef66a852d8722f5bb1633bddf91e84ca0a556ade9dbbb13e3d3c"
+  },
+  "tree": {
+    "roots": 13,
+    "root_ids": [
+      "web-dept-114",
+      "web-dept-43",
+      "web-dept-1",
+      "web-dept-7",
+      "web-dept-29",
+      "web-dept-615",
+      "web-dept-173",
+      "web-dept-199",
+      "web-dept-1023",
+      "web-dept-83",
+      "web-dept-165",
+      "web-dept-79",
+      "web-dept-512"
+    ],
+    "approved_nodes": 583,
+    "roots_unchanged": true,
+    "nodes_unchanged": true,
+    "retired_nodes": [
+      "web-item-43-3550"
+    ],
+    "retired_classifiable": []
+  },
+  "classification": {
+    "historical_confirmed": 412,
+    "historical_navigation": 171,
+    "bindable_now": 457,
+    "structural_now": 126,
+    "added": 45,
+    "removed": [],
+    "multi_profile_categories": 23,
+    "parameter_profile_associations": 555,
+    "pending_review_donors": 3,
+    "bindable_with_children": [
+      "web-item-173-4159",
+      "web-item-199-3692",
+      "web-item-29-3613",
+      "web-item-29-3863",
+      "web-item-29-3865",
+      "web-item-29-3874",
+      "web-item-512-3357",
+      "web-item-79-3909",
+      "web-item-79-3914"
+    ],
+    "calibrated_methods": [],
+    "auto_threshold_default": 0.98,
+    "auto_threshold_is_measured": false
+  },
+  "added": [
+    {
+      "id": "web-item-114-3490",
+      "path": [
+        "Háztartási gépek és klíma",
+        "Mosógépek és szárítógépek",
+        "Elöltöltős mosógépek"
+      ],
+      "donors": [
+        {
+          "emag_category_id": 385,
+          "name": "Mosógépek",
+          "review_state": "reviewed",
+          "parameter_count": 45,
+          "is_allowed": true
+        }
+      ],
+      "old_status": "navigation",
+      "new_status": "bindable",
+      "reviewed_input_state": "structural_product_reclassified",
+      "rationale": "Termékkategória; az archivált menü szűrő/szekció szerepe nem zárja ki a termékbesorolást. A termékkör meglévő profiljai külön maradnak.",
+      "risk": "narrower_scope",
+      "risk_note": "A menüpont termékköre azonos a donoréval vagy annak szűkítése (típus, kivitel, platform, évszak).",
+      "has_children": false
+    },
+    {
+      "id": "web-item-114-3491",
+      "path": [
+        "Háztartási gépek és klíma",
+        "Mosógépek és szárítógépek",
+        "Felültöltős mosógépek"
+      ],
+      "donors": [
+        {
+          "emag_category_id": 385,
+          "name": "Mosógépek",
+          "review_state": "reviewed",
+          "parameter_count": 45,
+          "is_allowed": true
+        }
+      ],
+      "old_status": "navigation",
+      "new_status": "bindable",
+      "reviewed_input_state": "structural_product_reclassified",
+      "rationale": "Termékkategória; az archivált menü szűrő/szekció szerepe nem zárja ki a termékbesorolást. A termékkör meglévő profiljai külön maradnak.",
+      "risk": "narrower_scope",
+      "risk_note": "A menüpont termékköre azonos a donoréval vagy annak szűkítése (típus, kivitel, platform, évszak).",
+      "has_children": false
+    },
+    {
+      "id": "web-item-114-3492",
+      "path": [
+        "Háztartási gépek és klíma",
+        "Mosógépek és szárítógépek",
+        "Mosó-szárítógépek"
+      ],
+      "donors": [
+        {
+          "emag_category_id": 385,
+          "name": "Mosógépek",
+          "review_state": "pending_review",
+          "parameter_count": 45,
+          "is_allowed": true,
+          "review_reason": "donor_scope_narrower_than_product"
+        }
+      ],
+      "old_status": "navigation",
+      "new_status": "bindable",
+      "reviewed_input_state": "structural_product_reclassified",
+      "rationale": "Termékkategória; az archivált menü szűrő/szekció szerepe nem zárja ki a termékbesorolást. A termékkör meglévő profiljai külön maradnak.",
+      "risk": "pending_review",
+      "risk_note": "Donor ellenőrzésre vár; automatikus donor és paraméterdúsítás tiltott.",
+      "has_children": false
+    },
+    {
+      "id": "web-item-114-4237",
+      "path": [
+        "Háztartási gépek és klíma",
+        "Mosogatógépek",
+        "Keskeny mosogatógépek"
+      ],
+      "donors": [
+        {
+          "emag_category_id": 411,
+          "name": "Mosogatógépek",
+          "review_state": "reviewed",
+          "parameter_count": 36,
+          "is_allowed": true
+        }
+      ],
+      "old_status": "navigation",
+      "new_status": "bindable",
+      "reviewed_input_state": "structural_product_reclassified",
+      "rationale": "Termékkategória; az archivált menü szűrő/szekció szerepe nem zárja ki a termékbesorolást. A termékkör meglévő profiljai külön maradnak.",
+      "risk": "narrower_scope",
+      "risk_note": "A menüpont termékköre azonos a donoréval vagy annak szűkítése (típus, kivitel, platform, évszak).",
+      "has_children": false
+    },
+    {
+      "id": "web-item-114-3502",
+      "path": [
+        "Háztartási gépek és klíma",
+        "Páraelszívók"
+      ],
+      "donors": [
+        {
+          "emag_category_id": 525,
+          "name": "Páraelszívók",
+          "review_state": "reviewed",
+          "parameter_count": 35,
+          "is_allowed": true
+        }
+      ],
+      "old_status": "navigation",
+      "new_status": "bindable",
+      "reviewed_input_state": "structural_product_reclassified",
+      "rationale": "Termékkategória; az archivált menü szűrő/szekció szerepe nem zárja ki a termékbesorolást. A termékkör meglévő profiljai külön maradnak.",
+      "risk": "narrower_scope",
+      "risk_note": "A menüpont termékköre azonos a donoréval vagy annak szűkítése (típus, kivitel, platform, évszak).",
+      "has_children": false
+    },
+    {
+      "id": "web-item-114-3508",
+      "path": [
+        "Háztartási gépek és klíma",
+        "Beépíthető készülékek",
+        "Beépíthető mosogatógépek"
+      ],
+      "donors": [
+        {
+          "emag_category_id": 411,
+          "name": "Mosogatógépek",
+          "review_state": "reviewed",
+          "parameter_count": 36,
+          "is_allowed": true
+        }
+      ],
+      "old_status": "navigation",
+      "new_status": "bindable",
+      "reviewed_input_state": "structural_product_reclassified",
+      "rationale": "Termékkategória; az archivált menü szűrő/szekció szerepe nem zárja ki a termékbesorolást. A termékkör meglévő profiljai külön maradnak.",
+      "risk": "narrower_scope",
+      "risk_note": "A menüpont termékköre azonos a donoréval vagy annak szűkítése (típus, kivitel, platform, évszak).",
+      "has_children": false
+    },
+    {
+      "id": "web-item-114-3750",
+      "path": [
+        "Háztartási gépek és klíma",
+        "Beépíthető készülékek",
+        "Beépíthető mikrohullámú sütők"
+      ],
+      "donors": [
+        {
+          "emag_category_id": 363,
+          "name": "Mikrohullámú sütők",
+          "review_state": "reviewed",
+          "parameter_count": 22,
+          "is_allowed": true
+        }
+      ],
+      "old_status": "navigation",
+      "new_status": "bindable",
+      "reviewed_input_state": "structural_product_reclassified",
+      "rationale": "Termékkategória; az archivált menü szűrő/szekció szerepe nem zárja ki a termékbesorolást. A termékkör meglévő profiljai külön maradnak.",
+      "risk": "narrower_scope",
+      "risk_note": "A menüpont termékköre azonos a donoréval vagy annak szűkítése (típus, kivitel, platform, évszak).",
+      "has_children": false
+    },
+    {
+      "id": "web-item-114-3751",
+      "path": [
+        "Háztartási gépek és klíma",
+        "Porszívók és vasalók",
+        "Porzsákos porszívók"
+      ],
+      "donors": [
+        {
+          "emag_category_id": 58,
+          "name": "Porszívók",
+          "review_state": "reviewed",
+          "parameter_count": 27,
+          "is_allowed": true
+        }
+      ],
+      "old_status": "navigation",
+      "new_status": "bindable",
+      "reviewed_input_state": "structural_product_reclassified",
+      "rationale": "Termékkategória; az archivált menü szűrő/szekció szerepe nem zárja ki a termékbesorolást. A termékkör meglévő profiljai külön maradnak.",
+      "risk": "narrower_scope",
+      "risk_note": "A menüpont termékköre azonos a donoréval vagy annak szűkítése (típus, kivitel, platform, évszak).",
+      "has_children": false
+    },
+    {
+      "id": "web-item-114-3819",
+      "path": [
+        "Háztartási gépek és klíma",
+        "Porszívók és vasalók",
+        "Porzsák nélküli porszívók"
+      ],
+      "donors": [
+        {
+          "emag_category_id": 58,
+          "name": "Porszívók",
+          "review_state": "reviewed",
+          "parameter_count": 27,
+          "is_allowed": true
+        }
+      ],
+      "old_status": "navigation",
+      "new_status": "bindable",
+      "reviewed_input_state": "structural_product_reclassified",
+      "rationale": "Termékkategória; az archivált menü szűrő/szekció szerepe nem zárja ki a termékbesorolást. A termékkör meglévő profiljai külön maradnak.",
+      "risk": "narrower_scope",
+      "risk_note": "A menüpont termékköre azonos a donoréval vagy annak szűkítése (típus, kivitel, platform, évszak).",
+      "has_children": false
+    },
+    {
+      "id": "web-item-114-3752",
+      "path": [
+        "Háztartási gépek és klíma",
+        "Porszívók és vasalók",
+        "Álló porszívók"
+      ],
+      "donors": [
+        {
+          "emag_category_id": 58,
+          "name": "Porszívók",
+          "review_state": "reviewed",
+          "parameter_count": 27,
+          "is_allowed": true
+        }
+      ],
+      "old_status": "navigation",
+      "new_status": "bindable",
+      "reviewed_input_state": "structural_product_reclassified",
+      "rationale": "Termékkategória; az archivált menü szűrő/szekció szerepe nem zárja ki a termékbesorolást. A termékkör meglévő profiljai külön maradnak.",
+      "risk": "narrower_scope",
+      "risk_note": "A menüpont termékköre azonos a donoréval vagy annak szűkítése (típus, kivitel, platform, évszak).",
+      "has_children": false
+    },
+    {
+      "id": "web-item-114-3820",
+      "path": [
+        "Háztartási gépek és klíma",
+        "Porszívók és vasalók",
+        "Robotporszívók"
+      ],
+      "donors": [
+        {
+          "emag_category_id": 58,
+          "name": "Porszívók",
+          "review_state": "pending_review",
+          "parameter_count": 27,
+          "is_allowed": true,
+          "review_reason": "donor_scope_narrower_than_product"
+        }
+      ],
+      "old_status": "navigation",
+      "new_status": "bindable",
+      "reviewed_input_state": "structural_product_reclassified",
+      "rationale": "Termékkategória; az archivált menü szűrő/szekció szerepe nem zárja ki a termékbesorolást. A termékkör meglévő profiljai külön maradnak.",
+      "risk": "pending_review",
+      "risk_note": "Donor ellenőrzésre vár; automatikus donor és paraméterdúsítás tiltott.",
+      "has_children": false
+    },
+    {
+      "id": "web-item-114-3753",
+      "path": [
+        "Háztartási gépek és klíma",
+        "Kávékészítés",
+        "Automata eszpresszó kávéfőzők"
+      ],
+      "donors": [
+        {
+          "emag_category_id": 32,
+          "name": "Eszpresszó kávéfőzők",
+          "review_state": "reviewed",
+          "parameter_count": 29,
+          "is_allowed": true
+        }
+      ],
+      "old_status": "navigation",
+      "new_status": "bindable",
+      "reviewed_input_state": "structural_product_reclassified",
+      "rationale": "Termékkategória; az archivált menü szűrő/szekció szerepe nem zárja ki a termékbesorolást. A termékkör meglévő profiljai külön maradnak.",
+      "risk": "narrower_scope",
+      "risk_note": "A menüpont termékköre azonos a donoréval vagy annak szűkítése (típus, kivitel, platform, évszak).",
+      "has_children": false
+    },
+    {
+      "id": "web-item-114-3754",
+      "path": [
+        "Háztartási gépek és klíma",
+        "Kávékészítés",
+        "Kapszulás kávéfőzők"
+      ],
+      "donors": [
+        {
+          "emag_category_id": 32,
+          "name": "Eszpresszó kávéfőzők",
+          "review_state": "reviewed",
+          "parameter_count": 29,
+          "is_allowed": true
+        }
+      ],
+      "old_status": "navigation",
+      "new_status": "bindable",
+      "reviewed_input_state": "structural_product_reclassified",
+      "rationale": "Termékkategória; az archivált menü szűrő/szekció szerepe nem zárja ki a termékbesorolást. A termékkör meglévő profiljai külön maradnak.",
+      "risk": "narrower_scope",
+      "risk_note": "A menüpont termékköre azonos a donoréval vagy annak szűkítése (típus, kivitel, platform, évszak).",
+      "has_children": false
+    },
+    {
+      "id": "web-item-43-3697",
+      "path": [
+        "TV és szórakozás",
+        "eBook olvasók és tartozékok"
+      ],
+      "donors": [
+        {
+          "emag_category_id": 103,
+          "name": "eBook olvasók",
+          "review_state": "reviewed",
+          "parameter_count": 25,
+          "is_allowed": true
+        },
+        {
+          "emag_category_id": 313,
+          "name": "eBook olvasó tartozékok",
+          "review_state": "reviewed",
+          "parameter_count": 8,
+          "is_allowed": true
+        }
+      ],
+      "old_status": "navigation",
+      "new_status": "bindable",
+      "reviewed_input_state": "structural_product_reclassified",
+      "rationale": "Termékkategória; az archivált menü szűrő/szekció szerepe nem zárja ki a termékbesorolást. A termékkör meglévő profiljai külön maradnak.",
+      "risk": "multi_profile",
+      "risk_note": "Több külön profil; dúsítás csak kifejezett profilválasztás után.",
+      "has_children": false
+    },
+    {
+      "id": "web-item-43-4021",
+      "path": [
+        "TV és szórakozás",
+        "Konzolok és játékok",
+        "Hordozható játékkonzolok"
+      ],
+      "donors": [
+        {
+          "emag_category_id": 152,
+          "name": "Hardver konzolok",
+          "review_state": "reviewed",
+          "parameter_count": 36,
+          "is_allowed": false
+        }
+      ],
+      "old_status": "navigation",
+      "new_status": "bindable",
+      "reviewed_input_state": "structural_product_reclassified",
+      "rationale": "Termékkategória; az archivált menü szűrő/szekció szerepe nem zárja ki a termékbesorolást. A termékkör meglévő profiljai külön maradnak.",
+      "risk": "narrower_scope",
+      "risk_note": "A menüpont termékköre azonos a donoréval vagy annak szűkítése (típus, kivitel, platform, évszak).",
+      "has_children": false
+    },
+    {
+      "id": "web-item-1-4244",
+      "path": [
+        "Telefon, Tablet, Laptop",
+        "Telefonok",
+        "Klasszikus mobiltelefonok"
+      ],
+      "donors": [
+        {
+          "emag_category_id": 15,
+          "name": "Mobiltelefonok",
+          "review_state": "reviewed",
+          "parameter_count": 43,
+          "is_allowed": false
+        }
+      ],
+      "old_status": "navigation",
+      "new_status": "bindable",
+      "reviewed_input_state": "structural_product_reclassified",
+      "rationale": "Termékkategória; az archivált menü szűrő/szekció szerepe nem zárja ki a termékbesorolást. A termékkör meglévő profiljai külön maradnak.",
+      "risk": "narrower_scope",
+      "risk_note": "A menüpont termékköre azonos a donoréval vagy annak szűkítése (típus, kivitel, platform, évszak).",
+      "has_children": false
+    },
+    {
+      "id": "web-item-1-3180",
+      "path": [
+        "Telefon, Tablet, Laptop",
+        "Laptopok",
+        "Laptopok Windows-szal"
+      ],
+      "donors": [
+        {
+          "emag_category_id": 14,
+          "name": "Laptop / Notebook",
+          "review_state": "reviewed",
+          "parameter_count": 68,
+          "is_allowed": false
+        }
+      ],
+      "old_status": "navigation",
+      "new_status": "bindable",
+      "reviewed_input_state": "structural_product_reclassified",
+      "rationale": "Termékkategória; az archivált menü szűrő/szekció szerepe nem zárja ki a termékbesorolást. A termékkör meglévő profiljai külön maradnak.",
+      "risk": "narrower_scope",
+      "risk_note": "A menüpont termékköre azonos a donoréval vagy annak szűkítése (típus, kivitel, platform, évszak).",
+      "has_children": false
+    },
+    {
+      "id": "web-item-7-3683",
+      "path": [
+        "Számítástechnika",
+        "Gaming",
+        "Gamer PC-k"
+      ],
+      "donors": [
+        {
+          "emag_category_id": 6,
+          "name": "Asztali számítógép",
+          "review_state": "reviewed",
+          "parameter_count": 70,
+          "is_allowed": false
+        }
+      ],
+      "old_status": "navigation",
+      "new_status": "bindable",
+      "reviewed_input_state": "structural_product_reclassified",
+      "rationale": "Termékkategória; az archivált menü szűrő/szekció szerepe nem zárja ki a termékbesorolást. A termékkör meglévő profiljai külön maradnak.",
+      "risk": "narrower_scope",
+      "risk_note": "A menüpont termékköre azonos a donoréval vagy annak szűkítése (típus, kivitel, platform, évszak).",
+      "has_children": false
+    },
+    {
+      "id": "web-item-7-3827",
+      "path": [
+        "Számítástechnika",
+        "Gaming",
+        "Gamer laptopok"
+      ],
+      "donors": [
+        {
+          "emag_category_id": 14,
+          "name": "Laptop / Notebook",
+          "review_state": "reviewed",
+          "parameter_count": 68,
+          "is_allowed": false
+        }
+      ],
+      "old_status": "navigation",
+      "new_status": "bindable",
+      "reviewed_input_state": "structural_product_reclassified",
+      "rationale": "Termékkategória; az archivált menü szűrő/szekció szerepe nem zárja ki a termékbesorolást. A termékkör meglévő profiljai külön maradnak.",
+      "risk": "narrower_scope",
+      "risk_note": "A menüpont termékköre azonos a donoréval vagy annak szűkítése (típus, kivitel, platform, évszak).",
+      "has_children": false
+    },
+    {
+      "id": "web-item-7-3684",
+      "path": [
+        "Számítástechnika",
+        "Gaming",
+        "Gamer monitorok"
+      ],
+      "donors": [
+        {
+          "emag_category_id": 5,
+          "name": "LCD & LED monitorok",
+          "review_state": "reviewed",
+          "parameter_count": 39,
+          "is_allowed": true
+        }
+      ],
+      "old_status": "navigation",
+      "new_status": "bindable",
+      "reviewed_input_state": "structural_product_reclassified",
+      "rationale": "Termékkategória; az archivált menü szűrő/szekció szerepe nem zárja ki a termékbesorolást. A termékkör meglévő profiljai külön maradnak.",
+      "risk": "narrower_scope",
+      "risk_note": "A menüpont termékköre azonos a donoréval vagy annak szűkítése (típus, kivitel, platform, évszak).",
+      "has_children": false
+    },
+    {
+      "id": "web-item-7-3829",
+      "path": [
+        "Számítástechnika",
+        "Gaming",
+        "Gamer billentyűzetek"
+      ],
+      "donors": [
+        {
+          "emag_category_id": 10,
+          "name": "Billentyűzetek",
+          "review_state": "reviewed",
+          "parameter_count": 17,
+          "is_allowed": true
+        }
+      ],
+      "old_status": "navigation",
+      "new_status": "bindable",
+      "reviewed_input_state": "structural_product_reclassified",
+      "rationale": "Termékkategória; az archivált menü szűrő/szekció szerepe nem zárja ki a termékbesorolást. A termékkör meglévő profiljai külön maradnak.",
+      "risk": "narrower_scope",
+      "risk_note": "A menüpont termékköre azonos a donoréval vagy annak szűkítése (típus, kivitel, platform, évszak).",
+      "has_children": false
+    },
+    {
+      "id": "web-item-7-3830",
+      "path": [
+        "Számítástechnika",
+        "Gaming",
+        "Gamer egérpad"
+      ],
+      "donors": [
+        {
+          "emag_category_id": 54,
+          "name": "Egérpad",
+          "review_state": "reviewed",
+          "parameter_count": 6,
+          "is_allowed": true
+        }
+      ],
+      "old_status": "navigation",
+      "new_status": "bindable",
+      "reviewed_input_state": "structural_product_reclassified",
+      "rationale": "Termékkategória; az archivált menü szűrő/szekció szerepe nem zárja ki a termékbesorolást. A termékkör meglévő profiljai külön maradnak.",
+      "risk": "narrower_scope",
+      "risk_note": "A menüpont termékköre azonos a donoréval vagy annak szűkítése (típus, kivitel, platform, évszak).",
+      "has_children": false
+    },
+    {
+      "id": "web-item-7-3831",
+      "path": [
+        "Számítástechnika",
+        "Gaming",
+        "Gamer egér"
+      ],
+      "donors": [
+        {
+          "emag_category_id": 11,
+          "name": "Egér",
+          "review_state": "reviewed",
+          "parameter_count": 16,
+          "is_allowed": true
+        }
+      ],
+      "old_status": "navigation",
+      "new_status": "bindable",
+      "reviewed_input_state": "structural_product_reclassified",
+      "rationale": "Termékkategória; az archivált menü szűrő/szekció szerepe nem zárja ki a termékbesorolást. A termékkör meglévő profiljai külön maradnak.",
+      "risk": "narrower_scope",
+      "risk_note": "A menüpont termékköre azonos a donoréval vagy annak szűkítése (típus, kivitel, platform, évszak).",
+      "has_children": false
+    },
+    {
+      "id": "web-item-29-4260",
+      "path": [
+        "Fotó-Videó, Okos eszközök",
+        "Okosórák",
+        "Android kompatibilis okosórák"
+      ],
+      "donors": [
+        {
+          "emag_category_id": 2920,
+          "name": "Okosórák",
+          "review_state": "reviewed",
+          "parameter_count": 45,
+          "is_allowed": false
+        }
+      ],
+      "old_status": "navigation",
+      "new_status": "bindable",
+      "reviewed_input_state": "structural_product_reclassified",
+      "rationale": "Termékkategória; az archivált menü szűrő/szekció szerepe nem zárja ki a termékbesorolást. A termékkör meglévő profiljai külön maradnak.",
+      "risk": "narrower_scope",
+      "risk_note": "A menüpont termékköre azonos a donoréval vagy annak szűkítése (típus, kivitel, platform, évszak).",
+      "has_children": false
+    },
+    {
+      "id": "web-item-29-4261",
+      "path": [
+        "Fotó-Videó, Okos eszközök",
+        "Okosórák",
+        "iOS kompatibilis okosórák"
+      ],
+      "donors": [
+        {
+          "emag_category_id": 2920,
+          "name": "Okosórák",
+          "review_state": "reviewed",
+          "parameter_count": 45,
+          "is_allowed": false
+        }
+      ],
+      "old_status": "navigation",
+      "new_status": "bindable",
+      "reviewed_input_state": "structural_product_reclassified",
+      "rationale": "Termékkategória; az archivált menü szűrő/szekció szerepe nem zárja ki a termékbesorolást. A termékkör meglévő profiljai külön maradnak.",
+      "risk": "narrower_scope",
+      "risk_note": "A menüpont termékköre azonos a donoréval vagy annak szűkítése (típus, kivitel, platform, évszak).",
+      "has_children": false
+    },
+    {
+      "id": "web-item-173-4297",
+      "path": [
+        "Otthon, barkács, kert",
+        "Világítás és elektronika",
+        "Okos izzók"
+      ],
+      "donors": [
+        {
+          "emag_category_id": 365,
+          "name": "Izzók",
+          "review_state": "reviewed",
+          "parameter_count": 25,
+          "is_allowed": true
+        }
+      ],
+      "old_status": "navigation",
+      "new_status": "bindable",
+      "reviewed_input_state": "structural_product_reclassified",
+      "rationale": "Termékkategória; az archivált menü szűrő/szekció szerepe nem zárja ki a termékbesorolást. A termékkör meglévő profiljai külön maradnak.",
+      "risk": "narrower_scope",
+      "risk_note": "A menüpont termékköre azonos a donoréval vagy annak szűkítése (típus, kivitel, platform, évszak).",
+      "has_children": false
+    },
+    {
+      "id": "web-item-173-4008",
+      "path": [
+        "Otthon, barkács, kert",
+        "Dekorációk"
+      ],
+      "donors": [
+        {
+          "emag_category_id": 1567,
+          "name": "Dekorációs kiegészítők",
+          "review_state": "reviewed",
+          "parameter_count": 20,
+          "is_allowed": true
+        },
+        {
+          "emag_category_id": 3903,
+          "name": "Fali dekorációk",
+          "review_state": "reviewed",
+          "parameter_count": 13,
+          "is_allowed": true
+        }
+      ],
+      "old_status": "navigation",
+      "new_status": "bindable",
+      "reviewed_input_state": "structural_product_reclassified",
+      "rationale": "Termékkategória; az archivált menü szűrő/szekció szerepe nem zárja ki a termékbesorolást. A termékkör meglévő profiljai külön maradnak.",
+      "risk": "multi_profile",
+      "risk_note": "Több külön profil; dúsítás csak kifejezett profilválasztás után.",
+      "has_children": false
+    },
+    {
+      "id": "web-item-173-4125",
+      "path": [
+        "Otthon, barkács, kert",
+        "Konyha és felszolgálás",
+        "Főzőedények"
+      ],
+      "donors": [
+        {
+          "emag_category_id": 146,
+          "name": "Serpenyő",
+          "review_state": "reviewed",
+          "parameter_count": 21,
+          "is_allowed": true
+        },
+        {
+          "emag_category_id": 147,
+          "name": "Fazekak és lábasok",
+          "review_state": "reviewed",
+          "parameter_count": 20,
+          "is_allowed": true
+        },
+        {
+          "emag_category_id": 1606,
+          "name": "Hőálló edények",
+          "review_state": "reviewed",
+          "parameter_count": 21,
+          "is_allowed": true
+        },
+        {
+          "emag_category_id": 2664,
+          "name": "Multifunkciós főzőedények",
+          "review_state": "reviewed",
+          "parameter_count": 21,
+          "is_allowed": true
+        }
+      ],
+      "old_status": "navigation",
+      "new_status": "bindable",
+      "reviewed_input_state": "structural_product_reclassified",
+      "rationale": "Termékkategória; az archivált menü szűrő/szekció szerepe nem zárja ki a termékbesorolást. A termékkör meglévő profiljai külön maradnak.",
+      "risk": "multi_profile",
+      "risk_note": "Több külön profil; dúsítás csak kifejezett profilválasztás után.",
+      "has_children": false
+    },
+    {
+      "id": "web-item-173-3778",
+      "path": [
+        "Otthon, barkács, kert",
+        "Konyha és felszolgálás",
+        "Vízszűrő kancsók és tartozékok"
+      ],
+      "donors": [
+        {
+          "emag_category_id": 520,
+          "name": "Vízszűrő kancsók",
+          "review_state": "reviewed",
+          "parameter_count": 17,
+          "is_allowed": true
+        },
+        {
+          "emag_category_id": 3674,
+          "name": "Vízszűrő kancsó tartozékok",
+          "review_state": "reviewed",
+          "parameter_count": 14,
+          "is_allowed": true
+        }
+      ],
+      "old_status": "navigation",
+      "new_status": "bindable",
+      "reviewed_input_state": "structural_product_reclassified",
+      "rationale": "Termékkategória; az archivált menü szűrő/szekció szerepe nem zárja ki a termékbesorolást. A termékkör meglévő profiljai külön maradnak.",
+      "risk": "multi_profile",
+      "risk_note": "Több külön profil; dúsítás csak kifejezett profilválasztás után.",
+      "has_children": false
+    },
+    {
+      "id": "web-item-199-2725",
+      "path": [
+        "Játékok, Baba, Mama",
+        "BABA-MAMA",
+        "Babakocsik és hordozók"
+      ],
+      "donors": [
+        {
+          "emag_category_id": 1359,
+          "name": "Babakocsik és tartozékok",
+          "review_state": "reviewed",
+          "parameter_count": 23,
+          "is_allowed": true
+        },
+        {
+          "emag_category_id": 3257,
+          "name": "Babahordozó eszközök",
+          "review_state": "reviewed",
+          "parameter_count": 11,
+          "is_allowed": true
+        }
+      ],
+      "old_status": "navigation",
+      "new_status": "bindable",
+      "reviewed_input_state": "structural_product_reclassified",
+      "rationale": "Termékkategória; az archivált menü szűrő/szekció szerepe nem zárja ki a termékbesorolást. A termékkör meglévő profiljai külön maradnak.",
+      "risk": "multi_profile",
+      "risk_note": "Több külön profil; dúsítás csak kifejezett profilválasztás után.",
+      "has_children": false
+    },
+    {
+      "id": "web-item-199-3264",
+      "path": [
+        "Játékok, Baba, Mama",
+        "BABA-MAMA",
+        "Babajátékok",
+        "Interaktív babajátékok"
+      ],
+      "donors": [
+        {
+          "emag_category_id": 3290,
+          "name": "Interaktív babajátékok",
+          "review_state": "reviewed",
+          "parameter_count": 14,
+          "is_allowed": true
+        }
+      ],
+      "old_status": "navigation",
+      "new_status": "bindable",
+      "reviewed_input_state": "structural_product_reclassified",
+      "rationale": "Termékkategória; az archivált menü szűrő/szekció szerepe nem zárja ki a termékbesorolást. A termékkör meglévő profiljai külön maradnak.",
+      "risk": "narrower_scope",
+      "risk_note": "A menüpont termékköre azonos a donoréval vagy annak szűkítése (típus, kivitel, platform, évszak).",
+      "has_children": false
+    },
+    {
+      "id": "web-item-199-3265",
+      "path": [
+        "Játékok, Baba, Mama",
+        "BABA-MAMA",
+        "Babajátékok",
+        "Tevékenységi központok és játszószőnyegek"
+      ],
+      "donors": [
+        {
+          "emag_category_id": 3278,
+          "name": "Baba tevékenységi játékközpont",
+          "review_state": "reviewed",
+          "parameter_count": 14,
+          "is_allowed": true
+        }
+      ],
+      "old_status": "navigation",
+      "new_status": "bindable",
+      "reviewed_input_state": "structural_product_reclassified",
+      "rationale": "Termékkategória; az archivált menü szűrő/szekció szerepe nem zárja ki a termékbesorolást. A termékkör meglévő profiljai külön maradnak.",
+      "risk": "narrower_scope",
+      "risk_note": "A menüpont termékköre azonos a donoréval vagy annak szűkítése (típus, kivitel, platform, évszak).",
+      "has_children": false
+    },
+    {
+      "id": "web-item-199-4313",
+      "path": [
+        "Játékok, Baba, Mama",
+        "JÁTÉKOK",
+        "Társasjátékok",
+        "Gyerek társasjátékok"
+      ],
+      "donors": [
+        {
+          "emag_category_id": 1209,
+          "name": "Társasjátékok",
+          "review_state": "reviewed",
+          "parameter_count": 15,
+          "is_allowed": true
+        }
+      ],
+      "old_status": "navigation",
+      "new_status": "bindable",
+      "reviewed_input_state": "structural_product_reclassified",
+      "rationale": "Termékkategória; az archivált menü szűrő/szekció szerepe nem zárja ki a termékbesorolást. A termékkör meglévő profiljai külön maradnak.",
+      "risk": "narrower_scope",
+      "risk_note": "A menüpont termékköre azonos a donoréval vagy annak szűkítése (típus, kivitel, platform, évszak).",
+      "has_children": false
+    },
+    {
+      "id": "web-item-199-4314",
+      "path": [
+        "Játékok, Baba, Mama",
+        "JÁTÉKOK",
+        "Társasjátékok",
+        "Családi társasjátékok"
+      ],
+      "donors": [
+        {
+          "emag_category_id": 1209,
+          "name": "Társasjátékok",
+          "review_state": "reviewed",
+          "parameter_count": 15,
+          "is_allowed": true
+        }
+      ],
+      "old_status": "navigation",
+      "new_status": "bindable",
+      "reviewed_input_state": "structural_product_reclassified",
+      "rationale": "Termékkategória; az archivált menü szűrő/szekció szerepe nem zárja ki a termékbesorolást. A termékkör meglévő profiljai külön maradnak.",
+      "risk": "narrower_scope",
+      "risk_note": "A menüpont termékköre azonos a donoréval vagy annak szűkítése (típus, kivitel, platform, évszak).",
+      "has_children": false
+    },
+    {
+      "id": "web-item-199-4315",
+      "path": [
+        "Játékok, Baba, Mama",
+        "JÁTÉKOK",
+        "Társasjátékok",
+        "Felnőtt társasjátékok"
+      ],
+      "donors": [
+        {
+          "emag_category_id": 1209,
+          "name": "Társasjátékok",
+          "review_state": "reviewed",
+          "parameter_count": 15,
+          "is_allowed": true
+        }
+      ],
+      "old_status": "navigation",
+      "new_status": "bindable",
+      "reviewed_input_state": "structural_product_reclassified",
+      "rationale": "Termékkategória; az archivált menü szűrő/szekció szerepe nem zárja ki a termékbesorolást. A termékkör meglévő profiljai külön maradnak.",
+      "risk": "narrower_scope",
+      "risk_note": "A menüpont termékköre azonos a donoréval vagy annak szűkítése (típus, kivitel, platform, évszak).",
+      "has_children": false
+    },
+    {
+      "id": "web-item-199-4128",
+      "path": [
+        "Játékok, Baba, Mama",
+        "JÁTÉKOK",
+        "LEGO felnőtteknek"
+      ],
+      "donors": [
+        {
+          "emag_category_id": 1187,
+          "name": "Építőkészletek",
+          "review_state": "reviewed",
+          "parameter_count": 15,
+          "is_allowed": true
+        }
+      ],
+      "old_status": "navigation",
+      "new_status": "bindable",
+      "reviewed_input_state": "structural_product_reclassified",
+      "rationale": "Termékkategória; az archivált menü szűrő/szekció szerepe nem zárja ki a termékbesorolást. A termékkör meglévő profiljai külön maradnak.",
+      "risk": "narrower_scope",
+      "risk_note": "A menüpont termékköre azonos a donoréval vagy annak szűkítése (típus, kivitel, platform, évszak).",
+      "has_children": false
+    },
+    {
+      "id": "web-item-83-2994",
+      "path": [
+        "Szépségápolás",
+        "Parfümök"
+      ],
+      "donors": [
+        {
+          "emag_category_id": 1241,
+          "name": "Parfüm",
+          "review_state": "reviewed",
+          "parameter_count": 14,
+          "is_allowed": false
+        }
+      ],
+      "old_status": "navigation",
+      "new_status": "bindable",
+      "reviewed_input_state": "structural_product_reclassified",
+      "rationale": "Termékkategória; az archivált menü szűrő/szekció szerepe nem zárja ki a termékbesorolást. A termékkör meglévő profiljai külön maradnak.",
+      "risk": "narrower_scope",
+      "risk_note": "A menüpont termékköre azonos a donoréval vagy annak szűkítése (típus, kivitel, platform, évszak).",
+      "has_children": false
+    },
+    {
+      "id": "web-item-83-4339",
+      "path": [
+        "Szépségápolás",
+        "Szépségápolási készülékek",
+        "IPL tartós szőrtelenítők"
+      ],
+      "donors": [
+        {
+          "emag_category_id": 63,
+          "name": "Epilátorok",
+          "review_state": "pending_review",
+          "parameter_count": 26,
+          "is_allowed": true,
+          "review_reason": "donor_technology_differs"
+        }
+      ],
+      "old_status": "navigation",
+      "new_status": "bindable",
+      "reviewed_input_state": "structural_product_reclassified",
+      "rationale": "Termékkategória; az archivált menü szűrő/szekció szerepe nem zárja ki a termékbesorolást. A termékkör meglévő profiljai külön maradnak.",
+      "risk": "pending_review",
+      "risk_note": "Donor ellenőrzésre vár; automatikus donor és paraméterdúsítás tiltott.",
+      "has_children": false
+    },
+    {
+      "id": "web-item-165-4041",
+      "path": [
+        "Sport és utazás",
+        "Kerékpározás",
+        "Felnőtt kerékpárok"
+      ],
+      "donors": [
+        {
+          "emag_category_id": 1809,
+          "name": "Kerékpárok",
+          "review_state": "reviewed",
+          "parameter_count": 34,
+          "is_allowed": true
+        }
+      ],
+      "old_status": "navigation",
+      "new_status": "bindable",
+      "reviewed_input_state": "structural_product_reclassified",
+      "rationale": "Termékkategória; az archivált menü szűrő/szekció szerepe nem zárja ki a termékbesorolást. A termékkör meglévő profiljai külön maradnak.",
+      "risk": "narrower_scope",
+      "risk_note": "A menüpont termékköre azonos a donoréval vagy annak szűkítése (típus, kivitel, platform, évszak).",
+      "has_children": false
+    },
+    {
+      "id": "web-item-165-4042",
+      "path": [
+        "Sport és utazás",
+        "Kerékpározás",
+        "Gyerek kerékpárok"
+      ],
+      "donors": [
+        {
+          "emag_category_id": 1809,
+          "name": "Kerékpárok",
+          "review_state": "reviewed",
+          "parameter_count": 34,
+          "is_allowed": true
+        }
+      ],
+      "old_status": "navigation",
+      "new_status": "bindable",
+      "reviewed_input_state": "structural_product_reclassified",
+      "rationale": "Termékkategória; az archivált menü szűrő/szekció szerepe nem zárja ki a termékbesorolást. A termékkör meglévő profiljai külön maradnak.",
+      "risk": "narrower_scope",
+      "risk_note": "A menüpont termékköre azonos a donoréval vagy annak szűkítése (típus, kivitel, platform, évszak).",
+      "has_children": false
+    },
+    {
+      "id": "web-item-79-4347",
+      "path": [
+        "Könyvek, Filmek és Irodaszerek",
+        "Filmek, zene",
+        "Bakelit lemezek"
+      ],
+      "donors": [
+        {
+          "emag_category_id": 604,
+          "name": "Hanglemezek és zenei CD-k",
+          "review_state": "reviewed",
+          "parameter_count": 22,
+          "is_allowed": true
+        }
+      ],
+      "old_status": "navigation",
+      "new_status": "bindable",
+      "reviewed_input_state": "structural_product_reclassified",
+      "rationale": "Termékkategória; az archivált menü szűrő/szekció szerepe nem zárja ki a termékbesorolást. A termékkör meglévő profiljai külön maradnak.",
+      "risk": "narrower_scope",
+      "risk_note": "A menüpont termékköre azonos a donoréval vagy annak szűkítése (típus, kivitel, platform, évszak).",
+      "has_children": false
+    },
+    {
+      "id": "web-item-79-3439",
+      "path": [
+        "Könyvek, Filmek és Irodaszerek",
+        "Írás és rajzolás",
+        "Füzetek"
+      ],
+      "donors": [
+        {
+          "emag_category_id": 2606,
+          "name": "Füzetek",
+          "review_state": "reviewed",
+          "parameter_count": 12,
+          "is_allowed": true
+        }
+      ],
+      "old_status": "navigation",
+      "new_status": "bindable",
+      "reviewed_input_state": "structural_product_reclassified",
+      "rationale": "Termékkategória; az archivált menü szűrő/szekció szerepe nem zárja ki a termékbesorolást. A termékkör meglévő profiljai külön maradnak.",
+      "risk": "narrower_scope",
+      "risk_note": "A menüpont termékköre azonos a donoréval vagy annak szűkítése (típus, kivitel, platform, évszak).",
+      "has_children": false
+    },
+    {
+      "id": "web-item-512-3833",
+      "path": [
+        "Autó- és motor felszerelések",
+        "Gumiabroncsok",
+        "Nyári gumik"
+      ],
+      "donors": [
+        {
+          "emag_category_id": 1412,
+          "name": "Gumiabroncsok",
+          "review_state": "reviewed",
+          "parameter_count": 16,
+          "is_allowed": true
+        }
+      ],
+      "old_status": "navigation",
+      "new_status": "bindable",
+      "reviewed_input_state": "structural_product_reclassified",
+      "rationale": "Termékkategória; az archivált menü szűrő/szekció szerepe nem zárja ki a termékbesorolást. A termékkör meglévő profiljai külön maradnak.",
+      "risk": "narrower_scope",
+      "risk_note": "A menüpont termékköre azonos a donoréval vagy annak szűkítése (típus, kivitel, platform, évszak).",
+      "has_children": false
+    },
+    {
+      "id": "web-item-512-3834",
+      "path": [
+        "Autó- és motor felszerelések",
+        "Gumiabroncsok",
+        "Téli gumik"
+      ],
+      "donors": [
+        {
+          "emag_category_id": 1412,
+          "name": "Gumiabroncsok",
+          "review_state": "reviewed",
+          "parameter_count": 16,
+          "is_allowed": true
+        }
+      ],
+      "old_status": "navigation",
+      "new_status": "bindable",
+      "reviewed_input_state": "structural_product_reclassified",
+      "rationale": "Termékkategória; az archivált menü szűrő/szekció szerepe nem zárja ki a termékbesorolást. A termékkör meglévő profiljai külön maradnak.",
+      "risk": "narrower_scope",
+      "risk_note": "A menüpont termékköre azonos a donoréval vagy annak szűkítése (típus, kivitel, platform, évszak).",
+      "has_children": false
+    },
+    {
+      "id": "web-item-512-3832",
+      "path": [
+        "Autó- és motor felszerelések",
+        "Gumiabroncsok",
+        "Négyévszakos"
+      ],
+      "donors": [
+        {
+          "emag_category_id": 1412,
+          "name": "Gumiabroncsok",
+          "review_state": "reviewed",
+          "parameter_count": 16,
+          "is_allowed": true
+        }
+      ],
+      "old_status": "navigation",
+      "new_status": "bindable",
+      "reviewed_input_state": "structural_product_reclassified",
+      "rationale": "Termékkategória; az archivált menü szűrő/szekció szerepe nem zárja ki a termékbesorolást. A termékkör meglévő profiljai külön maradnak.",
+      "risk": "narrower_scope",
+      "risk_note": "A menüpont termékköre azonos a donoréval vagy annak szűkítése (típus, kivitel, platform, évszak).",
+      "has_children": false
+    }
+  ],
+  "donors_not_allowed_in_export": [
+    {
+      "node_id": "web-item-114-4055",
+      "path": [
+        "Háztartási gépek és klíma",
+        "Hűtő-fűtő berendezések és vízmelegítők",
+        "Klímák"
+      ],
+      "emag_category_id": 410,
+      "name": "Klíma"
+    },
+    {
+      "node_id": "web-item-43-3562",
+      "path": [
+        "TV és szórakozás",
+        "Házimozi és audió rendszerek",
+        "Hangszórók"
+      ],
+      "emag_category_id": 310,
+      "name": "Hangszórók"
+    },
+    {
+      "node_id": "web-item-43-3574",
+      "path": [
+        "TV és szórakozás",
+        "Lejátszók, hangfalak, fej- és fülhallgatók",
+        "Vezetékes fej- és fülhallgatók"
+      ],
+      "emag_category_id": 155,
+      "name": "Vezetékes fejhallgatók"
+    },
+    {
+      "node_id": "web-item-43-3577",
+      "path": [
+        "TV és szórakozás",
+        "Lejátszók, hangfalak, fej- és fülhallgatók",
+        "Hordozható hangfalak"
+      ],
+      "emag_category_id": 2588,
+      "name": "Hordozható hangszórók"
+    },
+    {
+      "node_id": "web-item-43-3582",
+      "path": [
+        "TV és szórakozás",
+        "Konzolok és játékok",
+        "Konzolok"
+      ],
+      "emag_category_id": 152,
+      "name": "Hardver konzolok"
+    },
+    {
+      "node_id": "web-item-43-4021",
+      "path": [
+        "TV és szórakozás",
+        "Konzolok és játékok",
+        "Hordozható játékkonzolok"
+      ],
+      "emag_category_id": 152,
+      "name": "Hardver konzolok"
+    },
+    {
+      "node_id": "web-item-43-3583",
+      "path": [
+        "TV és szórakozás",
+        "Konzolok és játékok",
+        "Konzol és PC játékok"
+      ],
+      "emag_category_id": 37,
+      "name": "Játékok PC-re és konzolra"
+    },
+    {
+      "node_id": "web-item-43-3584",
+      "path": [
+        "TV és szórakozás",
+        "Konzolok és játékok",
+        "Gamepad, botkormányok és fejhallgatók"
+      ],
+      "emag_category_id": 582,
+      "name": "Kontrollerek, kormányok és gaming fejhallgatók"
+    },
+    {
+      "node_id": "web-item-43-3587",
+      "path": [
+        "TV és szórakozás",
+        "Konzolok és játékok",
+        "VR Gaming szemüvegek"
+      ],
+      "emag_category_id": 3419,
+      "name": "VR Gaming szemüvegek"
+    },
+    {
+      "node_id": "web-item-1-3718",
+      "path": [
+        "Telefon, Tablet, Laptop",
+        "Telefonok",
+        "Okostelefonok"
+      ],
+      "emag_category_id": 15,
+      "name": "Mobiltelefonok"
+    },
+    {
+      "node_id": "web-item-1-4244",
+      "path": [
+        "Telefon, Tablet, Laptop",
+        "Telefonok",
+        "Klasszikus mobiltelefonok"
+      ],
+      "emag_category_id": 15,
+      "name": "Mobiltelefonok"
+    },
+    {
+      "node_id": "web-item-1-3195",
+      "path": [
+        "Telefon, Tablet, Laptop",
+        "Mobiltelefon tartozékok",
+        "Telefontokok"
+      ],
+      "emag_category_id": 2779,
+      "name": "Mobiltelefon tokok"
+    },
+    {
+      "node_id": "web-item-1-4245",
+      "path": [
+        "Telefon, Tablet, Laptop",
+        "Mobiltelefon tartozékok",
+        "Kijelzővédő fóliák"
+      ],
+      "emag_category_id": 2773,
+      "name": "Képernyővédő fóliák"
+    },
+    {
+      "node_id": "web-item-1-4246",
+      "path": [
+        "Telefon, Tablet, Laptop",
+        "Mobiltelefon tartozékok",
+        "Töltőkábelek"
+      ],
+      "emag_category_id": 2782,
+      "name": "Adatkábelek/ USB kábelek"
+    },
+    {
+      "node_id": "web-item-1-4246",
+      "path": [
+        "Telefon, Tablet, Laptop",
+        "Mobiltelefon tartozékok",
+        "Töltőkábelek"
+      ],
+      "emag_category_id": 2780,
+      "name": "Töltők"
+    },
+    {
+      "node_id": "web-item-1-3192",
+      "path": [
+        "Telefon, Tablet, Laptop",
+        "Mobiltelefon tartozékok",
+        "Külső akkumulátorok"
+      ],
+      "emag_category_id": 2771,
+      "name": "Külső akkumulátorok"
+    },
+    {
+      "node_id": "web-item-1-3193",
+      "path": [
+        "Telefon, Tablet, Laptop",
+        "Mobiltelefon tartozékok",
+        "Telefon akkumulátorok"
+      ],
+      "emag_category_id": 2772,
+      "name": "Akkumulátorok"
+    },
+    {
+      "node_id": "web-item-1-3176",
+      "path": [
+        "Telefon, Tablet, Laptop",
+        "Mobiltelefon tartozékok",
+        "Adatkábelek"
+      ],
+      "emag_category_id": 2782,
+      "name": "Adatkábelek/ USB kábelek"
+    },
+    {
+      "node_id": "web-item-1-3174",
+      "path": [
+        "Telefon, Tablet, Laptop",
+        "Mobiltelefon tartozékok",
+        "Vezetékes fej- és fülhallgatók"
+      ],
+      "emag_category_id": 155,
+      "name": "Vezetékes fejhallgatók"
+    },
+    {
+      "node_id": "web-item-1-4321",
+      "path": [
+        "Telefon, Tablet, Laptop",
+        "Mobiltelefon tartozékok",
+        "Egyéb tartozékok"
+      ],
+      "emag_category_id": 2774,
+      "name": "Egyéb kiegészítők"
+    },
+    {
+      "node_id": "web-item-1-3143",
+      "path": [
+        "Telefon, Tablet, Laptop",
+        "Laptopok",
+        "Laptop, notebook"
+      ],
+      "emag_category_id": 14,
+      "name": "Laptop / Notebook"
+    },
+    {
+      "node_id": "web-item-1-3180",
+      "path": [
+        "Telefon, Tablet, Laptop",
+        "Laptopok",
+        "Laptopok Windows-szal"
+      ],
+      "emag_category_id": 14,
+      "name": "Laptop / Notebook"
+    },
+    {
+      "node_id": "web-item-1-3719",
+      "path": [
+        "Telefon, Tablet, Laptop",
+        "Tabletek és tartozékok",
+        "Tabletek"
+      ],
+      "emag_category_id": 73,
+      "name": "Tabletek"
+    },
+    {
+      "node_id": "web-item-1-4249",
+      "path": [
+        "Telefon, Tablet, Laptop",
+        "Okosórák és okos eszközök, aktivitásmérők",
+        "Okosórák"
+      ],
+      "emag_category_id": 2920,
+      "name": "Okosórák"
+    },
+    {
+      "node_id": "web-item-1-4250",
+      "path": [
+        "Telefon, Tablet, Laptop",
+        "Okosórák és okos eszközök, aktivitásmérők",
+        "Okos eszközök"
+      ],
+      "emag_category_id": 2920,
+      "name": "Okosórák"
+    },
+    {
+      "node_id": "web-item-1-4250",
+      "path": [
+        "Telefon, Tablet, Laptop",
+        "Okosórák és okos eszközök, aktivitásmérők",
+        "Okos eszközök"
+      ],
+      "emag_category_id": 2925,
+      "name": "Okos otthon"
+    },
+    {
+      "node_id": "web-item-7-3630",
+      "path": [
+        "Számítástechnika",
+        "Asztali PC és monitorok",
+        "Asztali számítógépek"
+      ],
+      "emag_category_id": 6,
+      "name": "Asztali számítógép"
+    },
+    {
+      "node_id": "web-item-7-3683",
+      "path": [
+        "Számítástechnika",
+        "Gaming",
+        "Gamer PC-k"
+      ],
+      "emag_category_id": 6,
+      "name": "Asztali számítógép"
+    },
+    {
+      "node_id": "web-item-7-3827",
+      "path": [
+        "Számítástechnika",
+        "Gaming",
+        "Gamer laptopok"
+      ],
+      "emag_category_id": 14,
+      "name": "Laptop / Notebook"
+    },
+    {
+      "node_id": "web-item-29-3602",
+      "path": [
+        "Fotó-Videó, Okos eszközök",
+        "Fényképezőgépek",
+        "Tükörreflexes fényképezőgépek"
+      ],
+      "emag_category_id": 43,
+      "name": "Tükörreflexes fényképezőgépek"
+    },
+    {
+      "node_id": "web-item-29-3863",
+      "path": [
+        "Fotó-Videó, Okos eszközök",
+        "Okosórák"
+      ],
+      "emag_category_id": 2920,
+      "name": "Okosórák"
+    },
+    {
+      "node_id": "web-item-29-4260",
+      "path": [
+        "Fotó-Videó, Okos eszközök",
+        "Okosórák",
+        "Android kompatibilis okosórák"
+      ],
+      "emag_category_id": 2920,
+      "name": "Okosórák"
+    },
+    {
+      "node_id": "web-item-29-4261",
+      "path": [
+        "Fotó-Videó, Okos eszközök",
+        "Okosórák",
+        "iOS kompatibilis okosórák"
+      ],
+      "emag_category_id": 2920,
+      "name": "Okosórák"
+    },
+    {
+      "node_id": "web-item-29-3869",
+      "path": [
+        "Fotó-Videó, Okos eszközök",
+        "Okos eszközök",
+        "Okos otthon"
+      ],
+      "emag_category_id": 2925,
+      "name": "Okos otthon"
+    },
+    {
+      "node_id": "web-item-29-3873",
+      "path": [
+        "Fotó-Videó, Okos eszközök",
+        "Okos eszközök",
+        "VR szemüvegek"
+      ],
+      "emag_category_id": 3419,
+      "name": "VR Gaming szemüvegek"
+    },
+    {
+      "node_id": "web-item-615-4268",
+      "path": [
+        "Szupermarket",
+        "Online élelmiszerbolt",
+        "Alapvető élelmiszerek"
+      ],
+      "emag_category_id": 3989,
+      "name": "Alapvető élelmiszerek"
+    },
+    {
+      "node_id": "web-item-615-4269",
+      "path": [
+        "Szupermarket",
+        "Online élelmiszerbolt",
+        "Tészták"
+      ],
+      "emag_category_id": 3998,
+      "name": "Tészták"
+    },
+    {
+      "node_id": "web-item-615-4270",
+      "path": [
+        "Szupermarket",
+        "Online élelmiszerbolt",
+        "Konzervek és gyorsételek"
+      ],
+      "emag_category_id": 3991,
+      "name": "Konzervek és gyorsételek"
+    },
+    {
+      "node_id": "web-item-615-4271",
+      "path": [
+        "Szupermarket",
+        "Online élelmiszerbolt",
+        "Diétás és bio termékek"
+      ],
+      "emag_category_id": 3993,
+      "name": "Diétás és természetes termékek"
+    },
+    {
+      "node_id": "web-item-615-4272",
+      "path": [
+        "Szupermarket",
+        "Online élelmiszerbolt",
+        "Gabonapelyhek"
+      ],
+      "emag_category_id": 3997,
+      "name": "Gabonapehely és müzli"
+    },
+    {
+      "node_id": "web-item-615-4273",
+      "path": [
+        "Szupermarket",
+        "Online élelmiszerbolt",
+        "Snackek"
+      ],
+      "emag_category_id": 3994,
+      "name": "Chips és ropi"
+    },
+    {
+      "node_id": "web-item-615-4274",
+      "path": [
+        "Szupermarket",
+        "Online élelmiszerbolt",
+        "Édességek"
+      ],
+      "emag_category_id": 3097,
+      "name": "Édességek"
+    },
+    {
+      "node_id": "web-item-615-3927",
+      "path": [
+        "Szupermarket",
+        "Alkoholmentes italok",
+        "Szénsavas üdítők"
+      ],
+      "emag_category_id": 4016,
+      "name": "Szénsavas üdítők"
+    },
+    {
+      "node_id": "web-item-615-3928",
+      "path": [
+        "Szupermarket",
+        "Alkoholmentes italok",
+        "Szénsavmentes üdítők"
+      ],
+      "emag_category_id": 4017,
+      "name": "Szénsavmentes üdítők"
+    },
+    {
+      "node_id": "web-item-615-3934",
+      "path": [
+        "Szupermarket",
+        "Online drogéria",
+        "Baba tápszerek"
+      ],
+      "emag_category_id": 3167,
+      "name": "Tápszerek"
+    },
+    {
+      "node_id": "web-item-615-4277",
+      "path": [
+        "Szupermarket",
+        "Ajándékötletek",
+        "Csomagok és ajándékkosarak"
+      ],
+      "emag_category_id": 3094,
+      "name": "Csomagok és ajándékkosarak"
+    },
+    {
+      "node_id": "web-item-1023-3982",
+      "path": [
+        "Divat, ékszerek és kiegészítők",
+        "NŐI DIVAT",
+        "Női ruházat",
+        "Dzsekik, mellények"
+      ],
+      "emag_category_id": 4404,
+      "name": "Női mellények"
+    },
+    {
+      "node_id": "web-item-1023-2937",
+      "path": [
+        "Divat, ékszerek és kiegészítők",
+        "NŐI DIVAT",
+        "Női kiegészítők",
+        "Karórák"
+      ],
+      "emag_category_id": 2709,
+      "name": "Női karórák"
+    },
+    {
+      "node_id": "web-item-1023-3744",
+      "path": [
+        "Divat, ékszerek és kiegészítők",
+        "FÉRFI DIVAT",
+        "Férfi ruházat",
+        "Dzsekik és mellények"
+      ],
+      "emag_category_id": 4403,
+      "name": "Férfi mellények"
+    },
+    {
+      "node_id": "web-item-1023-3746",
+      "path": [
+        "Divat, ékszerek és kiegészítők",
+        "FÉRFI DIVAT",
+        "Férfi kiegészítők",
+        "Karórák"
+      ],
+      "emag_category_id": 2742,
+      "name": "Férfi karórák"
+    },
+    {
+      "node_id": "web-item-83-2994",
+      "path": [
+        "Szépségápolás",
+        "Parfümök"
+      ],
+      "emag_category_id": 1241,
+      "name": "Parfüm"
+    }
+  ]
+}
