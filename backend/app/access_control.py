@@ -69,6 +69,8 @@ TENANT = {
     "products.read",
     "products.classify",
     "products.parameters",
+    "products.bulk",
+    "products.prepare.approve",
     "exports.read",
     "exports.profile",
     "reference.read",

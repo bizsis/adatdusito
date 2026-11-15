@@ -115,6 +115,10 @@ class ProductJob(Base):
     """Resumable maintenance jobs (e.g. backfill), leased like import runs."""
 
     __tablename__ = "product_jobs"
+    __table_args__ = (
+        # CATEGORY-03C: an idempotency key is unique per tenant and job kind.
+        UniqueConstraint("tenant_id", "kind", "idempotency_key", name="uq_product_job_idempotency"),
+    )
     id: Mapped[int] = mapped_column(primary_key=True)
     tenant_id: Mapped[int | None] = mapped_column(ForeignKey("tenants.id"), nullable=True)
     kind: Mapped[str] = mapped_column(String(32))
@@ -126,6 +130,10 @@ class ProductJob(Base):
     error: Mapped[str | None] = mapped_column(String(1000), nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=now)
     updated_at: Mapped[datetime] = mapped_column(DateTime, default=now, onupdate=now)
+    # CATEGORY-03C (0011)
+    created_by: Mapped[int | None] = mapped_column(ForeignKey("users.id"), nullable=True)
+    idempotency_key: Mapped[str | None] = mapped_column(String(80), nullable=True)
+    request_hash: Mapped[str | None] = mapped_column(String(64), nullable=True)
 
 
 # --- CATEGORY-03A: parameter slots and aliases (migration 0010) ---------------
@@ -198,3 +206,96 @@ class ProductParameterValue(Base):
     rule_version: Mapped[str] = mapped_column(String(32))
     updated_by: Mapped[int | None] = mapped_column(ForeignKey("users.id"), nullable=True)
     updated_at: Mapped[datetime] = mapped_column(DateTime, default=now)
+
+
+# --- CATEGORY-03C: selections, bulk operation items, preparation approvals ----
+
+
+class ProductSelection(Base):
+    """Server-side snapshot of a filtered product set; the token is stored hashed."""
+
+    __tablename__ = "product_selections"
+    id: Mapped[int] = mapped_column(primary_key=True)
+    tenant_id: Mapped[int] = mapped_column(ForeignKey("tenants.id"), index=True)
+    created_by: Mapped[int] = mapped_column(ForeignKey("users.id"))
+    token_hash: Mapped[str] = mapped_column(String(64), unique=True)
+    mode: Mapped[str] = mapped_column(String(16))
+    filters: Mapped[dict] = mapped_column(JSON, default=dict)
+    excluded: Mapped[int] = mapped_column(Integer, default=0)
+    total: Mapped[int] = mapped_column(Integer, default=0)
+    catalog_version_id: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    rule_version: Mapped[str] = mapped_column(String(32))
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=now)
+    expires_at: Mapped[datetime] = mapped_column(DateTime)
+
+
+class ProductSelectionItem(Base):
+    __tablename__ = "product_selection_items"
+    selection_id: Mapped[int] = mapped_column(ForeignKey("product_selections.id"), primary_key=True)
+    product_id: Mapped[int] = mapped_column(ForeignKey("supplier_products.id"), primary_key=True)
+    revision: Mapped[int] = mapped_column(Integer)
+
+
+class ProductOperationItem(Base):
+    """Per-product result of a bulk preview / preparation check (job_id), and of
+    the apply runs that consumed it (apply_job_id, apply_outcome)."""
+
+    __tablename__ = "product_operation_items"
+    __table_args__ = (
+        Index("ix_operation_item_outcome", "job_id", "outcome", "product_id"),
+        Index("ix_operation_item_apply", "apply_job_id", "apply_outcome", "product_id"),
+    )
+    job_id: Mapped[int] = mapped_column(ForeignKey("product_jobs.id"), primary_key=True)
+    product_id: Mapped[int] = mapped_column(ForeignKey("supplier_products.id"), primary_key=True)
+    tenant_id: Mapped[int] = mapped_column(ForeignKey("tenants.id"))
+    revision_before: Mapped[int] = mapped_column(Integer)
+    fingerprint: Mapped[str | None] = mapped_column(String(64), nullable=True)
+    outcome: Mapped[str] = mapped_column(String(32))
+    detail: Mapped[dict] = mapped_column(JSON, default=dict)
+    apply_job_id: Mapped[int | None] = mapped_column(ForeignKey("product_jobs.id"), nullable=True)
+    apply_outcome: Mapped[str | None] = mapped_column(String(32), nullable=True)
+    revision_after: Mapped[int | None] = mapped_column(Integer, nullable=True)
+
+
+class PreparationApproval(Base):
+    """Explicit user approval of a checked subset for later research (no AI here)."""
+
+    __tablename__ = "preparation_approvals"
+    __table_args__ = (
+        UniqueConstraint("tenant_id", "idempotency_key", name="uq_preparation_approval_idempotency"),
+        Index("ix_preparation_approval_tenant", "tenant_id", "state", "id"),
+    )
+    id: Mapped[int] = mapped_column(primary_key=True)
+    tenant_id: Mapped[int] = mapped_column(ForeignKey("tenants.id"))
+    state: Mapped[str] = mapped_column(String(16), default="active")
+    version: Mapped[int] = mapped_column(Integer, default=1)
+    check_id: Mapped[int] = mapped_column(ForeignKey("product_jobs.id"))
+    selection_id: Mapped[int] = mapped_column(ForeignKey("product_selections.id"))
+    catalog_version_id: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    rule_version: Mapped[str] = mapped_column(String(32))
+    schema_fingerprint: Mapped[str] = mapped_column(String(64))
+    counts: Mapped[dict] = mapped_column(JSON, default=dict)
+    reason: Mapped[str | None] = mapped_column(String(500), nullable=True)
+    idempotency_key: Mapped[str] = mapped_column(String(80))
+    request_hash: Mapped[str] = mapped_column(String(64))
+    approved_by: Mapped[int] = mapped_column(ForeignKey("users.id"))
+    approved_at: Mapped[datetime] = mapped_column(DateTime, default=now)
+    revoked_by: Mapped[int | None] = mapped_column(ForeignKey("users.id"), nullable=True)
+    revoked_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+    revoke_reason: Mapped[str | None] = mapped_column(String(500), nullable=True)
+    revalidated_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+
+
+class PreparationApprovalItem(Base):
+    __tablename__ = "preparation_approval_items"
+    __table_args__ = (Index("ix_preparation_item_product", "tenant_id", "product_id", "approval_id"),)
+    approval_id: Mapped[int] = mapped_column(ForeignKey("preparation_approvals.id"), primary_key=True)
+    product_id: Mapped[int] = mapped_column(ForeignKey("supplier_products.id"), primary_key=True)
+    tenant_id: Mapped[int] = mapped_column(ForeignKey("tenants.id"))
+    product_revision: Mapped[int] = mapped_column(Integer)
+    navigation_node_id: Mapped[str | None] = mapped_column(String(160), nullable=True)
+    donor_emag_category_id: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    research_targets: Mapped[int] = mapped_column(Integer, default=0)
+    mandatory_research_targets: Mapped[int] = mapped_column(Integer, default=0)
+    invalidated_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+    invalid_reason: Mapped[str | None] = mapped_column(String(32), nullable=True)

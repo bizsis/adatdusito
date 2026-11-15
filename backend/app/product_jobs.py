@@ -229,9 +229,11 @@ def main(argv=None):
     from app.db import engine
 
     with Session(engine()) as db:
+        from app import bulk_operations
+
         size = max(1, min(args.batch, 5000))
-        for job_id, kind in resumable(db, (KIND, PARAM_KIND)):
-            step = advance if kind == KIND else advance_parameters
+        for job_id, kind in resumable(db, (KIND, PARAM_KIND, *bulk_operations.KINDS)):
+            step = {KIND: advance, PARAM_KIND: advance_parameters}.get(kind, bulk_operations.advance)
             print(job_id, kind, step(db, job_id, batch=size))
     return 0
 
@@ -390,6 +392,10 @@ def process_parameter_job(job_id):
 def enqueue_parameters(job_id):
     process_parameter_job.delay(job_id)
 
+
+# CATEGORY-03C: register the bulk-operation Celery task wherever product jobs are
+# loaded (the worker imports this module), without another worker.py change.
+from app import bulk_operations  # noqa: E402,F401
 
 if __name__ == "__main__":
     sys.exit(main())

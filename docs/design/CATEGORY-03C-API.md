@@ -1,0 +1,301 @@
+# CATEGORY-03C – API/DTO-szerződés: tömeges paraméter-előkészítés és előkészítési jóváhagyás
+
+- **Feladat:** [#28](https://github.com/bizsis/adatdusito/issues/28). Alap: CATEGORY-03A (#26, `c05746d`). UX-forrás: `docs/design/CATEGORY-01B-UX.md` S6–S7 (Codex).
+- **Státusz:** **implementálva és tesztelve** a `claude/category-03c-bulk` ágon. Minden itt leírt végpont működik. Tesztek: `backend/tests/test_bulk_preparation.py`, `test_category03c_migration.py`. MySQL-mérés: a dokumentum végén.
+- **Additív:** a 03A végpontjai és mezői változatlanok. A 03A egyéni `preview`/`apply` és a `parameter-runs` továbbra is működik; a 03C a **kiválasztott halmazra** kötött, tokenes, ellenőrzött tömeges útvonalat adja hozzá.
+- Nincs AI-hívás, kutatás, kredit, fizetés, képkeresés, UNAS-export vagy telepítés. Az előkészítési jóváhagyás **csak** a későbbi kutatás bemenetét rögzíti.
+
+## Viszony a 03A-hoz
+
+| Igény | 03A | 03C |
+|---|---|---|
+| Egy termék előnézete/alkalmazása | `POST /products/{id}/parameters/preview\|apply` | változatlan |
+| Hatókör szerinti háttérfutás | `POST /parameter-runs` (élő szűrő, megerősítés nélkül) | változatlan; adminisztratív újraszámolásra |
+| Rögzített, szerveres kiválasztás | – | `POST /product-selections` → opaque `selection_token` |
+| Hiteles tömeges előnézet | – | `POST /parameter-bulk-previews` → termékenkénti eredmény, `preview_token` |
+| Megerősített tömeges alkalmazás | – | `POST /parameter-bulk-previews/{id}/apply` (token + megerősítés + idempotenciakulcs) |
+| Előkészítési jóváhagyás | – (`prepared` csak azt jelenti: van tárolt hely) | `POST /preparation-checks` → `POST /preparation-approvals` |
+
+## Közös szabályok
+
+Session-cookie, `X-CSRF-Token`, Origin, `no-store`, tenant = a session munkaterülete, hibaformátum `{"error": {"code", "message"}}` – mint a 02A/03A-ban. A böngésző **nem küld** tenant-ID-t és nem küld nagy termék-ID-listát.
+
+| Művelet | Jog |
+|---|---|
+| Kiválasztás, tömeges előnézet, előkészítési ellenőrzés, olvasás | `products.read` |
+| Tömeges alkalmazás | **`products.parameters` és `products.bulk`** (új tenant-jog, 0011) – a kettő nem helyettesíti egymást |
+| Előkészítési jóváhagyás, visszavonás, újramérés | **`products.prepare.approve`** (új tenant-jog, 0011). Nem importjóváhagyás, nem AI-/kreditengedély. |
+| Futás megszakítása / folytatása | a futás létrehozója, vagy az indításához szükséges jogok birtokosa |
+
+Az új jogokat a 0011 migráció veszi fel a jogkatalógusba; alapból az ügyféladminisztrátor (és a superadmin) kapja, más szerepkörhöz a szerepkör-szerkesztőben adható.
+
+| Kód | Jelentés |
+|---|---|
+| 404 | idegen/nem létező kiválasztás, futás, jóváhagyás – vagy nem a sajátod kiválasztása |
+| **409** | lejárt vagy hibás token; az előnézet/ellenőrzés még nem kész; a megerősített darabszám eltér a szerveres számtól; idempotenciakulcs más tartalommal; elavult `expected_version` |
+| 422 | érvénytelen szűrő; üres kiválasztás; túl nagy kiválasztás (`> 250 000`); `confirm` hiányzik |
+| 503 | nincs aktív közös katalógus |
+
+**Tokenek:** `selection_token`, `preview_token`, `check_token` – 43 karakteres, véletlen, átlátszatlan karakterlánc. A szerver csak SHA-256 lenyomatát tárolja; **egyszer**, a létrehozó válaszban kapja meg a kliens. URL-be, naplóba, megosztható linkbe nem kerül. A token a létrehozó felhasználóhoz és tenanthoz kötött.
+
+**Lejárat:** a kiválasztás `expires_at` értéke a létrehozástól **2 óra**. A belőle készült előnézet és ellenőrzés ugyanekkor jár le; lejárt token → 409. A már elindult alkalmazási futás a lejárat után is befejeződik (a megerősítés a lejárat előtt történt).
+
+**Futáskorlát:** egy *feldolgozási futás* legfeljebb 50 000 terméket dolgoz fel (`run_product_limit()`). A kiválasztás ennél nagyobb is lehet (legfeljebb 250 000): az előnézet, az ellenőrzés és az alkalmazás ilyenkor **több egymást követő futásban** halad ugyanazon a feladaton (`runs`), automatikusan.
+
+**Kötegek:** 500 termék/köteg, kötegenként commit és kurzor. Termékenként atomi (savepoint): egy termék hibája `error` eredmény, a többi halad. Nincs óriási tranzakció, a HTTP-kérés nem vár a feldolgozásra.
+
+## 1. Kiválasztás (snapshot)
+
+### `POST /api/v1/workspace/product-selections` (`products.read`)
+
+```json
+{"filters": {"state": null, "mandatory_missing": null, "navigation_node_id": null,
+             "source_category_id": null, "supplier_id": null,
+             "parameter_profile_state": null, "q": null},
+ "exclude_product_ids": [12, 13],
+ "product_ids": null}
+```
+- `filters`: pontosan a `GET /parameter-diff` szűrői, ugyanazzal a jelentéssel. A szerver a **teljes** szűrt halmazt rögzíti (nem csak egy oldalt), termékenként az aktuális `revision`-nel.
+- `exclude_product_ids`: legfeljebb 1000 kizárt termék (rövid kivétellista).
+- `product_ids`: a `filters` helyett egy oldalnyi (legfeljebb 100) kifejezett termék. A kettő együtt nem adható meg. Idegen ID → 404.
+
+Válasz:
+```json
+{"id": 41, "selection_token": "…", "total": 18234, "expires_at": "2026-11-16T12:00:00",
+ "filters": {…}, "excluded": 2, "mode": "filters|product_ids",
+ "catalog_version_id": 4, "rule_version": "category-03a.1", "created_at": "…"}
+```
+
+### `GET /api/v1/workspace/product-selections/{id}` (`products.read`, csak a létrehozónak)
+
+Ugyanez token nélkül, plusz `"expired": bool`.
+
+## 2. Tömeges előnézet
+
+### `POST /api/v1/workspace/parameter-bulk-previews` (`products.read`)
+
+Body: `{"selection_token": "…"}`. Válasz: `{"preview": <művelet DTO>, "preview_token": "…"}`. A számítás háttérben fut; a kliens a `GET /product-jobs/{id}`-t kérdezi 2–5 mp-enként.
+
+Termékenkénti **eredmény** (`outcome`):
+
+| `outcome` | Jelentés | Alkalmazáskor |
+|---|---|---|
+| `eligible` | van alkalmazandó változás (új hely, frissítés, üres hely törlése) | alkalmazza |
+| `unchanged` | a tárolt helyek már megfelelnek | kihagyja |
+| `skipped_pending_review` | a donor `pending_review` (#25: 3 csomópont–donor pár) | kihagyja |
+| `skipped_choice_required` | többprofilos, nincs kifejezett donor | kihagyja |
+| `skipped_no_donor` | nincs besorolás vagy donor | kihagyja |
+| `error` | a számítás hibát adott (a többi termék halad) | kihagyja |
+
+A zárolt helyek egy `eligible` terméken belül sem íródnak: `blocked_locked` számlálóban látszanak.
+
+**Művelet DTO** (előnézet, alkalmazás és előkészítési ellenőrzés közös alakja):
+```json
+{"id": 77, "kind": "bulk_preview|bulk_apply|preparation_check", "state": "pending|running|completed|cancelled|failed",
+ "stopped_reason": null,
+ "stalled": false, "selection_id": 41, "preview_id": null, "expires_at": "…",
+ "total": 18234, "processed": 18234, "runs": 1, "run_limit": 50000,
+ "outcomes": {"eligible": 15000, "unchanged": 3000, "skipped_pending_review": 20,
+              "skipped_choice_required": 200, "skipped_no_donor": 14, "error": 0},
+ "slots": {"create": 400000, "update": 1200, "remove": 300, "keep": 90000, "blocked_locked": 40},
+ "new_slots": {"missing": 300000, "review": 5000, "conflict": 120, "invalid": 900,
+               "present": 94000, "source_only": 1000},
+ "accepted_present": 88000, "source_refresh": 150, "source_overwrites": 0,
+ "revision_changed_since_selection": 12,
+ "error": null, "created_by": 2, "created_at": "…", "updated_at": "…"}
+```
+- `slots`/`new_slots`: a ténylegesen érintett termékek tételes összege (nem becslés). `new_slots.missing` = újonnan létrejövő üres donorhely (a későbbi kutatás célja).
+- `accepted_present`: változatlanul megmaradó, már kitöltött hely.
+- `source_overwrites`: meglévő, nem üres érték másik forrásból történő felülírása. A motor szabálya szerint **mindig 0**; a szerver kiszámolja és közli, hogy a kliens ellenőrizhesse.
+- `processed`/`total` pontos haladás (a `total` ismert, mert a kiválasztás rögzített). Alkalmazásnál a `total` a még alkalmazandó tételek száma a futás indításakor.
+- Az `outcomes` csak az előforduló kulcsokat tartalmazza; a hiányzó kulcs 0-t jelent.
+- A `runs` a megkezdett feldolgozási futások száma. Futáshatáron a feladat újra sorba áll, és ugyanott folytatódik.
+- Ismételt kérés esetén (azonos idempotenciakulcs és tartalom) a válasz `"replayed": true` mezőt is tartalmaz.
+
+### `GET /api/v1/workspace/product-jobs/{id}/items` (`products.read`)
+
+Lapozható termékenkénti eredmény: `outcome`, `apply_outcome` szűrő, `cursor`, `limit ≤ 100`.
+```json
+{"items": [{"product_id": 7, "name": "…", "sku": "…", "outcome": "eligible",
+            "apply_outcome": null, "revision_before": 4, "revision_after": null,
+            "summary": {"create": 30, "update": 1, "remove": 0, "keep": 12, "blocked_locked": 0},
+            "reasons": []}],
+ "next_cursor": 7}
+```
+Alkalmazási futásnál ugyanez az előnézet tételeiből, az `apply_outcome`-mal.
+
+## 3. Tömeges alkalmazás
+
+### `POST /api/v1/workspace/parameter-bulk-previews/{id}/apply` (`products.parameters` + `products.bulk`)
+
+```json
+{"preview_token": "…", "confirm": true, "expected_eligible": 15000,
+ "idempotency_key": "8b0c…(8–80 karakter)", "reason": "…"}
+```
+- Feltétel: az előnézet `completed`, nem járt le, a token egyezik, `confirm: true`, és az `expected_eligible` **pontosan** az előnézet `outcomes.eligible` értéke (amit a felhasználó látott). Különben 409/422.
+- **Idempotencia:** ugyanazzal a kulccsal és tartalommal ismételt kérés a már létrehozott futást adja vissza (200), új futás nélkül. Ugyanaz a kulcs más tartalommal → 409.
+- Válasz: `{"apply": <művelet DTO, kind=bulk_apply>}`.
+
+Termékenkénti `apply_outcome`:
+
+| `apply_outcome` | Jelentés |
+|---|---|
+| `applied` | alkalmazva, a termék `revision`-je eggyel nőtt |
+| `unchanged` | időközben már nem volt mit alkalmazni |
+| `stale` | a termék revíziója változott az előnézet óta: **kihagyva**, új előnézet kell |
+| `changed_since_preview` | ugyanazon revízió mellett a számított változás eltér (pl. új alias, katalógusváltás): kihagyva |
+| `error` | hiba ennél a terméknél; a többi halad. Új alkalmazási futás újrapróbálja. |
+
+A futás egészére vonatkozó leállást a DTO `stopped_reason` mezője jelzi; a fel nem dolgozott tételek `apply_outcome` értéke üres marad:
+
+| `stopped_reason` | Állapot | Jelentés |
+|---|---|---|
+| `cancelled_by_user` | `cancelled` | megszakították; a már alkalmazott rész megmarad |
+| `permission_revoked` | `cancelled` | a létrehozó elvesztette a `products.parameters` vagy `products.bulk` jogát vagy a tenant-hozzáférését. Ezt minden írási köteg előtt ellenőrizzük. |
+| `catalog_unavailable` | `failed` | nincs aktív katalógus; a futás folytatható, ha helyreáll |
+
+Az alkalmazás számlálói (`outcomes`): `applied`, `unchanged`, `stale`, `changed_since_preview`, `error`, plus a `slots`, `new_slots`, `source_overwrites` (0). Részleges siker = `completed` állapot nem nulla `stale`/`error` értékkel; **nem** „minden mentve”.
+
+**Újrapróbálás:** ugyanarra az előnézetre új idempotenciakulccsal indított alkalmazás csak a még nem alkalmazott (`apply_outcome` üres vagy `error`) tételeket dolgozza fel. `stale`/`changed_since_preview` tételhez új kiválasztás/előnézet kell.
+
+### `POST /api/v1/workspace/product-jobs/{id}/cancel` és `/resume`
+
+- `cancel`: a hátralévő tételekre vonatkozik; a már alkalmazott rész megmarad (auditált). Állapot: `cancelled`.
+- `resume`: `pending` vagy elakadt (`stalled: true`) futás újraindítása ugyanonnan (kurzor). Kész/megszakított futásra 409.
+
+## 4. Előkészítési ellenőrzés és jóváhagyás
+
+A `prepared` (a 03A diffben) csak azt jelenti, hogy a rendszer tárolt helyeket állított elő. Az **előkészítési jóváhagyás** külön, kifejezett felhasználói döntés egy ellenőrzött részhalmazra, rögzített termék-, séma- és katalógusrevízióval.
+
+### `POST /api/v1/workspace/preparation-checks` (`products.read`)
+
+Body: `{"selection_token": "…"}` → `{"check": <művelet DTO, kind=preparation_check>, "check_token": "…"}`.
+
+Termékenkénti eredmény: `approvable` vagy `blocked`, a `reasons[]` mezőben:
+
+| Blokkoló ok | Jelentés |
+|---|---|
+| `unclassified` | nincs belső kategória |
+| `donor_pending_review` | a donor `pending_review` |
+| `donor_choice_required` | többprofilos, nincs kifejezett donor |
+| `donor_missing` | nincs alkalmazható donor |
+| `not_prepared` | nincs tárolt paraméterhely |
+| `stale_diff` | a tárolt helyek eltérnek a jelenleg számítottól (alkalmazatlan változás) |
+| `meaning_conflict` | `conflict` állapotú hely |
+| `meaning_uncertain` | `review` hely bizonytalan címkével (`similar_label`) |
+| `unit_conflict` | `invalid` hely, vagy `review` `unit_unverified`/`ambiguous_number` okkal |
+
+**Nem blokkol:** üres donorhely (`missing`) – ez a későbbi kutatás célja –, `source_only`, `detached`, zárolt kézi érték. Az eredmény `summary` mezője termékenként adja a kutatandó hiányok számát (`research_targets`, `mandatory_research_targets`).
+
+Számlálók: `outcomes.approvable`, `outcomes.blocked`, `blocked_reasons{ok: db}`, `research_targets`, `mandatory_research_targets`.
+
+### `POST /api/v1/workspace/preparation-approvals` (`products.prepare.approve`)
+
+```json
+{"check_id": 81, "check_token": "…", "confirm": true, "expected_approvable": 14200,
+ "idempotency_key": "…", "reason": "Ellenőrzött mosógép-kör"}
+```
+- Feltételek, mint az alkalmazásnál (kész, nem lejárt ellenőrzés; token; megerősítés; pontos darabszám; idempotencia).
+- Csak az `approvable` termékek kerülnek be, és csak akkor, ha a revíziójuk az ellenőrzés óta nem változott; a többi `skipped_stale`-ként számolódik.
+- Rögzíti: termékenként `product_revision`, `navigation_node_id`, `donor_emag_category_id`, kutatandó hiányok; jóváhagyásszinten `catalog_version_id`, `rule_version`, `schema_fingerprint` (a besorolási szabályok és a donorellenőrzés lenyomata).
+
+**Jóváhagyás DTO:**
+```json
+{"id": 5, "version": 1, "state": "active|revoked", "check_id": 81, "selection_id": 41,
+ "approved": 14190, "skipped_stale": 10, "valid": 14190, "invalid": 0,
+ "research_targets": 380000, "mandatory_research_targets": 41000,
+ "catalog_version_id": 4, "rule_version": "category-03a.1", "schema_fingerprint": "…",
+ "schema_current": true, "reason": "…", "approved_by": 2, "approved_at": "…",
+ "revoked_by": null, "revoked_at": null, "revoke_reason": null, "revalidated_at": null}
+```
+
+**Érvényesség:** egy tétel érvényes, ha a termék `revision`-je változatlan, és a jóváhagyás `catalog_version_id`/`rule_version`/`schema_fingerprint` értéke megegyezik az aktuálissal (`schema_current`). Bármely termékváltozás (import, besorolás, donor, paraméterhely, kézi döntés) növeli a revíziót, így a tétel érvénytelen lesz. Az érvénytelen tétel a későbbi kutatási csomagba nem kerülhet.
+
+### `GET /api/v1/workspace/preparation-approvals` (`products.read`)
+
+Paraméterek: `state`, `cursor`, `limit ≤ 100` → `{"items": [<DTO>], "next_cursor"}`. A `valid`/`invalid` a legutóbbi újramérés szerinti érték; pontos aktuális érték a részletben.
+
+### `GET /api/v1/workspace/preparation-approvals/{id}` (`products.read`)
+
+A DTO **aktuálisan számolt** `valid`/`invalid` értékkel.
+
+### `GET /api/v1/workspace/preparation-approvals/{id}/items` (`products.read`)
+
+`valid` (bool) szűrő, `cursor`, `limit ≤ 100` →
+```json
+{"items": [{"product_id": 7, "product_revision": 9, "current_revision": 9, "valid": true,
+            "invalid_reason": null, "navigation_node_id": "…", "donor_emag_category_id": 385,
+            "research_targets": 26, "mandatory_research_targets": 3}], "next_cursor": null}
+```
+`invalid_reason`: `product_changed`, `schema_changed` vagy `revoked`.
+
+### `POST /api/v1/workspace/preparation-approvals/{id}/revalidate` (`products.prepare.approve`)
+
+Újramérés: az érvénytelen tételeket véglegesen érvénytelennek jelöli (`invalidated_at`), frissíti a számlálókat, auditál. Érvényessé nem tesz vissza semmit (ahhoz új ellenőrzés és jóváhagyás kell).
+
+### `POST /api/v1/workspace/preparation-approvals/{id}/revoke` (`products.prepare.approve`)
+
+Body: `{"expected_version": 1, "reason": "…"}` (az ok kötelező). Állapot `revoked`, `version` +1; a tételek megmaradnak (audit). Elavult verzió → 409.
+
+### `GET /api/v1/workspace/products/{id}/preparation` (`products.read`)
+
+`{"product_id", "revision", "approval": null | {"id", "approved_at", "product_revision", "valid", "invalid_reason", "research_targets", "mandatory_research_targets"}}` – a legutóbbi aktív jóváhagyás tétele.
+
+## Események és audit
+
+| Esemény | Mikor |
+|---|---|
+| `audit_events`: `products.selection_create`, `products.bulk_preview`, `products.bulk_apply`, `products.job_cancel`/`resume`, `products.preparation_check`, `products.preparation_approve`/`revoke`/`revalidate` | minden művelet, actorral és számlálókkal (nem tízezres JSON) |
+| `product_events.kind = parameter_slots` | termékenként az alkalmazáskor (a 03A-val azonos), `after.job_id` = alkalmazási futás |
+| `product_events.kind = bulk_operation` | összesítő esemény a futás végén (termék nélkül) |
+
+## Ami nem része ennek a fázisnak
+
+AI-kutatás, kalkuláció, kredit, fizetés, képkeresés, UNAS-export; kategória/donor tömeges módosítása (a 02A kategóriatérkép marad erre); a jóváhagyás nem indít semmit.
+
+## Adatmodell, migráció és visszaállítás
+
+- **0011** (`backend/migrations/versions/0011_bulk_preparation.py`), additív, a 0010 után.
+  - Új táblák:
+    - `product_selections`: a token SHA-256 lenyomata egyedi;
+    - `product_selection_items`: PK (`selection_id`, `product_id`) + revízió;
+    - `product_operation_items`: PK (`job_id`, `product_id`); indexek (`job_id`, `outcome`, `product_id`) és (`apply_job_id`, `apply_outcome`, `product_id`);
+    - `preparation_approvals`: egyedi (`tenant_id`, `idempotency_key`);
+    - `preparation_approval_items`: index (`tenant_id`, `product_id`, `approval_id`).
+  - `product_jobs`: `created_by`, `idempotency_key`, `request_hash`, egyedi (`tenant_id`, `kind`, `idempotency_key`).
+  - Jogok: `products.bulk`, `products.prepare.approve`.
+- A worker a `products.operation` feladatot a `app.product_jobs` modulon keresztül tölti be. `worker.py` módosítás nem kell.
+- Telepítés:
+  1. adatbázis-mentés;
+  2. `docker compose run --rm migrate`;
+  3. `docker compose restart backend worker`.
+- Elakadt futás folytatása: `POST /product-jobs/{id}/resume` vagy `docker compose exec backend python -m app.product_jobs`.
+- **Downgrade:** csak jóváhagyás nélkül fut. Ekkor törli az új táblákat és a tömeges futások sorait (ezek műveleti előzmények). Jóváhagyás esetén `RuntimeError` keletkezik, és a 0011 előtti mentést kell visszaállítani.
+
+## Mérés (MySQL 8.0.46, helyi, eldobható szerver)
+
+`scripts/mysql_category03c_check.py` – csak loopback hoston, üres adatbázison fut. Tilos a VPS-en, közös vagy `pinfo_db` adatbázison futtatni.
+
+```bash
+export APP_DATABASE_URL='mysql+pymysql://root:scratch@127.0.0.1:33306/adatdusito_dev'
+cd backend && PYTHONPATH=. python ../scripts/mysql_category03c_check.py --products 60000
+```
+
+Mért eredmény (2026-11-16): 60 000 besorolt termék, 30 paraméteres donor, futáskorlát 50 000, tehát **2 futás** feladatonként.
+
+| Lépés | Idő | Eredmény |
+|---|---:|---|
+| kiválasztás (teljes szűrt halmaz, kérésen belül) | 1,69 s | 60 000 tétel |
+| tömeges előnézet (háttér, 2 futás) | 145,1 s | 60 000 `eligible`, 1 860 000 új hely, `source_overwrites` 0, írás nincs |
+| tömeges alkalmazás (háttér, 2 futás) | 644,1 s | 60 000 `applied`, `source_overwrites` 0 |
+| ismételt kérés azonos kulccsal | 0,00 s | ugyanaz a futás (`replayed`) |
+| újrapróbálás új kulccsal | 0,10 s | 0 hátralévő tétel |
+| előkészítési ellenőrzés (háttér, 2 futás) | 263,2 s | 40 000 `approvable`, 20 000 `blocked` (`unit_conflict`) |
+| jóváhagyás létrehozása (kérésen belül, 1000-es darabokban) | 2,55 s | 40 000 tétel, 1 040 000 kutatandó hiány |
+| jóváhagyás élő érvényessége | 0,07 s | 40 000 érvényes |
+| újramérés | 0,93 s | – |
+| downgrade-védelem | 0,02 s | megtagadva |
+
+A kérésen belüli lépések (kiválasztás, jóváhagyás) lineárisan nőnek. 250 000 termékes kiválasztásnál ez nagyságrendileg 7–16 s; minden SQL-utasítás rövid (5000/1000 soros darabok). Ezt nem mértük, ezért nem garancia.
+
+Ezek egy gép mérései, nem garanciák.
