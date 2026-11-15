@@ -1,7 +1,17 @@
 # CATEGORY-03A – API/DTO-szerződés: paraméterhelyek, alias/mértékegység, verziózott diff
 
 - **Feladat:** [#23](https://github.com/bizsis/adatdusito/issues/23). Alap: CATEGORY-02A (#18, `e946b93`) és a CATEGORY-02C donorvédelem (#25).
-- **Státusz:** a szerződés az implementációval együtt készül a `claude/category-03a-parameters` ágon. Csak az a végpont tekinthető késznek, amelyet a PR „Implementált végpontok” listája annak jelöl.
+- **Státusz:** **implementálva és tesztelve** a `claude/category-03a-parameters` ágon. Mind a 10 lent leírt végpont működik:
+  - `GET /parameter-diff`
+  - `GET /products/{id}/parameters`
+  - `POST …/preview`
+  - `POST …/apply`
+  - `PATCH …/{slot_key}`
+  - `GET`, `POST` és `DELETE /parameter-aliases`
+  - `POST /parameter-runs`
+  - `GET /product-jobs/{id}`
+
+  Tesztek: `backend/tests/test_product_parameters.py`, `test_category03a_migration.py`. MySQL-mérés: a dokumentum végén.
 - Az útvonalak és a mezőnevek a frontend (Codex) számára **véglegesek**. Változtatás csak additív lehet, vagy a Vezér döntésével történhet.
 - Ez a fázis **paraméter-előkészítés**: nincs AI-hívás, nincs képkeresés, nincs kreditfelhasználás, nincs UNAS-export-módosítás. Meglévő, nem üres beszállítói értéket automatika nem ír felül.
 
@@ -38,7 +48,7 @@ A CATEGORY-02A szabályai érvényesek: session-cookie, `X-CSRF-Token` minden í
 | `present` | Kitöltve | biztos érték: normalizált egyezés, jóváhagyott alias vagy kézi döntés |
 | `missing` | Hiányzik | a donor paramétere, amelyhez nincs forrásadat (üres hely) |
 | `review` | Ellenőrzést igényel | bizonytalan egyezés vagy nem igazolt mértékegység; `candidates[]` sorolja a jelölteket |
-| `conflict` | Ellentmondás | több forrás eltérő értékkel ugyanarra a helyre; minden forrás megmarad a `sources[]`-ben |
+| `conflict` | Ellentmondás | több forrás eltérő értékkel ugyanarra a helyre; minden forrás megmarad a `sources[]`-ben. Ha korábban már volt tárolt érték, az megmarad a `value`-ban (`would_overwrite_value`). |
 | `invalid` | Érvénytelen | típus-, egység- vagy megengedettérték-hiba; a nyers érték megmarad |
 | `source_only` | Csak forrásban | `src:` hely, donorparaméterre nem illeszthető |
 | `detached` | Korábbi profilból | donorváltás után megmaradt, kitöltött vagy kézi érték, amely az új donorban nincs |
@@ -58,9 +68,11 @@ A CATEGORY-02A szabályai érvényesek: session-cookie, `X-CSRF-Token` minden í
 | `not_numeric` | mértékegységes célhoz nem szám érték: invalid |
 | `value_not_allowed` | kötött értékkészletnél (`allow_new_value = false`) nincs egyező megengedett érték: invalid |
 | `conflicting_sources` | több forrás eltérő értékkel |
+| `would_overwrite_value` | más forrás, alias vagy donor felülírná a már tárolt értéket. A tárolt érték megmarad (`value`), az új jelölt a `candidates[]`-be kerül, az állapot `conflict`. |
+| `ambiguous_number` | lehetséges ezres elválasztó (pl. `1.200`): review |
 | `donor_param_without_source` | hiányzó donorparaméter, üres hely |
 | `donor_not_ready` | a terméknél nincs dúsításra kész donor (`parameter_profile_state` ≠ `ready`): csak `src:` helyek keletkeznek |
-| `source_changed_locked` | a forrásérték változott, de a hely kézzel zárolt: az érték nem változott |
+| `source_changed_locked` | a forrásérték változott, de a hely kézzel zárolt: az érték nem változott. Az új forrás a `pending_source[]`-ben látható. |
 | `source_refreshed` | ugyanabból a forrásoszlopból frissült az érték (feedfrissítés) |
 | `profile_changed` | donorváltás miatt `detached` |
 | `manual_decision` | kézi döntés |
@@ -98,6 +110,8 @@ A CATEGORY-02A szabályai érvényesek: session-cookie, `X-CSRF-Token` minden í
 - A `sources[]` az eredeti fejlécet, nyers értéket, mértékegységet és eredetet **változatlanul** adja vissza. A `kind` értéke `attribute` (`source_attributes`) vagy `field` (strukturált mező, pl. `weight`).
 - A `candidates[]` (review/conflict esetén, legfeljebb 3 elem) alakja: `{"slot_key", "emag_parameter_id", "name", "reason"}` címkejelöltnél, vagy `{"source_key", "value", "unit"}` értékjelöltnél.
 - Az `alias` alakja: `{"id", "version", "scope"}`, ha alias döntött.
+- A `pending_source[]` (opcionális) zárolt helyen az újonnan érkezett, el nem fogadott forrásértékeket mutatja.
+- A számok tizedespontos alakban kerülnek a `value`-ba (pl. `1.5`). A nyers alak a `sources[].raw` és a `unit_conversion.raw_number` mezőben marad meg.
 
 ## Végpontok
 
@@ -206,7 +220,7 @@ Folytatható háttérfutás a paraméterhelyek előállítására.
  "scope": {"source_category_id": null, "navigation_node_id": null, "supplier_id": null},
  "start_after_product_id": 0}
 ```
-- Egy futás **legfeljebb 50 000 terméket** dolgoz fel (`RUN_PRODUCT_LIMIT`, a 02A-val közös, környezeti változóval csak csökkenthető). A tenant összes termékszáma ezen felül korlátlan: ha a hatókörben több termék van, a futás `has_more: true` és `next_start_after_product_id` értékkel zárul, és a kliens új futást indíthat onnan.
+- Egy futás **legfeljebb 50 000 terméket** dolgoz fel (a 02A-val közös `run_product_limit()`; az `IMPORT_MAX_PRODUCTS` környezeti változó csak csökkentheti). A tenant összes termékszáma ezen felül korlátlan: ha a hatókörben több termék van, a futás `has_more: true` és `next_start_after_product_id` értékkel zárul, és a kliens új futást indíthat onnan.
 - `preview`: csak számlál, nem ír. `apply`: kötegelt (500 termék) írás kurzorral. Megszakítás után folytatható, ismételt futtatás esetén idempotens (változatlan termékhez nem ír és nem növel revíziót).
 - Termékenként a `apply` ugyanazt teszi, mint a termékszintű `apply`, revízióellenőrzés nélkül: zárolt helyet nem ír, csak `blocked_locked`-ként számolja.
 - Válasz: `{"job": <job DTO>}`. Ugyanarra a hatókörre indított újabb futás a régit `superseded` állapotba teszi.
@@ -252,3 +266,41 @@ Csak az alábbi, igazolt, determinisztikus átváltások léteznek. Más esetben
 | frekvencia | Hz, kHz, MHz, GHz |
 
 Adatméret (MB/GB/TB) nem váltódik át, mert kétértelmű (1000 vs. 1024). A nyers érték mindig megmarad (`sources[].raw`, `unit_conversion.raw_number`). A tizedesvessző és -pont is elfogadott, ezres elválasztót nem találgatunk.
+
+## Adatmodell, migráció és visszaállítás
+
+- **0010** (`backend/migrations/versions/0010_product_parameters.py`), additív. A head a #18 0009-e.
+  - `parameter_aliases`: tenant-szintű vagy globális (`tenant_id NULL`), donorkörnyezethez kötött, verziózott (`version`, `state`). A jóváhagyott alias egyediségét az `active_key` (SHA-256) adja, ami visszavonáskor `NULL` lesz, így az előzmények megmaradnak.
+  - `product_parameter_values`: PK (`product_id`, `slot_key`). Indexek: (`tenant_id`, `state`, `mandatory`, `product_id`) a diff szűrőihez, (`tenant_id`, `emag_parameter_id`).
+  - Két új jog a jogkatalógusban: `products.parameters` és `parameters.global_aliases.manage`.
+- Telepítés:
+  1. adatbázis-mentés;
+  2. `docker compose run --rm migrate` (vagy `alembic upgrade head`);
+  3. `docker compose restart backend worker`.
+
+  Visszatöltés nincs: a helyeket a futások állítják elő.
+- **Downgrade:** csak akkor fut, ha nincs alias és nincs kézi vagy zárolt hely. Ilyenkor az automatikus helyek eltűnnek; ezek bármikor újraképezhetők. Különben `RuntimeError` keletkezik, és a 0010 előtti mentést kell visszaállítani.
+
+## Mérés (MySQL 8.0.46, helyi, eldobható szerver)
+
+`scripts/mysql_category03a_check.py` – csak loopback hoston, üres adatbázison fut. Tilos VPS-en, közös fejlesztői vagy `pinfo_db` adatbázison futtatni.
+
+```bash
+export APP_DATABASE_URL='mysql+pymysql://root:scratch@127.0.0.1:33306/adatdusito_dev'
+cd backend && PYTHONPATH=. python ../scripts/mysql_category03a_check.py --products 50000
+```
+
+Mért eredmény (2026-11-15, 50 000 besorolt termék, 30 paraméteres donor, 6 forrásoszlop/termék → **1 550 000 hely**):
+
+| Lépés | Idő |
+|---|---:|
+| `alembic upgrade head` (0009 + 0010, üres táblákra) | 1,69 s |
+| paraméterfutás, `apply`, első (1 550 000 hely létrehozása) | 376,3 s |
+| ugyanaz ismét (idempotens: 0 módosult termék, 0 írás) | 148,1 s |
+| diff, első oldal | 0,20 s |
+| diff, `state=review` / `mandatory_missing=true` / `parameter_profile_state=ready` | 0,01 s |
+| diff, üres találatú szűrő (`state=conflict`) – index nélkül 1,07 s volt | 0,00 s |
+| diff, `mandatory_missing=false` (antijoin, a legrosszabb eset) | 0,6 s |
+| downgrade-védelem (kézi döntés után megtagadva) | 0,75 s |
+
+Ezek egy gép mérései, nem garanciák. A futás háttérben, kötegenként commitolva halad, ezért HTTP-kérés nem vár rá.
