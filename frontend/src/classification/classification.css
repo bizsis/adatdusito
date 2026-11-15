@@ -1,0 +1,115 @@
+.classification-workspace {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--space-4);
+  min-width: 0;
+}
+.classification-workspace > .card {
+  min-width: 0;
+}
+.classification-workspace .table-wrap {
+  margin-top: var(--space-4);
+}
+.classification-workspace td small {
+  display: block;
+  margin-top: var(--space-1);
+}
+.classification-workspace td,
+.classification-summary dd,
+.classification-choices li > span {
+  overflow-wrap: anywhere;
+}
+.classification-workspace td {
+  min-width: 130px;
+}
+.classification-workspace td:first-child {
+  min-width: 45px;
+}
+.classification-choices,
+.classification-mappings,
+.classification-alternatives {
+  list-style: none;
+  padding: 0;
+}
+.classification-choices li,
+.classification-mappings li {
+  padding: var(--space-3);
+  margin-top: var(--space-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface);
+}
+.classification-choices li {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--space-3);
+  align-items: center;
+}
+.classification-alternatives li {
+  display: flex;
+  gap: var(--space-3);
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--space-2) 0;
+}
+.classification-picker-lock {
+  border: 0;
+  margin: 0;
+  padding: 0;
+  min-width: 0;
+}
+.classification-summary .notice svg {
+  vertical-align: middle;
+}
+@media (max-width: 700px) {
+  .classification-workspace .classification-products,
+  .classification-workspace .classification-products tbody,
+  .classification-workspace .classification-products tr {
+    display: block;
+    min-width: 0;
+    width: 100%;
+  }
+  .classification-products thead {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+  }
+  .classification-products tbody tr + tr {
+    border-top: 3px solid var(--border);
+  }
+  .classification-workspace .classification-products td {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--space-1);
+    min-width: 0;
+    width: 100%;
+  }
+  .classification-products td::before {
+    content: attr(data-label);
+    color: var(--muted);
+    font-size: 11px;
+  }
+  .classification-workspace .classification-products input[type="checkbox"] {
+    width: 22px;
+    height: 22px;
+  }
+  .classification-products .badge {
+    justify-self: start;
+  }
+  .classification-alternatives li {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .classification-choices li {
+    align-items: stretch;
+    flex-direction: column;
+  }
+  .classification-workspace .actions {
+    flex-wrap: wrap;
+  }
+  .classification-workspace .pager {
+    flex-wrap: wrap;
+  }
+}
