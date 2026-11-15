@@ -172,3 +172,58 @@ Egy szűrt lista számlálója nem nevezhető át teljes adatbázis-méretnek.
 Az alias-felülvizsgálat prototípusbeli terméksor-döntés; tenant-/globális
 alias létrehozásához a végleges művelet hatókörét és jogát külön kell tisztázni.
 Termékdöntésből nem következhet rejtett, minden ügyfélre érvényes szabály.
+
+## Ellenőrzési eredmények és kiadás
+
+| Ellenőrzés | Eredmény |
+| --- | --- |
+| Teljes backend/eszközcsomag | **389 sikeres**, 298,23 s |
+| Teljes böngészős regresszió | **109 sikeres**, 585,96 s; ebből 28 új paraméter-mock teszt |
+| Végleges paraméter-mock UI | **32 sikeres**, 33,06 s; a teljes csomag 28 esetét újrafuttatja, további 4 célzott regresszióval |
+| Külön menu-export job | **14 sikeres**, 12,43 s |
+| ESLint, TypeScript/Vite | Sikeres |
+| Node 22 lint és lintkonfiguráció | Sikeres, **3 konfigurációs teszt** |
+| Docker frontend/backend | Mindkettő sikeres; backend `pip check` és alkalmazásimport is |
+| npm audit, dev-függőségekkel | **0 sérülékenység** |
+
+Nincs kihagyott/hibás teszt. A két böngészős riport uniója 113 külön teszteset;
+a célzott ismétléseket nem adjuk hozzá új tesztként. A 32 új paraméteres UI-teszt
+**mock**, nem valódi 03A API-integráció. A 02D valódi FastAPI/SQLite-tesztjei a
+korábbi besorolást/importot/jogokat ellenőrzik, nem a hiányzó paraméterendpointokat.
+A két meglévő Starlette/httpx/AnyIO deprecation figyelmeztetés megmaradt.
+
+A teljes böngészős futás után az új UI további kontextus-, állapot-, többforrás-
+és ismeretlen-összesítés regressziói is elkészültek; ezért a végleges UI összes
+32 tesztjét külön újrafuttattam. A normál, nem injektált produkciós munkafolyamat
+új paraméter-szolgáltatást nem kap. A végleges forrásból új Docker/Node 22 build
+és lint/configuration-check is lefutott.
+
+```bash
+cd frontend
+npm ci
+npm run lint
+npm run test:lint
+npm run build
+npm audit --audit-level=high
+cd ..
+PYTHONPATH=backend python -m pytest -q backend/tests scripts/tests \
+  --ignore-glob='*_browser.py' --ignore=scripts/tests/test_emag_menu_export.py
+PYTHONPATH=backend python -m pytest -q backend/tests/*_browser.py scripts/tests/*_browser.py
+python -m pytest -q scripts/tests/test_emag_menu_export.py
+# Csak az új UI:
+PYTHONPATH=backend python -m pytest -q scripts/tests/test_parameter_presentation_browser.py
+```
+
+A tesztharness ideiglenes build-outputhoz `CATEGORY03_TEST_DIST` változót használ;
+ez nem alkalmazásbeállítás. A meglévő CI `_browser.py` mintája felveszi az új
+fájlt, workflow-fájl módosítása nélkül.
+
+A `codex/category-03b-frontend` ág feltöltve. A draft PR létrehozási kísérlete
+`POST https://api.github.com/graphql: Forbidden` (HTTP 403) hibával blokkolt.
+**Távoli GitHub Actions-sikert nem állítok**; a fenti futások helyi ellenőrzések.
+A stacked PR alapága `codex/category-02d-integration`, a függőség főágba
+kerüléséig. [Kész PR-leírás](CATEGORY-03B-PR.md).
+
+Saját kódcommitok: `817e5c7` (komponensek, mocktesztek, adatigény), `742f402`
+(ismeretlen teljes állomány korrekt kezelése), majd a végleges ellenőrzési
+összefoglaló dokumentációs commitja. Nincs main-merge vagy VPS-telepítés.
