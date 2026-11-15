@@ -60,6 +60,11 @@ class Security(Input):
     invite_ttl_hours: int = Field(default=48, ge=1, le=168)
 
 
+class Classification(Input):
+    # Minimum measured precision before a method may classify automatically.
+    auto_threshold: float = Field(default=0.98, ge=0.5, le=1.0)
+
+
 class Smtp(Input):
     host: str = Field(min_length=1, max_length=253)
     port: int = Field(ge=1, le=65535)
@@ -175,6 +180,7 @@ def read(who=Depends(require("system.settings.read")), db: Session = Depends(dat
         | {"google_secret_set": bool(db.get(SecretSetting, "google.client_secret"))},
         "mfa": config(db, "mfa"),
         "security": config(db, "security"),
+        "classification": config(db, "classification"),
         "roles": [
             {
                 "id": r.id,
@@ -382,4 +388,18 @@ def security(
     before = config(db, "security")
     store(db, "security", body.model_dump())
     log_change(db, who, "security", before, body.model_dump())
+    return body.model_dump()
+
+
+@router.put("/classification")
+def classification(
+    body: Classification,
+    who=Depends(require("system.settings.manage")),
+    db: Session = Depends(database),
+):
+    """CATEGORY-02A: automatic classification threshold (a target, not a measurement)."""
+    recent(who, db)
+    before = config(db, "classification")
+    store(db, "classification", body.model_dump())
+    log_change(db, who, "classification", before, body.model_dump())
     return body.model_dump()
