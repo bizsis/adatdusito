@@ -428,6 +428,50 @@ class Identity:
     full_resources: bool = True
 
 
+# Paths a restricted session (forced password change or pending MFA) may use.
+RESTRICTED_SAFE_PATHS = frozenset(
+    {
+        "/api/v1/auth/me",
+        "/api/v1/auth/logout",
+        "/api/v1/auth/password",
+        "/api/v1/auth/security",
+        "/api/v1/auth/reauth",
+        "/api/v1/auth/totp/setup",
+        "/api/v1/auth/totp/confirm",
+        "/api/v1/auth/passkeys/login/options",
+        "/api/v1/auth/passkeys/login/verify",
+    }
+)
+
+
+def route_path(request: Request):
+    """The path the router matched, taken from the ASGI scope (SECURITY-02).
+
+    Authorization must not use request.url: it is rebuilt from the Host
+    header and is therefore client-influenced (a forged Host once rewrote
+    request.url.path). scope["path"] is the percent-decoded request target
+    set by the server, which is exactly what Starlette routes on; the mount
+    prefix (scope["root_path"]) is removed the same way Starlette's
+    get_route_path() does. Anything unexpected yields "" (never a safe
+    path), so the gate fails closed. Host, X-Forwarded-Host/-Proto/-Prefix
+    and query strings play no part.
+    """
+    path = request.scope.get("path")
+    if not isinstance(path, str) or not path.startswith("/"):
+        return ""
+    root = request.scope.get("root_path") or ""
+    if not isinstance(root, str):
+        return ""
+    if root and path.startswith(root):
+        if path == root:
+            return ""
+        if path[len(root)] == "/":
+            path = path[len(root) :]
+    if "\x00" in path or "?" in path or "#" in path:
+        return ""
+    return path
+
+
 def identity(request: Request, db: Session = Depends(database)):
     token = request.cookies.get(COOKIE, "")
     session = db.get(LoginSession, digest(token)) if len(token) == 64 else None
@@ -445,18 +489,8 @@ def identity(request: Request, db: Session = Depends(database)):
         raise HTTPException(401, "A munkamenet lejárt.")
     mfa_pending = needs_mfa(db, user) and not session.mfa_verified
     restricted = mfa_pending or user.must_change_password
-    safe_paths = {
-        "/api/v1/auth/me",
-        "/api/v1/auth/logout",
-        "/api/v1/auth/password",
-        "/api/v1/auth/security",
-        "/api/v1/auth/reauth",
-        "/api/v1/auth/totp/setup",
-        "/api/v1/auth/totp/confirm",
-        "/api/v1/auth/passkeys/login/options",
-        "/api/v1/auth/passkeys/login/verify",
-    }
-    if restricted and request.url.path not in safe_paths:
+    safe_paths = RESTRICTED_SAFE_PATHS
+    if restricted and route_path(request) not in safe_paths:
         raise HTTPException(
             403, "A folytatáshoz jelszócsere vagy második faktor beállítása szükséges."
         )

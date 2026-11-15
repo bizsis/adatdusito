@@ -37,11 +37,15 @@ jobs:
         with:
           python-version: ${{ env.PYTHON_VERSION }}
           cache: pip
-          cache-dependency-path: backend/requirements.lock
-      - name: Install locked dependencies exactly (no resolver) and verify consistency
+          cache-dependency-path: |
+            backend/requirements.lock
+            backend/requirements-test.lock
+      - name: Install locked runtime + test dependencies exactly (no resolver) and verify consistency
         run: |
-          python -m pip install --no-deps -r backend/requirements.lock
+          python -m pip install --no-deps -r backend/requirements.lock -r backend/requirements-test.lock
           python -m pip check
+      - name: Check dependency files (pins, runtime/test separation, resolver agreement)
+        run: python backend/scripts/check_requirements.py --resolve
       - name: Run backend and tooling tests
         env:
           PYTHONPATH: backend
@@ -75,6 +79,7 @@ jobs:
           cache: pip
           cache-dependency-path: |
             backend/requirements.lock
+            backend/requirements-test.lock
             scripts/browser-requirements.txt
       - uses: actions/setup-node@v4
         with:
@@ -82,7 +87,7 @@ jobs:
           cache: npm
           cache-dependency-path: frontend/package-lock.json
       - name: Install backend and browser test dependencies
-        run: python -m pip install -r backend/requirements.lock -r scripts/browser-requirements.txt
+        run: python -m pip install -r backend/requirements.lock -r backend/requirements-test.lock -r scripts/browser-requirements.txt
       - name: Cache Playwright browsers
         uses: actions/cache@v4
         with:
@@ -125,10 +130,13 @@ jobs:
         with:
           python-version: ${{ env.PYTHON_VERSION }}
           cache: pip
-          cache-dependency-path: scripts/browser-requirements.txt
-      # Deliberately without backend dependencies: the tool runs on Windows
-      # machines with only Playwright installed.
-      - run: python -m pip install pytest==9.0.1 -r scripts/browser-requirements.txt
+          cache-dependency-path: |
+            backend/requirements-test.lock
+            scripts/browser-requirements.txt
+      # Deliberately without backend runtime dependencies: the tool runs on
+      # Windows machines with only Playwright installed. pytest comes from the
+      # test lock (single pin, backend/requirements-test.in).
+      - run: python -m pip install -r backend/requirements-test.lock -r scripts/browser-requirements.txt
       - name: Cache Playwright browsers
         uses: actions/cache@v4
         with:
@@ -184,8 +192,17 @@ jobs:
           context: backend
           push: false
           tags: adatdusito-ci-backend
+          load: true
           cache-from: type=gha,scope=backend
           cache-to: type=gha,scope=backend,mode=max
+      - name: Backend image contains runtime dependencies only
+        run: |
+          docker run --rm --entrypoint python adatdusito-ci-backend -c "
+          import importlib.util, sys
+          bad = [m for m in ('pytest', '_pytest', 'pluggy', 'iniconfig') if importlib.util.find_spec(m)]
+          sys.exit(f'test packages in the runtime image: {bad}' if bad else 0)"
+          docker run --rm --entrypoint sh adatdusito-ci-backend -c 'test ! -e /app/tests && test ! -e /app/requirements-test.lock && pip check'
+          docker run --rm --entrypoint python adatdusito-ci-backend -c "import app.main"
       - name: Build frontend image
         uses: docker/build-push-action@v6
         with:

@@ -10,11 +10,11 @@ Frontend dependency and lint decisions are documented in [FRONTEND-02](FRONTEND-
 
 | Job | What it checks | Blocking |
 |---|---|---|
-| `backend` | `backend/tests` + `scripts/tests`, except browser tests and the menu-export test. Dependencies are installed from `backend/requirements.lock` with `--no-deps`, then checked with `pip check`. | yes |
+| `backend` | `backend/tests` + `scripts/tests`, except browser tests and the menu-export test. Dependencies are installed from `backend/requirements.lock` + `backend/requirements-test.lock` with `--no-deps`, then checked with `pip check` and `backend/scripts/check_requirements.py --resolve`. | yes |
 | `browser` | `backend/tests/*_browser.py` + `scripts/tests/*_browser.py` (Playwright and Chromium) against a fresh `vite build` of the frontend | yes |
-| `menu-export` | `scripts/tests/test_emag_menu_export.py`, installed with **only** `scripts/browser-requirements.txt`, the way the Windows export tool is used | yes |
+| `menu-export` | `scripts/tests/test_emag_menu_export.py`, installed with **only** `scripts/browser-requirements.txt` and the test lock (pytest), the way the Windows export tool is used | yes |
 | `frontend` | `npm run lint` (zero warnings), `npm run test:lint`, explicit TypeScript checking, then `vite build` | yes |
-| `docker` | builds both images with BuildKit and the GitHub Actions layer cache, without pushing | yes |
+| `docker` | builds both images with BuildKit and the GitHub Actions layer cache, without pushing; checks that the backend image has no test packages or tests and that `pip check` passes | yes |
 | `ci-ok` | one aggregated required status for branch protection | yes |
 
 **Test partition.** Every test file runs in exactly one job:
@@ -40,7 +40,8 @@ It audits:
 
 | Input | Tool |
 |---|---|
-| `backend/requirements.lock` (pinned, audited as-is) | `pip-audit --no-deps` |
+| `backend/requirements.lock` (runtime, pinned, audited as-is) | `pip-audit --no-deps` |
+| `backend/requirements-test.lock` (test-only, dev-only class) | `pip-audit --no-deps` |
 | `scripts/browser-requirements.txt` | `pip-audit` |
 | `frontend/package-lock.json` | `npm audit`, runs twice: once with `--omit=dev` (runtime) and once for everything |
 
@@ -63,24 +64,45 @@ It audits:
 |---|---|---|---|---|
 | PyJWT | 2.10.1 → **2.15.1** | 16 with a fix (2.12.0–2.15.0) and the disputed CVE-2025-45768, which no longer matches | Google ID-token verification (`oidc_api.claims`): `PyJWKClient` with a fixed HTTPS URL, RS256 only. Tokens arrive from Google's token endpoint over TLS, so most HMAC/JWK-confusion advisories were not exploitable, but `crit` handling, non-Base64URL signature segments and JWKS refresh/DoS behaviour applied. | No API change for the calls used. Since 2.11 `iss` must be a string. Covered by `test_dependency_oidc_jwt.py`, which uses the real `PyJWKClient` path. |
 | python-multipart | 0.0.20 → **0.0.32** | 6 (fixes in 0.0.22–0.0.31) | Every multipart upload (supplier import, export reference workbook) and urlencoded form goes through Starlette into this parser: header-count, preamble/epilogue, negative Content-Length and separator DoS issues were reachable without login on Form endpoints. The path-traversal advisory needs `UPLOAD_KEEP_FILENAME`, which is not used here. | 0.0.32 adds only a boundary-scan speed-up over 0.0.31. 0.0.33 is not used (drops Python 3.10, changes `parse_options_header` output). Covered by `test_dependency_multipart.py`. |
-| starlette | 0.49.3 → **1.3.1** | 5 | **Host/path injection into `request.url` was reachable**: `security.identity()` compares `request.url.path` with the safe paths of restricted sessions (forced password change, pending MFA), and a forged Host header unlocked other endpoints. Also the urlencoded `max_fields` bypass. `HTTPEndpoint` and Windows `StaticFiles` are not used. | Must be upgraded together with FastAPI. |
+| starlette | 0.49.3 → **1.3.1** | 5 | **Host/path injection into `request.url` was reachable**: `security.identity()` compares `request.url.path` with the safe paths of restricted sessions (forced password change, pending MFA), and a forged Host header unlocked other endpoints (SECURITY-02 moved the gate to the ASGI scope path, see `security.route_path`). Also the urlencoded `max_fields` bypass. `HTTPEndpoint` and Windows `StaticFiles` are not used. | Must be upgraded together with FastAPI. |
 | fastapi | 0.121.1 → **0.141.1** | — (needed for Starlette ≥ 1.0) | — | 0.141.1 is the newest FastAPI released while 1.3.1 was the current Starlette. Breaking changes since 0.121 were checked: no `on_event`, no `fastapi.security` classes, Pydantic v2 only. JSON bodies now require `Content-Type: application/json` (0.132), which the frontend always sends. Covered by `test_dependency_starlette.py`. |
 
-Still open (dev-only): **pytest 9.0.1** (PYSEC-2026-1845: a `/tmp/pytest-of-<user>` local issue, fixed in 9.0.3). It is a test runner, but it ships in the backend image through the shared lock. Moving test-only packages out of the runtime lock is the cleaner follow-up. **Vite 7.3.8** and the frontend-owned blocking lint integration are covered by FRONTEND-02; the final npm audit reports zero findings.
+**SECURITY-02:** test tools no longer ship in the images. pytest is **9.0.3** in the test-only lock, so PYSEC-2026-1845 is closed. **FRONTEND-02:** Vite is **7.3.8**, frontend lint is blocking, and the final npm audit reports zero findings.
 
-### Lock maintenance procedure (reproducible)
+### Python dependency files (backend)
 
-`backend/requirements.lock` is the complete runtime set: 53 pinned distributions installed with `--no-deps`. To change it:
-1. Edit only the pins that must change, never "upgrade everything".
-2. Check that the lock is complete and that the resolver would choose exactly these versions under Python 3.12 (the Docker/CI interpreter):
-   ```bash
-   python3.12 -m venv /tmp/lockcheck && /tmp/lockcheck/bin/pip install -U pip
-   /tmp/lockcheck/bin/pip install --dry-run --ignore-installed --report /tmp/report.json -r backend/requirements.lock
-   # every package in report["install"] must be in the lock with the same version, and vice versa
-   /tmp/lockcheck/bin/pip install --no-deps -r backend/requirements.lock && /tmp/lockcheck/bin/pip check
-   ```
-3. Run the audit: `pip-audit -r backend/requirements.lock --no-deps --disable-pip`.
-4. Run the full CI.
+| File | Role | Installed by |
+|---|---|---|
+| `backend/requirements.txt` | runtime **inputs**: direct imports of `backend/app`, exact pins | — (input of the lock) |
+| `backend/requirements.lock` | complete runtime set: 49 pins, with `# via` provenance | backend/worker image (`pip install --no-deps` + `pip check`), CI |
+| `backend/requirements-test.in` | test inputs (`pytest`) | — (input of the test lock) |
+| `backend/requirements-test.lock` | **only** the packages tests add on top of the runtime lock: `pytest`, `pluggy`, `iniconfig`, `pygments` | CI and local test runs, never the image |
+
+- The backend image installs the runtime lock only, and `backend/.dockerignore` keeps `tests/` and the test files out of it.
+- The CI `docker` job checks the built image: no `pytest`, `pluggy` or `iniconfig`, no `/app/tests`, `pip check` passes, and `app.main` imports.
+- Local test setup:
+  ```bash
+  python3.12 -m venv .venv
+  .venv/bin/pip install --no-deps -r backend/requirements.lock -r backend/requirements-test.lock
+  .venv/bin/pip check
+  ```
+
+### Generating and checking the locks
+
+- **Generate** with `backend/scripts/compile-requirements.sh`. It uses [uv](https://docs.astral.sh/uv/) and targets the image interpreter: CPython 3.12, `x86_64-manylinux_2_28`.
+  - Existing pins in the lock files are kept as preferences, so only packages whose inputs changed move.
+  - To upgrade a package on purpose: `UPGRADE="starlette fastapi" backend/scripts/compile-requirements.sh`.
+  - The test lock is resolved with the runtime lock as a constraint. The script stops if test resolution would change a runtime pin.
+- **Check** with `python backend/scripts/check_requirements.py --resolve`. The CI backend job runs it on every PR.
+  - Offline:
+    - `requirements.txt` pins equal the lock
+    - no test tool is in the runtime lock
+    - the runtime and test locks do not overlap
+    - test inputs equal the test lock
+  - `--resolve`: pip's resolver picks exactly the locked set, both for the runtime lock and for runtime + test.
+- The offline part also runs as `backend/tests/test_dependency_locks.py`.
+- **Audit:** `dependency-audit.yml` audits `requirements.lock` as runtime, and `requirements-test.lock` and `scripts/browser-requirements.txt` as dev-only.
+  - Packages are never reclassified by name. A test tool that slips back into the runtime lock is reported as a runtime finding.
 
 ## Test reports and artifacts
 
@@ -126,7 +148,7 @@ exhaustive dependency checks are blocking with the current maintained plugin.
 
 ```bash
 python3.12 -m venv .venv
-.venv/bin/pip install --no-deps -r backend/requirements.lock && .venv/bin/pip check
+.venv/bin/pip install --no-deps -r backend/requirements.lock -r backend/requirements-test.lock && .venv/bin/pip check
 # backend job
 PYTHONPATH=backend .venv/bin/pytest -q -ra backend/tests scripts/tests \
   --ignore-glob='*_browser.py' --ignore=scripts/tests/test_emag_menu_export.py

@@ -114,7 +114,7 @@ New tests:
   settings, access forms, tenant flows, import/approval/export and navigation.
   UI-FIX-01's HTML/JSON/204/error regressions remain part of the browser job.
 
-### Local validation
+### Initial FRONTEND-02 local validation
 
 | Command/check | Result |
 | --- | --- |
@@ -134,6 +134,34 @@ and an Actions success cannot be claimed from these local results. The PR must
 trigger and pass the hosted workflow before merge.
 
 No backend source, Python lock, database, migration, `.env` or VPS is changed.
+
+## SECURITY-02 integration into FRONTEND-02
+
+Integrated `main` at `df31f6c8e127b76c11fdb551e52f333d38113922` (SECURITY-02,
+PR #10) into `codex/frontend-02` for PR #11. The original frontend implementation
+at `2c9bd2fc21d729aaa101802cf4db1f765e8d3478` is preserved.
+
+- `ci.yml` merged automatically. Parsed YAML comparisons confirm that the
+  backend, browser, menu-export, Docker and aggregate jobs match SECURITY-02;
+  the frontend job matches FRONTEND-02, including blocking lint and its tests.
+- The two conflicting passages in `CI.md` now describe the test-only Python
+  lock and runtime-only image checks alongside the patched Vite and required lint.
+- Backend security, all Python locks and tooling, the dependency audit workflow,
+  `AGENTS.md` and the SECURITY-02 test/reporting changes match the integrated
+  `main` byte for byte. No additional security or backend edits were made.
+- The 49 runtime and 4 test-only pins pass `pip check` and resolver agreement.
+  The backend image has no pytest/pluggy/iniconfig, tests or test lock;
+  `pip check` succeeds and `app.main` imports. Both Docker builds succeed.
+- Audits of the runtime lock, test lock, browser dependencies and npm runtime/all
+  dependencies find **zero vulnerabilities**. The combined report has zero
+  actionable, runtime-nofix and dev-only findings.
+
+Integration validation: **364 backend/tooling + 30 browser + 14 isolated export
++ 3 lint-configuration tests passed**. `npm ci`, blocking lint, TypeScript and
+Vite production build pass. Both Docker builds and SECURITY-02 runtime-image
+checks pass. The existing two Python deprecation warnings remain. The audit
+commands use the merged dependency-audit workflow's three Python inputs and two
+npm reports; the aggregate report is clean.
 
 ## Deployment and rollback
 
