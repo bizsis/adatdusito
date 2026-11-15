@@ -12,6 +12,7 @@ import {
 import { Help, Panel, FieldTitle } from "./ui";
 type Api = <T>(url: string, method?: string, body?: unknown) => Promise<T>;
 type Settings = {
+  classification?: { auto_threshold: number };
   general: Record<string, string>;
   smtp: {
     host: string;
@@ -112,6 +113,9 @@ export function SystemSettings({
           ["auth", "Hitelesítés és bejelentkezés", KeyRound],
           ["mfa", "Kétfaktoros hitelesítés", ShieldCheck],
           ["security", "Biztonsági szabályok", LockKeyhole],
+          ...(data.classification
+            ? [["classification", "Kategóriabesorolás", Settings2]]
+            : []),
         ].map(([key, name, Icon]) => (
           <button
             key={String(key)}
@@ -151,16 +155,57 @@ export function SystemSettings({
             auth: "Hitelesítés és bejelentkezés",
             mfa: "Kétfaktoros hitelesítés",
             security: "Biztonsági szabályok",
+            classification: "Kategóriabesorolás",
           }[tab] || "Beállítások"
         }
         help={
-          tab === "general"
+          tab === "general" || tab === "classification"
             ? undefined
             : tab === "security"
               ? "security"
               : (tab as "smtp" | "auth" | "mfa")
         }
       >
+        {tab === "classification" && data.classification && (
+          <>
+            <p>
+              A küszöb a kalibrált módszerek automatikus besorolásához szükséges
+              mért precizitás. Nem a termékhez kitalált pontosság; a döntést a
+              kiszolgáló hozza meg.
+            </p>
+            <form
+              onSubmit={(e) => {
+                e.preventDefault();
+                void act(() => save("classification", data.classification));
+              }}
+            >
+              <label>
+                Kategória-besorolási admin küszöb (%)
+                <input
+                  type="number"
+                  min="50"
+                  max="100"
+                  step="0.1"
+                  required
+                  disabled={disabled}
+                  value={
+                    Math.round(data.classification.auto_threshold * 1000) / 10
+                  }
+                  onChange={(e) =>
+                    patch(
+                      "classification",
+                      "auto_threshold",
+                      Number(e.target.value) / 100,
+                    )
+                  }
+                />
+              </label>
+              {canManage && (
+                <button disabled={disabled}>Besorolási küszöb mentése</button>
+              )}
+            </form>
+          </>
+        )}
         {tab === "general" && (
           <form
             onSubmit={(e) => {
