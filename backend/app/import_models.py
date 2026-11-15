@@ -82,6 +82,16 @@ class SupplierProduct(Base):
         ForeignKey("import_runs.id", use_alter=True, name="fk_product_last_run")
     )
     last_line: Mapped[int] = mapped_column()
+    # CATEGORY-02A: optimistic concurrency for every product write.
+    revision: Mapped[int] = mapped_column(default=1, server_default="1")
+    # The customer's own/supplier category, kept verbatim (never rewritten by
+    # internal classification); data["category"] keeps the original text too.
+    source_category_id: Mapped[int | None] = mapped_column(
+        ForeignKey("product_source_categories.id"), nullable=True, index=True
+    )
+    # Every unmapped source column, lossless: {key: {header, label, unit, raw,
+    # column, run_id, line, present}}; see app.product_catalog.
+    source_attributes: Mapped[dict | None] = mapped_column(JSON, nullable=True)
 
 
 class ImportChange(Base):
