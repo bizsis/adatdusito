@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import {
   Settings2,
   Mail,
@@ -60,12 +60,12 @@ export function SystemSettings({
     [password, P] = useState(""),
     [secret, G] = useState(""),
     [recipient, R] = useState("");
-  async function load() {
+  const load = useCallback(async () => {
     D(await api<Settings>("/system/settings"));
-  }
+  }, [api]);
   useEffect(() => {
     load().catch((e) => E(String(e)));
-  }, []);
+  }, [load]);
   async function act(fn: () => Promise<void>) {
     E("");
     S("");

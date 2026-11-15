@@ -1,5 +1,5 @@
 /** Decode API responses without exposing proxy HTML or JSON parser errors. */
-export async function readApiResponse(response: Response): Promise<any> {
+export async function readApiResponse(response: Response): Promise<unknown> {
   if (response.status === 413)
     throw new Error("Túl nagy fájl, legfeljebb 50 MB tölthető fel.");
   if (response.status === 204) return null;
@@ -15,8 +15,15 @@ export async function readApiResponse(response: Response): Promise<any> {
   }
 }
 
-export function apiErrorMessage(status: number, data: any): string {
-  const message = data?.error?.message;
+export function apiErrorMessage(status: number, data: unknown): string {
+  const error =
+    typeof data === "object" && data !== null && "error" in data
+      ? data.error
+      : null;
+  const message =
+    typeof error === "object" && error !== null && "message" in error
+      ? error.message
+      : null;
   if (typeof message === "string" && message.trim()) return message;
   switch (status) {
     case 401:

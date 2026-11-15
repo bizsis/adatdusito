@@ -1,6 +1,6 @@
 import { dateTime } from "./ui";
-import React, { useEffect, useState } from "react";
-import { Pencil, Trash2, Plus, Save } from "lucide-react";
+import React, { useEffect, useState, useCallback } from "react";
+import { Pencil, Trash2, Plus } from "lucide-react";
 import { PermissionMatrix, IconButton, Help } from "./ui";
 import { CreateSystemUser, AdminPasswordReset } from "./AuthViews";
 import { permissionDescriptions, auditLabel } from "./help";
@@ -158,25 +158,35 @@ export function AccessWorkspace({
       if (tab === "invites" && inviteWrite)
         try {
           IN(await api("/invitations" + suffix));
-        } catch {}
+        } catch {
+          // Keep the original action error if refreshing invitations also fails.
+        }
     } finally {
       B(false);
     }
   };
-  async function load() {
+  const companyRead = can("companies.read"),
+    shopRead = can("webshops.read");
+  const load = useCallback(async () => {
     if (roleRead) {
       R(await api("/access/roles" + suffix));
       C(await api("/access/catalog"));
     }
     if (!system) {
-      if (can("companies.read")) CO(await api("/access/companies"));
-      if (can("webshops.read")) SH(await api("/access/webshops"));
+      if (companyRead) CO(await api("/access/companies"));
+      if (shopRead) SH(await api("/access/webshops"));
     }
     if (inviteWrite) IN(await api("/invitations" + suffix));
-  }
+  }, [api, roleRead, system, companyRead, shopRead, inviteWrite, suffix]);
   useEffect(() => {
-    act(load);
-  }, [tenantId]);
+    // Initial loading must not depend on the currently edited tab or form.
+    E("");
+    N("");
+    B(true);
+    load()
+      .catch((e) => E(String(e)))
+      .finally(() => B(false));
+  }, [load]);
   useEffect(() => {
     if (!userRead) return;
     const timer = setTimeout(() => {
@@ -191,7 +201,7 @@ export function AccessWorkspace({
         .catch((e) => E(String(e)));
     }, 250);
     return () => clearTimeout(timer);
-  }, [q, page, tenantId, userRevision]);
+  }, [api, q, page, tenantId, userRevision, system, userRead]);
   useEffect(() => {
     if (!system) return;
     const timer = setTimeout(
@@ -206,7 +216,7 @@ export function AccessWorkspace({
       250,
     );
     return () => clearTimeout(timer);
-  }, [tenantSearch, tenantPage]);
+  }, [api, system, tenantSearch, tenantPage]);
   function roleEdit(r: Role | null) {
     ER(r);
     RN(r?.name || "");
@@ -1010,7 +1020,7 @@ export function AcceptInvitation({
     api<typeof info>("/invitations/inspect", "POST", { token })
       .then(I)
       .catch((e) => E(String(e)));
-  }, [token]);
+  }, [api, token]);
   return (
     <main className="login-page">
       <section className="card padded">
@@ -1122,7 +1132,7 @@ function SystemResources({ api, userId }: { api: Api; userId: number }) {
       250,
     );
     return () => clearTimeout(t);
-  }, [q]);
+  }, [api, q]);
   return (
     <details>
       <summary>Rendszerfelhasználó cég-/webáruház-hozzáférése</summary>

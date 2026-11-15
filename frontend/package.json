@@ -1,1 +1,34 @@
-{"name":"adatdusito-frontend","private":true,"version":"0.1.0","type":"module","scripts":{"dev":"vite --host 0.0.0.0","build":"tsc --noEmit && vite build"},"dependencies":{"@fontsource/inter":"5.2.8","@simplewebauthn/browser":"13.1.2","lucide-react":"0.468.0","react":"19.2.0","react-dom":"19.2.0"},"devDependencies":{"@types/react":"19.2.2","@types/react-dom":"19.2.2","typescript":"5.9.3","vite":"7.2.2"}}
+{
+  "name": "adatdusito-frontend",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite --host 0.0.0.0",
+    "build": "tsc --noEmit && vite build",
+    "lint": "eslint src --max-warnings=0",
+    "test:lint": "node --test tests/lint.test.mjs"
+  },
+  "dependencies": {
+    "@fontsource/inter": "5.2.8",
+    "@simplewebauthn/browser": "13.1.2",
+    "lucide-react": "0.468.0",
+    "react": "19.2.0",
+    "react-dom": "19.2.0"
+  },
+  "devDependencies": {
+    "@eslint/js": "9.39.5",
+    "@types/react": "19.2.2",
+    "@types/react-dom": "19.2.2",
+    "eslint": "9.39.5",
+    "eslint-plugin-react-hooks": "7.1.1",
+    "typescript": "5.9.3",
+    "typescript-eslint": "8.72.2",
+    "vite": "7.3.8"
+  },
+  "overrides": {
+    "@typescript-eslint/typescript-estree": {
+      "minimatch": "11.0.1"
+    }
+  }
+}
