@@ -1,5 +1,9 @@
 import { Help } from "./ui";
 import React, { useState, useEffect, useCallback } from "react";
+import {
+  ImportClassificationSummary,
+  type ImportClassificationSummaryProps,
+} from "./classification/ClassificationSummary";
 type Request = <T>(url: string, method?: string, body?: unknown) => Promise<T>;
 type Column = {
   index: number;
@@ -53,10 +57,12 @@ export function ImportWorkspace({
   api,
   canManage,
   permissions,
+  classificationSummary,
 }: {
   api: Request;
   canManage: boolean;
   permissions?: string[];
+  classificationSummary?: ImportClassificationSummaryProps;
 }) {
   const canCreate = permissions
     ? permissions.includes("imports.create")
@@ -245,6 +251,9 @@ export function ImportWorkspace({
     exportProfiles.find((p) => p.id === Number(exportProfile))?.fields || [];
   return (
     <>
+      {classificationSummary && (
+        <ImportClassificationSummary {...classificationSummary} />
+      )}
       <section className="card padded">
         <h2 className="field-title">
           Beszállítói import

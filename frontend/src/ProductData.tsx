@@ -1,5 +1,11 @@
-import React, { useEffect, useState } from "react";
+import React, { lazy, Suspense, useEffect, useState } from "react";
 import { Panel } from "./ui";
+import type { ClassificationPresentation } from "./classification/presentation";
+const ClassificationWorkspace = lazy(() =>
+  import("./classification/ClassificationWorkspace").then((module) => ({
+    default: module.ClassificationWorkspace,
+  })),
+);
 type Api = <T>(url: string, method?: string, body?: unknown) => Promise<T>;
 type Product = {
   id: number;
@@ -7,7 +13,23 @@ type Product = {
   supplier_name: string;
   source_line: number;
 };
-export function ProductData({ api }: { api: Api }) {
+export function ProductData({
+  api,
+  classification,
+}: {
+  api: Api;
+  classification?: ClassificationPresentation;
+}) {
+  // Production keeps the current API until CATEGORY-02A has a verified adapter.
+  if (classification)
+    return (
+      <Suspense fallback={<p role="status">Termékbesorolás betöltése…</p>}>
+        <ClassificationWorkspace {...classification} />
+      </Suspense>
+    );
+  return <ImportedProductData api={api} />;
+}
+function ImportedProductData({ api }: { api: Api }) {
   const [cursor, C] = useState(0),
     [history, H] = useState<number[]>([]),
     [data, D] = useState<{
