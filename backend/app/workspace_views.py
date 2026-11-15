@@ -479,8 +479,11 @@ def delete_category_map(
 @router.get("/product-jobs/{id}")
 def product_job(id: int, who=Depends(require("products.read")), db: Session = Depends(database)):
     job = db.get(ProductJob, id)
-    if job is None or job.kind != product_jobs.KIND or job.tenant_id != tenant(who):
+    kinds = (product_jobs.KIND, product_jobs.PARAM_KIND)
+    if job is None or job.kind not in kinds or job.tenant_id != tenant(who):
         raise HTTPException(404, "A háttérfeladat nem található.")
+    if job.kind == product_jobs.PARAM_KIND:
+        return product_jobs.parameter_job_dto(job)
     return product_jobs.job_dto(job)
 
 
@@ -499,3 +502,9 @@ def internal_categories(
     ]
     return {"items": items[offset : offset + limit], "total": len(items), "offset": offset,
             "limit": limit, "rule_version": pc.RULE_VERSION}
+
+
+# CATEGORY-03A parameter endpoints share the /api/v1/workspace prefix.
+from app.parameter_views import router as parameter_router  # noqa: E402
+
+router.include_router(parameter_router)
