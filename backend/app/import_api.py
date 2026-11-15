@@ -307,6 +307,12 @@ def approve(
     run = get_run(db, who, id)
     if run.state != "awaiting_approval":
         raise HTTPException(409, "Az import nem vár jóváhagyásra.")
+    from app.import_engine import run_limit_message, run_product_limit
+
+    data_rows = (run.analysis or {}).get("data_rows")
+    if data_rows is not None and data_rows > run_product_limit():
+        # CATEGORY-02A: at most 50 000 products per run, rejected up front.
+        raise HTTPException(422, run_limit_message(data_rows, run_product_limit()))
     if body.feed_type not in ("full", "partial", "price", "stock", "technical"):
         raise HTTPException(422, "Hibás feedtípus.")
     headers = run.analysis["headers"]
