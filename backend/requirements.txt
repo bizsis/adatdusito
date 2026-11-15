@@ -1,14 +1,19 @@
-fastapi==0.141.1
-uvicorn==0.38.0
-SQLAlchemy==2.0.44
-PyMySQL==1.1.2
-cryptography==46.0.3
+# Runtime dependencies of the backend and worker images (direct imports only).
+# Authoritative, fully pinned set: requirements.lock, generated from this file
+# by scripts/compile-requirements.sh. Pins here must equal the lock.
+# Test-only dependencies live in requirements-test.in / requirements-test.lock.
 alembic==1.17.2
 celery[redis]==5.5.3
+cryptography==50.0.2
+fastapi==0.141.1
 httpx==0.28.1
-pytest==9.0.1
 openpyxl==3.1.5
-python-multipart==0.0.32
-# Security-relevant pins (DEPENDENCY-01); the authoritative set is requirements.lock.
-starlette==1.3.1
 PyJWT==2.15.1
+PyMySQL==1.1.2
+pyotp==2.9.0
+python-multipart==0.0.32
+qrcode==8.2
+SQLAlchemy==2.0.44
+starlette==1.3.1
+uvicorn==0.38.0
+webauthn==2.7.0
