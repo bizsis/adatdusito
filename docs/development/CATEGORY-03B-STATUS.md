@@ -165,3 +165,10 @@ a Tulajdonos dönt, nincs automatikus retarget/merge/deploy.
 E pontok egyeztetendő szerződés/implementációs feltételek, nem engedély nélküli
 backendmódosítások. A már létező végleges útvonalakból sem készül működőnek
 állított adapter addig, amíg a végpontokat Claude ténylegesen nem implementálta.
+
+A publikált 03A DTO nem ad teljes tenant-termékszámot. Ezért a prezentációs
+összesítés nullable: ismeretlen esetben nincs kitalált 0 vagy 50 000-es kvóta.
+Egy szűrt lista számlálója nem nevezhető át teljes adatbázis-méretnek.
+Az alias-felülvizsgálat prototípusbeli terméksor-döntés; tenant-/globális
+alias létrehozásához a végleges művelet hatókörét és jogát külön kell tisztázni.
+Termékdöntésből nem következhet rejtett, minden ügyfélre érvényes szabály.

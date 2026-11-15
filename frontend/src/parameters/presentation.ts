@@ -74,7 +74,7 @@ export type DiffPage = {
   rows: ParameterRow[];
   next: string | null;
   total: number;
-  totalProducts: number;
+  totalProducts: number | null;
   context: unknown;
   versionLabel: string;
   profiles: ParameterProfile[];

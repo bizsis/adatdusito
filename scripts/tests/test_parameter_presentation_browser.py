@@ -64,7 +64,7 @@ def parameter_page(parameter_build):
             if body['filters']['status']!='all':filtered=[r for r in filtered if r['status']==body['filters']['status']]
             if body['filters']['match']!='all':filtered=[r for r in filtered if r['match']==body['filters']['match']]
             offset=int(body['cursor'] or 0)
-            result=dict(rows=filtered[offset:offset+4],next=str(offset+4) if len(filtered)>offset+4 else None,total=len(filtered),totalProducts=125000,context={'revision':state['revision'],'workspace':workspace},versionLabel='Katalógus v12 / termékrevízió '+str(state['revision']),profiles=state['profiles'],activeProfileKey=state['profile'],preparation=dict(state=state['preparation'],canApprove=state['can_approve'],explanation='A jóváhagyás a visszakapott revízióra érvényes.' if state['preparation']=='approved' else 'Az egyezési konfliktusok rendezettek; az üres érték később kutatható.' if state['can_approve'] else 'A hiányzó érték megengedett; az egyezési konfliktusokat felül kell vizsgálni.',audit='Teszt szerverpillanatkép'))
+            result=dict(rows=filtered[offset:offset+4],next=str(offset+4) if len(filtered)>offset+4 else None,total=len(filtered),totalProducts=state.get('total_products',125000),context={'revision':state['revision'],'workspace':workspace},versionLabel='Katalógus v12 / termékrevízió '+str(state['revision']),profiles=state['profiles'],activeProfileKey=state['profile'],preparation=dict(state=state['preparation'],canApprove=state['can_approve'],explanation='A jóváhagyás a visszakapott revízióra érvényes.' if state['preparation']=='approved' else 'Az egyezési konfliktusok rendezettek; az üres érték később kutatható.' if state['can_approve'] else 'A hiányzó érték megengedett; az egyezési konfliktusokat felül kell vizsgálni.',audit='Teszt szerverpillanatkép'))
             if workspace=='two':result['rows']=[{**result['rows'][0],'key':'other','own':{**result['rows'][0]['own'],'title':'Másik ügyfél paramétere'}}]
             if state['hold'] and workspace=='one':state['pending'].append((route,result));return
         elif operation=='values':
@@ -377,4 +377,11 @@ def test_conflicting_sources_all_remain_visible(parameter_page):
     expect(page.locator('.parameter-table').get_by_text('7 kg',exact=True)).to_be_visible()
     assert state['rows'][2]['own']['value']['raw']=='7'
     assert state['rows'][2]['additionalSources'][0]['value']['raw']=='8'
+    assert not state['writes']
+
+
+def test_unknown_total_is_not_a_zero_or_fabricated_tenant_limit(parameter_page):
+    page,state=parameter_page;state['total_products']=None;page.goto('http://parameter.test/')
+    expect(page.get_by_text('Nincs összesített adat',exact=False)).to_be_visible()
+    expect(page.locator('.parameter-table tbody tr')).to_have_count(4)
     assert not state['writes']

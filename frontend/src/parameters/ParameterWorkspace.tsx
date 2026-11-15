@@ -67,14 +67,14 @@ function validatePage(page: DiffPage) {
     page.rows.length > 100 ||
     !Number.isSafeInteger(page.total) ||
     page.total < 0 ||
-    !Number.isSafeInteger(page.totalProducts) ||
-    page.totalProducts < 0 ||
+    (page.totalProducts !== null &&
+      (!Number.isSafeInteger(page.totalProducts) || page.totalProducts < 0)) ||
     !Array.isArray(page.profiles) ||
     !page.preparation ||
     page.rows.some(
       (r) =>
         !r ||
-        !(r.status in parameterLabels) ||
+        !Object.hasOwn(parameterLabels, r.status) ||
         !["confirmed", "ambiguous", "none"].includes(r.match) ||
         !Array.isArray(r.history),
     )
@@ -289,7 +289,9 @@ function Workspace({
             <p>
               Paramétertalálatok: {page.total.toLocaleString("hu-HU")} · Teljes
               tárolt termékállomány:{" "}
-              {page.totalProducts.toLocaleString("hu-HU")}
+              {page.totalProducts === null
+                ? "Nincs összesített adat"
+                : page.totalProducts.toLocaleString("hu-HU")}
             </p>
             <p className="small muted">{page.versionLabel}</p>
             <details>
