@@ -1,30 +1,86 @@
-## Result and scope
+## Eredmény
 
-Refs #24. This is the **first, presentation-only CATEGORY-03B round**, stacked on CATEGORY-02D PR #22 (`a780c65`). It preserves that PR's real-API integration fixes. It does not claim a working CATEGORY-03A API integration.
+Refs #24, https://github.com/bizsis/adatdusito/issues/24#issuecomment-6902773899.
+PR #27 most a **#26 / c05746d működő FastAPI API-jára épülő frontend-integráció**.
+Base változatlanul #22 (`codex/category-02d-integration`, `a780c65`), head
+`codex/category-03b-frontend`. A közös ellenőrző ág
+`codex/category-03b-api-integration`; nincs main-merge és VPS-telepítés.
 
-Adds a responsive Hungarian parameter comparison workspace to the existing ProductData/Classification detail via optional services, plus an optional job slot in ImportWorkspace. Shows raw/normalized values, units/conversion provenance, separate own/donor requirements, all preserved conflicting sources, missing slots, ambiguous aliases, donor review status, correction/lock/history, preview/approval, opaque bulk selection, partial jobs and preparation approval. Pending-review donors cannot offer automatic preparation, local estimates cannot apply as server dry runs, and source-overwriting previews are blocked. Confirmed mappings need no redundant row approval. No frontend matching/unit-conversion/batching algorithm, AI/credit/payment/image feature, backend change or migration.
+A produkciós adapter mind a tíz kész műveletet használja a közös session/CSRF/tenant
+klienssel: termékáttekintés, tárolt paraméterek, szerveres preview/apply, kézi PATCH,
+alias GET/POST/DELETE és háttérfutás indítás/állapot. Szigorú runtime DTO-ellenőrzés,
+valódi 401/403/404/409/422/503 hibakezelés és friss betöltés szükséges írási hiba után.
+Nyers forrás és kézi zárolás megmarad; `pending_review` nem készít automatikus
+`emag:` helyet, többdonoros kategóriához explicit választás kell. Ez nem donorjóváhagyás.
 
-The production adapter supplies none of the new optional services yet, so no mock data or unimplemented controls appear in the real workflow. Synthetic test transport is excluded from production builds/images. Presentation callback types are not wire DTO proposals.
+Az egytermékes apply csak termékrevíziót küld, nem előnézeti tokent. A scoped
+preview/apply job külön művelet, legfeljebb 50 000 termék/futás. A többfutásos
+feldolgozás a valódi `has_more` / `next_start_after_product_id` alapján, külön
+felhasználói indítással működik; a teljes termékállomány nincs 50 000-re korlátozva.
+A UI nem számol hamis százalékot a futáskorlátból.
 
-## Contract dependency and open integration gaps
+Az általános bulk snapshot/token/apply, külön előkészítési jóváhagyás, teljes
+auditlapozás és univerzális allowed-values CRUD továbbra sincs produkcióba kötve.
+Kötött listás helyen szabad értékadás tiltott; valódi forrásjelölt elfogadható.
+A lokális PATCH/alias/job megerősítés nincs szerveres dry-runnak nevezve.
 
-During this work Claude published the final route/field contract at `claude/category-03a-parameters` / `e330ee7` (`docs/design/CATEGORY-03A-API.md`). That commit is documentation only; its parameter endpoints and 0010 implementation are not present. The UI also supports the documented review/source_only/detached slot states.
+## API-eltérések / átadandó Claude-nak
 
-The status document lists the exact remaining data needs and mismatches: complete slot-list paging, bounded histories/errors, source/candidate multiplicity, stable allowed-value IDs for constrained PATCH, alias scope, manual-edit preview, real snapshot/token guarantees for bulk, job progress/resume semantics and a separate preparation approval. `prepared` is not user approval; processed/limit is not a reliable completion percentage. No unsupported operation is bound to a guessed endpoint.
+A pontos reprodukciók és kezelések: `docs/development/CATEGORY-03B-STATUS.md`.
+A tényleges konverziós factor decimális szöveg is; a review candidates harmadik
+alakja `{source_key,header,raw}`; `pending_source` nincs kiszerializálva, ezért a
+friss nyers forrást a termékrészletből, azonos explicit kulccsal olvassuk.
+Saját kötelezőség, paramétertípus, kategóriamegkötés és általános allowed-value
+kapcsolat hiányában nincs kitalált adat. Teljes job-total/resume/cancel sem garantált.
+Backendfájlt, migrációt, dependency lockot nem változtat ez a PR.
 
-## Validation
+## Ellenőrzés
 
-- 389 backend/tooling tests passed, 14 export tests passed.
-- Complete browser regression run: 109 passed. The final parameter UI suite: 32 passed separately (28 overlap the full run; 4 additional regressions). These 32 are presentation mocks, not real 03A backend proof.
-- Existing #22 real FastAPI/SQLite cases remain regression coverage; they are not presented as parameter-API integration.
-- ESLint, TypeScript/Vite and 3 lint-configuration tests passed; Node 22 lint/configuration and Docker frontend build passed.
-- Backend/frontend Docker builds and backend pip check/application import passed. npm audit including dev dependencies: 0 vulnerabilities.
-- Desktop/mobile mock screenshots at 1440/390 px; no horizontal viewport overflow.
+Az alábbi parancsok a #26 backenddel egyesített, izolált közös tesztágra vonatkoznak.
+A frontend-only PR-nál az új natív 03A tesztek dependency-skipet kapnak, amíg a
+backend nincs a base-ben. Ez nem helyettesíti a közös tesztág futását.
 
-## Release / rollback
+```bash
+PYTHONPATH=backend .venv/bin/pytest -q backend/tests scripts/tests \
+  --ignore-glob='*_browser.py' --ignore=scripts/tests/test_emag_menu_export.py
+PYTHONPATH=backend .venv/bin/pytest -q backend/tests/*_browser.py scripts/tests/*_browser.py
+PYTHONPATH=backend .venv/bin/pytest -q -ra --durations=5 scripts/tests/test_parameter_api_browser.py
+.venv/bin/pytest -q scripts/tests/test_emag_menu_export.py
+(cd frontend && npm run lint && npm run test:lint && npm run build && npm audit --audit-level=moderate)
+docker build -t adatdusito-ci-backend backend
+docker build -t adatdusito-ci-frontend frontend
+```
 
-Draft pending implemented 03A endpoints and actual integration/hosted CI. The base is `codex/category-02d-integration`, not main; retarget only after the owner merges the dependency. No main merge or VPS deployment. No .env, Compose, reference database, dependency lock or category hierarchy changes. Rollback removes this optional frontend feature; existing workflows remain available.
+- Backend/eszközök: **410 passed**.
+- Korábbi böngészős regresszió: **113 passed**, párhuzamos fájlcsoportokban
+  (14 backend-browser + 74 script-browser + 21 CATEGORY-02D + 4 célzott CATEGORY-02D).
+  A 32 paraméter-prezentációs mockteszt ebbe beleszámít.
+- Új natív paraméter-API E2E: **21 passed**, 257,96 s, a végleges kinyitható
+  termékparaméter-panellel együtt. Összes böngészőteszt: **134 passed**.
+- Menüexport: **14 passed**.
+- ESLint, TypeScript/Vite, Node 22 és **3 lintkonfigurációs teszt** sikeres.
+- Backend/frontend Docker build sikeres; backend import/pip check és runtime-only
+  csomagellenőrzés sikeres; frontend tesztharness nincs az image-ben.
+- npm audit (dev függőségekkel együtt): **0 sérülékenység**.
 
-See docs/development/CATEGORY-03B-STATUS.md for the exact frontend/backend boundary, published-contract gaps and the implementation/data checklist.
+A natív paramétertesztek valódi FastAPI/SQLite kérések, produkciós frontenddel,
+390/1440 px-en. Mind a hét slotállapot, mértékegység-konverzió, zárolás,
+feedfrissítés, donorvédelem, aliasjogok, hibakódok és tenantizoláció tesztelt.
+Öt külön megjelölt transport-hibateszt hibás JSON-t injektál a valódi válasz után.
+A 50 002 ténylegesen tárolt terméken két valódi worker-preview **50 000 + 2**
+rekordot dolgoz fel paraméterírás nélkül; a scoped apply külön tesztje idempotens.
+Az enqueue helyettesített, a workerfüggvény valódi; nincs Celery/Redis infraígéret.
+A 32 meglévő paraméter-prezentációs teszt mock UI-regresszió, külön bizonyítékként.
+**Saját MySQL-mérés nincs; az adatmennyiségi E2E SQLite.**
 
-PR creation via GitHub GraphQL failed with HTTP 403 in this cloud environment. The branch is pushed; no hosted GitHub Actions success is claimed. Use this description for a draft PR with base `codex/category-02d-integration` and head `codex/category-03b-frontend`.
+## Integráció és visszaállítás
+
+A #26 backend és annak saját 0010 migrációja függőség; ebben a frontend-PR-ban
+nincs új migráció. A tulajdonos dönt az integrációról/base-ről. A main, VPS, .env,
+Compose, pinfo_db, fix kategóriafa változatlan. Visszaállítás a frontend-változás
+visszavonása; szerveradatot nem töröl.
+
+A GitHub GraphQL API HTTP 403-at ad ebből a környezetből. A PR szövegének
+szerkesztési kísérlete sikertelen; ez a fájl a kész, átadható PR-leírás. A push
+frissíti #27 kódját. Hosted CI csak ténylegesen megfigyelt eredménnyel nevezhető
+sikeresnek, a helyi zöld ellenőrzéseket nem nevezzük hosted eredménynek.

@@ -2128,6 +2128,11 @@ function App() {
               <ProductData
                 api={api}
                 canClassify={can("products.classify")}
+                parameterAccess={{
+                  edit: can("products.parameters"),
+                  globalAliases: can("parameters.global_aliases.manage"),
+                  classify: can("products.classify"),
+                }}
                 workspaceKey={String(me.tenant_id)}
               />
             ) : can("reference.read") ? (
