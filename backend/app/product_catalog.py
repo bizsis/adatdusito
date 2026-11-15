@@ -116,6 +116,25 @@ def names_index():
     return index
 
 
+# --- search ------------------------------------------------------------------
+
+SEARCH_FIELDS = ("name", "sku", "gtin")
+SEARCH_MAX_TERMS = 5
+CONTROL = re.compile(r"[\x00-\x1f\x7f]")
+
+
+def search_text(data):
+    """Folded, tab-separated name/SKU/GTIN; terms never contain a tab."""
+    parts = [fold(CONTROL.sub(" ", str(data.get(k) or ""))) for k in SEARCH_FIELDS]
+    return "\t".join(parts)[:1024]
+
+
+def search_terms(q):
+    """Whitespace-separated terms, folded; each must match (AND), any field."""
+    terms = [t for t in fold(CONTROL.sub(" ", q or "")).split(" ") if t]
+    return terms[:SEARCH_MAX_TERMS]
+
+
 # --- own/source categories -----------------------------------------------
 
 

@@ -397,3 +397,113 @@ def test_backfill_fills_pre_0009_products_resumably(imports):
         assert p.source_attributes["Teljesítmény (W)"]["raw"] == "0"
         assert p.source_category_id is not None and p.revision == 2
         assert db.scalar(select(func.count()).select_from(ProductClassification)) == 5
+
+
+# --- server-side search (q) ------------------------------------------------------
+
+SEARCH_HEAD = "SKU;NAME;EAN;CATEGORY\n"
+SEARCH_MAPPING = {"0": "sku", "1": "name", "2": "gtin", "3": "category"}
+
+
+def seed_search(c, t, s):
+    rows = [
+        ["00012", "Televízió 55 colos", "5901234123457", "TV"],
+        ["00013", "Televízió állvány", "5901234123464", "TV"],
+        ["A-77", "Mosógép elöltöltős", "4006381333931", "Gépek"],
+        ["a_b", "Kábel 50% kedvezmény", "4006381333948", "Kábelek"],
+        ["X/1", "Porszívó (zsák nélküli)", "4006381333955", "Gépek"],
+    ]
+    run(c, t, s, csv(*rows, head=SEARCH_HEAD), mapping=SEARCH_MAPPING)
+
+
+def skus(data):
+    return [i["fields"]["sku"] for i in data["items"]]
+
+
+def test_search_name_sku_and_gtin_partial_case_and_accent_insensitive(imports):
+    c, t, s = imports
+    seed_search(c, t, s)
+    assert skus(products(c, q="televizio")) == ["00012", "00013"]
+    assert skus(products(c, q="TELEVÍZIÓ ÁLLVÁNY")) == ["00013"]
+    assert skus(products(c, q="0012")) == ["00012"]
+    assert skus(products(c, q="1333931")) == ["A-77"]
+    assert skus(products(c, q="a-7")) == ["A-77"]
+    assert skus(products(c, q="televízió 55")) == ["00012"]  # every term must match
+    assert skus(products(c, q="televízió mosógép")) == []
+
+
+def test_search_treats_sql_wildcards_and_specials_literally(imports):
+    c, t, s = imports
+    seed_search(c, t, s)
+    assert skus(products(c, q="50%")) == ["a_b"]
+    assert skus(products(c, q="%")) == ["a_b"]
+    assert skus(products(c, q="a_b")) == ["a_b"]
+    assert skus(products(c, q="_")) == ["a_b"]
+    assert skus(products(c, q="a%b")) == []
+    assert skus(products(c, q="x/1")) == ["X/1"]
+    assert skus(products(c, q="(zsák")) == ["X/1"]
+    assert skus(products(c, q="' OR 1=1 --")) == []
+    assert skus(products(c, q="\\")) == []
+
+
+def test_search_empty_missing_and_too_long(imports):
+    c, t, s = imports
+    seed_search(c, t, s)
+    assert len(products(c, q="   ")["items"]) == 5
+    nothing = products(c, q="nincs ilyen termék")
+    assert nothing["items"] == [] and nothing["next_cursor"] is None
+    assert nothing["status_counts"] == {"auto_classified": 0, "needs_review": 0}
+    assert c.get("/api/v1/workspace/products", params={"q": "x" * 121}).status_code == 422
+
+
+def test_search_combines_with_filters_counts_and_stable_cursor_pages(imports):
+    c, t, s = imports
+    seed_search(c, t, s)
+    gepek = next(i for i in c.get("/api/v1/workspace/category-maps").json()["items"]
+                 if i["source_category"]["path"] == "Gépek")["source_category"]["id"]
+    c.put(f"/api/v1/workspace/category-maps/{gepek}",
+          json={"expected_revision": None, "state": "approved", "navigation_node_id": WASHER})
+    data = products(c, q="40063813339")
+    assert data["status_counts"] == {"auto_classified": 2, "needs_review": 1}
+    assert skus(products(c, q="40063813339", status="auto_classified")) == ["A-77", "X/1"]
+    assert skus(products(c, q="40063813339", source_category_id=gepek, status="needs_review")) == []
+    seen, cursor = [], 0
+    while True:
+        page = products(c, q="59012341234", limit=1, cursor=cursor)
+        seen += skus(page)
+        if page["next_cursor"] is None:
+            break
+        cursor = page["next_cursor"]
+    assert seen == ["00012", "00013"]
+
+
+def test_search_is_tenant_scoped_permission_checked_and_compatible(imports):
+    c, t, s = imports
+    seed_search(c, t, s)
+    other = TestClient(app, base_url="https://testserver")
+    login(other, "other@example.hu")
+    assert other.get("/api/v1/workspace/products", params={"q": "televízió"}).json()["items"] == []
+    anonymous = TestClient(app, base_url="https://testserver")
+    assert anonymous.get("/api/v1/workspace/products", params={"q": "tv"}).status_code == 401
+    legacy = c.get("/api/v1/workspace/products").json()  # pre-02A client call
+    assert {"items", "next_cursor", "field_labels"} <= set(legacy)
+    assert {"id", "fields", "supplier_name", "source_line"} <= set(legacy["items"][0])
+
+
+def test_search_text_follows_reimport_and_backfill(imports):
+    from app.product_backfill import run as backfill
+
+    c, t, s = imports
+    seed_search(c, t, s)
+    run(c, t, s, csv(["00012", "Okostelevízió 65", "5901234123457", "TV"], head=SEARCH_HEAD),
+        mapping=SEARCH_MAPPING)
+    assert skus(products(c, q="okos")) == ["00012"]
+    assert skus(products(c, q="55 colos")) == []
+    with Session(t) as db:
+        for p in db.scalars(select(SupplierProduct)):
+            p.search_text = None
+        db.commit()
+    assert products(c, q="okos")["items"] == []
+    with Session(t) as db:
+        assert backfill(db)["search_text_filled"] == 5
+    assert skus(products(c, q="okos")) == ["00012"]

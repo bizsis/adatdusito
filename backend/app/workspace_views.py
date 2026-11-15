@@ -167,11 +167,16 @@ def products(
     source_category_id: int | None = Query(None, ge=1),
     without_source_category: bool = False,
     navigation_node_id: str | None = Query(None, max_length=160),
+    q: str | None = Query(None, max_length=120),
     who=Depends(require("products.read")),
     db: Session = Depends(database),
 ):
     tid = tenant(who)
     conditions = [SupplierProduct.tenant_id == tid, Supplier.tenant_id == tid]
+    # Server-side search: every folded term must occur in name, SKU or GTIN.
+    # Wildcards are escaped (autoescape); no product is loaded for filtering.
+    for term in pc.search_terms(q):
+        conditions.append(SupplierProduct.search_text.contains(term, autoescape=True))
     if supplier_id is not None:
         conditions.append(SupplierProduct.supplier_id == supplier_id)
     if source_category_id is not None:

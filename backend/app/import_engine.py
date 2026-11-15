@@ -347,6 +347,9 @@ def advance(db, run_id):
                         # Partial feeds change only mapped fields; never delete missing products.
                         product.data = {**previous, **values}
                         product.source_attributes = attributes
+                        from app.product_catalog import search_text
+
+                        product.search_text = search_text(product.data)
                         product.last_run_id = run.id
                         product.last_line = line
                         category_text = product.data.get("category")

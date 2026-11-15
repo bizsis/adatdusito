@@ -59,6 +59,7 @@ def upgrade():
         b.add_column(sa.Column("revision", sa.Integer(), nullable=False, server_default="1"))
         b.add_column(sa.Column("source_category_id", sa.Integer(), nullable=True))
         b.add_column(sa.Column("source_attributes", sa.JSON(), nullable=True))
+        b.add_column(sa.Column("search_text", sa.String(1024), nullable=True))
         b.create_foreign_key(
             "fk_product_source_category",
             "product_source_categories",
@@ -141,7 +142,7 @@ def downgrade():
     with op.batch_alter_table("supplier_products") as b:
         b.drop_index("ix_supplier_products_source_category_id")
         b.drop_constraint("fk_product_source_category", type_="foreignkey")
-        for col in ["source_attributes", "source_category_id", "revision"]:
+        for col in ["search_text", "source_attributes", "source_category_id", "revision"]:
             b.drop_column(col)
     op.drop_index("ix_category_maps_tenant_id", "category_maps")
     op.drop_table("category_maps")

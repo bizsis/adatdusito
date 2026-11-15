@@ -92,6 +92,9 @@ class SupplierProduct(Base):
     # Every unmapped source column, lossless: {key: {header, label, unit, raw,
     # column, run_id, line, present}}; see app.product_catalog.
     source_attributes: Mapped[dict | None] = mapped_column(JSON, nullable=True)
+    # Folded "name\tsku\tgtin" for server-side search (product_catalog.search_text);
+    # filled by the import and by app.product_backfill.
+    search_text: Mapped[str | None] = mapped_column(String(1024), nullable=True)
 
 
 class ImportChange(Base):

@@ -94,6 +94,27 @@ A meglévő végpont, **visszafelé kompatibilis**: az `items[].fields`, `suppli
 | `source_category_id` | |
 | `without_source_category` | bool |
 | `navigation_node_id` | |
+| `q` | szerveroldali keresés, legfeljebb 120 karakter (lásd lent) |
+
+**Keresés (`q`):**
+- **Mezők:** terméknév (`fields.name`), beszállítói cikkszám (`fields.sku`) és EAN/GTIN (`fields.gtin`).
+- **Egyezés:** részleges (a keresett szöveg bárhol szerepelhet), kis- és nagybetű-független, ékezet-független (pl. `televizio` megtalálja a `Televízió` terméket).
+- **Normalizálás:** Unicode NFKD, a diakritikus jelek elhagyása, `casefold`, a szóközök összevonása, a vezérlőkarakterek eltávolítása.
+- **Több szó:** a szóközzel elválasztott szavak (legfeljebb 5) mindegyikének szerepelnie kell, akár különböző mezőkben (ÉS-kapcsolat). Például `televízió 55` → név „Televízió 55 colos”.
+- **Speciális karakterek:**
+  - a `%`, `_`, `/`, `\`, `'` és `(` szó szerint értendő
+  - az SQL-wildcardok escape-elve kerülnek a lekérdezésbe (`LIKE … ESCAPE`), és a lekérdezés paraméterezett
+- Üres vagy csak szóközből álló `q` = nincs keresés. 120 karakternél hosszabb `q` → 422.
+- A keresés minden más szűrővel, a `status_counts` értékkel és a kurzoros lapozással együtt működik. A lapok `id` szerint rendezettek, stabilak és ismétlésmentesek.
+- **Tárolás és index:**
+  - A keresés a `supplier_products.search_text` oszlopon fut (0009). Ez a hajtogatott „név⇥SKU⇥GTIN” szöveg, amelyet az import minden termékváltozáskor, a régi termékeknél pedig a `python -m app.product_backfill` tölt ki.
+  - A szűrés teljesen az adatbázisban történik, Python-memóriába nem töltünk termékeket.
+  - A lekérdezés a `tenant_id` indexen, `id` szerinti sorrendben halad, így csak az adott tenant sorait vizsgálja.
+  - A részszöveges (`%…%`) egyezést B-fa index nem gyorsítja, ezért a költség a tenant termékszámával arányos. A `status_counts` miatt minden kérés a tenant összes egyező sorát megszámolja.
+- **Mérés:** SQLite, 50 000 termék, egy tenant, `limit=25`. A medián válaszidő 26–43 ms volt: ritka és gyakori szónál, nem talált keresésnél és státuszszűrővel is.
+  - **MySQL 8-on még nincs mérés, garancia nincs.**
+  - Ha nagy tenantnál lassú, a következő lépés egy InnoDB `FULLTEXT … WITH PARSER ngram` index ugyanazon az oszlopon (külön migráció), vagy a `status_counts` opcionálissá tétele.
+- A backfill lefutásáig a régi (0009 előtti) termékek keresésben nem jelennek meg, szűrőkkel és lapozással viszont igen.
 
 **Válasz:**
 ```json

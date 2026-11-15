@@ -6,6 +6,7 @@ For each product it fills only what is missing:
 * source_attributes from the product's last import row (raw cells + run headers
   and mapping). If that row no longer exists, nothing is invented.
 * source_category_id from data["category"] (text kept verbatim).
+* search_text (folded name/SKU/GTIN) for server-side search.
 * an initial classification (automatic decision rules; locked rows untouched).
 
 Run (inside the backend container or venv):
@@ -69,6 +70,9 @@ def fill(db, product, runs, category_cache, maps, threshold, counters):
         )
         counters["source_category_linked"] = counters.get("source_category_linked", 0) + 1
         changed = True
+    if product.search_text is None:
+        product.search_text = pc.search_text(product.data)
+        counters["search_text_filled"] = counters.get("search_text_filled", 0) + 1
     if changed:
         product.revision = (product.revision or 1) + 1
     if db.get(ProductClassification, product.id) is None:
