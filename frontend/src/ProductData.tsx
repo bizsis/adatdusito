@@ -1,12 +1,14 @@
-import React, { lazy, Suspense, useEffect, useState } from "react";
+import React, { lazy, Suspense, useEffect, useState, useMemo } from "react";
 import { Panel } from "./ui";
+import { createCategory02Presentation } from "./classification/category02Api";
+import type { Products, Request } from "./classification/category02Contract";
 import type { ClassificationPresentation } from "./classification/presentation";
 const ClassificationWorkspace = lazy(() =>
   import("./classification/ClassificationWorkspace").then((module) => ({
     default: module.ClassificationWorkspace,
   })),
 );
-type Api = <T>(url: string, method?: string, body?: unknown) => Promise<T>;
+type Api = Request;
 type Product = {
   id: number;
   fields: Record<string, unknown>;
@@ -16,20 +18,59 @@ type Product = {
 export function ProductData({
   api,
   classification,
+  canClassify = false,
+  workspaceKey = "current",
 }: {
   api: Api;
   classification?: ClassificationPresentation;
+  canClassify?: boolean;
+  workspaceKey?: string;
 }) {
-  // Production keeps the current API until CATEGORY-02A has a verified adapter.
+  // Keep legacy responses working while the additive CATEGORY-02A backend rolls out.
   if (classification)
     return (
       <Suspense fallback={<p role="status">Termékbesorolás betöltése…</p>}>
         <ClassificationWorkspace {...classification} />
       </Suspense>
     );
-  return <ImportedProductData api={api} />;
+  return (
+    <ImportedProductData
+      api={api}
+      canClassify={canClassify}
+      workspaceKey={workspaceKey}
+    />
+  );
 }
-function ImportedProductData({ api }: { api: Api }) {
+function BoundClassification({
+  api,
+  initial,
+  canClassify,
+  workspaceKey,
+}: {
+  api: Api;
+  initial: Products;
+  canClassify: boolean;
+  workspaceKey: string;
+}) {
+  const presentation = useMemo(
+    () => createCategory02Presentation(api, workspaceKey, canClassify, initial),
+    [api, workspaceKey, canClassify, initial],
+  );
+  return (
+    <Suspense fallback={<p role="status">Termékbesorolás betöltése…</p>}>
+      <ClassificationWorkspace {...presentation} />
+    </Suspense>
+  );
+}
+function ImportedProductData({
+  api,
+  canClassify,
+  workspaceKey,
+}: {
+  api: Api;
+  canClassify: boolean;
+  workspaceKey: string;
+}) {
   const [cursor, C] = useState(0),
     [history, H] = useState<number[]>([]),
     [data, D] = useState<{
@@ -54,6 +95,15 @@ function ImportedProductData({ api }: { api: Api }) {
       cancelled = true;
     };
   }, [api, cursor]);
+  if (data && "status_counts" in data)
+    return (
+      <BoundClassification
+        api={api}
+        initial={data as Products}
+        canClassify={canClassify}
+        workspaceKey={workspaceKey}
+      />
+    );
   return (
     <>
       <Panel title="Beszállítói termékadatok">

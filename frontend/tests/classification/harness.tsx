@@ -1,6 +1,7 @@
 /** Test adapter only. All HTTP paths/payloads here are synthetic, NOT backend contracts. */
 import React, { useMemo, useState } from "react";
 import { createRoot } from "react-dom/client";
+import { ApiHttpError } from "../../src/apiResponse";
 import { ProductData } from "../../src/ProductData";
 import { ImportClassificationSummary } from "../../src/classification/ClassificationSummary";
 import {
@@ -96,4 +97,32 @@ function Harness() {
     </main>
   );
 }
-createRoot(document.getElementById("root")!).render(<Harness />);
+async function contractApi<T>(
+  path: string,
+  method = "GET",
+  body?: unknown,
+  signal?: AbortSignal,
+): Promise<T> {
+  const response = await fetch("/api/v1" + path, {
+    method,
+    signal,
+    headers: { "Content-Type": "application/json" },
+    ...(body !== undefined ? { body: JSON.stringify(body) } : {}),
+  });
+  const data = await response.json();
+  if (!response.ok)
+    throw new ApiHttpError(
+      response.status,
+      data.error?.message || "A művelet sikertelen.",
+    );
+  return data as T;
+}
+createRoot(document.getElementById("root")!).render(
+  new URLSearchParams(location.search).has("contract") ? (
+    <main>
+      <ProductData api={contractApi} canClassify workspaceKey="contract-test" />
+    </main>
+  ) : (
+    <Harness />
+  ),
+);

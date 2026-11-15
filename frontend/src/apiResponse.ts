@@ -1,3 +1,12 @@
+export class ApiHttpError extends Error {
+  constructor(
+    public readonly status: number,
+    message: string,
+  ) {
+    super(message);
+  }
+}
+
 /** Decode API responses without exposing proxy HTML or JSON parser errors. */
 export async function readApiResponse(response: Response): Promise<unknown> {
   if (response.status === 413)

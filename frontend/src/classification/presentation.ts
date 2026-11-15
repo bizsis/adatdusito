@@ -13,6 +13,7 @@ export type Choice = {
   path: string[];
   selectable: boolean;
   hasChildren: boolean;
+  donors?: { key: string; title: string }[];
 };
 export type ProductCard = {
   key: string;
@@ -30,6 +31,9 @@ export type ProductCard = {
   protectedEdit: boolean;
   auditText: string;
   donorText: string;
+  canEdit?: boolean;
+  fields?: { label: string; value: string }[];
+  history?: string[];
   editContext: unknown;
 };
 export type MappingCard = {
@@ -68,15 +72,18 @@ export type EditIntent = {
     | { kind: "product"; key: string; context: unknown }
     | { kind: "mapping"; key: string; context: unknown; inherit: boolean }
     | { kind: "bulk"; selection: Selection };
-  category: Choice;
+  category: Choice | null;
+  action?: "set" | "reset" | "reject";
   reason: string;
+  donorKey?: string;
 };
 export type ChangePreview = {
   handle: string;
   summary: string;
   affected: number;
-  locked: number;
-  conflicts: number;
+  locked: number | null;
+  conflicts: number | null;
+  localOnly?: boolean;
   canApply: boolean;
   changes: { label: string; before: string; after: string }[];
 };
@@ -87,6 +94,10 @@ export class ClassificationConflict extends Error {
   }
 }
 export type PresentationPorts = {
+  features?: { productSearch: boolean; mappingSearch: boolean };
+  mappingPropagation?: "always";
+  resetSupported?: boolean;
+  details?: (key: string, signal: AbortSignal) => Promise<ProductCard>;
   products: (
     filters: ProductFilters,
     cursor: string | null,
@@ -108,7 +119,10 @@ export type PresentationPorts = {
     signal: AbortSignal,
   ) => Promise<{ handle: string; count: number }>;
   preview?: (intent: EditIntent, signal: AbortSignal) => Promise<ChangePreview>;
-  apply?: (preview: ChangePreview, signal: AbortSignal) => Promise<void>;
+  apply?: (
+    preview: ChangePreview,
+    signal: AbortSignal,
+  ) => Promise<void | string>;
   threshold?: (signal: AbortSignal) => Promise<number>;
   saveThreshold?: (percent: number, signal: AbortSignal) => Promise<number>;
 };

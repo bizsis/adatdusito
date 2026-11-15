@@ -24,12 +24,14 @@ export function ClassificationEditor({
   ownCategory: string;
   onClose: () => void;
   onRefresh: () => void;
-  onApplied: () => void;
+  onApplied: (message?: string) => void;
   initialChoice?: Choice;
 }) {
   const [choice, setChoice] = useState<Choice | null>(
     initialChoice?.selectable ? initialChoice : null,
   );
+  const [action, setAction] = useState<"set" | "reset" | "reject">("set");
+  const [donorKey, setDonorKey] = useState("");
   const [reason, setReason] = useState("");
   const [inherit, setInherit] = useState(false);
   const [preview, setPreview] = useState<ChangePreview | null>(null);
@@ -45,7 +47,8 @@ export function ClassificationEditor({
     setError("");
   }
   async function inspect() {
-    if (!choice || !reason.trim() || !ports.preview) return;
+    if ((action === "set" && !choice) || !reason.trim() || !ports.preview)
+      return;
     request.current?.abort();
     const controller = new AbortController();
     request.current = controller;
@@ -57,6 +60,8 @@ export function ClassificationEditor({
         {
           target: target.kind === "mapping" ? { ...target, inherit } : target,
           category: choice,
+          action,
+          donorKey,
           reason: reason.trim(),
         },
         controller.signal,
@@ -75,7 +80,7 @@ export function ClassificationEditor({
     if (
       !preview ||
       !preview.canApply ||
-      preview.conflicts > 0 ||
+      (preview.conflicts ?? 0) > 0 ||
       !ports.apply ||
       busy ||
       conflict
@@ -87,8 +92,8 @@ export function ClassificationEditor({
     setBusy(true);
     setError("");
     try {
-      await ports.apply(preview, controller.signal);
-      if (!controller.signal.aborted) onApplied();
+      const message = await ports.apply(preview, controller.signal);
+      if (!controller.signal.aborted) onApplied(message || undefined);
     } catch (e) {
       if (!controller.signal.aborted) {
         setError(e instanceof Error ? e.message : "A módosítás nem menthető.");
@@ -103,7 +108,7 @@ export function ClassificationEditor({
     <Panel
       title={
         target.kind === "mapping"
-          ? "Saját kategóriatérkép jóváhagyása"
+          ? "Saját kategóriatérkép szerkesztése"
           : "Belső besorolás módosítása"
       }
     >
@@ -116,21 +121,77 @@ export function ClassificationEditor({
         eredeti saját kategóriát vagy értékeket. A mentett kézi döntés védelmét
         a szerver biztosítja.
       </p>
+      {ports.resetSupported && (
+        <label>
+          Művelet
+          <select
+            aria-label="Művelet"
+            value={action}
+            disabled={busy || conflict}
+            onChange={(e) => {
+              invalidate();
+              setAction(e.target.value as typeof action);
+            }}
+          >
+            <option value="set">
+              {target.kind === "mapping"
+                ? "Kategóriatérkép jóváhagyása"
+                : "Kézi besorolás"}
+            </option>
+            <option value="reset">
+              {target.kind === "mapping"
+                ? "Kategóriatérkép törlése és automatikus újrabesorolás"
+                : "Kézi védelem feloldása és automatikus újrabesorolás"}
+            </option>
+            {target.kind === "mapping" && (
+              <option value="reject">Kategóriatérkép elutasítása</option>
+            )}
+          </select>
+        </label>
+      )}
+      {action !== "set" && (
+        <p className="notice">
+          A szerver újraértékeli az érintett besorolásokat. A saját kategóriák
+          és eredeti termékadatok megmaradnak.
+        </p>
+      )}
       <fieldset
         className="classification-picker-lock"
         disabled={busy || conflict}
       >
-        {ports.choices && (
+        {action === "set" && ports.choices && (
           <CategoryPicker
             read={ports.choices}
             selected={choice}
             onSelect={(value) => {
               invalidate();
               setChoice(value);
+              setDonorKey("");
             }}
           />
         )}
       </fieldset>
+      {action === "set" && !!choice?.donors?.length && (
+        <label>
+          Paraméterprofil
+          <select
+            aria-label="Paraméterprofil"
+            value={donorKey}
+            disabled={busy}
+            onChange={(e) => {
+              invalidate();
+              setDonorKey(e.target.value);
+            }}
+          >
+            <option value="">Válassz paraméterprofilt</option>
+            {choice.donors.map((d) => (
+              <option key={d.key} value={d.key}>
+                {d.title}
+              </option>
+            ))}
+          </select>
+        </label>
+      )}
       <label>
         Módosítás indoka
         <textarea
@@ -142,7 +203,13 @@ export function ClassificationEditor({
           }}
         />
       </label>
-      {target.kind === "mapping" && (
+      {target.kind === "mapping" && ports.mappingPropagation === "always" && (
+        <p className="notice">
+          A jóváhagyás a saját kategória összes nem zárolt termékére azonnal
+          érvényesül. A védett kézi döntések megmaradnak.
+        </p>
+      )}
+      {target.kind === "mapping" && ports.mappingPropagation !== "always" && (
         <label>
           <input
             type="checkbox"
@@ -169,7 +236,11 @@ export function ClassificationEditor({
       <div className="actions">
         <button
           disabled={
-            !choice || !reason.trim() || busy || conflict || !ports.preview
+            (action === "set" && !choice) ||
+            !reason.trim() ||
+            busy ||
+            conflict ||
+            !ports.preview
           }
           onClick={inspect}
         >
@@ -183,6 +254,14 @@ export function ClassificationEditor({
       {preview && (
         <section aria-label="Módosítás előnézete">
           <h3>Előnézet</h3>
+          {preview.localOnly && (
+            <p className="notice">
+              Helyi módosítás-összesítő, nem szerveroldali próbafuttatás. A
+              szerver mentéskor ellenőrzi a jogosultságokat és a revíziót. Az
+              érintett termékszám felső becslés; a pontos eredményt a mentési
+              válasz adja meg.
+            </p>
+          )}
           <p>{preview.summary}</p>
           <dl className="data-list">
             <div>
@@ -191,11 +270,17 @@ export function ClassificationEditor({
             </div>
             <div>
               <dt>Védett, kihagyandó</dt>
-              <dd>{preview.locked.toLocaleString("hu-HU")}</dd>
+              <dd>
+                {preview.locked?.toLocaleString("hu-HU") ??
+                  "Mentéskor derül ki"}
+              </dd>
             </div>
             <div>
               <dt>Ütközések</dt>
-              <dd>{preview.conflicts.toLocaleString("hu-HU")}</dd>
+              <dd>
+                {preview.conflicts?.toLocaleString("hu-HU") ??
+                  "Mentéskor ellenőrzött"}
+              </dd>
             </div>
           </dl>
           <ul>
@@ -205,12 +290,12 @@ export function ClassificationEditor({
               </li>
             ))}
           </ul>
-          {preview.locked > 0 && (
+          {(preview.locked ?? 0) > 0 && (
             <p>
               A védett kézi javítások megmaradnak; a szerver ezeket kihagyja.
             </p>
           )}
-          {preview.conflicts > 0 && (
+          {(preview.conflicts ?? 0) > 0 && (
             <p role="alert">
               Az ütközéseket előbb rendezni kell. A módosítás nem alkalmazható.
             </p>
@@ -219,7 +304,7 @@ export function ClassificationEditor({
             className="primary"
             disabled={
               !preview.canApply ||
-              preview.conflicts > 0 ||
+              (preview.conflicts ?? 0) > 0 ||
               busy ||
               conflict ||
               !ports.apply
@@ -227,7 +312,11 @@ export function ClassificationEditor({
             onClick={apply}
           >
             {target.kind === "mapping"
-              ? "Kategóriatérkép jóváhagyása"
+              ? action === "reset"
+                ? "Kategóriatérkép törlése"
+                : action === "reject"
+                  ? "Kategóriatérkép elutasítása"
+                  : "Kategóriatérkép jóváhagyása"
               : "Módosítás mentése"}
           </button>
         </section>

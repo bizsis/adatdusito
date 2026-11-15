@@ -1,5 +1,6 @@
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import { Panel } from "../ui";
+import { CategoryPicker } from "./CategoryPicker";
 import { ClassificationSummary } from "./ClassificationSummary";
 import {
   ClassificationEditor,
@@ -45,6 +46,20 @@ function Workspace({ ports, access }: ClassificationPresentation) {
     { kind: "matching" }
   > | null>(null);
   const [focused, setFocused] = useState<ProductCard | null>(null);
+  const [filterPicker, setFilterPicker] = useState(false);
+  const [filterChoice, setFilterChoice] = useState<Choice | null>(null);
+  const detailLoad = useCallback(
+    (signal: AbortSignal) => {
+      if (!focused || !ports.details)
+        return Promise.reject(new Error("Nincs kiválasztott termék."));
+      return ports.details(focused.key, signal);
+    },
+    [focused, ports],
+  );
+  const detail = usePresentationRead(
+    focused && ports.details ? detailLoad : null,
+  );
+  const active = ports.details ? detail.data : focused;
   const [editor, setEditor] = useState<{
     target: EditorTarget;
     own: string;
@@ -121,8 +136,10 @@ function Workspace({ ports, access }: ClassificationPresentation) {
     setMappingHistory([]);
     setRevision((r) => r + 1);
   }
-  function applied() {
-    setMessage("A módosítás mentve. A friss állapot betöltése folyamatban.");
+  function applied(message?: string) {
+    setMessage(
+      message || "A módosítás mentve. A friss állapot betöltése folyamatban.",
+    );
     refresh();
   }
   function editProduct(product: ProductCard) {
@@ -214,16 +231,24 @@ function Workspace({ ports, access }: ClassificationPresentation) {
         {tab === "products" ? (
           <>
             <div className="filters">
-              <label>
-                Termék keresése
-                <input
-                  value={filters.search}
-                  onChange={(e) =>
-                    filter({ ...filters, search: e.target.value })
-                  }
-                  placeholder="Név, cikkszám vagy EAN"
-                />
-              </label>
+              {ports.features?.productSearch !== false && (
+                <label>
+                  Termék keresése
+                  <input
+                    value={filters.search}
+                    onChange={(e) =>
+                      filter({ ...filters, search: e.target.value })
+                    }
+                    placeholder="Név, cikkszám vagy EAN"
+                  />
+                </label>
+              )}
+              {ports.features?.productSearch === false && (
+                <p className="muted">
+                  A terméknév-, cikkszám- és EAN-keresés a szerveroldali API
+                  kiegészítésére vár.
+                </p>
+              )}
               <label>
                 Besorolási státusz
                 <select
@@ -243,25 +268,57 @@ function Workspace({ ports, access }: ClassificationPresentation) {
                   <option value="review">{classificationLabels.review}</option>
                 </select>
               </label>
+              {ports.features ? (
+                <div>
+                  <button onClick={() => setFilterPicker(!filterPicker)}>
+                    Kategória szerinti szűrés:{" "}
+                    {filterChoice?.path.join(" / ") || "Minden kategória"}
+                  </button>
+                  {filterChoice && (
+                    <button
+                      onClick={() => {
+                        setFilterChoice(null);
+                        filter({ ...filters, category: "" });
+                      }}
+                    >
+                      Kategóriaszűrő törlése
+                    </button>
+                  )}
+                  {filterPicker && ports.choices && (
+                    <CategoryPicker
+                      read={ports.choices}
+                      selected={filterChoice}
+                      onSelect={(c) => {
+                        setFilterChoice(c);
+                        setFilterPicker(false);
+                        filter({ ...filters, category: c.key });
+                      }}
+                    />
+                  )}
+                </div>
+              ) : (
+                <label>
+                  Kategória szerinti szűrés
+                  <select
+                    aria-label="Kategória szerinti szűrés"
+                    value={filters.category}
+                    onChange={(e) =>
+                      filter({ ...filters, category: e.target.value })
+                    }
+                  >
+                    <option value="">Minden kategória</option>
+                    {page.data?.categories.map((c) => (
+                      <option key={c.key} value={c.key}>
+                        {c.title}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+              )}
               <label>
-                Kategória szerinti szűrés
-                <select
-                  aria-label="Kategória szerinti szűrés"
-                  value={filters.category}
-                  onChange={(e) =>
-                    filter({ ...filters, category: e.target.value })
-                  }
-                >
-                  <option value="">Minden kategória</option>
-                  {page.data?.categories.map((c) => (
-                    <option key={c.key} value={c.key}>
-                      {c.title}
-                    </option>
-                  ))}
-                </select>
-              </label>
-              <label>
-                Forrás szerinti szűrés
+                {ports.features
+                  ? "Besorolás eredete"
+                  : "Forrás szerinti szűrés"}
                 <select
                   aria-label="Forrás szerinti szűrés"
                   value={filters.source}
@@ -413,7 +470,7 @@ function Workspace({ ports, access }: ClassificationPresentation) {
                             >
                               Megnyitás
                             </button>
-                            {editable && (
+                            {editable && p.canEdit !== false && (
                               <button
                                 disabled={pendingSearch}
                                 onClick={() => editProduct(p)}
@@ -457,18 +514,20 @@ function Workspace({ ports, access }: ClassificationPresentation) {
           </>
         ) : (
           <>
-            <label>
-              Saját kategóriatérkép keresése
-              <input
-                value={mappingSearch}
-                onChange={(e) => {
-                  setMappingSearch(e.target.value);
-                  setMappingCursor(null);
-                  setMappingHistory([]);
-                  setEditor(null);
-                }}
-              />
-            </label>
+            {ports.features?.mappingSearch !== false && (
+              <label>
+                Saját kategóriatérkép keresése
+                <input
+                  value={mappingSearch}
+                  onChange={(e) => {
+                    setMappingSearch(e.target.value);
+                    setMappingCursor(null);
+                    setMappingHistory([]);
+                    setEditor(null);
+                  }}
+                />
+              </label>
+            )}
             {mappings.loading && (
               <p role="status">Kategóriatérképek betöltése…</p>
             )}
@@ -532,26 +591,30 @@ function Workspace({ ports, access }: ClassificationPresentation) {
           </>
         )}
       </Panel>
-      {focused && tab === "products" && (
-        <Panel title={focused.title}>
-          <ClassificationSummary product={focused} />
-          {focused.group === "review" && !!focused.alternatives.length && (
+      {focused && detail.loading && (
+        <p role="status">Termékrészlet betöltése…</p>
+      )}
+      {focused && detail.error && <p role="alert">{detail.error}</p>}
+      {active && tab === "products" && (
+        <Panel title={active.title}>
+          <ClassificationSummary product={active} />
+          {active.group === "review" && !!active.alternatives.length && (
             <section aria-label="Besorolási alternatívák">
               <h3>Lehetséges belső kategóriák</h3>
               <ul className="classification-alternatives">
-                {focused.alternatives.slice(0, 3).map((c) => (
+                {active.alternatives.slice(0, 3).map((c) => (
                   <li key={c.key}>
                     <span>{c.path.join(" / ")}</span>
-                    {editable && c.selectable && (
+                    {editable && active.canEdit !== false && c.selectable && (
                       <button
                         onClick={() =>
                           setEditor({
                             target: {
                               kind: "product",
-                              key: focused.key,
-                              context: focused.editContext,
+                              key: active.key,
+                              context: active.editContext,
                             },
-                            own: focused.ownCategory,
+                            own: active.ownCategory,
                             suggested: c,
                           })
                         }
@@ -565,10 +628,33 @@ function Workspace({ ports, access }: ClassificationPresentation) {
               </ul>
             </section>
           )}
-          {editable && (
-            <button onClick={() => editProduct(focused)}>
+          {editable && active.canEdit !== false && (
+            <button onClick={() => editProduct(active)}>
               Besorolás szerkesztése
             </button>
+          )}
+          {active.fields && (
+            <section aria-label="Eredeti termékadatok">
+              <h3>Eredeti termékadatok</h3>
+              <dl className="data-list">
+                {active.fields.map((f, i) => (
+                  <div key={i}>
+                    <dt>{f.label}</dt>
+                    <dd>{f.value}</dd>
+                  </div>
+                ))}
+              </dl>
+            </section>
+          )}
+          {!!active.history?.length && (
+            <details>
+              <summary>Besorolási előzmények</summary>
+              <ul>
+                {active.history.map((e, i) => (
+                  <li key={i}>{e}</li>
+                ))}
+              </ul>
+            </details>
           )}
           <button onClick={() => setFocused(null)}>
             Termékrészlet bezárása

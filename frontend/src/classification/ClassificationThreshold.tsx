@@ -29,7 +29,7 @@ export function ClassificationThreshold({
   useEffect(() => () => pending.current?.abort(), []);
   const percent = draft ?? String(saved ?? result.data ?? "");
   const number = percent.trim() === "" ? NaN : Number(percent);
-  const valid = Number.isFinite(number) && number >= 0 && number <= 100;
+  const valid = Number.isFinite(number) && number >= 50 && number <= 100;
   async function save() {
     if (!valid || !ports.saveThreshold || busy) return;
     const controller = new AbortController();
@@ -39,7 +39,7 @@ export function ClassificationThreshold({
     setMessage("");
     try {
       const actual = await ports.saveThreshold(number, controller.signal);
-      if (!Number.isFinite(actual) || actual < 0 || actual > 100)
+      if (!Number.isFinite(actual) || actual < 50 || actual > 100)
         throw new Error("A kiszolgáló beállításválasza nem értelmezhető.");
       if (!controller.signal.aborted) {
         setSaved(actual);
@@ -73,7 +73,7 @@ export function ClassificationThreshold({
             Kategória-besorolási admin küszöb (%)
             <input
               type="number"
-              min="0"
+              min="50"
               max="100"
               step="0.1"
               value={percent}
