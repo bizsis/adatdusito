@@ -1,5 +1,5 @@
 import { dateTime } from "./ui";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import {
   startAuthentication,
   startRegistration,
@@ -7,7 +7,6 @@ import {
 import {
   KeyRound,
   ShieldCheck,
-  Mail,
   Plus,
   Save,
   Trash2,
@@ -114,7 +113,7 @@ export function AuthLogin({
     api<typeof methods>("/auth/methods")
       .then(M)
       .catch((e) => E(String(e)));
-  }, []);
+  }, [api]);
   async function act(fn: () => Promise<void>) {
     B(true);
     E("");
@@ -511,16 +510,16 @@ export function SecurityCenter({
     [busy, B] = useState(false),
     [error, E] = useState(""),
     [status, S] = useState("");
-  async function load() {
+  const load = useCallback(async () => {
     const d = await api<Security>("/auth/security");
     D(d);
     U(d.username);
     SE(await api("/auth/sessions"));
     M(await api("/auth/methods"));
-  }
+  }, [api]);
   useEffect(() => {
     load().catch((e) => E(String(e)));
-  }, []);
+  }, [load]);
   async function act(fn: () => Promise<void>) {
     E("");
     S("");
@@ -1107,7 +1106,7 @@ function AdminRecovery({ api }: { api: Api }) {
       300,
     );
     return () => clearTimeout(timer);
-  }, [q]);
+  }, [api, q]);
   return (
     <Panel title="Felügyelt TOTP-helyreállítás" help="recoveryAdmin">
       <label>

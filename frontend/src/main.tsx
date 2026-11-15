@@ -1,7 +1,7 @@
 import { auditLabel } from "./help";
 import { readApiResponse, apiErrorMessage } from "./apiResponse";
 import { dateTime } from "./ui";
-import React, { useEffect, useState, useRef } from "react";
+import React, { useEffect, useState, useRef, useCallback } from "react";
 import { createRoot } from "react-dom/client";
 import "@fontsource/inter/latin-400.css";
 import "@fontsource/inter/latin-ext-400.css";
@@ -14,7 +14,7 @@ import "./style.css";
 import { SystemSettings } from "./SystemSettings";
 import { AuthLogin, SecurityCenter, RegistrationConfirm } from "./AuthViews";
 import { ProductData } from "./ProductData";
-import { Help, setDisplayTimezone } from "./ui";
+import { setDisplayTimezone } from "./ui";
 import {
   LayoutDashboard,
   Building2,
@@ -51,7 +51,6 @@ function NavIcon({ name }: { name: string }) {
 import { AccessWorkspace, AcceptInvitation } from "./AccessWorkspace";
 import { ImportWorkspace, ExportAdmin } from "./ImportWorkspace";
 
-type Role = "tenant_admin" | "processor" | "reviewer" | "viewer";
 type User = {
   id: number;
   name: string;
@@ -62,7 +61,6 @@ type User = {
   superadmin: boolean;
 };
 type Tenant = { id: number; name: string; active: boolean };
-type Member = User & { role: Role; membership_active: boolean };
 type Me = {
   mfa_required?: boolean;
   user: User;
@@ -192,7 +190,7 @@ async function api<T>(
       window.dispatchEvent(new Event("session-expired"));
     throw new Error(apiErrorMessage(response.status, data));
   }
-  return data;
+  return data as T;
 }
 function useLoad<T>(url: string | null, revision = 0) {
   const [data, setData] = useState<T | null>(null),
@@ -269,27 +267,6 @@ function Pager({
         Következő
       </button>
     </div>
-  );
-}
-function RoleSelect({
-  value,
-  onChange,
-}: {
-  value: string;
-  onChange: (s: Role) => void;
-}) {
-  return (
-    <select
-      aria-label="Szerepkör"
-      value={value}
-      onChange={(e) => onChange(e.target.value as Role)}
-    >
-      {(["tenant_admin", "processor", "reviewer"] as Role[]).map((r) => (
-        <option key={r} value={r}>
-          {roleNames[r]}
-        </option>
-      ))}
-    </select>
   );
 }
 function Flag({ value }: { value: boolean | null }) {
@@ -1647,13 +1624,13 @@ function App() {
     environment: "development",
     timezone: "Europe/Budapest",
   });
-  async function refreshBranding() {
+  const refreshBranding = useCallback(async () => {
     const r = await api<{ branding: typeof branding }>("/auth/methods");
     if (!r.branding || typeof r.branding.display_name !== "string") return;
     BR(r.branding);
     setDisplayTimezone(r.branding.timezone);
     document.title = r.branding.display_name;
-  }
+  }, []);
   useEffect(() => {
     refreshBranding().catch(() => {});
     if (location.hash === "#security") setPage("security");
@@ -1661,7 +1638,7 @@ function App() {
       "auth_error",
     );
     if (authError) setError(authError);
-  }, []);
+  }, [refreshBranding]);
 
   const [me, setMe] = useState<Me | null>(null),
     [loading, setLoading] = useState(true),
@@ -1686,13 +1663,18 @@ function App() {
   const [workspaceQuery, WQ] = useState(""),
     [workspaceOffset, WO] = useState(0),
     [workspaceItems, WI] = useState<{ tenant_id: number; name: string }[]>([]);
+  // Keep the search/form state on periodic session refreshes with identical lists.
+  const workspaceSnapshot = JSON.stringify(
+    me?.workspaces || me?.memberships || [],
+  );
+  const canSearchWorkspaces = !!me?.workspaces;
   useEffect(() => {
-    WI(me?.workspaces || me?.memberships || []);
+    WI(JSON.parse(workspaceSnapshot));
     WQ("");
     WO(0);
-  }, [me?.tenant_id, JSON.stringify(me?.workspaces)]);
+  }, [me?.tenant_id, workspaceSnapshot]);
   useEffect(() => {
-    if (!me?.workspaces) return;
+    if (!canSearchWorkspaces) return;
     let cancelled = false;
     const timer = setTimeout(
       () =>
@@ -1716,13 +1698,23 @@ function App() {
     workspaceQuery,
     workspaceOffset,
     me?.tenant_id,
-    JSON.stringify(me?.workspaces),
+    workspaceSnapshot,
+    canSearchWorkspaces,
   ]);
+  const authGeneration = useRef(0);
+  const refresh = useCallback(async () => {
+    const generation = ++authGeneration.current;
+    const user = await api<Me>("/auth/me");
+    if (generation !== authGeneration.current) return;
+    csrf = user.csrf_token;
+    setMe(user);
+  }, []);
+  const signedIn = !!me;
   useEffect(() => {
-    if (!me) return;
+    if (!signedIn) return;
     const timer = setInterval(() => refresh().catch(() => {}), 30000);
     return () => clearInterval(timer);
-  }, [!!me]);
+  }, [signedIn, refresh]);
   async function switchWorkspace(id: number | null) {
     authGeneration.current++;
     setLoading(true);
@@ -1740,14 +1732,6 @@ function App() {
       setLoading(false);
     }
   }
-  const authGeneration = useRef(0);
-  async function refresh() {
-    const generation = ++authGeneration.current;
-    const user = await api<Me>("/auth/me");
-    if (generation !== authGeneration.current) return;
-    csrf = user.csrf_token;
-    setMe(user);
-  }
   useEffect(() => {
     refresh()
       .catch(() => setMe(null))
@@ -1760,7 +1744,7 @@ function App() {
     };
     window.addEventListener("session-expired", expire);
     return () => window.removeEventListener("session-expired", expire);
-  }, []);
+  }, [refresh]);
   if (loading)
     return (
       <div className="boot">
@@ -1777,6 +1761,7 @@ function App() {
           try {
             if (me) await api("/auth/logout", "POST");
           } catch {
+            // Local logout must complete even if the server session has expired.
           } finally {
             authGeneration.current++;
             csrf = "";
@@ -1789,6 +1774,7 @@ function App() {
             try {
               if (me) await api("/auth/logout", "POST");
             } catch {
+              // Invitation login still clears the old local session on failure.
             } finally {
               authGeneration.current++;
               csrf = "";
@@ -1927,7 +1913,7 @@ function App() {
         </div>
         <p className="nav-label">MUNKATERÜLET</p>
         <nav>
-          {pages.map(([key, icon, label]) => (
+          {pages.map(([key, , label]) => (
             <button
               key={key}
               className={

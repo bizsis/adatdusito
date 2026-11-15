@@ -1,6 +1,5 @@
-import { dateTime } from "./ui";
 import { Help } from "./ui";
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 type Request = <T>(url: string, method?: string, body?: unknown) => Promise<T>;
 type Column = {
   index: number;
@@ -132,7 +131,7 @@ export function ImportWorkspace({
     [header, H] = useState(0),
     [delimiter, D] = useState(""),
     [encoding, EN] = useState("");
-  const act = async (fn: () => Promise<void>) => {
+  const act = useCallback(async (fn: () => Promise<void>) => {
     E("");
     B(true);
     try {
@@ -142,15 +141,15 @@ export function ImportWorkspace({
     } finally {
       B(false);
     }
-  };
-  async function refresh() {
+  }, []);
+  const canReadExports = !permissions || permissions.includes("exports.read");
+  const refresh = useCallback(async () => {
     S(await api("/imports/suppliers"));
     R(await api("/imports/runs"));
-    if (!permissions || permissions.includes("exports.read"))
-      EP(await api("/imports/export-profiles"));
+    if (canReadExports) EP(await api("/imports/export-profiles"));
     else EP([]);
-  }
-  function select(r: Run) {
+  }, [api, canReadExports]);
+  const select = useCallback((r: Run) => {
     U(r);
     T(String(r.supplier_id));
     CP(r.profile_id ? String(r.profile_id) : "");
@@ -181,57 +180,67 @@ export function ImportWorkspace({
     );
     V(false);
     K("");
-  }
+  }, []);
+  const runId = run?.id,
+    runState = run?.state;
+  const hasColumns = !!run?.analysis.columns;
   useEffect(() => {
     act(async () => {
       await refresh();
       F(await api("/imports/fields"));
     });
-  }, []);
+  }, [api, act, refresh]);
   useEffect(() => {
     if (supplier)
       api<typeof profiles>("/imports/profiles?supplier_id=" + supplier)
         .then(PS)
         .catch((e) => E(String(e)));
-  }, [supplier, run?.id]);
+  }, [api, supplier, runId]);
   useEffect(() => {
-    if (!run) return;
+    if (!runId) return;
+    let active = true;
     const id = setInterval(() => {
-      api<Run>("/imports/runs/" + run.id)
+      api<Run>("/imports/runs/" + runId)
         .then((r) => {
-          if (r.state !== run.state && r.state === "awaiting_approval")
+          if (!active) return;
+          if (r.state !== runState && r.state === "awaiting_approval")
             select(r);
           else U(r);
-          if (r.state !== run.state) refresh().catch((e) => E(String(e)));
+          if (r.state !== runState) refresh().catch((e) => E(String(e)));
         })
-        .catch((e) => E(String(e)));
+        .catch((e) => {
+          if (active) E(String(e));
+        });
     }, 2000);
-    return () => clearInterval(id);
-  }, [run?.id, run?.state]);
+    return () => {
+      active = false;
+      clearInterval(id);
+    };
+  }, [api, runId, runState, refresh, select]);
   useEffect(() => {
-    if (run)
+    if (runId)
       api<{ items: typeof rows }>(
-        `/imports/runs/${run.id}/rows?offset=${offset}`,
+        `/imports/runs/${runId}/rows?offset=${offset}`,
       )
         .then((r) => Q(r.items))
         .catch((e) => E(String(e)));
-  }, [run?.id, run?.state, offset]);
+  }, [api, runId, runState, offset]);
   useEffect(() => {
-    if (run?.analysis.columns)
-      api<typeof joins>(`/imports/runs/${run.id}/join-suggestions`)
+    if (runId && hasColumns)
+      api<typeof joins>(`/imports/runs/${runId}/join-suggestions`)
         .then(J)
         .catch((e) => E(String(e)));
-  }, [run?.id, run?.state]);
+  }, [api, runId, runState, hasColumns]);
   const columns = run?.analysis.columns || [];
   useEffect(() => {
-    if (run?.state === "awaiting_approval")
-      api<typeof sourcePreview>(`/imports/runs/${run.id}/preview`, "POST", {
+    if (runId && runState === "awaiting_approval")
+      api<typeof sourcePreview>(`/imports/runs/${runId}/preview`, "POST", {
         mapping,
         offset: sourceOffset,
       })
         .then(SP)
         .catch((e) => E(String(e)));
-  }, [run?.id, run?.state, sourceOffset, mapping]);
+  }, [api, runId, runState, sourceOffset, mapping]);
   const targetFields =
     exportProfiles.find((p) => p.id === Number(exportProfile))?.fields || [];
   return (
@@ -865,12 +874,12 @@ export function ExportAdmin({
     [fields, F] = useState<Field[]>([]),
     [error, E] = useState(""),
     [message, M] = useState("");
-  async function load() {
+  const load = useCallback(async () => {
     S(await api("/imports/engines"));
-  }
+  }, [api]);
   useEffect(() => {
     load().catch((e) => E(String(e)));
-  }, []);
+  }, [load]);
   const act = async (fn: () => Promise<void>) => {
     E("");
     M("");

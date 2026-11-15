@@ -31,7 +31,7 @@ export function ProductData({ api }: { api: Api }) {
     return () => {
       cancelled = true;
     };
-  }, [cursor]);
+  }, [api, cursor]);
   return (
     <>
       <Panel title="Beszállítói termékadatok">

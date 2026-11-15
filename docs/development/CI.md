@@ -2,6 +2,8 @@
 
 Status: **Implemented** in QUALITY-01 (`claude/quality-01`). This page describes the GitHub Actions configuration in `.github/workflows/`. The general testing guide is `docs/development/TESTING.md`, which is maintained by the DOCS-01 branch. The section proposed for it is at the end of this page.
 
+Frontend dependency and lint decisions are documented in [FRONTEND-02](FRONTEND-02.md).
+
 ## Workflows
 
 ### `ci.yml`: runs on pull requests, pushes to `main` and manual dispatch
@@ -11,9 +13,8 @@ Status: **Implemented** in QUALITY-01 (`claude/quality-01`). This page describes
 | `backend` | `backend/tests` + `scripts/tests`, except browser tests and the menu-export test. Dependencies are installed from `backend/requirements.lock` with `--no-deps`, then checked with `pip check`. | yes |
 | `browser` | `backend/tests/*_browser.py` + `scripts/tests/*_browser.py` (Playwright and Chromium) against a fresh `vite build` of the frontend | yes |
 | `menu-export` | `scripts/tests/test_emag_menu_export.py`, installed with **only** `scripts/browser-requirements.txt`, the way the Windows export tool is used | yes |
-| `frontend` | `npx tsc --noEmit -p tsconfig.json` (explicit type check), then `npx vite build` | yes |
+| `frontend` | `npm run lint` (zero warnings), `npm run test:lint`, explicit TypeScript checking, then `vite build` | yes |
 | `docker` | builds both images with BuildKit and the GitHub Actions layer cache, without pushing | yes |
-| `eslint` | lints `frontend/src` with an isolated toolchain and writes a report only | **no** (advisory) |
 | `ci-ok` | one aggregated required status for branch protection | yes |
 
 **Test partition.** Every test file runs in exactly one job:
@@ -65,7 +66,7 @@ It audits:
 | starlette | 0.49.3 → **1.3.1** | 5 | **Host/path injection into `request.url` was reachable**: `security.identity()` compares `request.url.path` with the safe paths of restricted sessions (forced password change, pending MFA), and a forged Host header unlocked other endpoints. Also the urlencoded `max_fields` bypass. `HTTPEndpoint` and Windows `StaticFiles` are not used. | Must be upgraded together with FastAPI. |
 | fastapi | 0.121.1 → **0.141.1** | — (needed for Starlette ≥ 1.0) | — | 0.141.1 is the newest FastAPI released while 1.3.1 was the current Starlette. Breaking changes since 0.121 were checked: no `on_event`, no `fastapi.security` classes, Pydantic v2 only. JSON bodies now require `Content-Type: application/json` (0.132), which the frontend always sends. Covered by `test_dependency_starlette.py`. |
 
-Still open (dev-only): **pytest 9.0.1** (PYSEC-2026-1845: a `/tmp/pytest-of-<user>` local issue, fixed in 9.0.3). It is a test runner, but it ships in the backend image through the shared lock. Moving test-only packages out of the runtime lock is the cleaner follow-up. **vite 7.2.2 → 7.3.8** is dev-only and frontend-owned.
+Still open (dev-only): **pytest 9.0.1** (PYSEC-2026-1845: a `/tmp/pytest-of-<user>` local issue, fixed in 9.0.3). It is a test runner, but it ships in the backend image through the shared lock. Moving test-only packages out of the runtime lock is the cleaner follow-up. **Vite 7.3.8** and the frontend-owned blocking lint integration are covered by FRONTEND-02; the final npm audit reports zero findings.
 
 ### Lock maintenance procedure (reproducible)
 
@@ -104,21 +105,22 @@ Still open (dev-only): **pytest 9.0.1** (PYSEC-2026-1845: a `/tmp/pytest-of-<use
 2. `backend/requirements.lock` has no hashes (`pip-audit` warns about this). Using `pip-compile --generate-hashes` would allow `--require-hashes` installs.
 3. Third-party actions are referenced by major tag (`@v4`). Pinning them to commit SHAs, for example with Dependabot for `github-actions`, is recommended as a follow-up.
 
-## ESLint: evaluation and integration plan
+## ESLint: blocking frontend integration
 
-- **Current state.** The frontend has no ESLint configuration or dependency. Adding them would touch `frontend/package.json`, `frontend/package-lock.json` and a new `frontend/eslint.config.js`. These are Codex-owned files under active CODEX 09 refactoring, so this branch does not change them.
-- **Interim solution.** `.github/linters/` contains an isolated, pinned toolchain: ESLint 9.39.5, typescript-eslint 8.72.2, react-hooks 5.2.0 and TypeScript 5.9.3. It has its own `package-lock.json` and a minimal config: recommended JS + TypeScript rules and the React hooks rules. The advisory `eslint` job lints `frontend/src` with it and writes the rule counts to the job summary. Nothing in `frontend/` is read except the sources.
-- **Baseline on `1d613fe`:** 34 findings in total.
-  - 24 `react-hooks/exhaustive-deps` warnings
-  - 7 `@typescript-eslint/no-unused-vars` errors
-  - 3 `no-empty` errors
-  - Files: `main.tsx` 13, `ImportWorkspace.tsx` 8, `AccessWorkspace.tsx` 7, `AuthViews.tsx` 4, `ProductData.tsx` 1, `SystemSettings.tsx` 1
-- **Integration** (for the frontend owner, after CODEX 09 lands):
-  1. Add the five packages above as `devDependencies` in `frontend/package.json`, with the same versions.
-  2. Move `.github/linters/eslint.config.mjs` to `frontend/eslint.config.js` and drop the `frontend/` prefix from the globs.
-  3. Add `"lint": "eslint src"` to the npm scripts.
-  4. Fix or explicitly disable the baseline findings. The hooks warnings need case-by-case review, not blanket fixes.
-  5. In `ci.yml`, replace the `eslint` job with `npm run lint` in the `frontend` job, make it blocking, and delete `.github/linters/`.
+FRONTEND-02 moves the toolchain into `frontend/package.json`, with exact locked
+versions and `frontend/eslint.config.js`. Run `npm run lint` and `npm run test:lint`
+from `frontend/`. Both commands run in the required `frontend` job; lint errors
+and warnings fail the job and therefore `ci-ok`.
+
+The original 34 baseline findings (24 hooks dependency warnings, 7 unused
+variables and 3 empty blocks) are resolved. UI-FIX-01's two explicit `any` types
+were also replaced with `unknown`. No blanket hook suppressions are used. The
+file-by-file hook review, advisory links, dependency pins, Node 22 compatibility
+and scoped minimatch override test are in [FRONTEND-02](FRONTEND-02.md).
+
+The redundant advisory `eslint` job and `.github/linters/` files are removed.
+React Compiler diagnostics are a separate adoption decision; hook ordering and
+exhaustive dependency checks are blocking with the current maintained plugin.
 
 ## Running the CI jobs locally
 
@@ -132,11 +134,8 @@ PYTHONPATH=backend .venv/bin/pytest -q -ra backend/tests scripts/tests \
 .venv/bin/pip install -r scripts/browser-requirements.txt
 (cd frontend && npm ci && npx vite build)
 PYTHONPATH=backend .venv/bin/pytest -q backend/tests/*_browser.py scripts/tests/*_browser.py
-# frontend job
-(cd frontend && npx tsc --noEmit -p tsconfig.json && npx vite build)
-# advisory lint
-npm ci --prefix .github/linters
-.github/linters/node_modules/.bin/eslint -c .github/linters/eslint.config.mjs frontend/src
+# frontend job (includes blocking lint)
+(cd frontend && npm ci && npm run lint && npm run test:lint && npm run build)
 ```
 
 ## Proposed update for `docs/development/TESTING.md` (DOCS-01)
@@ -151,6 +150,6 @@ This replaces the section "Current GitHub Actions observations" after both PRs a
 > - an explicit `tsc --noEmit` type check and production build
 > - both Docker images
 >
-> ESLint runs as an advisory report until it is integrated into `frontend/package.json`. A separate weekly and on-change workflow (`dependency-audit.yml`) reports Python and npm vulnerabilities, classified as actionable, runtime-nofix or dev-only. It is non-blocking for now. Test reports are summarized in each job and uploaded as artifacts only on failure.
+> ESLint and its configuration tests run in the required frontend job; errors and warnings block CI. A separate weekly and on-change workflow (`dependency-audit.yml`) reports Python and npm vulnerabilities, classified as actionable, runtime-nofix or dev-only. It is non-blocking for now. Test reports are summarized in each job and uploaded as artifacts only on failure.
 >
 > Local equivalent of the backend job: `PYTHONPATH=backend python -m pytest -q backend/tests scripts/tests --ignore-glob='*_browser.py' --ignore=scripts/tests/test_emag_menu_export.py`.

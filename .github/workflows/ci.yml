@@ -150,7 +150,7 @@ jobs:
           if-no-files-found: ignore
 
   frontend:
-    name: Frontend type check and build
+    name: Frontend lint, type check and build
     runs-on: ubuntu-24.04
     timeout-minutes: 10
     defaults:
@@ -164,32 +164,12 @@ jobs:
           cache: npm
           cache-dependency-path: frontend/package-lock.json
       - run: npm ci --no-audit --no-fund
+      - name: Blocking frontend lint and configuration tests
+        run: npm run lint && npm run test:lint
       - name: TypeScript type check (tsc --noEmit, frontend/tsconfig.json)
         run: npx tsc --noEmit -p tsconfig.json --pretty false
       - name: Production build
         run: npx vite build
-
-  eslint:
-    name: ESLint (advisory)
-    runs-on: ubuntu-24.04
-    timeout-minutes: 10
-    # Advisory until ESLint is part of frontend/package.json (frontend owner).
-    continue-on-error: true
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: ${{ env.NODE_VERSION }}
-          cache: npm
-          cache-dependency-path: .github/linters/package-lock.json
-      - run: npm ci --no-audit --no-fund --prefix .github/linters
-      - name: Lint frontend/src (report only)
-        run: |
-          mkdir -p reports
-          .github/linters/node_modules/.bin/eslint -c .github/linters/eslint.config.mjs \
-            -f json -o reports/eslint.json frontend/src || true
-      - name: ESLint summary
-        run: python3 .github/scripts/ci_report.py eslint reports/eslint.json --summary
 
   docker:
     name: Docker images
@@ -216,7 +196,7 @@ jobs:
           cache-to: type=gha,scope=frontend,mode=max
 
   ci-ok:
-    # Single required status for branch protection; ESLint is advisory.
+    # Single required status; blocking lint runs inside the frontend job.
     name: CI result
     if: always()
     needs: [backend, browser, menu-export, frontend, docker]
