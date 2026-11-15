@@ -1,4 +1,11 @@
-import React, { useCallback, useEffect, useRef, useState } from "react";
+import React, {
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+  lazy,
+  Suspense,
+} from "react";
 import { Panel } from "../ui";
 import { CategoryPicker } from "./CategoryPicker";
 import { ClassificationSummary } from "./ClassificationSummary";
@@ -26,6 +33,11 @@ import "./classification.css";
 export function ClassificationWorkspace(props: ClassificationPresentation) {
   return <Workspace key={props.workspaceKey} {...props} />;
 }
+const ParameterWorkspace = lazy(() =>
+  import("../parameters/ParameterWorkspace").then((m) => ({
+    default: m.ParameterWorkspace,
+  })),
+);
 const initialFilters: ProductFilters = {
   search: "",
   group: "all",
@@ -33,7 +45,12 @@ const initialFilters: ProductFilters = {
   source: "",
 };
 
-function Workspace({ ports, access }: ClassificationPresentation) {
+function Workspace({
+  ports,
+  access,
+  parameterPreparation,
+  workspaceKey,
+}: ClassificationPresentation) {
   const [tab, setTab] = useState<"products" | "mappings">("products");
   const [filters, setFilters] = useState<ProductFilters>(initialFilters);
   const search = usePresentationSearch(filters.search);
@@ -636,6 +653,20 @@ function Workspace({ ports, access }: ClassificationPresentation) {
             <button onClick={() => editProduct(active)}>
               Besorolás szerkesztése
             </button>
+          )}
+          {parameterPreparation && (
+            <Suspense fallback={<p role="status">Paraméternézet betöltése…</p>}>
+              <ParameterWorkspace
+                workspaceKey={workspaceKey}
+                product={{
+                  key: active.key,
+                  title: active.title,
+                  ownCategory: active.ownCategory,
+                  internalPath: active.internalCategory?.path.join(" / ") || "",
+                }}
+                {...parameterPreparation}
+              />
+            </Suspense>
           )}
           {active.fields && (
             <section aria-label="Eredeti termékadatok">
