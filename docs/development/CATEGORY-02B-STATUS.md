@@ -123,11 +123,13 @@ frontend nem indítja el és nem helyettesíti. MySQL-terhelésmérés nem tört
 - Teljes böngészős/eszközregresszió a keresés előtti állapoton: **66 sikeres,
   2 kihagyott** (a két valódi API-esethez még hiányzó backend); azóta a kibővített
   keresős adaptercsomag külön újrafuttatva.
-- PR #18 `9017dd0` + frontend izolált backend/eszközteszt-csomag: **383 sikeres**;
-  a keresési kiegészítés (`8c5db11`) teljes újrafuttatásának eredménye külön rögzítendő.
+- PR #18 `8c5db11` + frontend izolált backend/eszközteszt-csomag: **389 sikeres**.
+- Teljes integrált böngészős/eszközregresszió `8c5db11` + frontend mellett:
+  **70 sikeres, 0 kihagyott**, beleértve a valódi API-eseteket és az összes
+  meglévő hitelesítési, munkaterület-, import-, kategória- és navigációs tesztet.
 - Produkciós API-adapter HTTP-mock böngészőtesztek: **8 sikeres**.
-- Valódi API-integráció: **2 sikeres**, 390 és 1440 px; friss teljes eredmény
-  a PR átadásakor. A sima frontendágon a backendfüggőség miatt kifejezetten skip.
+- Valódi API-integráció `8c5db11`-gyel: **2 sikeres**, 390 és 1440 px;
+  névkereséssel és a visszakapott szűrt termékek ellenőrzésével. A sima frontendágon a backendfüggőség miatt kifejezetten skip.
 - ESLint, TypeScript és Vite build; lintszabályok **3 sikeres** tesztje.
 - Backend és frontend Docker build sikeres; runtime `pip check` sikeres.
 - `npm audit --audit-level=high`: **0 sérülékenység**, fejlesztői függőségekkel együtt.
@@ -135,3 +137,9 @@ frontend nem indítja el és nem helyettesíti. MySQL-terhelésmérés nem tört
 
 A GitHub Actions állapotát a helyi eredmények nem helyettesítik; csak a ténylegesen
 lefutott távoli futás tekinthető annak.
+
+A fejlesztési ág feltöltve: `codex/category-02b-frontend`. A PR létrehozási kísérlet
+`POST https://api.github.com/graphql: Forbidden` (HTTP 403) hibával blokkolt;
+automatikus PR-létrehozás és távoli GitHub Actions-ellenőrzés nem történt.
+[PR megnyitása](https://github.com/bizsis/adatdusito/pull/new/codex/category-02b-frontend).
+A helyi eredmény nem állít távoli CI-sikert. Main-merge és VPS-telepítés nem történt.
