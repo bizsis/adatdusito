@@ -53,11 +53,11 @@ def test_audit_classifies_runtime_nofix_and_dev_only(tmp_path, monkeypatch, caps
             ("PyJWT", "2.10.1", [vuln("A", ["2.12.0"]), vuln("B", ["2.15.0"]), vuln("A", ["2.12.0"])]),
             ("starlette", "0.49.3", [vuln("S", ["1.3.1"])]),
             ("pyjwt", "2.10.1", [vuln("N")]),
-            ("pytest", "9.0.1", [vuln("P", ["9.0.3"])]),
             ("redis", "5.2.1", []),
         ),
     )
     browser = write(tmp_path, "browser.json", pip_report(("pyee", "13.0.0", [vuln("E", ["13.1"])])))
+    tests = write(tmp_path, "tests.json", pip_report(("pytest", "9.0.1", [vuln("P", ["9.0.3"])])))
     npm_all = write(
         tmp_path,
         "npm-all.json",
@@ -79,18 +79,26 @@ def test_audit_classifies_runtime_nofix_and_dev_only(tmp_path, monkeypatch, caps
     )
     npm_runtime = write(tmp_path, "npm-runtime.json", {"vulnerabilities": {"react-dom": {}}})
     lines, actionable, errors = ci_report.audit(
-        [f"backend={backend}", f"browser-tests={browser}"], npm_runtime, npm_all
+        [f"backend={backend}", f"browser-tests={browser}", f"backend-test={tests}"], npm_runtime, npm_all
     )
     text = "\n".join(lines)
     assert actionable and not errors
     assert "| **actionable** | 4 |" in text  # 2 pyjwt (deduplicated) + starlette + react-dom
     assert "| runtime-nofix | 1 |" in text
-    assert "| dev-only | 3 |" in text  # pytest, pyee (test tooling), vite (devDependency)
+    assert "| dev-only | 3 |" in text  # pytest (test lock), pyee (browser tests), vite (devDependency)
+    assert "| PyPI (backend-test) | pytest | 9.0.1 |" in text
     assert "| PyPI (backend) | PyJWT | 2.10.1 | 2: A, B | 2.15.0 |" in text
     assert "1.3.1 (major upgrade)" in text
     assert "| npm (frontend) | vite | 7.0.0 - 7.3.6 | 1: GHSA-x | vite@7.3.8 |" in text
     assert "transitive" not in text
     assert text.index("### actionable") < text.index("### runtime-nofix") < text.index("### dev-only")
+
+
+def test_runtime_lock_findings_are_never_reclassified_by_name(tmp_path):
+    """A test tool inside the runtime lock ships in the image: report it as runtime."""
+    report = write(tmp_path, "pip.json", pip_report(("pytest", "9.0.1", [vuln("P", ["9.0.3"])])))
+    lines, actionable, _ = ci_report.audit([f"backend={report}"], None, None)
+    assert actionable and "| **actionable** | 1 |" in "\n".join(lines)
 
 
 def test_audit_is_non_blocking_unless_requested(tmp_path, monkeypatch, capsys):
