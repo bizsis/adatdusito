@@ -27,11 +27,11 @@ Ha egy utasítás ellentmond ennek a fájlnak, a fejlesztő megáll, és a Vezé
 
 ## Aktuális munkamegosztás
 
-A Vezér frissíti. Az `AGENTS.md` közös szabályzat, minden fejlesztőre kötelező; szerkesztője a táblázat szerint Claude, a tartalmi döntéseket a Vezér hozza. Utolsó módosítás: CATEGORY-03C (#29, a Vezér 2026-11-15-i döntése), 2026-11.
+A Vezér frissíti. Az `AGENTS.md` közös szabályzat, minden fejlesztőre kötelező; szerkesztője a táblázat szerint Claude, a tartalmi döntéseket a Vezér hozza. Utolsó módosítás: RELEASE-01 (#33, `test_auth09.py` gazdája), 2026-11.
 
 | Terület | Fájlgazda |
 |---|---|
-| `backend/app/security.py`, biztonsági backend-tesztek (`backend/tests/test_login_protection.py`, `test_password_hash_capacity.py`, `test_deploy_nginx.py`, `test_restricted_session_gate.py`, `test_dependency_*.py`) | Claude |
+| `backend/app/security.py`, biztonsági backend-tesztek (`backend/tests/test_login_protection.py`, `test_password_hash_capacity.py`, `test_deploy_nginx.py`, `test_restricted_session_gate.py`, `test_dependency_*.py`, AUTH/SECURITY: `test_auth09.py`) | Claude |
 | Python-függőségfájlok: `backend/requirements*.{txt,in,lock}`, `backend/scripts/compile-requirements.sh`, `backend/scripts/check_requirements.py`, `backend/Dockerfile`, `backend/.dockerignore`; a CI backend-, browser- és menu-export jobjainak telepítési lépései | Claude |
 | `deploy/nginx/*` (külső Nginx deploykonfiguráció) | Claude |
 | CATEGORY-02A: `backend/app/product_models.py`, `product_catalog.py`, `product_backfill.py`, `workspace_views.py`, az `import_engine.py` termék-/forrásattribútum-része, az `import_api.py` futáskorlát-ellenőrzése, a `settings_api.py`/`system_config.py` `classification` csoportja, `backend/migrations/versions/0009_product_classification.py`, `backend/tests/test_product_classification.py`, `test_category02a_migration.py`, `docs/design/CATEGORY-02A-API.md` | Claude |
