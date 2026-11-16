@@ -130,21 +130,25 @@ def deletion_plan(db, run):
 
 def public(run):
     return {
-        k: getattr(run, k)
-        for k in (
-            "id",
-            "supplier_id",
-            "filename",
-            "state",
-            "profile_id",
-            "config",
-            "analysis",
-            "cursor",
-            "counters",
-            "error",
-            "created_at",
-            "updated_at",
-        )
+        **{
+            k: getattr(run, k)
+            for k in (
+                "id",
+                "supplier_id",
+                "filename",
+                "state",
+                "profile_id",
+                "config",
+                "analysis",
+                "cursor",
+                "counters",
+                "error",
+                "created_at",
+                "updated_at",
+            )
+        },
+        # IMPORT-UX-01: UI hint only (no reference counts); DELETE re-checks everything.
+        "deletable": run.approved_by is None and run.state in DELETABLE_STATES,
     }
 
 

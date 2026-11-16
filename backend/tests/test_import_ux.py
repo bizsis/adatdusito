@@ -131,6 +131,8 @@ def test_delete_unapproved_import_is_real_and_does_not_come_back(imports):
     c, t, s = imports
     first, _ = analysed(c, t, s, b"SKU;NAME\n001;TV\n", "besz_minta.csv")
     second, _ = analysed(c, t, s, b"SKU;NAME\n002;Radio\n", "besz_minta.csv")
+    listed = {x["id"]: x["deletable"] for x in c.get("/api/v1/imports/runs").json()}
+    assert listed == {first: True, second: True}
     plan = c.get(f"/api/v1/imports/runs/{first}/deletion").json()
     assert plan["deletable"] and plan["reason"] is None
     assert plan["deletes"]["source_file_chunks"] == 1 and plan["deletes"]["source_file_bytes"] > 0
@@ -166,6 +168,7 @@ def test_processed_import_and_its_products_are_never_deleted(imports):
     id, _ = analysed(c, t, s, b"SKU;NAME;QUANTITY\n001;TV;1\n")
     approve(c, id)
     work(t, id)
+    assert c.get(f"/api/v1/imports/runs/{id}").json()["deletable"] is False
     plan = c.get(f"/api/v1/imports/runs/{id}/deletion").json()
     assert not plan["deletable"] and plan["reason"] == "approved_or_processed"
     assert plan["references"]["products_last_written_by_run"] == 1
