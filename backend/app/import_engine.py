@@ -19,7 +19,15 @@ from app.import_models import (
     ImportChange,
     ImportProfile,
 )
-from app.import_parser import analyze, rows, normalize, IDENTIFIERS, FIELDS
+from app.import_parser import (
+    analyze,
+    blank_row,
+    rows,
+    normalize,
+    review_flags,
+    IDENTIFIERS,
+    FIELDS,
+)
 from app.worker import celery
 
 
@@ -38,12 +46,18 @@ def run_product_limit():
     return max(1, min(limit("IMPORT_MAX_PRODUCTS", RUN_PRODUCT_LIMIT), RUN_PRODUCT_LIMIT))
 
 
+def count_rows(path, config):
+    """Physical lines after the header, split into content rows and fully blank rows."""
+    physical = data = 0
+    for line, row in rows(path, config):
+        if line > config["header_line"]:
+            physical += 1
+            data += not blank_row(row)
+    return {"physical_rows": physical, "data_rows": data, "empty_rows": physical - data}
+
+
 def count_data_rows(path, config):
-    return sum(
-        1
-        for line, row in rows(path, config)
-        if line > config["header_line"] and any(str(v).strip() for v in row)
-    )
+    return count_rows(path, config)["data_rows"]
 
 
 def run_limit_message(count, maximum):
@@ -172,7 +186,8 @@ def advance(db, run_id):
                             run.approved_by = p.approved_by
                             run.state = "processing"
                         break
-                analysis["data_rows"] = count_data_rows(path, config)
+                # IMPORT-UX-02: blank lines are counted and shown, never products.
+                analysis.update(count_rows(path, config))
                 analysis["run_product_limit"] = run_product_limit()
                 run.analysis = analysis
                 if run.state != "processing":
@@ -232,7 +247,7 @@ def advance(db, run_id):
                 issues = []
                 values = {}
                 provenance = {}
-                if not any(v.strip() for v in raw):
+                if blank_row(raw):
                     state = "empty"
                 elif len(raw) != len(run.analysis["headers"]):
                     state = "error"
@@ -249,7 +264,12 @@ def advance(db, run_id):
                             "excel_format": getattr(cells[index], "excel_format", None),
                             "excel_numeric": getattr(cells[index], "numeric", None),
                         }
+                        problems = problems + review_flags(field, value)
                         issues += [field + ":" + problem for problem in problems]
+                        if field == "gtin" and problems:
+                            # IMPORT-UX-02: an unverified code (e.g. 8,71999E+12) is not a
+                            # GTIN; the raw text stays in the row and its provenance.
+                            values[field] = None
                     for field in ("price_type", "tax_basis", "currency"):
                         if not values.get(field) and config.get(field):
                             values[field] = config[field]

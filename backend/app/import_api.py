@@ -254,6 +254,7 @@ def preview(
     offset: int = Query(0, ge=0),
     limit_: int = Query(25, ge=1, le=100, alias="limit"),
     errors: bool = False,
+    include_empty: bool = False,
     who=Depends(require("imports.read")),
     db: Session = Depends(database),
 ):
@@ -261,6 +262,9 @@ def preview(
     stmt = select(ImportRow).where(ImportRow.run_id == id)
     if errors:
         stmt = stmt.where(ImportRow.state.in_(["error", "conflict"]))
+    elif not include_empty:
+        # IMPORT-UX-02: blank source lines are counted (counters["empty"]) but not listed.
+        stmt = stmt.where(ImportRow.state != "empty")
     return {
         "items": [
             {
@@ -838,13 +842,21 @@ def source_preview(
     from app.import_engine import materialize
     from app.import_parser import rows
 
+    from app.import_parser import blank_row
+
     run = get_run(db, who, id)
     if not run.analysis.get("headers"):
         raise HTTPException(409, "Az elemzés még nem készült el.")
+    # IMPORT-UX-02: the offset counts content rows; blank lines are skipped here and
+    # reported as numbers only. "line" stays the physical line of the source file.
     result = []
+    seen = 0
     with materialize(db, run) as path:
         for line, raw in rows(path, run.config):
-            if line <= run.config["header_line"] + offset:
+            if line <= run.config["header_line"] or blank_row(raw):
+                continue
+            seen += 1
+            if seen <= offset:
                 continue
             result.append({"line": line, "raw": raw})
             if len(result) > limit_:
@@ -854,12 +866,14 @@ def source_preview(
         "has_more": len(result) > limit_,
         "offset": offset,
         "headers": run.analysis["headers"],
+        **{k: run.analysis.get(k) for k in ("physical_rows", "data_rows", "empty_rows")},
     }
 
 
 class PreviewMapping(BaseModel):
     mapping: dict[str, str]
     offset: int = Field(default=0, ge=0, le=250000)
+    limit: int = Field(default=25, ge=1, le=50)
 
 
 @router.post("/runs/{id}/preview")
@@ -869,7 +883,7 @@ def interpreted_preview(
     who=Depends(require("imports.read")),
     db: Session = Depends(database),
 ):
-    from app.import_parser import normalize
+    from app.import_parser import normalize, review_flags
 
     run = get_run(db, who, id)
     headers = run.analysis.get("headers", [])
@@ -879,14 +893,19 @@ def interpreted_preview(
         if v
     ):
         raise HTTPException(422, "Hibás megfeleltetés.")
-    page = source_preview(id, body.offset, 25, who, db)
+    page = source_preview(id, body.offset, body.limit, who, db)
     for r in page["items"]:
-        r["interpreted"] = {
-            field: {
-                "value": normalize(field, r["raw"][int(i)])[0],
-                "issues": normalize(field, r["raw"][int(i)])[1],
+        interpreted = {}
+        for i, field in body.mapping.items():
+            if not field or int(i) >= len(r["raw"]):
+                continue
+            value, issues = normalize(field, r["raw"][int(i)])
+            issues = issues + review_flags(field, value)
+            # Same rule as the import: an unverified code is not shown as a GTIN.
+            interpreted[field] = {
+                "value": None if field == "gtin" and issues else value,
+                "raw": r["raw"][int(i)],
+                "issues": issues,
             }
-            for i, field in body.mapping.items()
-            if field and int(i) < len(r["raw"])
-        }
+        r["interpreted"] = interpreted
     return page
