@@ -90,6 +90,38 @@ def profile_state_condition(state):
 
 # --- diff ---------------------------------------------------------------------
 
+DIFF_FILTERS = ("state", "mandatory_missing", "navigation_node_id", "source_category_id", "supplier_id",
+                "parameter_profile_state", "q")
+
+
+def diff_conditions(tid, filters):
+    """WHERE conditions of the parameter diff (also used by 03C selections).
+
+    The query must join Supplier and outer-join ProductClassification.
+    """
+    slot = ProductParameterValue
+    conditions = [SupplierProduct.tenant_id == tid, Supplier.tenant_id == tid]
+    for term in pc.search_terms(filters.get("q")):
+        conditions.append(SupplierProduct.search_text.contains(term, autoescape=True))
+    if filters.get("supplier_id") is not None:
+        conditions.append(SupplierProduct.supplier_id == filters["supplier_id"])
+    if filters.get("source_category_id") is not None:
+        conditions.append(SupplierProduct.source_category_id == filters["source_category_id"])
+    if filters.get("navigation_node_id") is not None:
+        conditions.append(ProductClassification.navigation_node_id == filters["navigation_node_id"])
+    if filters.get("parameter_profile_state") is not None:
+        conditions.append(profile_state_condition(filters["parameter_profile_state"]))
+    # Filters are driven by ix_product_parameter_state (tenant, state, mandatory, product).
+    if filters.get("state") is not None:
+        conditions.append(SupplierProduct.id.in_(
+            select(slot.product_id).where(slot.tenant_id == tid, slot.state == filters["state"])))
+    if filters.get("mandatory_missing") is not None:
+        missing = SupplierProduct.id.in_(select(slot.product_id).where(
+            slot.tenant_id == tid, slot.state == "missing", slot.mandatory.is_(True)))
+        conditions.append(missing if filters["mandatory_missing"] else not_(missing))
+    return conditions
+
+
 
 @router.get("/parameter-diff")
 def parameter_diff(
@@ -108,25 +140,10 @@ def parameter_diff(
 ):
     tid = tenant(who)
     slot = ProductParameterValue
-    conditions = [SupplierProduct.tenant_id == tid, Supplier.tenant_id == tid, SupplierProduct.id > cursor]
-    for term in pc.search_terms(q):
-        conditions.append(SupplierProduct.search_text.contains(term, autoescape=True))
-    if supplier_id is not None:
-        conditions.append(SupplierProduct.supplier_id == supplier_id)
-    if source_category_id is not None:
-        conditions.append(SupplierProduct.source_category_id == source_category_id)
-    if navigation_node_id is not None:
-        conditions.append(ProductClassification.navigation_node_id == navigation_node_id)
-    if parameter_profile_state is not None:
-        conditions.append(profile_state_condition(parameter_profile_state))
-    # Filters are driven by ix_product_parameter_state (tenant, state, mandatory, product).
-    if state is not None:
-        conditions.append(SupplierProduct.id.in_(
-            select(slot.product_id).where(slot.tenant_id == tid, slot.state == state)))
-    if mandatory_missing is not None:
-        missing = SupplierProduct.id.in_(select(slot.product_id).where(
-            slot.tenant_id == tid, slot.state == "missing", slot.mandatory.is_(True)))
-        conditions.append(missing if mandatory_missing else not_(missing))
+    conditions = diff_conditions(tid, dict(
+        state=state, mandatory_missing=mandatory_missing, navigation_node_id=navigation_node_id,
+        source_category_id=source_category_id, supplier_id=supplier_id,
+        parameter_profile_state=parameter_profile_state, q=q)) + [SupplierProduct.id > cursor]
     rows = db.execute(
         select(SupplierProduct, ProductClassification)
         .join(Supplier, Supplier.id == SupplierProduct.supplier_id)
