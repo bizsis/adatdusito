@@ -1,16 +1,20 @@
-"""IMPORT-UX-02 (#42): a truthful, compact import preview and safe field suggestions.
+"""IMPORT-UX-01/02 (#41, #42): import-history deletion and a truthful, compact preview.
 
 The CSV fixture reconstructs the shape reported for besz_minta.csv (UTF-8 BOM, ';',
 27 columns, 3 product rows, 4945 rows of 27 empty fields, the cited LASTINITIALCOST /
 LISTPRICE / BARCODE / QUANTITY values); it is not the customer's original file.
 """
 
+from datetime import timedelta
+
 import pytest
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
-from app.import_models import SupplierProduct
+from app.import_models import ImportChunk, ImportRun, SupplierProduct
 from app.import_parser import blank_row
+from app.models import Audit, now
+from conftest import login
 from test_supplier_import import approve, imports, upload, work  # noqa: F401
 
 HEADERS = ["ARTICLENR", "NAME", "BARCODE", "QUANTITY", "LASTINITIALCOST", "LISTPRICE",
@@ -118,6 +122,101 @@ def test_whitespace_and_invisible_characters_count_as_blank(imports):
     approve(c, id, {"0": "sku", "1": "name"})
     work(t, id)
     assert c.get(f"/api/v1/imports/runs/{id}").json()["counters"] == {"ready": 1, "empty": 2}
+
+
+# --- IMPORT-UX-01 -----------------------------------------------------------------
+
+
+def test_delete_unapproved_import_is_real_and_does_not_come_back(imports):
+    c, t, s = imports
+    first, _ = analysed(c, t, s, b"SKU;NAME\n001;TV\n", "besz_minta.csv")
+    second, _ = analysed(c, t, s, b"SKU;NAME\n002;Radio\n", "besz_minta.csv")
+    plan = c.get(f"/api/v1/imports/runs/{first}/deletion").json()
+    assert plan["deletable"] and plan["reason"] is None
+    assert plan["deletes"]["source_file_chunks"] == 1 and plan["deletes"]["source_file_bytes"] > 0
+    assert set(plan["keeps"]) >= {"supplier_products", "audit_log", "other_imports"}
+    r = c.delete(f"/api/v1/imports/runs/{first}")
+    assert r.status_code == 200 and r.json() == {"deleted": True, "run_id": first}
+    # Server truth, not a hidden list item: gone from the list and from the database,
+    # also after the next upload (the reported "deleted imports came back" case).
+    third, _ = analysed(c, t, s, b"SKU;NAME\n003;Laptop\n", "uj.csv")
+    ids = [x["id"] for x in c.get("/api/v1/imports/runs").json()]
+    assert first not in ids and second in ids and third in ids
+    assert c.get(f"/api/v1/imports/runs/{first}").status_code == 404
+    with Session(t) as db:
+        assert db.get(ImportRun, first) is None
+        assert db.scalar(select(func.count()).select_from(ImportChunk)
+                         .where(ImportChunk.run_id == first)) == 0
+        logged = db.scalar(select(Audit).where(Audit.action == "import.delete"))
+        assert logged.target == str(first) and logged.details["state"] == "awaiting_approval"
+    # Documented repeat: the record no longer exists.
+    assert c.delete(f"/api/v1/imports/runs/{first}").status_code == 404
+
+
+def test_cancelled_before_approval_is_deletable_and_cancel_works_awaiting_approval(imports):
+    c, t, s = imports
+    id, run = analysed(c, t, s, b"SKU;NAME\n001;TV\n")
+    assert run["state"] == "awaiting_approval"
+    assert c.post(f"/api/v1/imports/runs/{id}/actions/cancel").json()["state"] == "cancelled"
+    assert c.delete(f"/api/v1/imports/runs/{id}").status_code == 200
+
+
+def test_processed_import_and_its_products_are_never_deleted(imports):
+    c, t, s = imports
+    id, _ = analysed(c, t, s, b"SKU;NAME;QUANTITY\n001;TV;1\n")
+    approve(c, id)
+    work(t, id)
+    plan = c.get(f"/api/v1/imports/runs/{id}/deletion").json()
+    assert not plan["deletable"] and plan["reason"] == "approved_or_processed"
+    assert plan["references"]["products_last_written_by_run"] == 1
+    r = c.delete(f"/api/v1/imports/runs/{id}")
+    assert r.status_code == 409 and "Jóváhagyott" in r.json()["error"]["message"]
+    with Session(t) as db:
+        assert db.get(ImportRun, id) is not None
+        assert db.scalar(select(func.count()).select_from(SupplierProduct)) == 1
+
+
+def test_running_or_referenced_unapproved_import_is_refused(imports):
+    c, t, s = imports
+    id, _ = analysed(c, t, s, b"SKU;NAME\n001;TV\n")
+    with Session(t) as db:
+        db.get(ImportRun, id).lease_until = now() + timedelta(minutes=5)
+        db.commit()
+    r = c.delete(f"/api/v1/imports/runs/{id}")
+    assert r.status_code == 409 and "fut" in r.json()["error"]["message"]
+    other, _ = analysed(c, t, s, "SKU;NAME;QUANTITY\n009;Kábel;1\n".encode())
+    approve(c, other)
+    work(t, other)
+    with Session(t) as db:
+        db.get(ImportRun, id).lease_until = None
+        # Defensive: a product pointing at an unapproved run must keep it.
+        db.scalar(select(SupplierProduct)).last_run_id = id
+        db.commit()
+    plan = c.get(f"/api/v1/imports/runs/{id}/deletion").json()
+    assert plan["reason"] == "referenced"
+    assert c.delete(f"/api/v1/imports/runs/{id}").status_code == 409
+
+
+def test_delete_is_tenant_scoped_role_bound_and_csrf_origin_protected(imports):
+    c, t, s = imports
+    id, _ = analysed(c, t, s, b"SKU;NAME\n001;TV\n")
+    login(c, "other@example.hu")  # tenant 2 administrator
+    assert c.get(f"/api/v1/imports/runs/{id}/deletion").status_code == 404
+    assert c.delete(f"/api/v1/imports/runs/{id}").status_code == 404
+    login(c, "reviewer@example.hu")  # tenant 1, imports.read only
+    assert c.get(f"/api/v1/imports/runs/{id}/deletion").status_code == 403
+    assert c.delete(f"/api/v1/imports/runs/{id}").status_code == 403
+    login(c, "admin@example.hu")
+    token = c.headers.pop("X-CSRF-Token")
+    assert c.delete(f"/api/v1/imports/runs/{id}").status_code == 403
+    c.headers["X-CSRF-Token"] = token
+    assert c.delete(f"/api/v1/imports/runs/{id}",
+                    headers={"Origin": "https://evil.example"}).status_code == 403
+    with Session(t) as db:
+        assert db.get(ImportRun, id) is not None
+    c.post("/api/v1/auth/logout")
+    c.headers.pop("X-CSRF-Token", None)
+    assert c.delete(f"/api/v1/imports/runs/{id}").status_code == 401
 
 
 @pytest.mark.parametrize("limit", [5, 10, 25, 50])

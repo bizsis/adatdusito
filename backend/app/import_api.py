@@ -71,6 +71,63 @@ def row_envelope(run, row):
     }
 
 
+# IMPORT-UX-01: an import record may be deleted only before anything was approved or
+# written from it. Approved/processed imports stay (archiving is a later, separate
+# decision); products, profiles, suppliers and the audit log are never deleted here.
+DELETABLE_STATES = ("uploaded", "awaiting_approval", "failed", "cancelled")
+
+
+def deletion_plan(db, run):
+    """What DELETE /runs/{id} would remove and keep, and why it may be refused."""
+    from app.product_models import ProductEvent
+
+    def count(model, *where):
+        return db.scalar(select(func.count()).select_from(model).where(*where)) or 0
+
+    references = {
+        "import_rows": count(ImportRow, ImportRow.run_id == run.id),
+        "import_changes": count(ImportChange, ImportChange.run_id == run.id),
+        "products_last_written_by_run": count(
+            SupplierProduct, SupplierProduct.last_run_id == run.id
+        ),
+        "product_events": count(ProductEvent, ProductEvent.run_id == run.id),
+    }
+    if run.approved_by is not None or run.state not in DELETABLE_STATES:
+        reason = "approved_or_processed"
+    elif run.lease_until and run.lease_until > now():
+        reason = "running"
+    elif any(references.values()):
+        reason = "referenced"
+    else:
+        reason = None
+    chunks = db.execute(
+        select(func.count(), func.coalesce(func.sum(func.length(ImportChunk.data)), 0)).where(
+            ImportChunk.run_id == run.id
+        )
+    ).one()
+    return {
+        "run_id": run.id,
+        "filename": run.filename,
+        "state": run.state,
+        "deletable": reason is None,
+        "reason": reason,
+        "deletes": {
+            "import_record": 1,
+            "analysis_and_settings": True,
+            "source_file_chunks": chunks[0],
+            "source_file_bytes": int(chunks[1]),
+        },
+        "references": references,
+        "keeps": [
+            "supplier_products",
+            "import_profiles",
+            "import_suppliers",
+            "other_imports",
+            "audit_log",
+        ],
+    }
+
+
 def public(run):
     return {
         k: getattr(run, k)
@@ -807,6 +864,51 @@ def expire_source(
     audit(db, who, "import.expire_source", id, tenant_id=run.tenant_id)
     db.commit()
     return {"expired": True}
+
+
+@router.get("/runs/{id}/deletion")
+def deletion_preview(
+    id: int, who=Depends(require("imports.manage")), db: Session = Depends(database)
+):
+    """Dry run for the confirmation dialog: nothing is changed."""
+    return deletion_plan(db, get_run(db, who, id))
+
+
+DELETE_REFUSALS = {
+    "approved_or_processed": "Jóváhagyott vagy feldolgozott import nem törölhető; "
+    "a termékek és a napló megőrzése miatt csak későbbi archiválás lesz lehetséges.",
+    "running": "Az import elemzése éppen fut; várd meg a végét, vagy szakítsd meg.",
+    "referenced": "Az importra termék vagy változásnapló hivatkozik, ezért nem törölhető.",
+}
+
+
+@router.delete("/runs/{id}")
+def delete_run(
+    id: int, who=Depends(require("imports.manage")), db: Session = Depends(database)
+):
+    """IMPORT-UX-01: delete an unapproved import record and its stored source file.
+
+    Tenant-scoped (404 for other tenants), imports.manage, CSRF/Origin as every write.
+    Repeating the call after success returns 404 (the record no longer exists).
+    """
+    get_run(db, who, id)
+    run = db.scalar(select(ImportRun).where(ImportRun.id == id).with_for_update())
+    plan = deletion_plan(db, run)
+    if not plan["deletable"]:
+        raise HTTPException(409, DELETE_REFUSALS[plan["reason"]])
+    db.execute(delete(ImportChunk).where(ImportChunk.run_id == id))
+    db.delete(run)
+    audit(
+        db,
+        who,
+        "import.delete",
+        id,
+        tenant_id=run.tenant_id,
+        state=plan["state"],
+        source_bytes=plan["deletes"]["source_file_bytes"],
+    )
+    db.commit()
+    return {"deleted": True, "run_id": id}
 
 
 @router.get("/products/{id}/changes")
