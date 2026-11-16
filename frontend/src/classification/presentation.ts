@@ -1,3 +1,6 @@
+import type { Request } from "./category02Contract";
+import type { ParameterAccess } from "../parameters/liveContract";
+import type { ParameterServices } from "../parameters/presentation";
 /** Frontend presentation ports only. These are NOT CATEGORY-02A HTTP DTOs.
  * A production adapter must map the published contract, authorization and revisions.
  * There are deliberately no URLs, fetch defaults or sample responses here.
@@ -133,6 +136,8 @@ export type PresentationAccess = {
   manageThreshold: boolean;
 };
 export type ClassificationPresentation = {
+  liveParameters?: { request: Request; access: ParameterAccess };
+  parameterPreparation?: ParameterServices;
   workspaceKey: string;
   ports: PresentationPorts;
   access: PresentationAccess;
