@@ -167,10 +167,31 @@ export function validateMaps(v: unknown): asserts v is Maps {
       ),
   );
 }
-export function validateMapWrite(
-  v: unknown,
-): asserts v is { products_changed: number; locked_skipped: number } {
-  requireValid(
-    object(v) && count(v.products_changed) && count(v.locked_skipped),
-  );
+export type MapWriteResult =
+  | { products_changed: number; locked_skipped: number }
+  | {
+      products_changed: null;
+      locked_skipped: null;
+      reapply: {
+        mode: "queued";
+        state: "pending" | "running";
+        job_id: number;
+        total: number;
+        enqueue_failed?: boolean;
+      };
+    };
+export function validateMapWrite(v: unknown): asserts v is MapWriteResult {
+  requireValid(object(v));
+  if (v.products_changed === null) {
+    requireValid(
+      v.locked_skipped === null &&
+        object(v.reapply) &&
+        v.reapply.mode === "queued" &&
+        ["pending", "running"].includes(String(v.reapply.state)) &&
+        id(v.reapply.job_id) &&
+        count(v.reapply.total) &&
+        (v.reapply.enqueue_failed === undefined ||
+          typeof v.reapply.enqueue_failed === "boolean"),
+    );
+  } else requireValid(count(v.products_changed) && count(v.locked_skipped));
 }

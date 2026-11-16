@@ -523,7 +523,9 @@ function Workspace({
               </table>
             </div>
             <section aria-label="Paraméteres előkészítés jóváhagyása">
-              <h3>{prepLabels[page.preparation.state]}</h3>
+              <h3>
+                {page.preparation.heading || prepLabels[page.preparation.state]}
+              </h3>
               <p>{page.preparation.explanation}</p>
               <p>{page.preparation.audit}</p>
               <p>

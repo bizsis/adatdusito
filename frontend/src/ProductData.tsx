@@ -61,6 +61,8 @@ function BoundClassification({
 }) {
   const enabled = parameterAccess !== undefined;
   const edit = parameterAccess?.edit ?? false;
+  const bulk = parameterAccess?.bulk ?? false;
+  const approve = parameterAccess?.approve ?? false;
   const globalAliases = parameterAccess?.globalAliases ?? false;
   const classify = parameterAccess?.classify ?? false;
   const presentation = useMemo(
@@ -70,7 +72,7 @@ function BoundClassification({
         ? {
             liveParameters: {
               request: api,
-              access: { edit, globalAliases, classify },
+              access: { edit, globalAliases, classify, bulk, approve },
             },
           }
         : {}),
@@ -81,6 +83,8 @@ function BoundClassification({
       canClassify,
       initial,
       enabled,
+      bulk,
+      approve,
       edit,
       globalAliases,
       classify,

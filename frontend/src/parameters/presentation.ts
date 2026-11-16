@@ -84,6 +84,7 @@ export type DiffPage = {
   profiles: ParameterProfile[];
   activeProfileKey: string | null;
   preparation: {
+    heading?: string;
     state: "unprepared" | "review" | "approved" | "stale";
     canApprove: boolean;
     explanation: string;

@@ -284,6 +284,8 @@ export type Alias = ReturnType<typeof decodeAlias>;
 export type Job = ReturnType<typeof decodeJob>;
 export type RunScope = ReturnType<typeof decodeScope>;
 export type ParameterAccess = {
+  bulk?: boolean;
+  approve?: boolean;
   edit: boolean;
   globalAliases: boolean;
   classify: boolean;
@@ -361,3 +363,16 @@ export const decodeProductContext = shape({
     50,
   ),
 });
+
+/** Shared strict decoders for the additive 03C wire contract. */
+export const parameterWire = {
+  shape,
+  text,
+  bool,
+  count,
+  id,
+  nullable,
+  optional,
+  enumeration,
+  array,
+};

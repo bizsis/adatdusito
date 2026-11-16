@@ -1,3 +1,6 @@
+import { LiveBulkPreparation } from "./LiveBulkPreparation";
+import type { Request } from "../classification/category02Contract";
+import type { ParameterAccess } from "./liveContract";
 import React, { useCallback, useState } from "react";
 import {
   usePresentationRead,
@@ -9,10 +12,15 @@ import type { LiveParameterApi } from "./liveApi";
 export function ParameterOverview({
   api,
   onOpen,
+  request,
+  access,
 }: {
+  request?: Request;
+  access?: ParameterAccess;
   api: LiveParameterApi;
   onOpen: (id: number) => void;
 }) {
+  const [selected, Selected] = useState<number[]>([]);
   const [search, S] = useState("");
   const query = usePresentationSearch(search);
   const [state, T] = useState("");
@@ -38,6 +46,7 @@ export function ParameterOverview({
   );
   const read = usePresentationRead(load);
   function reset() {
+    Selected([]);
     C(null);
     H([]);
   }
@@ -127,6 +136,7 @@ export function ParameterOverview({
         <table>
           <thead>
             <tr>
+              <th>Kijelölés</th>
               <th>Termék / SKU</th>
               <th>Helyek és kötelező hiány</th>
               <th>Állapot</th>
@@ -136,6 +146,20 @@ export function ParameterOverview({
           <tbody>
             {read.data?.items.map((p) => (
               <tr key={p.product_id}>
+                <td>
+                  <input
+                    type="checkbox"
+                    aria-label={`Kijelölés: ${p.name || p.product_id}`}
+                    checked={selected.includes(p.product_id)}
+                    onChange={(e) =>
+                      Selected(
+                        e.target.checked
+                          ? [...selected, p.product_id]
+                          : selected.filter((id) => id !== p.product_id),
+                      )
+                    }
+                  />
+                </td>
                 <td>
                   {p.name || "Név nélküli termék"}
                   <small>{p.sku || "–"}</small>
@@ -176,6 +200,7 @@ export function ParameterOverview({
         <button
           disabled={!history.length || read.loading || search !== query}
           onClick={() => {
+            Selected([]);
             C(history.at(-1) ?? null);
             H(history.slice(0, -1));
           }}
@@ -185,6 +210,7 @@ export function ParameterOverview({
         <button
           disabled={!read.data?.next_cursor || read.loading || search !== query}
           onClick={() => {
+            Selected([]);
             H([...history, cursor]);
             C(read.data?.next_cursor ?? null);
           }}
@@ -192,6 +218,20 @@ export function ParameterOverview({
           Következő paraméteres termékek
         </button>
       </div>
+      {request && access && read.data && search === query && (
+        <LiveBulkPreparation
+          key={JSON.stringify([query, state, profile, mandatory])}
+          request={request}
+          access={access}
+          selectedIds={selected}
+          filters={{
+            ...(query.trim() ? { q: query } : {}),
+            ...(state ? { state } : {}),
+            ...(profile ? { parameter_profile_state: profile } : {}),
+            ...(mandatory ? { mandatory_missing: mandatory === "true" } : {}),
+          }}
+        />
+      )}
     </section>
   );
 }

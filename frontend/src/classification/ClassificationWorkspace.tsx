@@ -587,6 +587,8 @@ function Workspace({
           >
             <ParameterOverview
               api={liveApi}
+              request={parameterRequest}
+              access={liveParameters?.access}
               onOpen={(id) => {
                 if (!ports.details) return;
                 selectionRequest.current?.abort();

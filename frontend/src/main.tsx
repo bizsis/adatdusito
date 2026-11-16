@@ -2130,6 +2130,8 @@ function App() {
                 canClassify={can("products.classify")}
                 parameterAccess={{
                   edit: can("products.parameters"),
+                  bulk: can("products.bulk"),
+                  approve: can("products.prepare.approve"),
                   globalAliases: can("parameters.global_aliases.manage"),
                   classify: can("products.classify"),
                 }}

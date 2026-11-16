@@ -401,10 +401,7 @@ export function createCategory02Presentation(
               if (intent.target.kind !== "mapping")
                 throw new Error("A művelet nem támogatott.");
               const old = intent.target.context as CategoryMap;
-              const result = await api<{
-                products_changed: number;
-                locked_skipped: number;
-              }>(
+              const result = await api<unknown>(
                 `/workspace/category-maps/${old.source_category.id}${intent.action === "reset" ? `?expected_revision=${old.map!.revision}` : ""}`,
                 intent.action === "reset" ? "DELETE" : "PUT",
                 intent.action === "reset"
@@ -424,6 +421,8 @@ export function createCategory02Presentation(
                 signal,
               );
               validateMapWrite(result);
+              if (result.products_changed === null)
+                return `Kategóriatérkép mentése befejeződött. Az újrabesorolás háttérben fut: #${result.reapply.job_id}; érintett termékek: ${result.reapply.total.toLocaleString("hu-HU")}. A módosított és védett darabszám még nem ismert.${result.reapply.enqueue_failed ? " A sorba állítás nem sikerült; workerellenőrzés szükséges." : ""}`;
               return `${intent.action === "reset" ? "Kategóriatérkép törölve" : intent.action === "reject" ? "Kategóriatérkép elutasítva" : "Kategóriatérkép mentve"}. Újrabesorolt termékek: ${result.products_changed.toLocaleString("hu-HU")}; védett, kihagyott: ${result.locked_skipped.toLocaleString("hu-HU")}.`;
             })
         : undefined,

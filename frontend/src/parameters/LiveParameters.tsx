@@ -1,3 +1,4 @@
+import { PreparationStatus } from "./PreparationStatus";
 import React, {
   useCallback,
   useEffect,
@@ -433,10 +434,11 @@ export function LiveParameters({
               ? null
               : String(c.donor_emag_category_id),
           preparation: {
+            heading: "Paraméterhelyek és külön jóváhagyás",
             state: data.stored.slots.length ? "review" : "unprepared",
             canApprove: false,
             explanation:
-              "A tárolt vagy kiszámított hely nem felhasználói előkészítési jóváhagyás. Külön jóváhagyási API nincs bekötve.",
+              "A tárolt vagy kiszámított hely nem felhasználói előkészítési jóváhagyás. Az aktuális jóváhagyás fent látható; az ellenőrzés és a jóváhagyás a Paraméteres termékáttekintésen indítható.",
             audit:
               "A termék végpontjának legfeljebb 50 eseménye látható; teljes auditlapozás nincs.",
           },
@@ -551,6 +553,11 @@ export function LiveParameters({
   return (
     <section aria-label="Élő paramétermunkaterület">
       <h3>Paraméter-előkészítés – valódi API</h3>
+      <PreparationStatus
+        key={`${product.key}:${snapshot?.meta.revision ?? 0}`}
+        request={request}
+        product={product.key}
+      />
       {support.loading && <p role="status">Paraméter-API ellenőrzése…</p>}
       {support.error && <p role="alert">{support.error}</p>}
       {support.data === false && (
@@ -652,9 +659,9 @@ export function LiveParameters({
             </>
           )}
           <p className="notice">
-            Nincs snapshotos általános bulk-jóváhagyás, külön előkészítési
-            jóváhagyás, teljes auditlapozás vagy univerzális értéklista-CRUD. AI
-            nem indítható.
+            A rögzített tömeges előnézet és az előkészítési jóváhagyás a
+            Paraméteres termékáttekintésen érhető el. Teljes auditlapozás és
+            univerzális értéklista-CRUD nincs bekötve. AI nem indítható.
           </p>
         </>
       )}

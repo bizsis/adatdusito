@@ -356,7 +356,9 @@ def test_real_50002_stored_products_cursor_and_multiple_runs(live_catalog):
             assert product_jobs.advance_parameters(db,first,batch=500)== 'completed'
         p.get_by_role('button',name='Paraméterfutás állapotának frissítése',exact=True).click()
         p.get_by_role('button',name='Következő legfeljebb 50 000 termék áttekintése',exact=True).click()
-        p.get_by_role('button',name='Paraméterfutás indítása',exact=True).click()
+        with p.expect_response(lambda r:r.request.method=='POST' and r.url.split('?')[0].endswith('/workspace/parameter-runs')) as response:
+            p.get_by_role('button',name='Paraméterfutás indítása',exact=True).click()
+        assert response.value.status==200
         second=live_catalog.queued[-1];assert second!=first
         with Session(live_catalog.engine) as db:assert product_jobs.advance_parameters(db,second,batch=500)=='completed'
         p.get_by_role('button',name='Paraméterfutás állapotának frissítése',exact=True).click()
