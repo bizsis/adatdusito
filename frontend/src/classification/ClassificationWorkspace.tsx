@@ -1,4 +1,13 @@
-import React, { useCallback, useEffect, useRef, useState } from "react";
+import { parameterApi } from "../parameters/liveApi";
+import React, {
+  useCallback,
+  useMemo,
+  useEffect,
+  useRef,
+  useState,
+  lazy,
+  Suspense,
+} from "react";
 import { Panel } from "../ui";
 import { CategoryPicker } from "./CategoryPicker";
 import { ClassificationSummary } from "./ClassificationSummary";
@@ -26,6 +35,36 @@ import "./classification.css";
 export function ClassificationWorkspace(props: ClassificationPresentation) {
   return <Workspace key={props.workspaceKey} {...props} />;
 }
+const LiveParameters = lazy(() =>
+  import("../parameters/LiveParameters").then((m) => ({
+    default: m.LiveParameters,
+  })),
+);
+function LiveParameterPanel(
+  props: React.ComponentProps<typeof LiveParameters>,
+) {
+  const [open, setOpen] = useState(false);
+  return (
+    <details onToggle={(event) => setOpen(event.currentTarget.open)}>
+      <summary>Termékparaméterek</summary>
+      {open && (
+        <Suspense fallback={<p role="status">Paraméteradatok betöltése…</p>}>
+          <LiveParameters {...props} />
+        </Suspense>
+      )}
+    </details>
+  );
+}
+const ParameterOverview = lazy(() =>
+  import("../parameters/ParameterOverview").then((m) => ({
+    default: m.ParameterOverview,
+  })),
+);
+const ParameterWorkspace = lazy(() =>
+  import("../parameters/ParameterWorkspace").then((m) => ({
+    default: m.ParameterWorkspace,
+  })),
+);
 const initialFilters: ProductFilters = {
   search: "",
   group: "all",
@@ -33,8 +72,21 @@ const initialFilters: ProductFilters = {
   source: "",
 };
 
-function Workspace({ ports, access }: ClassificationPresentation) {
-  const [tab, setTab] = useState<"products" | "mappings">("products");
+function Workspace({
+  ports,
+  access,
+  parameterPreparation,
+  liveParameters,
+  workspaceKey,
+}: ClassificationPresentation) {
+  const [tab, setTab] = useState<"products" | "mappings" | "parameters">(
+    "products",
+  );
+  const parameterRequest = liveParameters?.request;
+  const liveApi = useMemo(
+    () => (parameterRequest ? parameterApi(parameterRequest) : null),
+    [parameterRequest],
+  );
   const [filters, setFilters] = useState<ProductFilters>(initialFilters);
   const search = usePresentationSearch(filters.search);
   const [cursor, setCursor] = useState<string | null>(null);
@@ -223,6 +275,19 @@ function Workspace({ ports, access }: ClassificationPresentation) {
               }}
             >
               Saját kategóriatérkép és profilok
+            </button>
+          )}
+          {liveApi && (
+            <button
+              role="tab"
+              aria-selected={tab === "parameters"}
+              onClick={() => {
+                clearSelection();
+                setFocused(null);
+                setTab("parameters");
+              }}
+            >
+              Paraméteres termékáttekintés
             </button>
           )}
         </div>
@@ -516,6 +581,36 @@ function Workspace({ ports, access }: ClassificationPresentation) {
               </button>
             </div>
           </>
+        ) : tab === "parameters" && liveApi ? (
+          <Suspense
+            fallback={<p role="status">Paraméteres áttekintés betöltése…</p>}
+          >
+            <ParameterOverview
+              api={liveApi}
+              onOpen={(id) => {
+                if (!ports.details) return;
+                selectionRequest.current?.abort();
+                const c = new AbortController();
+                selectionRequest.current = c;
+                ports
+                  .details(String(id), c.signal)
+                  .then((p) => {
+                    if (!c.signal.aborted) {
+                      setFocused(p);
+                      setTab("products");
+                    }
+                  })
+                  .catch((e) => {
+                    if (!c.signal.aborted)
+                      setError(
+                        e instanceof Error
+                          ? e.message
+                          : "A termék nem tölthető be.",
+                      );
+                  });
+              }}
+            />
+          </Suspense>
         ) : (
           <>
             {ports.features?.mappingSearch !== false && (
@@ -636,6 +731,39 @@ function Workspace({ ports, access }: ClassificationPresentation) {
             <button onClick={() => editProduct(active)}>
               Besorolás szerkesztése
             </button>
+          )}
+          {liveParameters && (
+            <LiveParameterPanel
+              key={active.key}
+              request={liveParameters.request}
+              access={liveParameters.access}
+              workspaceKey={workspaceKey}
+              product={{
+                key: active.key,
+                title: active.title,
+                ownCategory: active.ownCategory,
+                internalPath: active.internalCategory?.path.join(" / ") || "",
+              }}
+              onProductChanged={() =>
+                applied(
+                  "A paraméterprofil kiválasztva. A friss termékadatokat újra megnyithatod.",
+                )
+              }
+            />
+          )}
+          {parameterPreparation && (
+            <Suspense fallback={<p role="status">Paraméternézet betöltése…</p>}>
+              <ParameterWorkspace
+                workspaceKey={workspaceKey}
+                product={{
+                  key: active.key,
+                  title: active.title,
+                  ownCategory: active.ownCategory,
+                  internalPath: active.internalCategory?.path.join(" / ") || "",
+                }}
+                {...parameterPreparation}
+              />
+            </Suspense>
           )}
           {active.fields && (
             <section aria-label="Eredeti termékadatok">

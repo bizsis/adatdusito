@@ -1,3 +1,4 @@
+import type { ParameterAccess } from "./parameters/liveContract";
 import React, { lazy, Suspense, useEffect, useState, useMemo } from "react";
 import { validateProductEnvelope } from "./classification/validateContract";
 import { Panel } from "./ui";
@@ -19,11 +20,13 @@ type Product = {
 export function ProductData({
   api,
   classification,
+  parameterAccess,
   canClassify = false,
   workspaceKey = "current",
 }: {
   api: Api;
   classification?: ClassificationPresentation;
+  parameterAccess?: ParameterAccess;
   canClassify?: boolean;
   workspaceKey?: string;
 }) {
@@ -38,11 +41,13 @@ export function ProductData({
     <ImportedProductData
       api={api}
       canClassify={canClassify}
+      parameterAccess={parameterAccess}
       workspaceKey={workspaceKey}
     />
   );
 }
 function BoundClassification({
+  parameterAccess,
   api,
   initial,
   canClassify,
@@ -50,12 +55,36 @@ function BoundClassification({
 }: {
   api: Api;
   initial: Products;
+  parameterAccess?: ParameterAccess;
   canClassify: boolean;
   workspaceKey: string;
 }) {
+  const enabled = parameterAccess !== undefined;
+  const edit = parameterAccess?.edit ?? false;
+  const globalAliases = parameterAccess?.globalAliases ?? false;
+  const classify = parameterAccess?.classify ?? false;
   const presentation = useMemo(
-    () => createCategory02Presentation(api, workspaceKey, canClassify, initial),
-    [api, workspaceKey, canClassify, initial],
+    () => ({
+      ...createCategory02Presentation(api, workspaceKey, canClassify, initial),
+      ...(enabled
+        ? {
+            liveParameters: {
+              request: api,
+              access: { edit, globalAliases, classify },
+            },
+          }
+        : {}),
+    }),
+    [
+      api,
+      workspaceKey,
+      canClassify,
+      initial,
+      enabled,
+      edit,
+      globalAliases,
+      classify,
+    ],
   );
   return (
     <Suspense fallback={<p role="status">Termékbesorolás betöltése…</p>}>
@@ -64,11 +93,13 @@ function BoundClassification({
   );
 }
 function ImportedProductData({
+  parameterAccess,
   api,
   canClassify,
   workspaceKey,
 }: {
   api: Api;
+  parameterAccess?: ParameterAccess;
   canClassify: boolean;
   workspaceKey: string;
 }) {
@@ -103,6 +134,7 @@ function ImportedProductData({
     return (
       <BoundClassification
         api={api}
+        parameterAccess={parameterAccess}
         initial={data as Products}
         canClassify={canClassify}
         workspaceKey={workspaceKey}

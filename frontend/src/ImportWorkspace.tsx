@@ -1,9 +1,18 @@
+import type {
+  ParameterJob,
+  ParameterServices,
+} from "./parameters/presentation";
 import { Help } from "./ui";
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, lazy, Suspense } from "react";
 import {
   ImportClassificationSummary,
   type ImportClassificationSummaryProps,
 } from "./classification/ClassificationSummary";
+const ParameterJobPanel = lazy(() =>
+  import("./parameters/ParameterJobPanel").then((m) => ({
+    default: m.ParameterJobPanel,
+  })),
+);
 type Request = <T>(url: string, method?: string, body?: unknown) => Promise<T>;
 type Column = {
   index: number;
@@ -60,11 +69,13 @@ export function ImportWorkspace({
   canManage,
   permissions,
   classificationSummary,
+  parameterJob,
 }: {
   api: Request;
   canManage: boolean;
   permissions?: string[];
   classificationSummary?: ImportClassificationSummaryProps;
+  parameterJob?: ParameterServices & { initial: ParameterJob };
 }) {
   const canCreate = permissions
     ? permissions.includes("imports.create")
@@ -263,6 +274,11 @@ export function ImportWorkspace({
           munkaterület teljes termékszámának korlátja. Nagyobb fájlt több
           futásra kell bontani.
         </p>
+      )}
+      {parameterJob && (
+        <Suspense fallback={<p role="status">Előkészítési futás betöltése…</p>}>
+          <ParameterJobPanel {...parameterJob} />
+        </Suspense>
       )}
       {classificationSummary && (
         <ImportClassificationSummary {...classificationSummary} />
