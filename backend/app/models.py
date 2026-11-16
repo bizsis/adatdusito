@@ -353,3 +353,4 @@ from app import import_models as _import_models  # noqa: E402,F401
 from app import access_models as _access_models  # noqa: E402,F401
 
 from app import auth_models as _auth_models  # noqa: E402,F401
+from app import product_models as _product_models  # noqa: E402,F401

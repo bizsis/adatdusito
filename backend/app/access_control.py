@@ -66,6 +66,7 @@ TENANT = {
     "imports.approve",
     "imports.cancel",
     "products.read",
+    "products.classify",
     "exports.read",
     "exports.profile",
     "reference.read",
