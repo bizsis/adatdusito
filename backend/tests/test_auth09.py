@@ -74,6 +74,53 @@ def enroll(c):
     return secret, r.json()["recovery_codes"]
 
 
+FIXED_TOTP_SECRET = "JBSWY3DPEHPK3PXPJBSWY3DPEHPK3PXP"  # public test vector, not a credential
+# 1_800_000_000 is a multiple of 30, so this instant is the start of a TOTP step.
+TOTP_STEP_START = 1_800_000_000
+
+
+class TotpClock:
+    """Controlled time source for the backend TOTP verifiers.
+
+    Only the ``time`` module references of ``auth_api`` and ``auth_service``
+    are replaced (their sole use is the TOTP step counter); other modules keep
+    the real clock.
+    """
+
+    def __init__(self, value):
+        self.value = value
+
+    def time(self):
+        return self.value
+
+    def code(self, secret):
+        return pyotp.TOTP(secret).at(self.value)
+
+    def __getattr__(self, name):
+        return getattr(time, name)
+
+
+@pytest.fixture
+def totp_clock(monkeypatch):
+    from app import auth_api, auth_service
+
+    clock = TotpClock(TOTP_STEP_START + 15)
+    monkeypatch.setattr(auth_api, "time", clock)
+    monkeypatch.setattr(auth_service, "time", clock)
+    return clock
+
+
+def enroll_at(c, clock):
+    """Enroll TOTP at the controlled time and return the code actually consumed."""
+    r = c.post("/api/v1/auth/totp/setup")
+    assert r.status_code == 200, r.text
+    secret = r.json()["secret"]
+    consumed = clock.code(secret)
+    r = c.post("/api/v1/auth/totp/confirm", json={"code": consumed})
+    assert r.status_code == 200, r.text
+    return secret, r.json()["recovery_codes"], consumed
+
+
 def test_username_optional_email_and_password_change_without_rbac_loss(environment):
     c, t, *_ = environment
     login(c)
@@ -266,10 +313,12 @@ def test_dns_mixed_targets_fail_closed_and_explicit_operator_allowlist(monkeypat
     assert mail_service.resolve_smtp("allowed.example.hu", 465) == "8.8.8.8"
 
 
-def test_totp_and_recovery_single_use_no_full_session_before_second_factor(environment):
+def test_totp_and_recovery_single_use_no_full_session_before_second_factor(
+    environment, totp_clock
+):
     c, t, *_ = environment
     login(c)
-    secret, codes = enroll(c)
+    secret, codes, consumed = enroll_at(c, totp_clock)
     assert len(codes) == 10 and len(set(codes)) == 10
     sec = c.get("/api/v1/auth/security").json()
     assert (
@@ -281,11 +330,11 @@ def test_totp_and_recovery_single_use_no_full_session_before_second_factor(envir
     pending = login_pending(c)
     assert pending["mfa_required"] and "csrf_token" not in pending
     assert c.get("/api/v1/auth/me").status_code == 401
-    # The setup code has already been consumed, even within the same 30-second window.
+    # The exact code consumed by the setup is replayed in the same 30-second window.
     assert (
         c.post(
             "/api/v1/auth/mfa/complete",
-            json={"token": pending["mfa_token"], "code": pyotp.TOTP(secret).now()},
+            json={"token": pending["mfa_token"], "code": consumed},
         ).status_code
         == 403
     )
@@ -318,6 +367,51 @@ def test_totp_and_recovery_single_use_no_full_session_before_second_factor(envir
         details = str([r.details for r in db.scalars(select(Audit))])
         assert secret not in details and codes[0] not in details
         assert db.scalar(select(Audit.id).where(Audit.action == "auth09.recovery_used"))
+
+
+# Enrollment happens in the last second of a step; the replay then lands
+# 0 / 1 / 30 / 60 seconds later: same step, just after the rollover, one and
+# two steps later. The verifier also accepts the previous step, so the
+# rollover cases check that the consumed counter, not the window, rejects it.
+@pytest.mark.parametrize("delay", [0, 1, 30, 60])
+def test_consumed_totp_replay_rejected_across_step_rollover(
+    environment, totp_clock, monkeypatch, delay
+):
+    c, t, *_ = environment
+    # Fixed test-only secret: every code below is fully determined by the clock.
+    monkeypatch.setattr(pyotp, "random_base32", lambda *a, **kw: FIXED_TOTP_SECRET)
+    login(c)
+    totp_clock.value = TOTP_STEP_START + 29
+    enrolled_step = totp_clock.value // 30
+    secret, _, consumed = enroll_at(c, totp_clock)
+    with Session(t) as db:
+        assert db.get(TotpDevice, 1).last_counter == enrolled_step
+    c.post("/api/v1/auth/logout")
+    pending = login_pending(c)
+    totp_clock.value += delay
+    replay = c.post(
+        "/api/v1/auth/mfa/complete",
+        json={"token": pending["mfa_token"], "code": consumed},
+    )
+    assert replay.status_code == 403
+    assert "csrf_token" not in replay.json()
+    assert c.get("/api/v1/auth/me").status_code == 401
+    with Session(t) as db:
+        assert db.get(TotpDevice, 1).last_counter == enrolled_step
+    current_step = totp_clock.value // 30
+    if current_step == enrolled_step:
+        return
+    fresh = totp_clock.code(secret)
+    assert fresh != consumed  # precondition of the fixed secret and instants
+    r = c.post(
+        "/api/v1/auth/mfa/complete",
+        json={"token": pending["mfa_token"], "code": fresh},
+    )
+    assert r.status_code == 200, r.text
+    c.headers["X-CSRF-Token"] = r.json()["csrf_token"]
+    assert c.get("/api/v1/auth/me").json()["user"]["superadmin"]
+    with Session(t) as db:
+        assert db.get(TotpDevice, 1).last_counter == current_step
 
 
 def test_required_mfa_restricts_existing_sessions_and_enrolls_before_new_session(
