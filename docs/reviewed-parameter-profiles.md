@@ -1,5 +1,7 @@
 # CODEX 05 – Ellenőrzött paraméter-hozzárendelések
 
+> **Történeti jelentés.** Az alábbi 412/171 számok a CODEX 05 akkori ellenőrzését írják le. A jelenlegi, 457 besorolható kategóriás állapot és a 45 elemes eltérés-jelentés: [category-457-status.md](category-457-status.md) (CATEGORY-02C).
+
 ## Eredmény és hatókör
 
 Az átadott 2669 soros kategóriaexporton, helyi adminisztrátori felülbírálások nélkül:
