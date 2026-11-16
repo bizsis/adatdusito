@@ -139,14 +139,14 @@ def downgrade():
         )
     for name in ["product_jobs", "product_events", "product_classifications"]:
         op.drop_table(name)
+    # MySQL (error 1553): an index that backs a foreign key cannot be dropped while
+    # the key exists, so the key goes first; drop_table removes a table's own indexes.
     with op.batch_alter_table("supplier_products") as b:
-        b.drop_index("ix_supplier_products_source_category_id")
         b.drop_constraint("fk_product_source_category", type_="foreignkey")
+        b.drop_index("ix_supplier_products_source_category_id")
         for col in ["search_text", "source_attributes", "source_category_id", "revision"]:
             b.drop_column(col)
-    op.drop_index("ix_category_maps_tenant_id", "category_maps")
     op.drop_table("category_maps")
-    op.drop_index("ix_product_source_categories_tenant_id", "product_source_categories")
     op.drop_table("product_source_categories")
     c.execute(sa.text("DELETE FROM role_permissions WHERE permission = :p"), {"p": PERMISSION})
     c.execute(sa.text("DELETE FROM permissions WHERE code = :p"), {"p": PERMISSION})

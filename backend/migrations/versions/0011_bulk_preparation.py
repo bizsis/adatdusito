@@ -114,24 +114,40 @@ def downgrade():
         raise RuntimeError(
             "Preparation approvals exist; restore the verified pre-0011 backup instead of downgrading."
         )
-    op.drop_index("ix_preparation_item_product", "preparation_approval_items")
+    # drop_table removes the tables' own indexes; dropping them one by one first
+    # fails on MySQL (error 1553) because they back foreign keys.
     op.drop_table("preparation_approval_items")
-    op.drop_index("ix_preparation_approval_tenant", "preparation_approvals")
     op.drop_table("preparation_approvals")
-    op.drop_index("ix_operation_item_apply", "product_operation_items")
-    op.drop_index("ix_operation_item_outcome", "product_operation_items")
     op.drop_table("product_operation_items")
     op.drop_table("product_selection_items")
-    op.drop_index("ix_product_selections_tenant_id", "product_selections")
     op.drop_table("product_selections")
     # Bulk job rows are operational history of the removed tables.
     c.execute(sa.text("DELETE FROM product_jobs WHERE kind IN ('bulk_preview','bulk_apply','preparation_check')"))
-    with op.batch_alter_table("product_jobs") as b:
-        b.drop_constraint("uq_product_job_idempotency", type_="unique")
-        b.drop_constraint("fk_product_job_created_by", type_="foreignkey")
-        b.drop_column("request_hash")
-        b.drop_column("idempotency_key")
-        b.drop_column("created_by")
+    if c.dialect.name == "mysql":
+        # On MySQL the unique index (tenant_id, kind, idempotency_key) silently replaced
+        # the implicit index of the unnamed tenant_id foreign key created in 0009, so it
+        # cannot be dropped while that key exists (error 1553). Drop the key, then add it
+        # back unnamed after the unique index is gone: MySQL recreates the same implicit
+        # index and key name, so the 0010 schema is exactly as before and a later 0011
+        # upgrade replaces the implicit index again.
+        tenant_fk = next(
+            fk["name"]
+            for fk in sa.inspect(c).get_foreign_keys("product_jobs")
+            if fk["referred_table"] == "tenants" and fk["constrained_columns"] == ["tenant_id"]
+        )
+        op.drop_constraint("fk_product_job_created_by", "product_jobs", type_="foreignkey")
+        op.drop_constraint(tenant_fk, "product_jobs", type_="foreignkey")
+        op.drop_constraint("uq_product_job_idempotency", "product_jobs", type_="unique")
+        for col in ["request_hash", "idempotency_key", "created_by"]:
+            op.drop_column("product_jobs", col)
+        c.execute(sa.text("ALTER TABLE product_jobs ADD FOREIGN KEY (tenant_id) REFERENCES tenants (id)"))
+    else:
+        with op.batch_alter_table("product_jobs") as b:
+            b.drop_constraint("uq_product_job_idempotency", type_="unique")
+            b.drop_constraint("fk_product_job_created_by", type_="foreignkey")
+            b.drop_column("request_hash")
+            b.drop_column("idempotency_key")
+            b.drop_column("created_by")
     for code in PERMISSIONS:
         c.execute(sa.text("DELETE FROM role_permissions WHERE permission = :p"), {"p": code})
         c.execute(sa.text("DELETE FROM permissions WHERE code = :p"), {"p": code})
