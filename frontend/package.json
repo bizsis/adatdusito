@@ -7,7 +7,8 @@
     "dev": "vite --host 0.0.0.0",
     "build": "tsc --noEmit && vite build",
     "lint": "eslint src --max-warnings=0",
-    "test:lint": "node --test tests/lint.test.mjs"
+    "test:lint": "node --test tests/lint.test.mjs",
+    "test": "node --test tests/*.test.mjs"
   },
   "dependencies": {
     "@fontsource/inter": "5.2.8",

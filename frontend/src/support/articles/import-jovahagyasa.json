@@ -1,0 +1,43 @@
+{
+  "id": "import-jovahagyasa",
+  "topic": "import",
+  "title": "Import ellenőrzése és jóváhagyása",
+  "summary": "Az előnézet után tudatosan indítsd a feldolgozást, majd ellenőrizd annak eredményét.",
+  "order": 5,
+  "blocks": [
+    {
+      "type": "image",
+      "src": "/help/images/oszlopok.png",
+      "alt": "Az importban felismert oszlopok jóváhagyás előtti ellenőrzése",
+      "caption": "Először ellenőrizd a megfeleltetést, majd az alábbi jóváhagyási beállításokat."
+    },
+    {
+      "type": "steps",
+      "items": [
+        "Ellenőrizd az oszlopmegfeleltetést, a mintasorokat és az összekapcsolási javaslatokat.",
+        "Adj felismerhető nevet az importprofilnak. Ha összekapcsolási kulcsot használsz, válassz megbízható, stabil azonosítót a Jóváhagyott összekapcsolási kulcs listából.",
+        "Állítsd be a Feed típusa mezőt. A részleges fájlt ne jelöld Teljes terméktörzsnek, ha nem tartalmazza a teljes állományt.",
+        "Ellenőrizd a pénzügyi mezők jelentését és a vonatkozó jelölőnégyzetet.",
+        "Kattints a Megfeleltetés jóváhagyása és feldolgozás gombra. Várd meg a feldolgozás végét; a Részben sikeres vagy Hibás állapot további ellenőrzést igényel.",
+        "Az Eredeti és értelmezett sorok nézetben nézd meg az eredményt és a sorhibákat."
+      ]
+    },
+    {
+      "type": "image",
+      "src": "/help/images/import-jovahagyas.png",
+      "alt": "Az import jóváhagyási beállításai és feldolgozást indító gombja",
+      "caption": "A jóváhagyás adatfeldolgozást indít. A képen tesztfájl beállításai láthatók."
+    },
+    {
+      "type": "warning",
+      "title": "Pontos azonosító szükséges",
+      "text": "Az összekapcsolás azonos beszállítón belül pontos kulcsegyezést használ; egy hasonló név nem elegendő. Újrapróbálás előtt ellenőrizd az előző futás állapotát."
+    },
+    {
+      "type": "note",
+      "title": "Automatikus következő feldolgozás",
+      "text": "A következő feltöltés automatikus feldolgozását csak ellenőrzött profilnál engedélyezd. Eltérő fájlszerkezet új ellenőrzést igényelhet."
+    }
+  ],
+  "related": ["termekek-kategorizalasa", "gyakori-hibak"]
+}

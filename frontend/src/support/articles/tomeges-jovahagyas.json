@@ -1,0 +1,46 @@
+{
+  "id": "tomeges-jovahagyas",
+  "topic": "tomeges",
+  "title": "Tömeges feldolgozás és előkészítési jóváhagyás",
+  "summary": "Kijelölésből előnézet, ellenőrzött alkalmazás és külön előkészítési jóváhagyás.",
+  "order": 9,
+  "blocks": [
+    {
+      "type": "steps",
+      "items": [
+        "Nyisd meg a Termékadatok → Paraméteres termékáttekintés fület, és állítsd be a termékszűrést.",
+        "Jelöld ki az oldal termékeit, vagy a Teljes szűrt termékkör rögzítése művelettel rögzítsd a szerveres kijelölést. A kijelölés legfeljebb 250 000 termék.",
+        "Indíts Tömeges paraméter-előnézetet. A Futás frissítése gombbal ellenőrizd a haladást, a kihagyásokat és a tételes eredményt.",
+        "Az előnézet befejezése után nézd át a változásokat. Adj indokot, majd külön erősítsd meg a tömeges alkalmazást. Ne tekintsd a részleges sikert minden termék sikeres mentésének.",
+        "Külön indíts Előkészítési ellenőrzést. A blokkoló eltéréseket javítsd; a hiányzó, kutatandó értékek nem jelentenek automatikusan hibás műszaki adatot.",
+        "Ha az ellenőrzés ezt lehetővé teszi és van jóváhagyási jogod, tekintsd át és erősítsd meg az előkészítési jóváhagyást.",
+        "A jóváhagyás részleteiben ellenőrizd az aktuális érvényességet. Újramérés és indokolt, megerősített visszavonás is elérhető."
+      ]
+    },
+    {
+      "type": "image",
+      "src": "/help/images/tomeges.png",
+      "alt": "Rögzített termékkör és tömeges paraméterműveletek a termékáttekintésben",
+      "caption": "A kép demótermékeken készített előnézetet mutat, nem éles műveletet."
+    },
+    {
+      "type": "heading",
+      "text": "Korlátok és folytatás"
+    },
+    {
+      "type": "list",
+      "items": [
+        "A szerveres kijelölés és az előnézet/ellenőrzés 2 óráig használható. Lejárat után új kijelölés és új előnézet szükséges.",
+        "Egy háttérfutás legfeljebb 50 000 terméket dolgoz fel. Ez nem a teljes adatállomány maximális mérete.",
+        "Pending vagy elakadt műveletnél a felület folytatást kínálhat. A megszakított művelet nem folytatható ugyanúgy.",
+        "Jog- vagy revízióhiba után ne indíts vak ismétlést. Ismeretlen hálózati kimenetelnél csak a felület által felkínált, azonos tartalmú helyreállítást használd."
+      ]
+    },
+    {
+      "type": "warning",
+      "title": "Ez még nem AI-kutatás",
+      "text": "Az előkészítési jóváhagyás az adatok és kutatási célok ellenőrzése. Nem indít automatikusan AI-kutatást és nem készít tényleges UNAS-exportot."
+    }
+  ],
+  "related": ["kezi-parameterek", "gyakori-hibak"]
+}

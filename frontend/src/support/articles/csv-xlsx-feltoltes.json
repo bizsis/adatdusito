@@ -1,0 +1,31 @@
+{
+  "id": "csv-xlsx-feltoltes",
+  "topic": "import",
+  "title": "CSV/XLSX feltöltése",
+  "summary": "Válassz beszállítót, töltsd fel a fájlt, majd várd meg az elemzést.",
+  "order": 3,
+  "blocks": [
+    {
+      "type": "steps",
+      "items": [
+        "Nyisd meg a Beszállítói import oldalt és válaszd ki a beszállítót.",
+        "Ha szükséges, a Haladó fájlbeállítások alatt állítsd be az XLSX munkalapját, a fejléc sorát, illetve a CSV elválasztóját és kódolását. Alapesetben a rendszer felismerést használ.",
+        "Az Importprofil feltöltéshez mezőben választhatsz mentett profilt, vagy maradhat az automatikus felismerés / új profil.",
+        "A CSV/XLSX fájl mezőben válaszd ki a helyi fájlt. A feltöltés után várd meg az elemzést és a Jóváhagyásra vár állapotot.",
+        "Ellenőrizd a felismert oszlopokat és a mintasorokat; a feltöltés önmagában még nem helyettesíti a megfeleltetés jóváhagyását."
+      ]
+    },
+    {
+      "type": "image",
+      "src": "/help/images/feltoltes.png",
+      "alt": "Az importoldal CSV/XLSX fájlválasztója és beszállítólistája",
+      "caption": "A fájlválasztó a beszállító kiválasztása után használható."
+    },
+    {
+      "type": "warning",
+      "title": "A formátum számít",
+      "text": "A támogatott feltöltés CSV vagy XLSX. Hibás ékezeteknél ellenőrizd a kódolást; összecsúszott oszlopoknál az elválasztót és a fejlécet."
+    }
+  ],
+  "related": ["oszlopok-megfeleltetese", "import-jovahagyasa", "gyakori-hibak"]
+}

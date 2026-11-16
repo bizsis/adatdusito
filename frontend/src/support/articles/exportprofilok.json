@@ -1,0 +1,31 @@
+{
+  "id": "exportprofilok",
+  "topic": "export",
+  "title": "Exportprofilok beállítása",
+  "summary": "Készítsd elő a célwebáruház mezőkészletét és a saját exportprofilt.",
+  "order": 10,
+  "blocks": [
+    {
+      "type": "steps",
+      "items": [
+        "Nyisd meg az Export menüt. A megjelenő lehetőségek a rendszer- és ügyféljogoktól függnek.",
+        "A Motor listában válaszd ki a célt, és ha van elérhető központi definíció, kattints a Definíció betöltése gombra. Az üres táblához a Mező hozzáadása gombbal adhatsz sort.",
+        "Ügyfél-munkaterületen, profilkezelési joggal ellenőrizd a mezők sorrendjét, oszlopnevét, kötelező jelölését, belső mezőkapcsolatát, alapértékeit és értéklistáit.",
+        "A Saját exportprofil mentése gombbal ments. Az ügyféloldalon jelenleg nincs külön profilnév-szerkesztő. Ha Központi definíció mentése látható, rendszerszintű mezősémát szerkesztesz, nem saját ügyfélprofilt.",
+        "Az import oszlopmegfeleltetésénél a Célwebáruház-exportprofil segítségével választhatod ki a mentett profilt."
+      ]
+    },
+    {
+      "type": "image",
+      "src": "/help/images/exportprofil.png",
+      "alt": "Exportmezők és profil beállításai tesztkörnyezetben",
+      "caption": "A felület mező- és profilbeállítást kezel, nem termékadatokat küld a webáruháznak."
+    },
+    {
+      "type": "warning",
+      "title": "Nincs kész UNAS-kiküldés",
+      "text": "Ebben a modulban tényleges UNAS-termékexport nem készül. A profil mentése nem tölti fel a termékeket az UNAS-ba, és nem helyettesíti a későbbi exportfolyamatot."
+    }
+  ],
+  "related": ["oszlopok-megfeleltetese", "import-jovahagyasa"]
+}

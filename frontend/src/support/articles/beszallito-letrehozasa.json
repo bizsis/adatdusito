@@ -1,0 +1,30 @@
+{
+  "id": "beszallito-letrehozasa",
+  "topic": "import",
+  "title": "Beszállító létrehozása",
+  "summary": "Hozz létre beszállítót az aktív ügyfélen belül, hogy hozzá tudd kötni az importfájlokat.",
+  "order": 2,
+  "blocks": [
+    {
+      "type": "steps",
+      "items": [
+        "Válaszd ki a megfelelő ügyfél-munkaterületet.",
+        "Nyisd meg a Beszállítói import menüt.",
+        "Az Új beszállító neve mezőben adj meg egy jól felismerhető nevet.",
+        "Kattints a Beszállító létrehozása gombra. A létrehozott beszállító kiválasztva jelenik meg a listában."
+      ]
+    },
+    {
+      "type": "image",
+      "src": "/help/images/beszallito.png",
+      "alt": "Beszállító kiválasztása és új beszállító létrehozása az importoldalon",
+      "caption": "A képen kizárólag szintetikus demóbeszállító szerepel."
+    },
+    {
+      "type": "note",
+      "title": "Ha hiányzik a létrehozás",
+      "text": "A beszállítók megtekintése, létrehozása és az import jóváhagyása külön jogosultságokhoz kapcsolódhat. A hozzáférést az ügyféladminisztrátorral egyeztesd."
+    }
+  ],
+  "related": ["csv-xlsx-feltoltes", "jogosultsagok"]
+}
