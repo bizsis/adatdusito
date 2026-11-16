@@ -29,6 +29,7 @@ import hashlib
 import json
 import os
 import sys
+import time
 from pathlib import Path
 
 BACKEND = Path(__file__).resolve().parents[1] / "backend"
@@ -168,7 +169,7 @@ class Run:
         except Exception as exc:  # recorded, then the snapshot shows the damage
             self.checks.append({"step": label or f"{current}->{target}", "ok": False,
                                 "problems": [f"{type(exc).__name__}: {getattr(exc, 'orig', exc)}"[:200]]})
-            print(f"ERR {label or current + '->' + target}: {type(exc).__name__}", flush=True)
+            print(f"ERR {label or current + '->' + target}: {self.checks[-1]['problems'][0]}", flush=True)
         self.check(label or f"{current} -> {target}", target)
 
     def guarded(self, level, insert, cleanup, label):
@@ -200,11 +201,15 @@ class Run:
 def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     parser.add_argument("--rounds", type=int, default=3)
+    parser.add_argument("--migrations", type=Path, default=BACKEND / "migrations",
+                        help="Alembic script directory (default: backend/migrations); the CI negative "
+                             "control points this at a copy with a deliberately broken downgrade")
     args = parser.parse_args(argv)
     scratch, mysql_version = guard(os.environ.get("APP_DATABASE_URL", ""))
     print(f"MySQL {mysql_version}", flush=True)
     cfg = Config(str(BACKEND / "alembic.ini"))
-    cfg.set_main_option("script_location", str(BACKEND / "migrations"))
+    cfg.set_main_option("script_location", str(args.migrations.resolve()))
+    started = time.monotonic()
     command.upgrade(cfg, "0008")
     seed(scratch)
     run = Run(cfg, scratch)
@@ -245,8 +250,14 @@ def main(argv=None):
     run.move("0008", "final -> 0008")
     run.move("0011", "final -> 0011")
     failed = [c for c in run.checks if not c["ok"]]
+    # Content-free schema fingerprint per level (reference snapshots), for CI logs.
+    schema_fingerprints = {
+        level: hashlib.sha256(json.dumps(snap["schema"], sort_keys=True, default=str).encode()).hexdigest()[:16]
+        for level, snap in sorted(run.ref.items())
+    }
     print(json.dumps({"mysql": mysql_version, "rounds": args.rounds, "checks": len(run.checks),
-                      "failed": len(failed)}, ensure_ascii=False))
+                      "failed": len(failed), "seconds": round(time.monotonic() - started, 1),
+                      "schema_fingerprints": schema_fingerprints}, ensure_ascii=False))
     return 1 if failed else 0
 
 
