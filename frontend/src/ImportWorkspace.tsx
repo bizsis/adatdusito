@@ -1,5 +1,9 @@
 import { Help } from "./ui";
 import React, { useState, useEffect, useCallback } from "react";
+import {
+  ImportClassificationSummary,
+  type ImportClassificationSummaryProps,
+} from "./classification/ClassificationSummary";
 type Request = <T>(url: string, method?: string, body?: unknown) => Promise<T>;
 type Column = {
   index: number;
@@ -20,6 +24,8 @@ type Run = {
   error: string | null;
   counters: Record<string, number>;
   analysis: {
+    data_rows?: number;
+    run_product_limit?: number;
     columns?: Column[];
     preview?: string[][];
     headers?: string[];
@@ -53,10 +59,12 @@ export function ImportWorkspace({
   api,
   canManage,
   permissions,
+  classificationSummary,
 }: {
   api: Request;
   canManage: boolean;
   permissions?: string[];
+  classificationSummary?: ImportClassificationSummaryProps;
 }) {
   const canCreate = permissions
     ? permissions.includes("imports.create")
@@ -245,6 +253,20 @@ export function ImportWorkspace({
     exportProfiles.find((p) => p.id === Number(exportProfile))?.fields || [];
   return (
     <>
+      {run?.analysis.run_product_limit !== undefined && (
+        <p className="notice">
+          Ebben a futásban{" "}
+          {run.analysis.data_rows?.toLocaleString("hu-HU") ??
+            "ismeretlen számú"}{" "}
+          termék; a szerver futásonkénti korlátja{" "}
+          {run.analysis.run_product_limit.toLocaleString("hu-HU")}. Ez nem a
+          munkaterület teljes termékszámának korlátja. Nagyobb fájlt több
+          futásra kell bontani.
+        </p>
+      )}
+      {classificationSummary && (
+        <ImportClassificationSummary {...classificationSummary} />
+      )}
       <section className="card padded">
         <h2 className="field-title">
           Beszállítói import
