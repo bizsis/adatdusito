@@ -27,6 +27,33 @@ def limit(name, default):
     return int(os.getenv(name, str(default)))
 
 
+def run_product_limit():
+    """Validated per-run maximum (CATEGORY-02A): at most 50 000 products per run.
+
+    The environment may only lower it. It does not limit the total number of
+    products stored per tenant across runs.
+    """
+    from app.product_catalog import RUN_PRODUCT_LIMIT
+
+    return max(1, min(limit("IMPORT_MAX_PRODUCTS", RUN_PRODUCT_LIMIT), RUN_PRODUCT_LIMIT))
+
+
+def count_data_rows(path, config):
+    return sum(
+        1
+        for line, row in rows(path, config)
+        if line > config["header_line"] and any(str(v).strip() for v in row)
+    )
+
+
+def run_limit_message(count, maximum):
+    return (
+        f"Import termékszámkorlát túllépve: a fájl {count} adatsort tartalmaz; "
+        f"futásonként legfeljebb {maximum} termék "
+        "importálható. Bontsd több fájlra, és indíts külön futásokat."
+    )
+
+
 @contextmanager
 def materialize(db, run):
     with tempfile.NamedTemporaryFile(
@@ -145,6 +172,8 @@ def advance(db, run_id):
                             run.approved_by = p.approved_by
                             run.state = "processing"
                         break
+                analysis["data_rows"] = count_data_rows(path, config)
+                analysis["run_product_limit"] = run_product_limit()
                 run.analysis = analysis
                 if run.state != "processing":
                     run.config = config
@@ -158,6 +187,29 @@ def advance(db, run_id):
             config = run.config
             counts = dict(run.counters or {})
             batch = 0
+            max_products = run_product_limit()
+            if not run.cursor:
+                # Reject an oversized run before any row is applied (no silent cut).
+                total = (run.analysis or {}).get("data_rows")
+                if total is None:
+                    total = count_data_rows(path, config)
+                if total > max_products:
+                    raise ValueError(run_limit_message(total, max_products))
+            from app.product_catalog import (
+                auto_threshold,
+                classify,
+                maps_for,
+                merge_attributes,
+                source_attributes,
+                source_category_id,
+            )
+            from app.product_models import ProductClassification
+
+            category_cache = {}
+            category_maps = maps_for(db, run.tenant_id)
+            threshold = auto_threshold(db)
+            mapped_columns = {int(c) for c in config["mapping"]}
+            full_feed = config.get("feed_type") == "full"
             for line, raw in rows(path, config):
                 if line <= config["header_line"] or line <= run.cursor:
                     continue
@@ -228,8 +280,8 @@ def advance(db, run_id):
                 ).hexdigest()
                 product = None
                 if state == "ready":
-                    if counts.get("ready", 0) >= limit("IMPORT_MAX_PRODUCTS", 100000):
-                        raise ValueError("Import termékszámkorlát túllépve")
+                    if counts.get("ready", 0) >= max_products:
+                        raise ValueError(run_limit_message(counts["ready"] + 1, max_products))
                     product = db.scalar(
                         select(SupplierProduct)
                         .where(
@@ -251,12 +303,14 @@ def advance(db, run_id):
                             else "conflicting_duplicate_key"
                         )
                     else:
+                        created = product is None
                         if not product:
                             product = SupplierProduct(
                                 tenant_id=run.tenant_id,
                                 supplier_id=run.supplier_id,
                                 identity_key=key,
                                 data={},
+                                revision=1,
                                 last_run_id=run.id,
                                 last_line=line,
                             )
@@ -270,6 +324,17 @@ def advance(db, run_id):
                             for k, v in values.items()
                             if previous.get(k) != v
                         }
+                        # Lossless source parameters: every unmapped column, with
+                        # header, unit, raw value and origin (CATEGORY-02A).
+                        attributes, attribute_delta = merge_attributes(
+                            product.source_attributes,
+                            source_attributes(
+                                run.analysis["headers"], raw, mapped_columns, run.id, line
+                            ),
+                            full_feed,
+                        )
+                        for name, change in attribute_delta.items():
+                            delta["source:" + name] = change
                         if delta:
                             db.add(
                                 ImportChange(
@@ -281,8 +346,34 @@ def advance(db, run_id):
                             )
                         # Partial feeds change only mapped fields; never delete missing products.
                         product.data = {**previous, **values}
+                        product.source_attributes = attributes
+                        from app.product_catalog import search_text
+
+                        product.search_text = search_text(product.data)
                         product.last_run_id = run.id
                         product.last_line = line
+                        category_text = product.data.get("category")
+                        category_id = source_category_id(
+                            db,
+                            category_cache,
+                            run.tenant_id,
+                            run.supplier_id,
+                            str(category_text) if category_text is not None else "",
+                        )
+                        category_changed = category_id != product.source_category_id
+                        product.source_category_id = category_id
+                        if not created and (delta or category_changed):
+                            product.revision = (product.revision or 1) + 1
+                        if category_changed or db.get(ProductClassification, product.id) is None:
+                            db.flush()
+                            classify(
+                                db,
+                                product,
+                                category_maps,
+                                threshold,
+                                str(category_text or ""),
+                                run_id=run.id,
+                            )
                 existing = db.get(ImportRow, (run.id, line))
                 if existing is None:
                     db.add(

@@ -52,6 +52,7 @@ SYSTEM = {
     "tenants.access.manage",
     "exports.fields.manage",
     "reference.manage",
+    "parameters.global_aliases.manage",
 }
 TENANT = {
     "tenants.read",
@@ -66,6 +67,10 @@ TENANT = {
     "imports.approve",
     "imports.cancel",
     "products.read",
+    "products.classify",
+    "products.parameters",
+    "products.bulk",
+    "products.prepare.approve",
     "exports.read",
     "exports.profile",
     "reference.read",

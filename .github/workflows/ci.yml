@@ -4,11 +4,13 @@ name: Adatdúsító CI
 #   backend    backend/tests + scripts/tests, except *_browser.py and the menu export test
 #   browser    backend/tests/*_browser.py + scripts/tests/*_browser.py (Chromium)
 #   menu-export scripts/tests/test_emag_menu_export.py with only the tool's own deps
-# See docs/development/CI.md.
+#   mysql-migrations  Alembic 0009-0011 downgrade/upgrade regression on a throwaway
+#                     MySQL 8 service container (RELEASE-03, owner: Claude)
+# See docs/development/CI.md and docs/development/RELEASE-03-MYSQL-CI.md.
 
 on:
   push:
-    branches: [main]
+    branches: [main, codex/category-03d-full-integration, codex/release-candidate-01]
   pull_request:
   workflow_dispatch:
 
@@ -212,11 +214,139 @@ jobs:
           cache-from: type=gha,scope=frontend
           cache-to: type=gha,scope=frontend,mode=max
 
+  mysql-migrations:
+    # RELEASE-03 (#38): the SQLite jobs above cannot see MySQL-only DDL failures
+    # (RELEASE-02 B1: error 1553 in the 0009-0011 downgrades). Throwaway service
+    # container, empty database, test-only credentials: never pinfo_db or the VPS.
+    name: MySQL 8 migrations (downgrade regression)
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_ROOT_PASSWORD: ci-only-throwaway
+          MYSQL_DATABASE: adatdusito_dev
+        ports:
+          - 33306:3306
+        options: >-
+          --health-cmd="mysqladmin ping -h 127.0.0.1 -uroot -pci-only-throwaway --silent"
+          --health-interval=5s --health-timeout=5s --health-retries=36
+          --memory=1g
+    env:
+      # Test-only password of the throwaway container above; not a production secret.
+      APP_DATABASE_URL: mysql+pymysql://root:ci-only-throwaway@127.0.0.1:33306/adatdusito_dev
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: pip
+          cache-dependency-path: backend/requirements.lock
+      - name: Install locked runtime dependencies (alembic, SQLAlchemy, PyMySQL)
+        run: python -m pip install --no-deps -r backend/requirements.lock
+      - name: Prepare the database helper (empty adatdusito_dev on the service only)
+        run: |
+          mkdir -p reports
+          cat > "$RUNNER_TEMP/mysql_ci_db.py" <<'PY'
+          """wait: until the service answers; reset: drop and recreate the empty test database."""
+          import os, sys, time
+          from sqlalchemy import create_engine, make_url, text
+          url = make_url(os.environ["APP_DATABASE_URL"])
+          assert url.host == "127.0.0.1" and url.database == "adatdusito_dev", "only the CI service"
+          server = create_engine(url.set(database=None))
+          for attempt in range(60):
+              try:
+                  with server.connect() as c:
+                      version = c.scalar(text("SELECT VERSION()"))
+                      break
+              except Exception:
+                  time.sleep(2)
+          else:
+              sys.exit("MySQL service did not become ready")
+          if sys.argv[1:] == ["reset"]:
+              with server.begin() as c:
+                  c.execute(text("DROP DATABASE IF EXISTS adatdusito_dev"))
+                  c.execute(text("CREATE DATABASE adatdusito_dev CHARACTER SET utf8mb4"))
+          print(f"MySQL {version} ready; database adatdusito_dev {'recreated empty' if sys.argv[1:] == ['reset'] else 'present'}")
+          PY
+          python "$RUNNER_TEMP/mysql_ci_db.py" wait
+      - name: Downgrade/upgrade regression (0008-0011, 3 rounds, schema + data fingerprints, guards)
+        working-directory: backend
+        env:
+          PYTHONPATH: .
+        run: |
+          set -o pipefail
+          python ../scripts/mysql_release02_downgrade_check.py --rounds 3 2>&1 | tee ../reports/mysql-release02.log
+      - name: Negative control - a reintroduced B1 downgrade must fail the check (exit 1, error 1553)
+        working-directory: backend
+        env:
+          PYTHONPATH: .
+        run: |
+          python "$RUNNER_TEMP/mysql_ci_db.py" reset
+          control="$RUNNER_TEMP/migrations-b1-control"
+          rm -rf "$control" && cp -r migrations "$control"
+          python - "$control/versions/0010_product_parameters.py" <<'PY'
+          import sys
+          path = sys.argv[1]
+          source = open(path, encoding="utf-8").read()
+          anchor = '    op.drop_table("product_parameter_values")\n'
+          assert source.count(anchor) == 1, "control anchor not found"
+          # Restore the exact pre-RELEASE-02 lines: once both tenant_id-leading indexes are
+          # dropped one by one, MySQL refuses the second one (error 1553).
+          broken = ('    op.drop_index("ix_product_parameter_emag", "product_parameter_values")\n'
+                    '    op.drop_index("ix_product_parameter_state", "product_parameter_values")\n' + anchor)
+          open(path, "w", encoding="utf-8").write(source.replace(anchor, broken))
+          PY
+          set +e
+          python ../scripts/mysql_release02_downgrade_check.py --rounds 1 --migrations "$control" \
+            > ../reports/mysql-b1-control.log 2>&1
+          code=$?
+          set -e
+          grep -E '^(OK|ERR) |^\{' ../reports/mysql-b1-control.log | head -12
+          echo "negative control exit code: $code"
+          test "$code" -eq 1 || { echo "::error::the check did not fail on the broken downgrade (exit $code)"; exit 1; }
+          grep -q "1553" ../reports/mysql-b1-control.log || { echo "::error::expected MySQL error 1553 not seen"; exit 1; }
+          echo "negative control OK: the reintroduced B1 downgrade is detected"
+      - name: RELEASE-01 check (only when scripts/mysql_release01_check.py is on this branch, PR #34)
+        working-directory: backend
+        env:
+          PYTHONPATH: .
+        run: |
+          if [ ! -f ../scripts/mysql_release01_check.py ]; then
+            echo "::notice::scripts/mysql_release01_check.py is not on this branch (it comes with PR #34); it runs here automatically once both are integrated."
+            exit 0
+          fi
+          python "$RUNNER_TEMP/mysql_ci_db.py" reset
+          set -o pipefail
+          python ../scripts/mysql_release01_check.py 2>&1 | tee ../reports/mysql-release01.log
+      - name: MySQL job summary
+        if: always()
+        run: |
+          {
+            echo "### MySQL 8 migrations"
+            for f in reports/mysql-release02.log reports/mysql-b1-control.log reports/mysql-release01.log; do
+              [ -f "$f" ] || continue
+              echo "**$f**: $(grep -c '^OK ' "$f" 2>/dev/null || true) OK, $(grep -c '^ERR ' "$f" 2>/dev/null || true) ERR"
+              echo '```'
+              grep -E '^\{' "$f" | tail -1 || true
+              echo '```'
+            done
+          } >> "$GITHUB_STEP_SUMMARY"
+      - name: Keep MySQL logs on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: mysql-migration-logs
+          path: reports/
+          retention-days: 7
+          if-no-files-found: ignore
+
   ci-ok:
     # Single required status; blocking lint runs inside the frontend job.
     name: CI result
     if: always()
-    needs: [backend, browser, menu-export, frontend, docker]
+    needs: [backend, browser, menu-export, frontend, docker, mysql-migrations]
     runs-on: ubuntu-24.04
     timeout-minutes: 2
     steps:

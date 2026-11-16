@@ -27,16 +27,22 @@ Ha egy utasítás ellentmond ennek a fájlnak, a fejlesztő megáll, és a Vezé
 
 ## Aktuális munkamegosztás
 
-A Vezér frissíti. Utolsó módosítás: SECURITY-01 / CODEX 09, 2026-11.
+A Vezér frissíti. Az `AGENTS.md` közös szabályzat, minden fejlesztőre kötelező; szerkesztője a táblázat szerint Claude, a tartalmi döntéseket a Vezér hozza. Utolsó módosítás: RELEASE-01 (#33, `test_auth09.py` gazdája), 2026-11.
 
 | Terület | Fájlgazda |
 |---|---|
-| `backend/app/security.py`, biztonsági backend-tesztek (`backend/tests/test_login_protection.py`, `test_password_hash_capacity.py`, `test_deploy_nginx.py`, `test_restricted_session_gate.py`, `test_dependency_*.py`) | Claude |
+| `backend/app/security.py`, biztonsági backend-tesztek (`backend/tests/test_login_protection.py`, `test_password_hash_capacity.py`, `test_deploy_nginx.py`, `test_restricted_session_gate.py`, `test_dependency_*.py`, AUTH/SECURITY: `test_auth09.py`) | Claude |
 | Python-függőségfájlok: `backend/requirements*.{txt,in,lock}`, `backend/scripts/compile-requirements.sh`, `backend/scripts/check_requirements.py`, `backend/Dockerfile`, `backend/.dockerignore`; a CI backend-, browser- és menu-export jobjainak telepítési lépései | Claude |
 | `deploy/nginx/*` (külső Nginx deploykonfiguráció) | Claude |
+| CATEGORY-02A: `backend/app/product_models.py`, `product_catalog.py`, `product_backfill.py`, `workspace_views.py`, az `import_engine.py` termék-/forrásattribútum-része, az `import_api.py` futáskorlát-ellenőrzése, a `settings_api.py`/`system_config.py` `classification` csoportja, `backend/migrations/versions/0009_product_classification.py`, `backend/tests/test_product_classification.py`, `test_category02a_migration.py`, `docs/design/CATEGORY-02A-API.md` | Claude |
+| CATEGORY-02C (donoraudit): a `product_catalog.py` és a `workspace_views.py` `pending_review` donorokat kizáró része, `backend/reference_data/donor_review.json`, a `test_product_classification.py` 02C-tesztjei | Claude |
+| CATEGORY-03A: `backend/app/product_parameters.py`, `parameter_views.py`, `product_jobs.py`, a `product_models.py` paramétermodelljei, `backend/migrations/versions/0010_product_parameters.py`, `backend/tests/test_product_parameters.py`, `test_category03a_migration.py`, `docs/design/CATEGORY-03A-API.md`, `docs/category-03a-open-decisions.md`, `scripts/mysql_category03a_check.py` | Claude |
+| CATEGORY-03C: `backend/app/bulk_operations.py`, `bulk_views.py`, a `product_models.py` kiválasztási, műveleti és jóváhagyási modelljei, `backend/migrations/versions/0011_bulk_preparation.py`, `backend/tests/test_bulk_preparation.py`, `test_category03c_migration.py`, `docs/design/CATEGORY-03C-API.md`, `scripts/mysql_category03c_check.py` | Claude |
+| `backend/app/worker.py`: az `app.product_jobs` Celery-regisztrációja (#18) | Claude (csak ez a bekötés; más `worker.py`-változást integrációnál egyeztetni kell) |
+| `.github/workflows/ci.yml` `mysql-migrations` jobja és a `ci-ok` `needs` listájának ehhez tartozó eleme; `scripts/mysql_release01_check.py`, `scripts/mysql_release02_downgrade_check.py` (RELEASE-03, #38) | Claude (csak ez a job; a többi CI-jobot nem írja át) |
 | SECURITY-01 érintett pontjai: `backend/app/api.py` login-végpont, `backend/app/auth_api.py` `throttle()`/`failure_limit()` és a passkey/MFA korlátozási hívások, `backend/app/oidc_api.py` és `backend/app/registration.py` korlátozási sorai, `backend/tests/conftest.py` stubok, `backend/tests/test_security_integration.py`, `.env.example` biztonsági változói | Claude (csak ebben a feladatban) |
 | `AGENTS.md`, `CLAUDE.md` | Claude (a tartalmi döntéseket a Vezér hozza) |
-| `frontend/**` (React UI/UX, Cloud & Teal design, ikonok, súgók, komponensek, `frontend/nginx.conf`) | Codex |
+| `frontend/**` (React UI/UX, Cloud & Teal design, ikonok, súgók, komponensek, `frontend/nginx.conf`), ezen belül a `frontend/src/parameters/**` és a frontend API-adapterek; a böngészős integrációs tesztek | Codex |
 | Minden más | a Vezér feladatonként jelöli ki; kijelölés nélkül nem módosítható |
 
 ## Fejlesztési és tesztelési parancsok
