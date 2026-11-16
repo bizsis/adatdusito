@@ -31,6 +31,9 @@ DEFAULTS = {
         "password_min_length": 12,
         "invite_ttl_hours": 48,
     },
+    # CATEGORY-02A: minimum measured precision a classification method needs
+    # before it may classify automatically. A target, not a measured accuracy.
+    "classification": {"auto_threshold": 0.98},
 }
 
 

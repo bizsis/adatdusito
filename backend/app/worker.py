@@ -8,5 +8,5 @@ celery.conf.update(task_serializer="json", result_serializer="json", accept_cont
 def ping():
     return "pong"
 
-# Register the supplier task in worker-only processes too.
-celery.conf.imports = ("app.import_engine",)
+# Register the supplier import and product job tasks in worker-only processes too.
+celery.conf.imports = ("app.import_engine", "app.product_jobs")

@@ -1,5 +1,5 @@
 import { auditLabel } from "./help";
-import { readApiResponse, apiErrorMessage } from "./apiResponse";
+import { readApiResponse, apiErrorMessage, ApiHttpError } from "./apiResponse";
 import { dateTime } from "./ui";
 import React, { useEffect, useState, useRef, useCallback } from "react";
 import { createRoot } from "react-dom/client";
@@ -188,7 +188,10 @@ async function api<T>(
   if (!response.ok) {
     if (response.status === 401 && url !== "/auth/login")
       window.dispatchEvent(new Event("session-expired"));
-    throw new Error(apiErrorMessage(response.status, data));
+    throw new ApiHttpError(
+      response.status,
+      apiErrorMessage(response.status, data),
+    );
   }
   return data as T;
 }
@@ -2122,7 +2125,18 @@ function App() {
           )}
           {page === "products" &&
             (me.tenant_id && can("products.read") ? (
-              <ProductData api={api} />
+              <ProductData
+                api={api}
+                canClassify={can("products.classify")}
+                parameterAccess={{
+                  edit: can("products.parameters"),
+                  bulk: can("products.bulk"),
+                  approve: can("products.prepare.approve"),
+                  globalAliases: can("parameters.global_aliases.manage"),
+                  classify: can("products.classify"),
+                }}
+                workspaceKey={String(me.tenant_id)}
+              />
             ) : can("reference.read") ? (
               <Categories />
             ) : null)}

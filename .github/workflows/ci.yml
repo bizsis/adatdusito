@@ -8,7 +8,7 @@ name: Adatdúsító CI
 
 on:
   push:
-    branches: [main]
+    branches: [main, codex/category-03d-full-integration]
   pull_request:
   workflow_dispatch:
 

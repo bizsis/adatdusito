@@ -1,13 +1,112 @@
-import React, { useEffect, useState } from "react";
+import type { ParameterAccess } from "./parameters/liveContract";
+import React, { lazy, Suspense, useEffect, useState, useMemo } from "react";
+import { validateProductEnvelope } from "./classification/validateContract";
 import { Panel } from "./ui";
-type Api = <T>(url: string, method?: string, body?: unknown) => Promise<T>;
+import { createCategory02Presentation } from "./classification/category02Api";
+import type { Products, Request } from "./classification/category02Contract";
+import type { ClassificationPresentation } from "./classification/presentation";
+const ClassificationWorkspace = lazy(() =>
+  import("./classification/ClassificationWorkspace").then((module) => ({
+    default: module.ClassificationWorkspace,
+  })),
+);
+type Api = Request;
 type Product = {
   id: number;
   fields: Record<string, unknown>;
   supplier_name: string;
   source_line: number;
 };
-export function ProductData({ api }: { api: Api }) {
+export function ProductData({
+  api,
+  classification,
+  parameterAccess,
+  canClassify = false,
+  workspaceKey = "current",
+}: {
+  api: Api;
+  classification?: ClassificationPresentation;
+  parameterAccess?: ParameterAccess;
+  canClassify?: boolean;
+  workspaceKey?: string;
+}) {
+  // Keep legacy responses working while the additive CATEGORY-02A backend rolls out.
+  if (classification)
+    return (
+      <Suspense fallback={<p role="status">Termékbesorolás betöltése…</p>}>
+        <ClassificationWorkspace {...classification} />
+      </Suspense>
+    );
+  return (
+    <ImportedProductData
+      api={api}
+      canClassify={canClassify}
+      parameterAccess={parameterAccess}
+      workspaceKey={workspaceKey}
+    />
+  );
+}
+function BoundClassification({
+  parameterAccess,
+  api,
+  initial,
+  canClassify,
+  workspaceKey,
+}: {
+  api: Api;
+  initial: Products;
+  parameterAccess?: ParameterAccess;
+  canClassify: boolean;
+  workspaceKey: string;
+}) {
+  const enabled = parameterAccess !== undefined;
+  const edit = parameterAccess?.edit ?? false;
+  const bulk = parameterAccess?.bulk ?? false;
+  const approve = parameterAccess?.approve ?? false;
+  const globalAliases = parameterAccess?.globalAliases ?? false;
+  const classify = parameterAccess?.classify ?? false;
+  const presentation = useMemo(
+    () => ({
+      ...createCategory02Presentation(api, workspaceKey, canClassify, initial),
+      ...(enabled
+        ? {
+            liveParameters: {
+              request: api,
+              access: { edit, globalAliases, classify, bulk, approve },
+            },
+          }
+        : {}),
+    }),
+    [
+      api,
+      workspaceKey,
+      canClassify,
+      initial,
+      enabled,
+      bulk,
+      approve,
+      edit,
+      globalAliases,
+      classify,
+    ],
+  );
+  return (
+    <Suspense fallback={<p role="status">Termékbesorolás betöltése…</p>}>
+      <ClassificationWorkspace {...presentation} />
+    </Suspense>
+  );
+}
+function ImportedProductData({
+  parameterAccess,
+  api,
+  canClassify,
+  workspaceKey,
+}: {
+  api: Api;
+  parameterAccess?: ParameterAccess;
+  canClassify: boolean;
+  workspaceKey: string;
+}) {
   const [cursor, C] = useState(0),
     [history, H] = useState<number[]>([]),
     [data, D] = useState<{
@@ -16,13 +115,16 @@ export function ProductData({ api }: { api: Api }) {
       field_labels: Record<string, string>;
     } | null>(null),
     [item, I] = useState<Product | null>(null),
-    [error, E] = useState("");
+    [error, E] = useState(""),
+    [retry, R] = useState(0);
   useEffect(() => {
     let cancelled = false;
     D(null);
+    E("");
     I(null);
     api<NonNullable<typeof data>>("/workspace/products?cursor=" + cursor)
       .then((r) => {
+        validateProductEnvelope(r);
         if (!cancelled) D(r);
       })
       .catch((e) => {
@@ -31,7 +133,17 @@ export function ProductData({ api }: { api: Api }) {
     return () => {
       cancelled = true;
     };
-  }, [api, cursor]);
+  }, [api, cursor, retry]);
+  if (data && "status_counts" in data)
+    return (
+      <BoundClassification
+        api={api}
+        parameterAccess={parameterAccess}
+        initial={data as Products}
+        canClassify={canClassify}
+        workspaceKey={workspaceKey}
+      />
+    );
   return (
     <>
       <Panel title="Beszállítói termékadatok">
@@ -42,6 +154,7 @@ export function ProductData({ api }: { api: Api }) {
         {error && (
           <p className="error" role="alert">
             {error}
+            <button onClick={() => R(retry + 1)}>Újrapróbálás</button>
           </p>
         )}
         <div className="table-wrap">
