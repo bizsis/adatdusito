@@ -34,9 +34,19 @@ export default function HelpPage() {
   );
   const found = searchArticles(articles, route.query, route.topic);
   const home = helpHref(null, route.query, route.topic);
+  // Native hash navigation updates the URL before its queued event updates React.
+  // Read the current URL in control events so a just-cleared query/topic cannot
+  // be restored from an older render (notably fast mobile select changes).
   const changeSearch = (query: string) => {
-    const next = { ...route, query };
-    window.history.replaceState(null, "", helpHref(null, query, route.topic));
+    const current = readHelpRoute(window.location.hash);
+    const next = { ...current, article: null, query };
+    window.history.replaceState(null, "", helpHref(null, query, current.topic));
+    setRoute(next);
+  };
+  const changeTopic = (topic: string) => {
+    const current = readHelpRoute(window.location.hash);
+    const next = { ...current, article: null, topic };
+    window.location.hash = helpHref(null, current.query, topic);
     setRoute(next);
   };
   return (
@@ -116,13 +126,7 @@ export default function HelpPage() {
               <select
                 id="help-topic"
                 value={route.topic}
-                onChange={(e) => {
-                  window.location.hash = helpHref(
-                    null,
-                    route.query,
-                    e.target.value,
-                  );
-                }}
+                onChange={(e) => changeTopic(e.target.value)}
               >
                 <option value="">Összes témakör</option>
                 {orderedTopics.map((t) => (

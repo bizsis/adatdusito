@@ -77,12 +77,28 @@ besorolási, paraméter-, tömeges és exportnézetet is végigjárja. Csak szin
 SQLite-adatok érintettek; a referencia-kapcsolat írásmentessége is ellenőrzött.
 
 A helyi végső ellenőrzés: **10 frontendteszt** (7 segédlet/tartalom/biztonság,
-3 meglévő lintkonfiguráció), **4 natív böngészőteszt**, **437 backend/eszközteszt**,
+3 meglévő lintkonfiguráció), **5 natív böngészőteszt**, **437 backend/eszközteszt**,
 lint és TypeScript/Vite build: mind sikeres. A képrögzítő smoke külön is sikeres.
 A cikkek renderelője és tartalma külön HelpPage chunkba került (kb. 27,4 kB,
 gzip 9,4 kB), a 9 PNG összesen kb. 472 kB, és nem töltődik be a Segédlet
 nyitóoldalán. Nincs új runtime vagy fejlesztői függőség.
 A végső átadás a hosted futás eredményét és a pontos commit SHA-t külön rögzíti.
+
+## Mobil témakörváltási regresszió
+
+Az első hosted futásban a 390 px-es témakörválasztó a keresés törlése után a
+négy importcikk helyett nullát mutathatott. A natív hivatkozás már módosította az
+URL-t, de a sorba állított `hashchange` előtt a React-állapot még a régi keresést
+őrizte. A gyors select/change ebből visszaírhatta a törölt keresőszöveget.
+
+A vezérlők most az aktuális URL-t olvassák, és a témakörváltáskor is közvetlenül
+frissítik a React-állapotot. A böngésző vissza/előre eseménykezelése megmarad.
+Az új, késleltetett hashchange-et szimuláló natív regresszió a javítás előtt
+0 cikkel elbukik, a javítás után változatlanul 4 importcikket vár és kap. Az
+ellenkező irányt is vizsgálja: témakörtörlés utáni gyors keresés nem állíthatja
+vissza a régi témakört. Az eredeti mobil/asztali teszt elvárásai nem gyengültek.
+A teljes HELP-csomag: **5 passed**, a frontendcsomag: **10 passed**, lint/build zöld.
+A végső átadás a javított commit új teljes hosted CI-futását adja meg.
 
 ## Határok
 

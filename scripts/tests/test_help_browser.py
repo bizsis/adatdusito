@@ -171,3 +171,39 @@ def test_record_current_ui_screenshots_and_existing_workflows(help_catalog):
             p.get_by_label(f'label {i}',exact=True).fill(label)
             p.get_by_label(f'internal_field {i}',exact=True).fill(internal)
         shot(p.locator('main > section.card').first,'exportprofil')
+
+
+def test_mobile_topic_and_search_use_current_url_when_hashchange_is_delayed(help_catalog):
+    """Deterministic regression: native hash navigation precedes its event/React render.
+
+    Chromium can dispatch select/change before the queued hashchange handler.
+    Hold that handler to reproduce the timing without altering any response data.
+    """
+    with app_browser(help_catalog,width=390) as ui:
+        p=ui.page
+        p.add_init_script("""window.__holdHelpHash = false;
+            window.addEventListener('hashchange', event => {
+                if (window.__holdHelpHash) event.stopImmediatePropagation();
+            }, true);""")
+        p.reload()
+        open_help(p)
+        search=p.get_by_role('searchbox',name='Keresés a segédletben',exact=True)
+        search.fill('nem-letezo-978943')
+        expect(p.get_by_role('heading',name='Nincs találat',exact=True)).to_be_visible()
+        p.evaluate('window.__holdHelpHash = true')
+        p.get_by_role('link',name='Keresés és témakörszűrés törlése',exact=True).click()
+        assert p.url.endswith('#/segedlet')
+        topic=p.get_by_role('combobox',name='Témakör',exact=True)
+        topic.select_option('import')
+        expect(p.locator('.help-article-list li')).to_have_count(IMPORT_COUNT)
+        expect(search).to_have_value('')
+        expect(topic).to_have_value('import')
+        assert p.url.endswith('#/segedlet?tema=import')
+        # Reverse direction: the URL clears the topic before React sees the event.
+        p.evaluate("location.hash = '#/segedlet'")
+        search.fill('zárolás')
+        expect(p.locator('.help-results')).to_contain_text('Paraméterek kézi javítása és zárolása')
+        expect(topic).to_have_value('')
+        assert 'tema=' not in p.url
+        p.evaluate("window.__holdHelpHash = false; window.dispatchEvent(new HashChangeEvent('hashchange'))")
+        expect(p.locator('.help-results')).to_contain_text('Paraméterek kézi javítása és zárolása')
