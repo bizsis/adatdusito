@@ -2,7 +2,7 @@
 
 Feladat: [#32](https://github.com/bizsis/adatdusito/issues/32). Gazda: Codex
 (integráció, frontendadapterek, integrációs tesztek); üzleti és merge-döntés: Vezér/Tulajdonos.
-Ág: `codex/category-03d-full-integration`. **Draft integrációs PR; nem automatikusan
+Ág: `codex/category-03d-full-integration`. PR: [#37](https://github.com/bizsis/adatdusito/pull/37). **Draft integrációs PR; nem automatikusan
 merge-elhető és nem telepítendő a VPS-re.**
 
 A tulajdonos a feladat közbeni pontosításban kifejezetten a meglévő 03B felület
@@ -26,12 +26,16 @@ korábbi dokumentációs SHA-ból feltételeztük őket.
 | 5 | #22, CATEGORY-02D frontend/integráció | `a780c65d95f42d258a012139376d89dd2c343c48` | `7387dd7cc52230e2d89d33f3c21a37bfcb47b7b5` |
 | 6 | #27, CATEGORY-03B, TOTP-diagnózissal | `9babde51262fc8e3376ed58acc86b08579cd932f` | `29364f3acf07cf8cceb7042fb37cd149aedc3eac` |
 | 7 | #31, AUTH-09 determinisztikus teszt | `4ffcfb22a2a476948dc322839a65a558ce04ad9f` | `f948441c64ceba3fc1d44cbc428b61a117e6c2ed` |
+| 8 | #36, RELEASE-02 MySQL downgrade, a #37 kiegészítő feltétele | `3df4b20afbd8be6c4ab019ac245d3bf2e1071eed` | `d39ae88b3144daf6087d2d0f544e9276e10f7ee1` |
 
 Minden lépés normál `git merge --no-ff`; **nem volt szöveges merge-konfliktus**.
 Nem kellett Claude-fájlt önállóan javítani vagy felülírni. A 03D saját javításai
 frontend-, böngészőteszt-, általános integrációsteszt-, dokumentációs és CI-trigger
-fájlokra korlátozódnak. A backend az utolsó fenti merge utáni állapothoz képest
-változatlan; a backendmigrációkat sem módosítottuk.
+fájlokra korlátozódnak. A #36-ot a #37-ben előírt kiegészítő feltételként, Claude
+eredeti commitjaival integráltuk. A három migráció downgrade-javítása kizárólag
+ebből az inputból származik; a 03D nem ír saját backendmódosítást. AST-összevetés
+igazolja, hogy a 0009/0010/0011 `upgrade`, `revision` és `down_revision` része
+a #29 állapotához képest változatlan.
 
 A #25 és #26 párhuzamos ág: mindkettőt explicit integráltuk. A #29 ancestry-je
 önmagában nem számított a #25 auditjának bizonyítékául. A #22/#27 régebbi #18-alapja
@@ -41,10 +45,10 @@ Ellenőrzés a teljes klónban (a GitHub CI sekély checkoutján a bemeneti refe
 feltétlenül állnak rendelkezésre):
 
 ```bash
-for input in e946b93 47d0cc6 c05746d 369fc98 a780c65 9babde5 4ffcfb2; do
+for input in e946b93 47d0cc6 c05746d 369fc98 a780c65 9babde5 4ffcfb2 3df4b20; do
   git merge-base --is-ancestor "$input" codex/category-03d-full-integration || exit 1
 done
-git diff f948441..codex/category-03d-full-integration -- backend
+git diff d39ae88..codex/category-03d-full-integration -- backend
 ```
 
 Az utolsó parancs nem mutathat 03D által írt backendmódosítást.
@@ -145,6 +149,8 @@ A külön worker-only subprocess az API előzetes importja nélkül is ellenőrz
 `infra.ping`, `supplier.import`, `products.reapply_category_map`,
 `products.parameter_run`, `products.operation` regisztrációját.
 
+Az első teljes integrációs csomag (`7d39f12`) helyi eredményei:
+
 - Teljes backend/eszköz: **437 sikeres**.
 - Korábbi böngészős regresszió: **113 sikeres** (14 backend-browser, 74 script-browser,
   25 CATEGORY-02D).
@@ -175,10 +181,30 @@ Egy 50 002-es szűrt részhalmaz 03C előnézete ugyanazon jobon **50 000 + 2**
 terméket, **2 futásban** dolgoz fel, paraméterérték-írás nélkül. Ez valós SQLite
 adat, nem mock számláló; **nem 250 000-es MySQL mérés**.
 
-**Saját MySQL-mérést ebben a feladatban nem végeztünk.** A #25/#26/#29 dokumentumokban
-szereplő MySQL-eredmények Claude külön mérései; nem keverjük a saját bizonyítékba.
-250 000-es MySQL-teljesítménygarancia nincs. Az éles adatokkal végzett teszt nem
-része ennek a feladatnak.
+A RELEASE-02 beemelése után ugyanez a teljes backend- és böngészőcsomag
+újrafut; a végső commit hosted CI-je külön ellenőrzi az összes jobot.
+Az átadás a végső futás tényleges eredményét adja meg.
+
+### RELEASE-02: saját MySQL migrációs újrateszt
+
+A #36 integrálása után **saját, eldobható, helyi MySQL 8.0.46** konténeren futott
+a `scripts/mysql_release02_downgrade_check.py --rounds 3`. Az üres loopback
+adatbázist a script külön ellenőrizte; 2000 szintetikus terméket és importsorokat,
+felhasználókat, tagságot és szerepköröket készített a 0008-as szinten.
+
+- **56 ellenőrzés, 0 hiba**, exit 0; 16,96 s a teljes script.
+- Három teljes `0011 → 0010 → 0009 → 0008 → 0011` kör és az egyes
+  revíziópárok ismételt vissza/előrelépése.
+- Minden szinten egyezik a teljes oszlop-/index-/idegenkulcs-séma, a kulcsszabályok,
+  a megőrzött adatok és a jogkatalógus lenyomata.
+- A jóváhagyás, paraméteralias és kategóriatérkép külön-külön megakadályozta
+  a megfelelő downgrade-et; a megtagadás nem változtatta a sémát/adatokat.
+- A migrációs lánc végül 0011-en állt. A tesztkonténer kizárólag helyi, szintetikus
+  adatot tartalmazott; a VPS-re és a `pinfo_db`-re nem kapcsolódott.
+
+Ez migrációs regresszió, **nem 250 000-es MySQL-teljesítménymérés**.
+A #25/#26/#29 dokumentumokban szereplő további MySQL-eredmények Claude külön
+mérései; nem keverjük a saját bizonyítékba. Éles adatokon nem teszteltünk.
 
 ### Futtatási parancsok
 
@@ -204,7 +230,9 @@ nem kerül image-rétegbe vagy Gitbe. A backend image runtime-only csomagellenő
 
 Egyetlen, az eredeti backend-PR-ekből származó lánc: **0009 → 0010 → 0011**.
 A migrációs regressziók az előző állapot meglévő termékeit/jobkurzorát és új jogait
-is ellenőrzik. Új 03D migráció nincs; 0001/0002 és az összes migráció változatlan.
+is ellenőrzik. Új 03D migráció nincs; 0001/0002 és az összes upgrade változatlan.
+A #36 kizárólag a 0009–0011 downgrade-jeit javítja MySQL-biztos sorrendre,
+a döntésvédelmek megtartásával; részletek: [RELEASE-02-DOWNGRADE.md](RELEASE-02-DOWNGRADE.md).
 
 - 0009: kategóriabesorolási app-táblák és kiegészítések.
 - 0010: paraméterhelyek, aliasok, paraméteres műveletek.
@@ -216,6 +244,9 @@ is ellenőrzik. Új 03D migráció nincs; 0001/0002 és az összes migráció v�
   Éles adaton nincs automatikus downgrade: egyeztetett mentés-visszaállítás kell.
 - Korábbi revíziók visszalépése további alkalmazásadatokat érinthet; nem ajánlunk
   általános, feltétel nélküli `alembic downgrade` parancsot.
+- Félbeszakadt MySQL upgrade esetén a DDL nem tranzakciós. A RELEASE-02
+  downgrade-javítása nem teszi automatikusan újraindíthatóvá a részleges upgrade-et;
+  ilyenkor az ellenőrzött mentés visszaállítása szükséges.
 - Verziókeveredés előtt rendezni kell a futó workerfeladatokat. A már alkalmazott
   rész megmarad megszakításkor is; egy rollback nem vonja vissza ezeket magától.
 
@@ -227,8 +258,9 @@ nem rebase és nem automatika):
 1. #31 (main alapú determinisztikus AUTH-teszt).
 2. #18 (friss worker/pending védelem).
 3. #25 (02C audit), majd #26 (03A), majd #29 (03C).
-4. #22 frontend/integráció, majd #27 frontend.
-5. A jelen 03D draft PR a bekötési javításokkal, a friss mainre ellenőrizve és
+4. #36 RELEASE-02, a #29 után és a migrációk első telepítése előtt.
+5. #22 frontend/integráció, majd #27 frontend.
+6. A jelen 03D draft PR a bekötési javításokkal, a friss mainre ellenőrizve és
    újrafuttatott CI-vel; csak a Tulajdonos külön jóváhagyása után.
 
 A függő PR-ek base-ét az elődjük mainbe kerülése után a Tulajdonos/Vezér állítsa
@@ -238,12 +270,15 @@ kezeli őket, és a végső PR-ben a 03D javításai maradnak. Nem cherry-pickel
 másoljuk újra a frontend fájlokat mainbe. Squash/rebase választásakor ez az
 ancestry-garancia megváltozik, külön integrációs döntés és újratesztelés kell.
 
-A fenti kiadási sorrendet külön detached worktree-ben végigpróbáltuk. A hét
-input sorrendje #31 → #18 → #25 → #26 → #29 → #22 → #27 volt; ez ugyanazt a Git
-fát adta, mint az eredeti integrációs sorrend (`f948441`). Utána a validált
-03D implementáció **`217b23e`** beemelése is konfliktus nélkül sikerült, és a
-kapott fa bitre azonos a `217b23e` fájával. Ez helyi merge-próba, nem main-merge. Ha main vagy bármely input a pinelt SHA-hoz képest elmozdul, a jelen
-bizonyíték nem jelent automatikus jóváhagyást az új kombinációra.
+A kibővített kiadási sorrendet külön detached worktree-ben végigpróbáltuk:
+**#31 → #18 → #25 → #26 → #29 → #36 → #22 → #27**, utána a 03D
+`217b23e` implementáció és `7d39f12` jelentés. Mindegyik merge konfliktusmentes;
+a kapott fa bitre azonos a `d39ae88` integrációs állapot fájával.
+A helyi próba commitja `4ced858cb40232dde6330e27e02fe1b57d1c32a0`;
+ez nem main-merge. Ha main vagy bármely input a pinelt SHA-hoz képest elmozdul,
+a jelen bizonyíték nem jelent automatikus jóváhagyást az új kombinációra.
+A RELEASE-01 #34 külön audit/runbook PR; ez a tesztág nem írja felül és nem
+állítja, hogy annak mainbe kerülése megtörtént.
 
 ## Staging/VPS előfeltételek (nem végrehajtott lépések)
 
@@ -265,9 +300,13 @@ A main és a PR workflow működése megmarad; installlépést vagy biztonsági 
 nem változtattunk. A kötelező hosted eredményt külön, a tényleges run linkjével
 ellenőrizzük, nem nevezzük a helyi zöldet GitHub-zöldnek. Az aktuális tesztág
 futásai: https://github.com/bizsis/adatdusito/actions?query=branch%3Acodex%2Fcategory-03d-full-integration .
-A végső átadás a konkrét futás linkjét és megfigyelt állapotát adja meg.
+A `7d39f12` előző kombináció [43897116075](https://github.com/bizsis/adatdusito/actions/runs/43897116075)
+futása mind a hat jobon sikeres lett (backend, browser, menu-export, frontend,
+docker, ci-ok). Ez még nem a RELEASE-02-t tartalmazó változat bizonyítéka.
+A végső átadás a kibővített kombináció konkrét futáslinkjét és megfigyelt állapotát adja meg.
 
-A draft PR létrehozását a GitHub API képessége szerint kíséreljük meg. HTTP 403
-esetén a feltöltött tesztág és ez a jelentés a kész, review-zható eredmény;
-a Tulajdonos a compare oldalon hozhat létre draft PR-t main base-szel.
-Ez nem helyettesíti a hosted CI-t és nem jelent main-merge engedélyt.
+A Tulajdonos létrehozta a [#37 draft PR-t](https://github.com/bizsis/adatdusito/pull/37),
+main base-szel. A tesztág feltöltése ezt a PR-t frissíti. A GitHub API HTTP 403
+hozzáférési korlátja miatt külön PR-kommentet vagy leírásfrissítést nem tudunk
+közzétenni; az eredmények ebben a verziózott jelentésben szerepelnek.
+A draft állapot és a zöld CI nem jelent main-merge engedélyt.
