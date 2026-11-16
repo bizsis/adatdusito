@@ -10,6 +10,7 @@ from datetime import datetime
 from decimal import Decimal
 from sqlalchemy import (
     JSON,
+    BigInteger,
     Boolean,
     DateTime,
     ForeignKey,
@@ -125,3 +126,75 @@ class ProductJob(Base):
     error: Mapped[str | None] = mapped_column(String(1000), nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=now)
     updated_at: Mapped[datetime] = mapped_column(DateTime, default=now, onupdate=now)
+
+
+# --- CATEGORY-03A: parameter slots and aliases (migration 0010) ---------------
+
+
+class ParameterAlias(Base):
+    """Approved mapping of a source label (+unit) to one donor parameter.
+
+    tenant_id NULL = global alias (separate system permission). Every alias is
+    bound to a donor context (scope_emag_category_id). Rows are never deleted:
+    revoking sets state="revoked" and bumps version.
+    """
+
+    __tablename__ = "parameter_aliases"
+    __table_args__ = (
+        Index("ix_parameter_alias_lookup", "scope_emag_category_id", "label_key", "state"),
+        Index("ix_parameter_alias_tenant", "tenant_id", "state"),
+        UniqueConstraint("active_key", name="uq_parameter_alias_active"),
+    )
+    id: Mapped[int] = mapped_column(primary_key=True)
+    tenant_id: Mapped[int | None] = mapped_column(ForeignKey("tenants.id"), nullable=True)
+    # Unique identity of an approved alias; NULL once revoked (MySQL allows
+    # several NULLs in a unique index), so history rows never collide.
+    active_key: Mapped[str | None] = mapped_column(String(64), nullable=True)
+    label: Mapped[str] = mapped_column(String(160))
+    label_key: Mapped[str] = mapped_column(String(160))
+    unit: Mapped[str] = mapped_column(String(24), default="")
+    emag_parameter_id: Mapped[int] = mapped_column(Integer)
+    scope_emag_category_id: Mapped[int] = mapped_column(Integer)
+    state: Mapped[str] = mapped_column(String(16), default="approved")
+    version: Mapped[int] = mapped_column(Integer, default=1)
+    reason: Mapped[str | None] = mapped_column(String(500), nullable=True)
+    created_by: Mapped[int] = mapped_column(ForeignKey("users.id"))
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=now)
+    decided_by: Mapped[int] = mapped_column(ForeignKey("users.id"))
+    decided_at: Mapped[datetime] = mapped_column(DateTime, default=now)
+
+
+class ProductParameterValue(Base):
+    """One parameter slot of one product (emag:<id> or src:<source key>).
+
+    Original header/value/unit/origin are kept verbatim in `sources`; the
+    normalized value is only derived deterministically. A locked slot is never
+    written by automation.
+    """
+
+    __tablename__ = "product_parameter_values"
+    __table_args__ = (
+        Index("ix_product_parameter_state", "tenant_id", "state", "mandatory", "product_id"),
+        Index("ix_product_parameter_emag", "tenant_id", "emag_parameter_id"),
+    )
+    product_id: Mapped[int] = mapped_column(ForeignKey("supplier_products.id"), primary_key=True)
+    slot_key: Mapped[str] = mapped_column(String(191), primary_key=True)
+    tenant_id: Mapped[int] = mapped_column(ForeignKey("tenants.id"))
+    emag_parameter_id: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    donor_emag_category_id: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    catalog_link_id: Mapped[int | None] = mapped_column(BigInteger, nullable=True)
+    name: Mapped[str] = mapped_column(String(255))
+    display_order: Mapped[int] = mapped_column(Integer, default=0)
+    state: Mapped[str] = mapped_column(String(16))
+    origin: Mapped[str] = mapped_column(String(16))
+    reason_codes: Mapped[list] = mapped_column(JSON, default=list)
+    value: Mapped[str | None] = mapped_column(String(1000), nullable=True)
+    unit: Mapped[str | None] = mapped_column(String(24), nullable=True)
+    value_id: Mapped[int | None] = mapped_column(BigInteger, nullable=True)
+    details: Mapped[dict] = mapped_column(JSON, default=dict)  # sources, candidates, conversion, alias
+    mandatory: Mapped[bool] = mapped_column(Boolean, default=False)
+    locked: Mapped[bool] = mapped_column(Boolean, default=False)
+    catalog_version_id: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    rule_version: Mapped[str] = mapped_column(String(32))
+    updated_by: Mapped[int | None] = mapped_column(ForeignKey("users.id"), nullable=True)
+    updated_at: Mapped[datetime] = mapped_column(DateTime, default=now)

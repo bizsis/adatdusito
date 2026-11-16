@@ -215,22 +215,180 @@ def enqueue(job_id):
     process_job.delay(job_id)
 
 
-def resumable(db):
-    jobs = db.scalars(select(ProductJob).where(ProductJob.kind == KIND, ProductJob.state.in_(ACTIVE))
+def resumable(db, kinds=(KIND,)):
+    jobs = db.scalars(select(ProductJob).where(ProductJob.kind.in_(kinds), ProductJob.state.in_(ACTIVE))
                       .order_by(ProductJob.id))
-    return [j.id for j in jobs if j.state == "pending" or not j.lease_until or j.lease_until < now()]
+    return [(j.id, j.kind) for j in jobs
+            if j.state == "pending" or not j.lease_until or j.lease_until < now()]
 
 
 def main(argv=None):
-    parser = argparse.ArgumentParser(description="Run pending category-map reapply jobs.")
+    parser = argparse.ArgumentParser(description="Run pending category-map and parameter jobs.")
     parser.add_argument("--batch", type=int, default=BATCH)
     args = parser.parse_args(argv)
     from app.db import engine
 
     with Session(engine()) as db:
-        for job_id in resumable(db):
-            print(job_id, advance(db, job_id, batch=max(1, min(args.batch, 5000))))
+        size = max(1, min(args.batch, 5000))
+        for job_id, kind in resumable(db, (KIND, PARAM_KIND)):
+            step = advance if kind == KIND else advance_parameters
+            print(job_id, kind, step(db, job_id, batch=size))
     return 0
+
+
+
+# --- CATEGORY-03A: resumable parameter-slot runs ------------------------------
+
+PARAM_KIND = "parameter_slots"
+
+
+def parameter_scope_query(tenant_id, scope, cursor):
+    from app.product_models import ProductClassification
+
+    query = select(SupplierProduct).where(SupplierProduct.tenant_id == tenant_id,
+                                          SupplierProduct.id > cursor)
+    if scope.get("supplier_id"):
+        query = query.where(SupplierProduct.supplier_id == scope["supplier_id"])
+    if scope.get("source_category_id"):
+        query = query.where(SupplierProduct.source_category_id == scope["source_category_id"])
+    if scope.get("navigation_node_id"):
+        query = query.join(ProductClassification, ProductClassification.product_id == SupplierProduct.id) \
+            .where(ProductClassification.navigation_node_id == scope["navigation_node_id"])
+    return query.order_by(SupplierProduct.id)
+
+
+def create_parameter_job(db, tenant_id, mode, scope, start_after):
+    from app.import_engine import run_product_limit
+
+    for old in db.scalars(select(ProductJob).where(
+            ProductJob.kind == PARAM_KIND, ProductJob.tenant_id == tenant_id,
+            ProductJob.state.in_(ACTIVE)).with_for_update()):
+        if (old.counters or {}).get("scope") == scope:
+            old.state, old.lease_until, old.task_token = "superseded", None, None
+    job = ProductJob(kind=PARAM_KIND, tenant_id=tenant_id, state="pending", cursor=start_after, counters={
+        "mode": mode, "scope": scope, "start_after_product_id": start_after,
+        "limit": run_product_limit(), "processed": 0, "has_more": False,
+        "next_start_after_product_id": None, "products_changed": 0, "products_not_ready": 0,
+        "slots": {"create": 0, "update": 0, "remove": 0, "keep": 0, "blocked_locked": 0},
+        "states": {}})
+    db.add(job)
+    db.flush()
+    return job
+
+
+def parameter_job_dto(job):
+    c = job.counters or {}
+    stalled = job.state == "running" and (job.lease_until is None or job.lease_until < now())
+    return {"id": job.id, "kind": job.kind, "state": job.state, "stalled": stalled,
+            **{k: c.get(k) for k in ("mode", "scope", "start_after_product_id", "processed", "limit",
+                                     "has_more", "next_start_after_product_id", "products_changed",
+                                     "products_not_ready", "slots", "states")},
+            "error": job.error,
+            "created_at": job.created_at.isoformat() if job.created_at else None,
+            "updated_at": job.updated_at.isoformat() if job.updated_at else None}
+
+
+def claim_kind(db, job_id, kind):
+    job = db.scalar(select(ProductJob).where(ProductJob.id == job_id).with_for_update())
+    if job is None or job.kind != kind or job.state not in ACTIVE:
+        db.rollback()
+        return None
+    if job.state == "running" and job.lease_until and job.lease_until > now():
+        db.rollback()
+        return None
+    token = secrets.token_hex(16)
+    job.state, job.task_token, job.lease_until = "running", token, now() + LEASE
+    db.commit()
+    return token
+
+
+def advance_parameters(db: Session, job_id, batch=BATCH, max_batches=None):
+    """Process a parameter run batch by batch (≤ limit products per run)."""
+    from app import product_parameters as pp
+    from app.catalog_store import active_version
+
+    token = claim_kind(db, job_id, PARAM_KIND)
+    if token is None:
+        job = db.get(ProductJob, job_id)
+        return job.state if job else "missing"
+    done = 0
+    try:
+        while max_batches is None or done < max_batches:
+            job = db.scalar(select(ProductJob).where(ProductJob.id == job_id).with_for_update())
+            if job.task_token != token or job.state != "running":
+                db.rollback()
+                return job.state
+            version = active_version(db)
+            counters = json_copy(job.counters)
+            room = counters["limit"] - counters["processed"]
+            query = parameter_scope_query(job.tenant_id, counters["scope"], job.cursor)
+            products = list(db.scalars(query.limit(min(batch, room)))) if room > 0 else []
+            if not products:
+                if room <= 0 and db.scalar(query.with_only_columns(SupplierProduct.id).limit(1)):
+                    counters["has_more"] = True
+                    counters["next_start_after_product_id"] = job.cursor
+                job.counters = counters
+                job.state, job.lease_until, job.task_token = "completed", None, None
+                db.commit()
+                return "completed"
+            catalog = pp.Catalog(db, version) if version is not None else None
+            alias_cache = {}
+            existing = pp.stored_slots(db, [p.id for p in products])
+            list(db.scalars(select(ProductClassification).where(
+                ProductClassification.product_id.in_([p.id for p in products]))))
+            for product in products:
+                inputs, slots, decisions = pp.compute(db, product, catalog, alias_cache, existing[product.id])
+                if not inputs["ready"]:
+                    counters["products_not_ready"] += 1
+                for key, value in pp.summary(decisions).items():
+                    counters["slots"][key] += value
+                for _, change, before, after in decisions:
+                    state = (after or before or {}).get("state") if change != "remove" else None
+                    if state:
+                        counters["states"][state] = counters["states"].get(state, 0) + 1
+                if counters["mode"] == "apply" and pp.apply(db, product, decisions, slots, run_id=job.id):
+                    counters["products_changed"] += 1
+                elif counters["mode"] == "preview" and any(
+                        c not in ("keep", "blocked_locked") for _, c, _, _ in decisions):
+                    counters["products_changed"] += 1
+                counters["processed"] += 1
+            job.cursor = products[-1].id
+            job.counters = counters
+            job.lease_until = now() + LEASE
+            db.commit()
+            db.expunge_all()
+            done += 1
+    except Exception:
+        db.rollback()
+        job = db.get(ProductJob, job_id)
+        if job is not None and job.task_token == token:
+            job.state, job.lease_until, job.task_token = "pending", None, None
+            job.error = "A paraméterfutás megszakadt; újraindítható."
+            db.commit()
+        raise
+    job = db.get(ProductJob, job_id)
+    if job.task_token == token:
+        job.state, job.lease_until, job.task_token = "pending", None, None
+        db.commit()
+    return job.state
+
+
+def json_copy(value):
+    import json
+
+    return json.loads(json.dumps(value))
+
+
+@celery.task(name="products.parameter_run", acks_late=True, reject_on_worker_lost=True)
+def process_parameter_job(job_id):
+    from app.db import engine
+
+    with Session(engine()) as db:
+        advance_parameters(db, job_id)
+
+
+def enqueue_parameters(job_id):
+    process_parameter_job.delay(job_id)
 
 
 if __name__ == "__main__":
