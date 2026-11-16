@@ -84,11 +84,9 @@ def downgrade():
         raise RuntimeError(
             "Parameter decisions exist; restore the verified pre-0010 backup instead of downgrading."
         )
-    op.drop_index("ix_product_parameter_emag", "product_parameter_values")
-    op.drop_index("ix_product_parameter_state", "product_parameter_values")
+    # drop_table removes the tables' own indexes; dropping them one by one first
+    # fails on MySQL (error 1553) because they back the tenant_id foreign keys.
     op.drop_table("product_parameter_values")
-    op.drop_index("ix_parameter_alias_tenant", "parameter_aliases")
-    op.drop_index("ix_parameter_alias_lookup", "parameter_aliases")
     op.drop_table("parameter_aliases")
     for code in PERMISSIONS:
         c.execute(sa.text("DELETE FROM role_permissions WHERE permission = :p"), {"p": code})
