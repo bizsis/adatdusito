@@ -92,6 +92,17 @@ def main():
             run=response(client.get(f'/api/v1/imports/runs/{first}'),200)
             assert tuple(run['analysis'][k] for k in ['physical_rows','data_rows','empty_rows'])==(4948,3,4945)
             assert len(run['analysis']['headers'])==27
+            # TEMPLATE-01: generated artifacts participate in real FK cascade deletion.
+            from app import template_engine as te
+            from app.template_models import ImportTemplate, TemplateChunk
+            with Session(engine) as db:
+                item=te.create_snapshot(db,db.get(ImportRun,first))
+                template_id=item.id
+                te.build(db,template_id)
+                assert db.get(ImportTemplate,template_id).state=='ready_for_enrichment'
+            artifact=client.get(f'/api/v1/imports/runs/{first}/templates/{template_id}/xlsx')
+            assert artifact.status_code==200 and artifact.content.startswith(b'PK')
+            ok('template_0012_mysql_generation_and_download_without_ai')
             plan=response(client.get(f'/api/v1/imports/runs/{first}/deletion'),200)
             assert plan['deletable'] and plan['deletes']['source_file_chunks']>0
             response(client.delete(f'/api/v1/imports/runs/{first}'),200)
@@ -102,6 +113,8 @@ def main():
             assert first not in {r['id'] for r in response(client.get('/api/v1/imports/runs'),200)}
             ok('counts_27_4948_3_4945_and_permanent_delete_reupload_identity')
             with Session(engine) as db:
+                assert db.get(ImportTemplate,template_id) is None
+                assert not db.scalar(select(TemplateChunk).where(TemplateChunk.template_id==template_id))
                 assert db.get(ImportRun,first) is None
                 assert db.scalar(select(func.count()).select_from(ImportChunk).where(ImportChunk.run_id==first))==0
             ok('mysql_foreign_keys_allow_safe_chunk_and_run_deletion')
@@ -145,8 +158,8 @@ def main():
             response(client.post('/api/v1/auth/logout'),204)
             response(client.delete(f'/api/v1/imports/runs/{third}'),401)
             ok('real_tenant_permission_csrf_origin_and_auth_guards')
-            with engine.connect() as conn:assert conn.scalar(text('SELECT version_num FROM alembic_version'))=='0011'
-            ok('schema_stays_at_0011_no_new_migration')
+            with engine.connect() as conn:assert conn.scalar(text('SELECT version_num FROM alembic_version'))=='0012'
+            ok('schema_at_0012_with_rc02_guards_preserved')
     finally:
         app.dependency_overrides.clear();app.dependency_overrides.update(prior);engine.dispose()
     print(json.dumps({'mysql':version,'checks':len(checks),'failed':0,'fixture':'synthetic_27_columns_3_products_4945_empty','reference_access':False}))

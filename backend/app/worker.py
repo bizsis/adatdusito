@@ -9,4 +9,4 @@ def ping():
     return "pong"
 
 # Register the supplier import and product job tasks in worker-only processes too.
-celery.conf.imports = ("app.import_engine", "app.product_jobs")
+celery.conf.imports = ("app.import_engine", "app.product_jobs", "app.template_engine")

@@ -1972,3 +1972,13 @@ fieldset.fieldless {
     max-width: 18ch;
   }
 }
+
+/* Enrichment templates keep wide source tables inside their own viewport. */
+.template-panel { min-width: 0; margin-block: 1.5rem; padding-block: 1rem; border-block: 1px solid var(--border, #dbe6e8); }
+.template-panel .table-wrap { max-width: 100%; overflow: auto; }
+.template-panel table { min-width: 36rem; }
+.template-panel td { white-space: pre-wrap; overflow-wrap: anywhere; max-width: 24rem; }
+.template-panel select, .template-panel input { max-width: 100%; }
+.template-panel details { margin-block: 1rem; }
+.template-panel label { display: grid; gap: .4rem; margin-block: 1rem; }
+.template-panel .actions { display: flex; flex-wrap: wrap; gap: .75rem; }

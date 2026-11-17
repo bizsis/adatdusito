@@ -250,3 +250,7 @@ app.include_router(workspace_views_router)
 from app.auth_logging import install_auth_log_filter
 
 install_auth_log_filter()
+
+from app.template_api import router as template_router
+
+app.include_router(template_router)
