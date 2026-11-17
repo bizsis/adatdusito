@@ -1,4 +1,4 @@
-"""Integrated 0013->0014->0015 + reference/knowledge APIs on EMPTY loopback MySQL.
+"""Integrated 0013->0014->0015->0016 + reference/knowledge APIs on EMPTY loopback MySQL.
 
 Requires an explicit fixture acknowledgement. Never use on a VPS, shared DB or
 pinfo_db. Synthetic records only. Does not drop a database or print credentials.
@@ -45,7 +45,7 @@ def main():
     cfg = Config(str(ROOT / "backend/alembic.ini"))
     cfg.set_main_option("script_location", str(ROOT / "backend/migrations"))
     command.upgrade(cfg, "0013")
-    from app.models import User, now
+    from app.models import User
     from app.unas_models import (
         ReferenceProductSource,
         ReferenceProduct,
@@ -65,21 +65,18 @@ def main():
                 superadmin=True,
             )
         )
-        db.add(
-            ReferenceProductSource(
-                id=1,
-                key="legacy-fixture",
-                name="Legacy",
-                kind="unas_export",
-                usage_status="restricted",
-                usage_basis="none",
-                enrichment_enabled=False,
-                contribution="automatic",
-                excluded_columns=[],
-            )
-        )
         db.commit()
     with db_engine.begin() as conn:
+        # Seed the 0013 schema before the current ORM's lineage_group exists.
+        conn.execute(
+            text(
+                "INSERT INTO reference_product_sources "
+                "(id, `key`, name, kind, usage_status, usage_basis, enrichment_enabled, "
+                "contribution, excluded_columns, created_at) "
+                "VALUES (1,'legacy-fixture','Legacy','unas_export','restricted','none',"
+                "0,'automatic','[]',CURRENT_TIMESTAMP)"
+            )
+        )
         conn.execute(
             text(
                 "INSERT INTO reference_import_runs(id,source_id,file_name,file_sha256,state,counters,errors,started_at) VALUES(1,1,'legacy.csv',:h,'completed',:counters,'[]',CURRENT_TIMESTAMP)"
@@ -88,8 +85,9 @@ def main():
         )
     command.upgrade(cfg, "0014")
     command.upgrade(cfg, "0015")
+    command.upgrade(cfg, "0016")
     with db_engine.connect() as conn:
-        assert conn.scalar(text("SELECT version_num FROM alembic_version")) == "0015"
+        assert conn.scalar(text("SELECT version_num FROM alembic_version")) == "0016"
         assert (
             conn.scalar(text("SELECT ui_cursor FROM reference_import_runs WHERE id=1"))
             == 0
@@ -102,10 +100,10 @@ def main():
             )
             == "7"
         )
-    print("OK 0013 -> 0014 -> 0015; legacy run preserved", flush=True)
+    print("OK 0013 -> 0014 -> 0015 -> 0016; legacy run preserved", flush=True)
     from app.main import app
     from app import api, security, knowledge as kb, knowledge_uploads as jobs
-    from app.knowledge_models import KnowledgeLink, KnowledgeValue, KnowledgeObservation
+    from app.knowledge_models import KnowledgeLink
     from fastapi.testclient import TestClient
 
     def database_fixture():
@@ -282,6 +280,8 @@ def main():
                 "OK tenant source statistics and read-only supplier history", flush=True
             )
 
+            # Exercise the original 0015 guards starting at their own schema revision.
+            command.downgrade(cfg, "0015")
             try:
                 command.downgrade(cfg, "0014")
             except RuntimeError as exc:
@@ -290,9 +290,12 @@ def main():
                 raise AssertionError("Stored uploads must prevent a downgrade")
             with Session(db_engine) as db:
                 db.execute(delete(ReferenceImportChunk))
-                db.commit()
-                value = db.scalar(select(KnowledgeValue))
-                value.verified_by = 1
+                value_id = db.scalar(text("SELECT MIN(id) FROM knowledge_values"))
+                assert value_id is not None
+                db.execute(
+                    text("UPDATE knowledge_values SET verified_by=1 WHERE id=:id"),
+                    {"id": value_id},
+                )
                 db.commit()
             command.downgrade(cfg, "0014")
             command.upgrade(cfg, "0015")
@@ -315,20 +318,21 @@ def main():
                 "OK 0015 -> 0014 -> 0015 and decision guard before any DDL", flush=True
             )
             with Session(db_engine) as db:
-                db.scalar(
-                    select(KnowledgeValue).where(KnowledgeValue.verified_by == 1)
-                ).verified_by = None
+                db.execute(
+                    text("UPDATE knowledge_values SET verified_by=NULL WHERE id=:id"),
+                    {"id": value_id},
+                )
                 db.commit()
             command.downgrade(cfg, "0013")
             command.upgrade(cfg, "head")
             with db_engine.connect() as conn:
                 assert (
                     conn.scalar(text("SELECT version_num FROM alembic_version"))
-                    == "0015"
+                    == "0016"
                 )
                 assert conn.scalar(text("SELECT COUNT(*) FROM reference_products")) == 2
             print(
-                "OK 0015 -> 0013 -> 0015; reference rows preserved; reference DB never contacted",
+                "OK 0015 -> 0013 -> 0016; reference rows preserved; reference DB never contacted",
                 flush=True,
             )
     finally:

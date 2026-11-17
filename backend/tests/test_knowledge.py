@@ -316,7 +316,7 @@ def test_0014_chain_additive_and_guarded_downgrade():
     script = ScriptDirectory.from_config(cfg)
     assert len(script.get_heads()) == 1
     chain = [r.revision for r in script.iterate_revisions(script.get_current_head(), "0010")]
-    assert chain[-5:] == ["0015", "0014", "0013", "0012", "0011"]
+    assert chain == ["0016", "0015", "0014", "0013", "0012", "0011"]
     new = {"knowledge_products", "knowledge_identities", "knowledge_links",
            "knowledge_observations", "knowledge_values", "knowledge_conflicts",
            "knowledge_events"}
