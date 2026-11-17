@@ -93,7 +93,7 @@ const issueLabels: Record<string, string> = {
 };
 const columnWarnings: Record<string, string> = {
   scientific_notation_identifier:
-    "Tudományos jelölésű azonosítók (pl. 8,71999E+12): a teljes EAN nem rekonstruálható, ezek a sorok nem kapnak EAN-t. Javítás: az Excelben a vonalkód oszlopot mentés előtt Szám (0 tizedesjegy) vagy Szöveg formátumra kell állítani, majd újra feltölteni.",
+    "Tudományos jelölésű azonosítók (pl. 8,71999E+12): a teljes EAN nem rekonstruálható, ezek a sorok nem kapnak EAN-t. Kérj új, teljes számjegyes forrásadatot. Az utólagos Excel-formázás nem állítja helyre a már elveszett számjegyeket. Csak az eredetileg is teljes azonosító megőrzésére használd a Szám (0 tizedesjegy) vagy Szöveg formátumot, majd az ellenőrzött forrásból tölts fel újra.",
   invalid_gtin_samples:
     "Érvénytelen EAN/GTIN minták: ezek a sorok nem kapnak EAN-t, a nyers érték megmarad.",
   negative_values:

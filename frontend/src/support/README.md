@@ -120,6 +120,27 @@ SMTP-/OIDC-jelszó nem rögzíthető. Külső Google- és natív passkey-ablakb�
 készítünk kitalált képet. A forrásszintű leírás mellett ez külön emberi/eszközös
 ellenőrzési pont marad.
 
-A #41/#42 még nincs ebben a vizsgált alapverzióban. Az előzménytörlést,
-kompakt importelőnézetet, UNAS-fájlgenerálást, AI-kutatást és kredit/fizetési
-folyamatot ne írd le elkészült funkcióként.
+Az önálló HELP-02 átadásban a #41/#42 még nem szerepelt. A RELEASE-CANDIDATE-02
+integrálja ezeket (#43), ezért a törlésről, kompakt előnézetről és figyelmeztetésekről
+szóló importcikkeket és képeket frissítettük. UNAS-fájlgenerálás, AI-kutatás és
+kredit/fizetés továbbra sem kész funkció. A történeti átadási leltár és a jelenlegi
+felhasználói útmutató verzióját külön kezeld.
+
+## RELEASE-CANDIDATE-02 importképek
+
+A #43 és #46 egyesítése után öt új, szintetikus képernyőkép mutatja a tényleges
+kompakt importfelületet: `rc02-oszlopok`, `rc02-elozet`, `rc02-jovahagyas`,
+`rc02-importtortenet`, `rc02-importtorles`. A korábbi képek a történeti leltárhoz
+megmaradnak; a normál importcikkek az új vezérlőket mutatják.
+
+```bash
+RC02_SCREENSHOTS=1 PYTHONPATH=backend .venv/bin/pytest -q \
+  scripts/tests/test_release_candidate02_browser.py
+```
+
+Csak az eldobható FastAPI/SQLite-fixture-ön futtatható. A 390 és 1440 px-es
+folyamatot is ellenőrzi; képet csak 1440 px-en ír. A CSV a hibajegy tényeit
+rekonstruáló `rc02_sample.synthetic_feed()`, nem az eredeti beszállítói fájl.
+A következő import-UI változtatásnál ezeket a képeket és a mezőneveket újra kell
+ellenőrizni. A teljes HELP-02 kézikönyv emberi tartalmi jóváhagyása ettől még
+nem tekinthető késznek.

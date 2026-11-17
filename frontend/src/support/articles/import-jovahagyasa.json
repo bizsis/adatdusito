@@ -86,9 +86,9 @@
     },
     {
       "type": "image",
-      "src": "/help/images/import-jovahagyas.png",
+      "src": "/help/images/rc02-jovahagyas.png",
       "alt": "Importprofil, kulcs és feed a jóváhagyási űrlapon",
-      "caption": "A véglegesítés előtt a kulcsot és a feed típusát is ellenőrizni kell."
+      "caption": "Nettó/HUF környezet mellett is külön pénzügyi jóváhagyás kell."
     },
     {
       "type": "heading",

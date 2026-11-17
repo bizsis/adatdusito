@@ -82,7 +82,13 @@
     {
       "type": "note",
       "title": "Várt eredmény",
-      "text": "Létrejön egy azonosítható importfutás; az előnézet az eredeti cellákat és értelmezést mutatja. Az alapverzió soronként JSON-t is megjelenít, 25 soros lapozással; az új kompakt #42 előnézet nem ennek a verziónak a része."
+      "text": "Létrejön egy azonosítható importfutás; az előnézet az eredeti cellákat és értelmezést mutatja. Az integrált verzió kompakt táblázatban csak a nem üres sorokat mutatja: alapból 10, választhatóan 5/10/25/50 sor oldalanként. A nyers sorok és a JSON külön, kezdetben összecsukott Technikai részletek alatt láthatók."
+    },
+    {
+      "type": "image",
+      "src": "/help/images/rc02-elozet.png",
+      "alt": "Kompakt előnézet három szintetikus termékkel és adatfigyelmeztetésekkel",
+      "caption": "4948 forrássorból 3 kitöltött; az 4945 üres sort a számláló őrzi, az előnézet nem jeleníti meg. A példában a tudományos EAN és negatív készlet is jelzést kap."
     },
     {
       "type": "image",
@@ -105,7 +111,7 @@
       "items": [
         "422: ellenőrizd a CSV/XLSX formátumot, munkalapot és fejlécet. Üres vagy sérült fájlt ne ismételj jóváhagyással.",
         "Hosszú elemzés: nézd meg a futás állapotát és hibaüzenetét. Ne tölts fel ismét ugyanazt a fájlt csak azért, mert a worker lassan indul.",
-        "Sok üres sor: az előnézet és számlálók ellenőrzése szükséges. A #42 külön importjavítását ez a kézikönyv nem állítja késznek."
+        "Sok üres sor: ellenőrizd az Összes sor, nem üres (termékjelölt) és kihagyott üres sor számlálókat. A szintetikus regressziós példában 4948 sorból 3 kitöltött és 4945 üres; az üres sorok nem lesznek termékek. A fizikailag üres sorok kihagyása mellett a forrássorszám megmarad."
       ]
     },
     {

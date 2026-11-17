@@ -1,5 +1,7 @@
 # HELP-02 – képernyő-, művelet- és tartalomleltár
 
+> Történeti HELP-02 átadási leltár (`759278c`). A #43 integrálása után az aktuális importműködést és frissített képeket a [RELEASE-CANDIDATE-02](RELEASE-CANDIDATE-02.md) jegyzőkönyv és a felület frissített importcikkei írják le. Az alábbi #41/#42-hiányok a korábbi önálló HELP-02 alapverzióra vonatkoznak.
+
 **Vizsgált alap:** `codex/help-01` / `a8fdea527053b637bd56a56cb12d9f469b3506b6`. **Munkaág:** `codex/help-02-complete-manual`. A leltár első változata a cikkek bővítése előtt, külön commitban készült. A dokumentum nem a VPS aktuális verzióját igazolja.
 
 ## Állapot és bizonyíték

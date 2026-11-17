@@ -70,21 +70,21 @@
         "A DEMO-001 termékhez készíts külön, ugyanazon beszállítói cikkszámot tartalmazó műszaki mintát.",
         "Az elemzés után válaszd a cikkszámot kulcsnak, és nézd meg a korábbi tételekkel közölt pontos mintaegyezést.",
         "A műszaki mintánál válaszd a Műszaki adatok feedet; ne jelöld Teljes terméktörzsnek.",
-        "Ha LASTINITIALCOST vagy LISTPRICE fejlécet kapsz, a beszállító leírása alapján különítsd el a beszerzési és listaárat. Eladási árat ebből ne találj ki.",
+        "A jóváhagyott forrásjelentések szerint LASTINITIALCOST = utolsó beszerzési ár, LISTPRICE = listaár; mindkettő nettó HUF. Ezek előre kiválasztva jelennek meg, a LISTPRICE nettó/HUF környezetet tölthet elő, de a pénzügyi megerősítés továbbra is kötelező. Eladási árat egyikből sem következtetünk.",
         "A BARCODE tudományos jelölését, például 8,71999E+12 értéket az eredeti teljes vonalkóddal ellenőrizd. A hiányzó számjegy nem állítható helyre biztosan.",
-        "Negatív QUANTITY esetén tisztázd a jelentést; ne fordítsd pozitív eladható készletté. Az alapverzióban ezeket külön felül kell vizsgálni."
+        "Negatív QUANTITY esetén tisztázd a jelentést; ne fordítsd pozitív eladható készletté. A negatív érték változatlanul megmarad, figyelmeztetéssel; nem válik pozitív eladható készletté."
       ]
     },
     {
       "type": "note",
       "title": "Várt eredmény",
-      "text": "A tudatos kulcsválasztás megakadályozza a hasonló nevű termékek összekeverését. A #42 szélhelyzet-javítások nem kerülnek automatikusan ebbe az alapverzióba; bizonytalan pénzügyi/GTIN adatot ne hagyj jóvá."
+      "text": "A tudatos kulcsválasztás megakadályozza a hasonló nevű termékek összekeverését. Az integrált változat külön figyelmeztetést mutat a tudományos vagy hibás GTIN-re és a negatív készletre. A tudományos azonosítót nem menti érvényes GTIN-ként; új, teljes számjegyes forrás kell. Az utólagos Excel-formázás nem állítja helyre az elveszett számjegyeket."
     },
     {
       "type": "image",
-      "src": "/help/images/import-jovahagyas.png",
+      "src": "/help/images/rc02-jovahagyas.png",
       "alt": "Kulcs, feed és pénzügyi értelmezés a jóváhagyás előtt",
-      "caption": "Nincs kulcs esetén soronként külön tétel készül."
+      "caption": "Nettó/HUF környezet mellett is külön pénzügyi jóváhagyás kell."
     },
     {
       "type": "heading",

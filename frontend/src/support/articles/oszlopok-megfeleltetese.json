@@ -88,9 +88,14 @@
     },
     {
       "type": "image",
-      "src": "/help/images/oszlopok.png",
+      "src": "/help/images/rc02-oszlopok.png",
       "alt": "Forrásoszlopok és belső mezők megfeleltetési táblázata",
-      "caption": "A mintacella segít eldönteni, hogy a felismert jelentés helyes-e."
+      "caption": "Integrált megfeleltetés: megerősített beszerzési/listaár és külön adatfigyelmeztetések."
+    },
+    {
+      "type": "note",
+      "title": "Megerősített pénzügyi jelentés",
+      "text": "LASTINITIALCOST: utolsó beszerzési ár. LISTPRICE: listaár. Mindkettő nettó HUF; az integrált változat ezeket előre kiválasztja, de külön pénzügyi megerősítést kér. Más pénzösszeg-fejlécnél a Döntés szükséges javaslatot kézzel kell ellenőrizni. Egyikből sem következik automatikus eladási ár."
     },
     {
       "type": "heading",

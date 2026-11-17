@@ -323,24 +323,71 @@ test("coverage inventory links every real menu and article to existing source ev
       a.id,
     );
   }
-  assert.ok(coverage.filter((r) => r.status === "unavailable").length >= 4);
+  const missing = coverage.filter((r) => r.status === "unavailable");
+  assert.deepEqual(
+    new Set(missing.map((r) => r.screen)),
+    new Set(["UNAS fájlgenerálás", "AI-kutatás/kredit/fizetés"]),
+  );
+  assert.ok(
+    coverage.some(
+      (r) =>
+        r.screen.includes("Biztonságos törlés") && r.status === "documented",
+    ),
+  );
 });
 
 test("every sidebar page in the actual application has an inventory row", async () => {
-  const source=await readFile('src/main.tsx','utf8');
-  const tree=ts.createSourceFile('main.tsx',source,ts.ScriptTarget.Latest,true,ts.ScriptKind.TSX);
-  const coverage=JSON.parse(await readFile('src/support/coverage.json','utf8'));
+  const source = await readFile("src/main.tsx", "utf8");
+  const tree = ts.createSourceFile(
+    "main.tsx",
+    source,
+    ts.ScriptTarget.Latest,
+    true,
+    ts.ScriptKind.TSX,
+  );
+  const coverage = JSON.parse(
+    await readFile("src/support/coverage.json", "utf8"),
+  );
   let pages;
   function walk(node) {
-    if(ts.isVariableDeclaration(node) && ts.isIdentifier(node.name) && node.name.text==='pages') pages=node.initializer;
-    ts.forEachChild(node,walk);
+    if (
+      ts.isVariableDeclaration(node) &&
+      ts.isIdentifier(node.name) &&
+      node.name.text === "pages"
+    )
+      pages = node.initializer;
+    ts.forEachChild(node, walk);
   }
-  walk(tree);assert.ok(pages);
-  const labels=[];
+  walk(tree);
+  assert.ok(pages);
+  const labels = [];
   function entries(node) {
-    if(ts.isArrayLiteralExpression(node) && node.elements.length===3 && node.elements.every(ts.isStringLiteral)) labels.push(node.elements[2].text);
-    ts.forEachChild(node,entries);
+    if (
+      ts.isArrayLiteralExpression(node) &&
+      node.elements.length === 3 &&
+      node.elements.every(ts.isStringLiteral)
+    )
+      labels.push(node.elements[2].text);
+    ts.forEachChild(node, entries);
   }
-  entries(pages);assert.ok(labels.length>=10);
-  for(const label of labels) assert.ok(coverage.some(r=>r.screen.includes(label)),`undocumented actual menu: ${label}`);
+  entries(pages);
+  assert.ok(labels.length >= 10);
+  for (const label of labels)
+    assert.ok(
+      coverage.some((r) => r.screen.includes(label)),
+      `undocumented actual menu: ${label}`,
+    );
+});
+
+test("integrated import manual describes delivered controls and safe source repair", () => {
+  const body = (id) => model.articleText(articles.find((a) => a.id === id));
+  assert.ok(body("import-elozmenyek-hibak").includes("vegleges torles"));
+  assert.ok(body("import-elozmenyek-hibak").includes("imports.manage"));
+  assert.ok(!body("import-elozmenyek-hibak").includes("nem kinal megszakitas"));
+  assert.ok(body("csv-xlsx-feltoltes").includes("5/10/25/50"));
+  const finance = body("import-kulcsok-penzugy");
+  assert.ok(finance.includes("lastinitialcost") && finance.includes("listaar"));
+  assert.ok(
+    finance.includes("netto huf") && finance.includes("elveszett szamjegyeket"),
+  );
 });

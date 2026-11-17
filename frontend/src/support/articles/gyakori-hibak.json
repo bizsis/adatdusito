@@ -103,7 +103,7 @@
       "items": [
         "Ha továbbra sem egyértelmű: ne törölj adatot a helyreállítás kedvéért; az adminisztrátor vizsgálja a naplót.",
         "Képernyőkép előtt rejtsd el a személyes adatokat és titkokat. TOTP/QR, helyreállítási kód, meghívólink vagy token nem kérhető támogatási bizonyítékként.",
-        "Ismert hiányok: nincs kész UNAS-fájlgenerálás, AI-kutatás/kredit/fizetés. A #41/#42 külön importjavításokat ez az alapverzió nem tartalmazza."
+        "Ismert hiányok: nincs kész UNAS-fájlgenerálás, AI-kutatás/kredit/fizetés. A RELEASE-CANDIDATE-02 tartalmazza a #43 importjavításait: biztonságos feldolgozatlan-importtörlés és kompakt előnézet. A feldolgozott import továbbra sem törölhető."
       ]
     },
     {

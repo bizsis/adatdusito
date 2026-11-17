@@ -107,6 +107,7 @@
     "browser_evidence": "scripts/tests/test_help_manual_browser.py; scripts/tests/test_help_browser.py",
     "review": "awaiting_human_content_review",
     "images": [
+      "/help/images/rc02-elozet.png",
       "/help/images/fajlbeallitasok.png",
       "/help/images/feltoltes.png"
     ],
@@ -124,7 +125,7 @@
     "review": "awaiting_human_content_review",
     "images": [
       "/help/images/fajlbeallitasok.png",
-      "/help/images/oszlopok.png"
+      "/help/images/rc02-oszlopok.png"
     ],
     "evidence_scope": "forrásellenőrzés + képernyő/vezérlő megnyitás; nem minden adminisztratív írási művelet E2E-tesztje"
   },
@@ -139,7 +140,7 @@
     "browser_evidence": "scripts/tests/test_help_manual_browser.py; scripts/tests/test_help_browser.py",
     "review": "awaiting_human_content_review",
     "images": [
-      "/help/images/import-jovahagyas.png"
+      "/help/images/rc02-jovahagyas.png"
     ],
     "evidence_scope": "forrásellenőrzés + képernyő/vezérlő megnyitás; nem minden adminisztratív írási művelet E2E-tesztje"
   },
@@ -154,7 +155,7 @@
     "browser_evidence": "scripts/tests/test_help_manual_browser.py; scripts/tests/test_help_browser.py",
     "review": "awaiting_human_content_review",
     "images": [
-      "/help/images/import-jovahagyas.png"
+      "/help/images/rc02-jovahagyas.png"
     ],
     "evidence_scope": "forrásellenőrzés + képernyő/vezérlő megnyitás; nem minden adminisztratív írási művelet E2E-tesztje"
   },
@@ -169,7 +170,8 @@
     "browser_evidence": "scripts/tests/test_help_manual_browser.py; scripts/tests/test_help_browser.py",
     "review": "awaiting_human_content_review",
     "images": [
-      "/help/images/fajlbeallitasok.png"
+      "/help/images/rc02-importtortenet.png",
+      "/help/images/rc02-importtorles.png"
     ],
     "evidence_scope": "forrásellenőrzés + képernyő/vezérlő megnyitás; nem minden adminisztratív írási művelet E2E-tesztje"
   },
@@ -564,27 +566,36 @@
   },
   {
     "article": "import-elozmenyek-hibak",
-    "screen": "#41 Import UX-javítás",
-    "access": "nem elérhető a vizsgált alapverzióban",
+    "screen": "Beszállítói import / Biztonságos törlés és importtörténet",
+    "access": "imports.read; törlés: imports.manage; megszakítás: imports.cancel",
     "source": "ImportWorkspace.tsx",
-    "api": "—",
-    "actions": "Tartós futástörténet-törlés; kompakt történet; awaiting_approval megszakítás",
-    "status": "unavailable",
+    "api": "import_api.py",
+    "actions": "Kompakt lista; megerősített feldolgozatlan-importtörlés; awaiting_approval megszakítás",
+    "status": "documented",
     "browser_evidence": "scripts/tests/test_help_manual_browser.py; scripts/tests/test_help_browser.py",
     "review": "awaiting_human_content_review",
-    "evidence_scope": "forrásellenőrzés + képernyő/vezérlő megnyitás; nem minden adminisztratív írási művelet E2E-tesztje"
+    "evidence_scope": "forrásellenőrzés + képernyő/vezérlő megnyitás; nem minden adminisztratív írási művelet E2E-tesztje",
+    "images": [
+      "/help/images/rc02-importtortenet.png",
+      "/help/images/rc02-importtorles.png"
+    ]
   },
   {
     "article": "csv-xlsx-feltoltes",
-    "screen": "#42 Import előnézet-javítás",
-    "access": "nem elérhető a vizsgált alapverzióban",
+    "screen": "Beszállítói import / Kompakt előnézet és figyelmeztetések",
+    "access": "imports.read; jóváhagyás: imports.approve",
     "source": "ImportWorkspace.tsx",
-    "api": "—",
-    "actions": "5/10/25/50 soros kompakt forráselőnézet; pénzügyi és GTIN szélhelyzetek",
-    "status": "unavailable",
+    "api": "import_api.py",
+    "actions": "5/10/25/50 nem üres sor; technikai részletek külön; pénz/EAN/negatív készlet",
+    "status": "documented",
     "browser_evidence": "scripts/tests/test_help_manual_browser.py; scripts/tests/test_help_browser.py",
     "review": "awaiting_human_content_review",
-    "evidence_scope": "forrásellenőrzés + képernyő/vezérlő megnyitás; nem minden adminisztratív írási művelet E2E-tesztje"
+    "evidence_scope": "forrásellenőrzés + képernyő/vezérlő megnyitás; nem minden adminisztratív írási művelet E2E-tesztje",
+    "images": [
+      "/help/images/rc02-elozet.png",
+      "/help/images/fajlbeallitasok.png",
+      "/help/images/feltoltes.png"
+    ]
   },
   {
     "article": "exportprofilok",
@@ -596,7 +607,10 @@
     "status": "unavailable",
     "browser_evidence": "scripts/tests/test_help_manual_browser.py; scripts/tests/test_help_browser.py",
     "review": "awaiting_human_content_review",
-    "evidence_scope": "forrásellenőrzés + képernyő/vezérlő megnyitás; nem minden adminisztratív írási művelet E2E-tesztje"
+    "evidence_scope": "forrásellenőrzés + képernyő/vezérlő megnyitás; nem minden adminisztratív írási művelet E2E-tesztje",
+    "images": [
+      "/help/images/exportprofil.png"
+    ]
   },
   {
     "article": "elokeszitesi-jovahagyas",
@@ -608,6 +622,11 @@
     "status": "unavailable",
     "browser_evidence": "scripts/tests/test_help_manual_browser.py; scripts/tests/test_help_browser.py",
     "review": "awaiting_human_content_review",
-    "evidence_scope": "forrásellenőrzés + képernyő/vezérlő megnyitás; nem minden adminisztratív írási művelet E2E-tesztje"
+    "evidence_scope": "forrásellenőrzés + képernyő/vezérlő megnyitás; nem minden adminisztratív írási művelet E2E-tesztje",
+    "images": [
+      "/help/images/elokeszitesi-ellenorzes.png",
+      "/help/images/elokeszitesi-megerosites.png",
+      "/help/images/elokeszitesi-jovahagyas.png"
+    ]
   }
 ]
