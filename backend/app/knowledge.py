@@ -540,7 +540,7 @@ def sync_texts(db, link, source, texts, ctx):
                 format="html" if signals.TAG.search(text) else "plain", language=language,
                 language_confidence=confidence, language_method="heuristic",
                 verification="unverified", usage="inherited",
-                pii_flags=signals.pii_flags(text), current=True))
+                pii_flags=signals.pii_flags(text) or None, current=True))
         changed += 1
     return changed
 
@@ -591,12 +591,20 @@ def rebuild(db, source_id=None, tenant_id=None, batch=200, recompute=False):
             if value != obs.confidence:
                 obs.confidence = value
                 counters["recomputed"] += 1
-            touched.add((obs.knowledge_product_id, obs.attribute_key))
+            if i % 1000 == 0:
+                db.commit()
+        db.commit()
+        # Every value once (cap or source families may have changed even where no single
+        # claim did); committed in batches.
+        pairs = set(db.execute(select(KnowledgeValue.knowledge_product_id,
+                                      KnowledgeValue.attribute_key)).all())
+        pairs |= set(db.execute(select(KnowledgeObservation.knowledge_product_id,
+                                       KnowledgeObservation.attribute_key)
+                                .where(KnowledgeObservation.current.is_(True))).all())
+        for i, pair in enumerate(sorted(pairs), 1):
+            touched.add(pair)
             if i % 1000 == 0:
                 flush_touched()
-        for product_id, key in db.execute(select(KnowledgeValue.knowledge_product_id,
-                                                 KnowledgeValue.attribute_key)):
-            touched.add((product_id, key))
         flush_touched()
         return counters
 

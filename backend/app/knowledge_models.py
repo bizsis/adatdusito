@@ -92,7 +92,8 @@ class KnowledgeObservation(Base):
     superseded_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
     # KNOWLEDGE-02 (0016): recompute basis and personal-data hold.
     identity_confidence: Mapped[Decimal | None] = mapped_column(Numeric(5, 4), nullable=True)
-    pii_flags: Mapped[list | None] = mapped_column(JSON, nullable=True)
+    # SQL NULL (not JSON null) when nothing was found, so "IS NOT NULL" selects the holds.
+    pii_flags: Mapped[list | None] = mapped_column(JSON(none_as_null=True), nullable=True)
     pii_reviewed_by: Mapped[int | None] = mapped_column(Integer, nullable=True)
     pii_reviewed_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
 
@@ -217,7 +218,7 @@ class KnowledgeText(Base):
     verification: Mapped[str] = mapped_column(String(16), default="unverified")
     # inherited | reuse_allowed | internal_only | restricted
     usage: Mapped[str] = mapped_column(String(16), default="inherited")
-    pii_flags: Mapped[list] = mapped_column(JSON, default=list)
+    pii_flags: Mapped[list | None] = mapped_column(JSON(none_as_null=True), nullable=True)
     pii_reviewed_by: Mapped[int | None] = mapped_column(ForeignKey("users.id"), nullable=True)
     pii_reviewed_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
     current: Mapped[bool] = mapped_column(Boolean, default=True)

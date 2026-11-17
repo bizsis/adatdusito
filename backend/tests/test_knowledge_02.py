@@ -133,6 +133,8 @@ def test_recompute_applies_new_trust_and_threshold(two_copies):
         configure(db, trust_reference=0.3)
         counters = kb.rebuild(db, recompute=True)
         assert counters["recomputed"] > 0
+        # Each value consolidated exactly once.
+        assert counters["values"] == db.scalar(select(func.count()).select_from(KnowledgeValue))
         db.refresh(obs)
         assert obs.confidence == Decimal("0.3")
         assert kb.rebuild(db, recompute=True)["recomputed"] == 0  # idempotent
@@ -296,6 +298,11 @@ def test_personal_data_is_held_from_shared_knowledge_and_ai_until_reviewed(impor
         assert kb.enrichment_plan(db, ["unas:anyag"], gtin=EAN_C,
                                   texts=("long_description",))["texts_available"] == {}
         obs_id, text_id = obs.id, held.id
+        # Nothing found = SQL NULL (not JSON null): the hold queries page over holds only.
+        for model in (KnowledgeObservation, KnowledgeText):
+            assert db.scalar(select(func.count()).select_from(model).where(
+                model.pii_flags.is_not(None))) == 1
+        assert db.scalar(text("SELECT COUNT(*) FROM knowledge_texts WHERE pii_flags IS NULL"))
     login(client, "admin@example.hu")
     assert client.get("/api/v1/knowledge/pii-holds").status_code == 403
     login(client)

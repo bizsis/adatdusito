@@ -81,7 +81,7 @@ def upgrade():
         sa.Column("language_method", sa.String(16), nullable=False),
         sa.Column("verification", sa.String(16), nullable=False),
         sa.Column("usage", sa.String(16), nullable=False),
-        sa.Column("pii_flags", sa.JSON(), nullable=False),
+        sa.Column("pii_flags", sa.JSON(), nullable=True),  # NULL: nothing found
         sa.Column("pii_reviewed_by", sa.Integer(), sa.ForeignKey("users.id"), nullable=True),
         sa.Column("pii_reviewed_at", sa.DateTime(), nullable=True),
         sa.Column("current", sa.Boolean(), nullable=False),

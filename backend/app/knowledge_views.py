@@ -529,14 +529,13 @@ def pii_holds(offset: int = Query(0, ge=0), who=Depends(require("reference.manag
                         KnowledgeObservation.current.is_(True),
                         KnowledgeObservation.pii_flags.is_not(None),
                         KnowledgeObservation.pii_reviewed_by.is_(None))
-                        .order_by(KnowledgeObservation.id).offset(offset).limit(100))
-                    if o.pii_flags]
+                        .order_by(KnowledgeObservation.id).offset(offset).limit(100))]
     held_texts = [{"type": "text", "id": t.id, "knowledge_product_id": t.knowledge_product_id,
                    "kind": t.kind, "pii_flags": t.pii_flags, "source_id": t.source_id}
                   for t in db.scalars(select(KnowledgeText).where(
-                      KnowledgeText.current.is_(True), KnowledgeText.pii_reviewed_by.is_(None))
-                      .order_by(KnowledgeText.id).offset(offset).limit(500))
-                  if t.pii_flags]
+                      KnowledgeText.current.is_(True), KnowledgeText.pii_flags.is_not(None),
+                      KnowledgeText.pii_reviewed_by.is_(None))
+                      .order_by(KnowledgeText.id).offset(offset).limit(100))]
     return {"observations": observations, "texts": held_texts}
 
 
