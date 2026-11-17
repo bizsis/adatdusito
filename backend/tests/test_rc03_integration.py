@@ -5,6 +5,8 @@ The mappings below are test-only (they exercise the three placement paths), not 
 decisions."""
 
 import csv
+
+import pytest
 import io
 
 from openpyxl import load_workbook
@@ -17,6 +19,14 @@ from test_import_templates import download, generate, source, templates  # noqa:
 from test_supplier_import import imports  # noqa: F401
 from test_product_parameters import VACUUM, WASHER, install_catalog
 from test_unas_reference import ROWS, export
+
+
+@pytest.fixture(autouse=True)
+def no_knowledge_broker(monkeypatch):
+    """KNOWLEDGE-01 schedules a rebuild after an import; tests have no Celery broker."""
+    from app import knowledge
+
+    monkeypatch.setattr(knowledge, "schedule", lambda **kw: None)
 
 
 def approve(db, category, parameter, name, *, unas_parameter=None, unas_field=None):
