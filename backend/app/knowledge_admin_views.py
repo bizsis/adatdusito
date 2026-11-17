@@ -6,12 +6,14 @@ from datetime import timedelta
 
 from fastapi import APIRouter, Depends, File, Form, HTTPException, Query, UploadFile
 from pydantic import BaseModel, ConfigDict, Field
-from sqlalchemy import select, func, or_
+from sqlalchemy import select, func, or_, case
 from sqlalchemy.orm import Session
 
 from app.security import require, database, audit
 from app.access_control import is_system
 from app.models import Audit, Tenant, now
+from app.import_models import SupplierProduct, ImportRun
+from app.product_models import ProductParameterValue
 from app.unas_models import (
     ReferenceProductSource,
     ReferenceProduct,
@@ -57,6 +59,7 @@ def run_dto(run):
     analysis = conf.get("analysis", {})
     mapping = conf.get("mapping", {})
     return {
+        "engine": "reference",
         "id": run.id,
         "source_id": run.source_id,
         "file_name": run.file_name,
@@ -88,13 +91,82 @@ def run_dto(run):
     }
 
 
+def supplier_run_dto(run, source_id):
+    # These IDs belong to supplier imports, not reference_import_runs. Only safe
+    # metadata is returned; no raw rows, private settings or exception bodies.
+    return {
+        "engine": "supplier",
+        "id": run.id,
+        "source_id": source_id,
+        "file_name": run.filename,
+        "state": run.state,
+        "counters": {**run.counters, "errors": run.counters.get("error", 0)},
+        "errors": [],
+        "started_at": run.created_at,
+        "finished_at": (
+            run.updated_at
+            if run.state in ("completed", "partial", "failed", "cancelled")
+            else None
+        ),
+        "cursor": run.cursor,
+        "uploaded": False,
+        "retryable": False,
+        "headers": [],
+        "mapping": {},
+        "preview": [],
+        "parser": {},
+    }
+
+
+def supplier_statistics(db, tenant_id):
+    name = SupplierProduct.data["name"].as_string()
+    gtin = SupplierProduct.data["gtin"].as_string()
+    # The supplier importer stores only validated GTINs in its normalized data.
+    total, names, valid = db.execute(
+        select(
+            func.count(),
+            func.sum(case((name.is_not(None) & (name != ""), 1), else_=0)),
+            func.sum(case((gtin.is_not(None) & (gtin != ""), 1), else_=0)),
+        ).where(SupplierProduct.tenant_id == tenant_id)
+    ).one()
+    params, attrs = db.execute(
+        select(
+            func.count(func.distinct(ProductParameterValue.emag_parameter_id)),
+            func.count(),
+        )
+        .join(SupplierProduct, SupplierProduct.id == ProductParameterValue.product_id)
+        .where(
+            SupplierProduct.tenant_id == tenant_id,
+            ProductParameterValue.state == "present",
+            ProductParameterValue.slot_key.like("emag:%"),
+        )
+    ).one()
+    updated = db.scalar(
+        select(func.max(ImportRun.updated_at))
+        .join(SupplierProduct, SupplierProduct.last_run_id == ImportRun.id)
+        .where(SupplierProduct.tenant_id == tenant_id)
+    )
+    last = db.scalar(
+        select(ImportRun)
+        .where(ImportRun.tenant_id == tenant_id)
+        .order_by(ImportRun.id.desc())
+        .limit(1)
+    )
+    return total, updated, 0, names or 0, valid or 0, params, attrs, last
+
+
 def source_dto(db, source):
     total, last_update, verified, names = db.execute(
         select(
             func.count(),
             func.max(ReferenceProduct.updated_at),
-            func.sum(ReferenceProduct.verification != "unverified"),
-            func.sum(ReferenceProduct.name.is_not(None)),
+            func.sum(
+                case(
+                    (ReferenceProduct.verification.in_(("verified", "approved")), 1),
+                    else_=0,
+                )
+            ),
+            func.sum(case((ReferenceProduct.name.is_not(None), 1), else_=0)),
         ).where(ReferenceProduct.source_id == source.id)
     ).one()
     valid = (
@@ -129,6 +201,12 @@ def source_dto(db, source):
         .order_by(ReferenceImportRun.id.desc())
         .limit(1)
     )
+    last_dto = run_dto(last) if last else None
+    if source.kind == "tenant_import" and source.tenant_id is not None:
+        total, last_update, verified, names, valid, params, attrs, supplier_last = (
+            supplier_statistics(db, source.tenant_id)
+        )
+        last_dto = supplier_run_dto(supplier_last, source.id) if supplier_last else None
     return {
         "id": source.id,
         "key": source.key,
@@ -140,8 +218,8 @@ def source_dto(db, source):
         "attribute_values": attrs,
         "imported_at": source.created_at,
         "updated_at": last_update,
-        "state": last.state if last else "empty",
-        "last_import": run_dto(last) if last else None,
+        "state": last_dto["state"] if last_dto else "empty",
+        "last_import": last_dto,
         "usage_status": source.usage_status,
         "enrichment_enabled": source.enrichment_enabled,
         "usage_basis": source.usage_basis,
@@ -287,7 +365,26 @@ def history(
     who=Depends(administrator),
     db: Session = Depends(database),
 ):
-    get_source(db, id)
+    source = get_source(db, id)
+    if source.kind == "tenant_import" and source.tenant_id is not None:
+        where = ImportRun.tenant_id == source.tenant_id
+        return {
+            "items": [
+                supplier_run_dto(r, id)
+                for r in db.scalars(
+                    select(ImportRun)
+                    .where(where)
+                    .order_by(ImportRun.id.desc())
+                    .offset(offset)
+                    .limit(limit)
+                )
+            ],
+            "total": db.scalar(
+                select(func.count()).select_from(ImportRun).where(where)
+            ),
+            "offset": offset,
+            "limit": limit,
+        }
     return {
         "items": [
             run_dto(r)

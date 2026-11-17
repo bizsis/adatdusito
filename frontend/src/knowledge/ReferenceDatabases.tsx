@@ -4,6 +4,7 @@ import "./knowledge.css";
 type Request = <T>(url: string, method?: string, body?: unknown) => Promise<T>;
 type Page<T> = { items: T[]; total: number; offset: number; limit: number };
 type Run = {
+  engine?: "reference" | "supplier";
   id: number;
   source_id: number;
   file_name: string;
@@ -58,6 +59,10 @@ type Audit = {
   details: { run_id?: number };
 };
 const states: Record<string, string> = {
+  uploaded: "Feltöltve",
+  awaiting_approval: "Jóváhagyásra vár",
+  processing: "Feldolgozás alatt",
+  paused: "Szüneteltetve",
   empty: "Még nincs import",
   queued: "Elemzésre vár",
   analyzing: "Elemzés alatt",
@@ -120,6 +125,7 @@ const kindLabels: Record<string, string> = {
   csv: "CSV",
   xlsx: "XLSX",
   unas_export: "UNAS-export",
+  tenant_import: "Ügyfélimport",
 };
 const active = (state: string) =>
   ["queued", "analyzing", "queued_import", "converting", "running"].includes(
@@ -772,10 +778,18 @@ export default function ReferenceDatabases({ api }: { api: Request }) {
                 </form>
               </details>
               <h3>Importelőzmények</h3>
+              {selected.kind === "tenant_import" && (
+                <p>
+                  A beszállítói importok összesítője itt olvasható. A
+                  forrássorok és műveletek az ügyfél Beszállítói import
+                  munkaterületén érhetők el.
+                </p>
+              )}
               <ul className="knowledge-history">
                 {history?.items.map((item) => (
                   <li key={item.id}>
                     <button
+                      disabled={item.engine === "supplier"}
                       onClick={() =>
                         void act(async () =>
                           showRun(

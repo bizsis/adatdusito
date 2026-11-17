@@ -98,3 +98,9 @@ Az integrált futásban nincs `-k` szűrés vagy migrációs tesztkihagyás. A k
 A `scripts/mysql_knowledge_ui_check.py` kizárólag üres, loopback MySQL 8.0 tesztadatbázist fogad, `KNOWLEDGE_UI_FIXTURE_ACK=isolated-knowledge-ui-01` megjelöléssel. A CI külön eldobható szolgáltatáson futtatja, a régi RC02- és migrációs próbák mellett. Ellenőrzi a 0013-as rekord megőrzését, a webes feltöltést, az ismételhetőséget, a tényleges KNOWLEDGE-01 újraépítést, a feltöltésvédelmet, a több lépéses downgrade előtti döntésvédelmet és az `0015→0014→0015`, `0015→0013→0015` köröket. Nem VPS-telepítési parancs.
 
 Telepítés kizárólag tulajdonosi jóváhagyás és mentés után: a teljes migrációs lánc sorrendben futtatandó, majd a backend/worker/frontend frissítendő. Ebben a munkában sem VPS-telepítés, sem main-/RC-03-merge nem történt.
+
+## Ügyfélforrások tényleges statisztikája
+
+A motor `tenant_import` típusú forrásánál a termékek és minőségi számlálók a `supplier_products`, a paraméterszám a kitöltött eMAG `product_parameter_values` rekordokból jön. A forrás feltöltési előzményei az eredeti `ImportRun` összesítői, `engine=supplier` megkülönböztetéssel; csak állapot/számláló/időpont adatok, nyers sor, ár, készlet és beállítás nélkül. Ezek az előzmények a referenciaadminban csak olvashatók; műveleteik az ügyfél eredeti importmunkaterületén érhetők el. A referenciafeltöltések `engine=reference` jelölésűek, az importazonosítók két tartományát a felület nem keveri.
+
+A minőségi összesítések számai explicit egészértékű SQL `CASE` összegzéssel készülnek, nem logikai `SUM` eredményként: több érvényes/named rekord nem válhat `true` értékké.

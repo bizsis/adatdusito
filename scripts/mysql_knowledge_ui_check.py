@@ -200,6 +200,88 @@ def main():
                     == 2
                 )
             print("OK repeat import is duplicate-free", flush=True)
+            # A KNOWLEDGE tenant source represents supplier records, not reference rows.
+            from app.models import Tenant
+            from app.import_models import Supplier, SupplierProduct, ImportRun
+            from app.product_models import ProductParameterValue
+
+            with Session(db_engine) as db:
+                db.add(Tenant(id=1, name="Synthetic tenant"))
+                db.flush()
+                db.add(Supplier(id=1, tenant_id=1, name="Synthetic supplier"))
+                db.flush()
+                db.add(
+                    ImportRun(
+                        id=1,
+                        tenant_id=1,
+                        supplier_id=1,
+                        filename="supplier.csv",
+                        state="completed",
+                        config={},
+                        analysis={},
+                        counters={"ready": 3},
+                    )
+                )
+                db.flush()
+                for number, code in enumerate(["5201137061819", "5904517345546", None]):
+                    db.add(
+                        SupplierProduct(
+                            id=100 + number,
+                            tenant_id=1,
+                            supplier_id=1,
+                            identity_key=str(number),
+                            data={
+                                "sku": str(number),
+                                "name": f"Supplier product {number}",
+                                "gtin": code,
+                                "brand": "Acme",
+                            },
+                            last_run_id=1,
+                            last_line=number + 2,
+                        )
+                    )
+                db.flush()
+                db.add(
+                    ProductParameterValue(
+                        product_id=100,
+                        tenant_id=1,
+                        slot_key="emag:6511",
+                        emag_parameter_id=6511,
+                        name="Width",
+                        state="present",
+                        origin="source",
+                        reason_codes=[],
+                        details={},
+                        rule_version="fixture",
+                        value="600",
+                        unit="mm",
+                    )
+                )
+                db.commit()
+                kb.rebuild(db, tenant_id=1)
+                tenant_source = db.scalar(
+                    select(ReferenceProductSource.id).where(
+                        ReferenceProductSource.kind == "tenant_import"
+                    )
+                )
+            tenant_stats = client.get(prefix + f"/sources/{tenant_source}").json()
+            assert tenant_stats["products"] == 3 and tenant_stats["parameters"] == 1
+            assert (
+                tenant_stats["quality"]["valid_gtin_products"] == 2
+                and tenant_stats["quality"]["with_name"] == 3
+            )
+            tenant_history = client.get(
+                prefix + f"/sources/{tenant_source}/imports"
+            ).json()
+            assert (
+                tenant_history["total"] == 1
+                and tenant_history["items"][0]["engine"] == "supplier"
+            )
+            assert tenant_history["items"][0]["preview"] == []
+            print(
+                "OK tenant source statistics and read-only supplier history", flush=True
+            )
+
             try:
                 command.downgrade(cfg, "0014")
             except RuntimeError as exc:

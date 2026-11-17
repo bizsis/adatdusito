@@ -343,3 +343,25 @@ def test_0014_chain_additive_and_guarded_downgrade():
             with pytest.raises(RuntimeError, match="backup"):
                 migration.downgrade()
 
+
+
+def test_admin_tenant_source_reports_supplier_counts_and_safe_history(world):
+    client, target = world
+    with Session(target) as db:
+        set_parameter(db, "T-1", "600")
+        kb.rebuild(db)
+        source = db.scalar(select(ReferenceProductSource).where(ReferenceProductSource.kind == "tenant_import"))
+        source_id = source.id
+    login(client)
+    source = client.get(f"/api/v1/knowledge-admin/sources/{source_id}").json()
+    assert source["products"] == 3
+    assert source["parameters"] == 1 and source["attribute_values"] == 1
+    assert source["quality"]["valid_gtin_products"] == 2
+    assert source["quality"]["with_name"] == 3
+    assert source["last_import"]["engine"] == "supplier"
+    history = client.get(f"/api/v1/knowledge-admin/sources/{source_id}/imports").json()
+    assert history["total"] == 1
+    row = history["items"][0]
+    assert row["engine"] == "supplier" and not row["uploaded"] and not row["retryable"]
+    assert row["preview"] == [] and row["parser"] == {}
+    assert "199990" not in str(row) and "49990" not in str(row)

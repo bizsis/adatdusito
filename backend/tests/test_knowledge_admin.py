@@ -84,6 +84,7 @@ def test_csv_recognition_privacy_preview_stats_and_lookup(admin):
     source = c.get(BASE + f"/sources/{run['source_id']}").json()
     assert source["products"] == 2 and source["parameters"] == 2
     assert source["quality"]["valid_gtin_products"] == 2
+    assert source["quality"]["with_name"] == 2
     assert source["contribution"] == "automatic"
     with Session(target) as db:
         p = db.scalar(
