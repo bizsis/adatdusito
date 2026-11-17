@@ -37,6 +37,14 @@ SCHEMA = "unas_export/teszt-unas-hu/20261117-084322"
 H = {h: i for i, h in enumerate(UNAS_HEADERS)}
 
 
+@pytest.fixture(autouse=True)
+def no_knowledge_broker(monkeypatch):
+    """KNOWLEDGE-01 schedules a rebuild after an import; tests have no Celery broker."""
+    from app import knowledge
+
+    monkeypatch.setattr(knowledge, "schedule", lambda **kw: None)
+
+
 def row(**values):
     cells = [None] * len(UNAS_HEADERS)
     for header, value in values.items():

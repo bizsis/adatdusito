@@ -396,6 +396,8 @@ def enqueue_parameters(job_id):
 # CATEGORY-03C: register the bulk-operation Celery task wherever product jobs are
 # loaded (the worker imports this module), without another worker.py change.
 from app import bulk_operations  # noqa: E402,F401
+# KNOWLEDGE-01: the knowledge.rebuild task is registered through the same import.
+from app import knowledge  # noqa: E402,F401
 
 if __name__ == "__main__":
     sys.exit(main())
