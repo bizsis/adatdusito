@@ -61,6 +61,12 @@
       ]
     },
     {
+      "type": "image",
+      "src": "/help/images/termeklista.png",
+      "alt": "Terméklista saját kategóriával, belső besorolással és védelemjelzéssel",
+      "caption": "A forráskategória, belső kategória és kézi védelem külön oszlopban ellenőrizhető."
+    },
+    {
       "type": "heading",
       "text": "Lépésről lépésre – ellenőrzött demópélda"
     },

@@ -184,6 +184,7 @@
     "browser_evidence": "scripts/tests/test_help_manual_browser.py; scripts/tests/test_help_browser.py",
     "review": "awaiting_human_content_review",
     "images": [
+      "/help/images/termeklista.png",
       "/help/images/kategorizalas.png"
     ],
     "evidence_scope": "forrásellenőrzés + képernyő/vezérlő megnyitás; nem minden adminisztratív írási művelet E2E-tesztje"
