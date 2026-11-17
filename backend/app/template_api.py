@@ -137,6 +137,7 @@ def download(
         ):
             file.write(chunk.data)
         file.seek(0)
+        db.rollback()  # End the read transaction before streaming to a slow client.
     except BaseException:
         file.close()
         raise

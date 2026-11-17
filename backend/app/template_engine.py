@@ -196,7 +196,7 @@ def build(db, id):
         with materialize(db, run) as source, tempfile.TemporaryDirectory() as directory:
             headers = None
             width = 0
-            lines = set()
+            matched_lines = set()
             donors = set()
             content_count = physical_count = 0
             for line, raw in rows(source, run.config):
@@ -205,15 +205,18 @@ def build(db, id):
                 if line <= run.config["header_line"]:
                     continue
                 physical_count += 1
+                if physical_count > 1048575:
+                    raise ValueError("A sablon meghaladja az XLSX sorkorlátját.")
                 content_count += not blank_row(raw)
                 width = max(width, len(raw))
-                lines.add(line)
+                if line in choices:
+                    matched_lines.add(line)
                 chosen = choices.get(line, default) if not blank_row(raw) else None
                 if chosen and chosen["donor"] is not None:
                     donors.add(chosen["donor"])
             if headers is None:
                 raise ValueError("A fejlécsor nem érhető el.")
-            if set(choices) - lines:
+            if set(choices) - matched_lines:
                 raise ValueError(
                     "A kategóriaválasztás nem létező forrássorra hivatkozik."
                 )

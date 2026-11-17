@@ -350,3 +350,21 @@ def test_existing_accepted_product_classification_supplies_parameters(templates)
         len([c for c in item["manifest"]["columns"] if c["kind"] == "parameter"]) == 7
     )
     assert item["manifest"]["assignments"]["2"]["donor"] == 385
+
+
+def test_too_many_physical_blank_rows_fail_early_without_partial_artifact(templates):
+    client, target, _, _ = templates
+    run = source(templates, b"SKU;NAME\n001;A\n" + b"\n" * 1048575)
+    response = client.post(f"/api/v1/imports/runs/{run}/templates", json={})
+    id = response.json()["id"]
+    with Session(target) as db:
+        te.build(db, id)
+        item = db.get(ImportTemplate, id)
+        assert item.state == "failed" and "sorkorlát" in item.error
+        assert db.get(ImportRun, run).state == "awaiting_approval"
+        assert not db.scalar(
+            select(TemplateChunk).where(TemplateChunk.template_id == id)
+        )
+    assert (
+        client.get(f"/api/v1/imports/runs/{run}/templates/{id}/xlsx").status_code == 409
+    )
