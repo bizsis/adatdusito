@@ -169,7 +169,7 @@ A `test_follow_written_demo_supplier_import_classification_missing_and_grants` a
 
 ## Változtatási határ
 
-Nincs backend-, importmotor-, schema-, migráció-, ügyféladat-, pinfo_db-, .env- vagy Compose-változás. Nincs #41/#42 integráció, main merge vagy VPS-telepítés. A CI-ben kizárólag a HELP-02 ág push-triggerét adtuk hozzá; a jobok és telepítési lépések változatlanok.
+Nincs backend-, importmotor-, schema-, migráció-, ügyféladat-, pinfo_db-, .env- vagy Compose-változás. Nincs #41/#42 integráció, main merge vagy VPS-telepítés. A CI-ben a HELP-02 ág push-triggerét adtuk hozzá, és csak ennek az ágnak az elavult push-futásait szakítja meg az új push. A main soros ellenőrzése, a jobok és telepítési lépések változatlanok.
 
 ## Helyi ellenőrzési jegyzőkönyv
 
