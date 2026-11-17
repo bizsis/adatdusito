@@ -330,6 +330,10 @@ def import_export(db, path, store_key=None, version=None, limit=None):
     run.state = "completed" if not counters["errors"] else "partial"
     run.finished_at = now()
     db.commit()
+    # KNOWLEDGE-01: the knowledge base learns from the new source data automatically.
+    from app.knowledge import schedule
+
+    schedule(source_id=source.id)
     return run
 
 

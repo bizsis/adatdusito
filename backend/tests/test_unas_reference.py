@@ -37,6 +37,14 @@ SCHEMA = "unas_export/teszt-unas-hu/20261117-084322"
 H = {h: i for i, h in enumerate(UNAS_HEADERS)}
 
 
+@pytest.fixture(autouse=True)
+def no_knowledge_broker(monkeypatch):
+    """KNOWLEDGE-01 schedules a rebuild after an import; tests have no Celery broker."""
+    from app import knowledge
+
+    monkeypatch.setattr(knowledge, "schedule", lambda **kw: None)
+
+
 def row(**values):
     cells = [None] * len(UNAS_HEADERS)
     for header, value in values.items():
@@ -344,7 +352,7 @@ def test_single_alembic_head_and_0013_chain():
     cfg.set_main_option("script_location", str(BACKEND / "migrations"))
     script = ScriptDirectory.from_config(cfg)
     # Fails with two heads once 0012 is integrated: then set 0013.down_revision = "0012".
-    assert script.get_heads() == ["0013"]
+    assert len(script.get_heads()) == 1  # one head: 0013, or a later assigned revision
     revisions = {r.revision for r in script.walk_revisions()}
     expected = "0012" if "0012" in revisions else "0011"
     assert script.get_revision("0013").down_revision == expected

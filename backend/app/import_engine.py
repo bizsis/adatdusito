@@ -466,6 +466,12 @@ def advance(db, run_id):
 def process_import(run_id):
     with Session(engine()) as db:
         advance(db, run_id)
+        # KNOWLEDGE-01: a finished import teaches the knowledge base (shareable data only).
+        run = db.get(ImportRun, run_id)
+        if run is not None and run.state in ("completed", "partial"):
+            from app.knowledge import schedule
+
+            schedule(tenant_id=run.tenant_id)
         # The independent worktable must never change import/research outcomes.
         try:
             from app.template_engine import auto_template
