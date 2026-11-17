@@ -1,0 +1,112 @@
+.knowledge-admin {
+  display: grid;
+  gap: 1.25rem;
+  min-width: 0;
+}
+.knowledge-admin > *,
+.knowledge-columns > * {
+  min-width: 0;
+}
+.knowledge-columns {
+  display: grid;
+  grid-template-columns: minmax(16rem, 1fr) minmax(0, 2fr);
+  gap: 1.25rem;
+}
+.knowledge-form-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+}
+.knowledge-admin label {
+  display: grid;
+  gap: 0.4rem;
+  margin-bottom: 0.8rem;
+}
+.knowledge-admin label.check {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+}
+.knowledge-admin input,
+.knowledge-admin select,
+.knowledge-admin textarea {
+  max-width: 100%;
+  min-width: 0;
+}
+.knowledge-source-list,
+.knowledge-history {
+  list-style: none;
+  padding: 0;
+  display: grid;
+  gap: 0.7rem;
+}
+.knowledge-source-list button {
+  width: 100%;
+  display: grid;
+  gap: 0.35rem;
+  text-align: left;
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+.knowledge-source-list button[aria-pressed="true"] {
+  border-color: var(--accent, #198f7b);
+  background: #e5f4ef;
+}
+.knowledge-history li {
+  overflow-wrap: anywhere;
+  display: grid;
+  gap: 0.3rem;
+}
+.knowledge-history button {
+  text-align: left;
+  white-space: normal;
+}
+.knowledge-metrics {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+.knowledge-metrics > div {
+  padding: 0.7rem;
+  border: 1px solid var(--border, #dbe6e8);
+  border-radius: 0.5rem;
+}
+.knowledge-metrics dt {
+  font-size: 0.82rem;
+}
+.knowledge-metrics dd {
+  font-size: 1.35rem;
+  margin: 0.4rem 0 0;
+  font-weight: 700;
+}
+.knowledge-admin .table-wrap {
+  max-width: 100%;
+  overflow: auto;
+  margin-block: 1rem;
+}
+.knowledge-admin table {
+  min-width: 28rem;
+}
+.knowledge-admin td {
+  overflow-wrap: anywhere;
+  max-width: 24rem;
+  white-space: pre-wrap;
+}
+.knowledge-admin .actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin-block: 1rem;
+}
+.knowledge-admin details {
+  margin-block: 1rem;
+}
+.knowledge-filename {
+  overflow-wrap: anywhere;
+}
+@media (max-width: 850px) {
+  .knowledge-columns,
+  .knowledge-form-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}

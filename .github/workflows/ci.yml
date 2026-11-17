@@ -10,7 +10,7 @@ name: Adatdúsító CI
 
 on:
   push:
-    branches: [main, codex/category-03d-full-integration, codex/release-candidate-01, codex/help-01, codex/help-02-complete-manual, codex/release-candidate-02, codex/template-01]
+    branches: [main, codex/category-03d-full-integration, codex/release-candidate-01, codex/help-01, codex/help-02-complete-manual, codex/release-candidate-02, codex/template-01, codex/knowledge-ui-01]
   pull_request:
   workflow_dispatch:
 
@@ -20,7 +20,7 @@ permissions:
 concurrency:
   group: ci-${{ github.event.pull_request.number || github.ref }}
   # Superseded PR and these integration branches cancel old runs; main keeps every run.
-  cancel-in-progress: ${{ github.event_name == 'pull_request' || (github.event_name == 'push' && (github.ref == 'refs/heads/codex/help-02-complete-manual' || github.ref == 'refs/heads/codex/release-candidate-02' || github.ref == 'refs/heads/codex/template-01')) }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' || (github.event_name == 'push' && (github.ref == 'refs/heads/codex/help-02-complete-manual' || github.ref == 'refs/heads/codex/release-candidate-02' || github.ref == 'refs/heads/codex/template-01' || github.ref == 'refs/heads/codex/knowledge-ui-01')) }}
 
 env:
   PYTHON_VERSION: "3.12" # matches backend/Dockerfile
@@ -34,6 +34,15 @@ jobs:
     runs-on: ubuntu-24.04
     timeout-minutes: 20
     services:
+      knowledge-ui-mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_ROOT_PASSWORD: knowledge-ci-only-throwaway
+          MYSQL_DATABASE: adatdusito_dev
+        ports: ["33308:3306"]
+        options: >-
+          --health-cmd="mysqladmin ping -h 127.0.0.1 --silent"
+          --health-interval=5s --health-timeout=3s --health-retries=30
       rc02-import-mysql:
         image: mysql:8.0
         env:
@@ -74,6 +83,13 @@ jobs:
         run: |
           set -o pipefail
           python scripts/mysql_rc02_import_check.py 2>&1 | tee reports/mysql-rc02-import.log
+      - name: Integrated knowledge UI and 0013-0015 migration regression on isolated MySQL 8
+        env:
+          APP_DATABASE_URL: mysql+pymysql://root:knowledge-ci-only-throwaway@127.0.0.1:33308/adatdusito_dev
+          KNOWLEDGE_UI_FIXTURE_ACK: isolated-knowledge-ui-01
+        run: |
+          set -o pipefail
+          python scripts/mysql_knowledge_ui_check.py 2>&1 | tee reports/mysql-knowledge-ui.log
       - name: Test summary
         if: always()
         run: python .github/scripts/ci_report.py junit reports/backend.xml --title "Backend tests" --summary

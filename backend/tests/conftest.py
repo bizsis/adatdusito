@@ -283,3 +283,14 @@ def login(client, email="root@example.hu", password="Test-password-2026!"):
     assert response.status_code == 200, response.text
     client.headers["X-CSRF-Token"] = response.json()["csrf_token"]
     return response
+
+
+@pytest.fixture(autouse=True)
+def isolate_knowledge_task_publication(monkeypatch):
+    """Integration tests execute rebuilds explicitly against their own SQLite DB.
+
+    Keep the real scheduler callable, but never publish synthetic records to a
+    developer's broker. Individual publication-contract tests may override this.
+    """
+    from app.knowledge import process_rebuild
+    monkeypatch.setattr(process_rebuild, "apply_async", lambda *args, **kwargs: None)

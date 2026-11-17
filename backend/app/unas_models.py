@@ -11,6 +11,7 @@ from sqlalchemy import (
     DateTime,
     ForeignKey,
     Integer,
+    LargeBinary,
     Numeric,
     String,
     Text,
@@ -137,6 +138,18 @@ class ReferenceImportRun(Base):
     errors: Mapped[list] = mapped_column(JSON)  # first 200 row errors: {line, code}
     started_at: Mapped[datetime] = mapped_column(DateTime, default=now)
     finished_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+    # Web administration job metadata; original import engine is reused.
+    ui_config: Mapped[dict] = mapped_column(JSON, default=dict)
+    ui_cursor: Mapped[int] = mapped_column(Integer, default=0)
+    ui_task_token: Mapped[str | None] = mapped_column(String(64), nullable=True)
+    ui_lease_until: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+
+
+class ReferenceImportChunk(Base):
+    __tablename__ = "reference_import_chunks"
+    run_id: Mapped[int] = mapped_column(ForeignKey("reference_import_runs.id"), primary_key=True)
+    ordinal: Mapped[int] = mapped_column(Integer, primary_key=True)
+    data: Mapped[bytes] = mapped_column(LargeBinary(60000))
 
 
 class ReferenceProduct(Base):
