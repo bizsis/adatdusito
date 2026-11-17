@@ -111,10 +111,13 @@ Fájlgazda-kivétel: a Vezér #41 és #42 alatti döntése alapján a `frontend/
   - elutasított törlés a szerver indoklásával.
 - `backend/tests/test_import_browser.py`: a JSON-szöveg helyett a kompakt táblázat cellájára ellenőriz.
 
-## Nyitott üzleti kérdések (nem döntöttük el)
+## Tulajdonosi döntések (2026-11-17)
 
-1. **A `LASTINITIALCOST` jelentése** (utolsó beszerzési/bekerülési költség?) és viszonya a `LISTPRICE`-hoz: melyik legyen a beszerzési ár és melyik a listaár, nettó vagy bruttó, milyen pénznemben? A felület csak javasol, a döntést a kezelő hozza.
-2. **A negatív `QUANTITY`** (pl. `-35132`) üzleti jelentése: visszarendelés, korrekció vagy hibás export? Kell-e külön szabály a nulla helyett?
-3. **A tudományos jelölésű `BARCODE`:** a beszállító tudja-e szövegként (teljes számjegyekkel) exportálni? Addig ezek a sorok EAN nélkül kerülnek be.
-4. **Archiválás:** jóváhagyott vagy feldolgozott importokhoz kell-e (és milyen megőrzési szabállyal) külön archiválási művelet?
-5. **Az eredeti `besz_minta.csv`:** a tényleges fájllal is érdemes megismételni a reprodukciót. A rekonstrukció a hibajegy tényein alapul.
+| Kérdés | Döntés | Megvalósítás |
+|---|---|---|
+| `LASTINITIALCOST` és `LISTPRICE` | a `LASTINITIALCOST` az **utolsó beszerzési ár**; a `LISTPRICE` a **listaár**, mindig **nettó** és mindig **HUF** | A pontosan így nevezett fejlécek előre kiválasztva: `purchase_price`, illetve `list_price` (`method: owner_confirmed`, `meaning`). A `LISTPRICE` mellé `confirmed_context` kerül (`tax_basis: nettó`, `currency: HUF`), ami csak az üres pénzügyi alapértékeket tölti elő. **A pénzügyi jóváhagyás továbbra is kötelező** (nélküle 422). Más pénzösszeg-fejléc (`COST`, `PRICE`, `SALE_PRICE` …) továbbra is csak „Döntés szükséges” javaslatot kap, az Ár mezőre semmi nem kerül automatikusan. |
+| negatív `QUANTITY` | egyelőre marad, ahogy van | Nincs változás: nyers forrásadat, `negative_value_requires_rule` jelzéssel; az exportprofilok `negative_stock: zero` szabálya érvényes. |
+| tudományos jelölésű `BARCODE` | a forrás-Excelben számként vagy szövegként kell formázni | A figyelmeztetés javítási útmutatót tartalmaz: az oszlopot Szám (0 tizedesjegy) vagy Szöveg formátumra kell állítani, majd újra feltölteni. A sérült kód továbbra sem kerül be EAN-ként. |
+| archiválás | nem kell | Nincs archiválás. A jóváhagyott vagy feldolgozott import nem törölhető (409). |
+
+Továbbra is nyitott: a reprodukció megismétlése az eredeti `besz_minta.csv`-vel. A rekonstrukció a hibajegy tényein alapul.

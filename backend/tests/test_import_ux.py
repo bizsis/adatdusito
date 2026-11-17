@@ -63,18 +63,32 @@ def test_reconstructed_besz_minta_counts_and_compact_source_preview(imports):
                       json={"mapping": {}, "limit": bad}).status_code == 422
 
 
-def test_monetary_headers_are_explicit_decisions_never_automatic_price(imports):
+def test_monetary_headers_owner_confirmed_or_explicit_decision_never_sale_price(imports):
     c, t, s = imports
-    _, run = analysed(c, t, s)
+    id, run = analysed(c, t, s)
     cost, listprice = column(run, "LASTINITIALCOST"), column(run, "LISTPRICE")
-    # Previously LASTINITIALCOST was preselected as "Ár"; now nothing is preselected.
-    assert cost["field"] is None and cost["suggested_field"] == "purchase_price"
-    assert listprice["field"] is None and listprice["suggested_field"] == "list_price"
-    assert cost["requires_decision"] and listprice["requires_decision"] and cost["critical"]
+    # Owner decision on #42 (2026-11-17): LASTINITIALCOST is the last purchase price,
+    # LISTPRICE the list price, always net and HUF. Previously LASTINITIALCOST -> "Ár".
+    assert (cost["field"], cost["method"], cost["meaning"]) == (
+        "purchase_price", "owner_confirmed", "last_purchase_price")
+    assert (listprice["field"], listprice["meaning"]) == ("list_price", "list_price_net_huf")
+    assert listprice["confirmed_context"] == {"tax_basis": "nettó", "currency": "HUF"}
+    assert cost["critical"] and not cost["requires_decision"]
     assert all(c["field"] != "price" for c in run["analysis"]["columns"])
-    # Non-monetary headers keep their automatic suggestion.
     assert column(run, "ARTICLENR")["field"] == "sku"
     assert column(run, "CURRENCYCODE")["field"] == "currency"
+    # Confirmed meaning does not skip the explicit financial approval of the run.
+    mapping = {"0": "sku", "1": "name", "4": "purchase_price", "5": "list_price"}
+    r = c.post(f"/api/v1/imports/runs/{id}/approve",
+               json={"name": "P", "mapping": mapping, "identity_field": "sku"})
+    assert r.status_code == 422 and "pénzügyi" in r.json()["error"]["message"]
+    # Any other monetary header is only a suggestion that needs a decision.
+    _, other = analysed(c, t, s, b"SKU;COST;PRICE;SALE_PRICE\n1;2;3;4\n", "other.csv")
+    for header, suggested in (("COST", "purchase_price"), ("PRICE", "price"),
+                              ("SALE_PRICE", "sale_price")):
+        col = column(other, header)
+        assert col["field"] is None and col["suggested_field"] == suggested
+        assert col["requires_decision"] and col["meaning"] is None
 
 
 def test_scientific_barcode_and_negative_quantity_are_flagged_not_trusted(imports):

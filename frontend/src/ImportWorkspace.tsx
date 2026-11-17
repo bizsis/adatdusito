@@ -25,6 +25,8 @@ type Column = {
   suggested_field?: string | null;
   requires_decision?: boolean;
   warnings?: string[];
+  meaning?: string | null;
+  confirmed_context?: Record<string, string> | null;
 };
 type Run = {
   id: number;
@@ -91,7 +93,7 @@ const issueLabels: Record<string, string> = {
 };
 const columnWarnings: Record<string, string> = {
   scientific_notation_identifier:
-    "Tudományos jelölésű azonosítók (pl. 8,71999E+12): a teljes EAN nem rekonstruálható, ezek a sorok nem kapnak EAN-t.",
+    "Tudományos jelölésű azonosítók (pl. 8,71999E+12): a teljes EAN nem rekonstruálható, ezek a sorok nem kapnak EAN-t. Javítás: az Excelben a vonalkód oszlopot mentés előtt Szám (0 tizedesjegy) vagy Szöveg formátumra kell állítani, majd újra feltölteni.",
   invalid_gtin_samples:
     "Érvénytelen EAN/GTIN minták: ezek a sorok nem kapnak EAN-t, a nyers érték megmarad.",
   negative_values:
@@ -104,6 +106,11 @@ const counterLabels: Record<string, string> = {
   conflict: "ütközés",
   duplicate: "ismétlődés",
   not_seen_in_full_feed: "teljes feedből hiányzó",
+};
+// Owner decision (#42, 2026-11-17): confirmed meanings of these source headers.
+const meanings: Record<string, string> = {
+  last_purchase_price: "utolsó beszerzési ár",
+  list_price_net_huf: "listaár – mindig nettó, HUF",
 };
 const deleteRefusals: Record<string, string> = {
   approved_or_processed:
@@ -243,10 +250,18 @@ export function ImportWorkspace({
     U(r);
     T(String(r.supplier_id));
     CP(r.profile_id ? String(r.profile_id) : "");
+    // Owner-confirmed context (e.g. LISTPRICE is net HUF) only prefills empty
+    // defaults; the operator still has to approve the financial mapping.
+    const context = Object.assign(
+      {},
+      ...(r.analysis.columns || [])
+        .filter((c) => c.field && c.confirmed_context)
+        .map((c) => c.confirmed_context),
+    ) as Record<string, string>;
     FD({
-      currency: String(r.config.currency || ""),
-      price_type: String(r.config.price_type || ""),
-      tax_basis: String(r.config.tax_basis || ""),
+      currency: String(r.config.currency || context.currency || ""),
+      price_type: String(r.config.price_type || context.price_type || ""),
+      tax_basis: String(r.config.tax_basis || context.tax_basis || ""),
     });
     A(false);
     G("partial");
@@ -896,7 +911,12 @@ export function ImportWorkspace({
                               .join(", ") || "Exportprofil szerint"}
                           </td>
                           <td>
-                            {c.requires_decision && c.suggested_field ? (
+                            {c.meaning ? (
+                              <strong className="decision">
+                                Megerősített jelentés: {meanings[c.meaning] || c.meaning}
+                                . Pénzügyi jóváhagyás szükséges.
+                              </strong>
+                            ) : c.requires_decision && c.suggested_field ? (
                               <strong className="decision">
                                 Döntés szükséges – lehetséges jelentés:{" "}
                                 {fieldLabel(c.suggested_field)}. Automatikusan

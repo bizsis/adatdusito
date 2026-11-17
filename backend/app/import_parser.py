@@ -64,6 +64,12 @@ NUMERIC = {
 }
 # Monetary amounts: a header match is only a suggestion, never a preselected mapping.
 AMOUNTS = {"purchase_price", "list_price", "price", "sale_price"}
+# Owner decision (issue #42, 2026-11-17): these exact headers have a confirmed meaning,
+# so they are preselected. The financial approval of the run is still required.
+CONFIRMED_HEADERS = {
+    "lastinitialcost": ("purchase_price", "last_purchase_price", None),
+    "listprice": ("list_price", "list_price_net_huf", {"tax_basis": "nettó", "currency": "HUF"}),
+}
 # Invisible characters that some exports leave in otherwise empty cells.
 INVISIBLE = "\u200b\u200c\u200d\u2060\ufeff"
 FINANCIAL = {
@@ -289,7 +295,10 @@ def analyze(path, filename, config):
         ]
         key = matches[0] if len(matches) == 1 else None
         suggestion = None
-        if key in AMOUNTS:
+        confirmed = CONFIRMED_HEADERS.get(norm(h))
+        if confirmed:
+            key = confirmed[0]
+        elif key in AMOUNTS:
             # Purchase cost vs list vs sale price cannot be told from a header alone.
             suggestion, key = key, None
         vals = [r[i] for r in data if i < len(r) and not blank(r[i])]
@@ -301,6 +310,9 @@ def analyze(path, filename, config):
             key = "gtin"
             method = "content"
             confidence = 0.65
+        elif confirmed:
+            method = "owner_confirmed"
+            confidence = 1.0
         elif suggestion:
             method = "financial_suggestion"
             confidence = 0
@@ -346,6 +358,8 @@ def analyze(path, filename, config):
                 "suggested_field": suggestion,
                 "requires_decision": bool(suggestion),
                 "warnings": warnings,
+                "meaning": confirmed[1] if confirmed else None,
+                "confirmed_context": confirmed[2] if confirmed else None,
             }
         )
     return config, {"headers": header, "columns": columns, "preview": data[:10]}
