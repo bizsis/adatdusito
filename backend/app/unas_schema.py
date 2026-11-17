@@ -130,6 +130,25 @@ RECOMMENDED = {
 # Values the shop system generates: exported, but there is no evidence they are importable.
 SYSTEM_GENERATED = {"Létrehozás", "Utolsó Módosítás", "Termék link"}
 TIME_DEPENDENT_GROUPS = {"price", "stock"}
+# Product knowledge that may enter the shared knowledge base (owner decision, RC-03).
+# Prices, stock, visibility, shipping/payment, customer groups, SEO/marketing settings,
+# related-product links, system values and integration identifiers stay with the store.
+SHAREABLE_GROUPS = {"identity", "category", "description", "media", "unit", "content",
+                    "tabs", "parameter"}
+NOT_SHAREABLE_PARAMETER = re.compile(r"(^|[^a-z])(id|azonosito|forras|source)([^a-z]|$)")
+
+
+def shareable(entry):
+    # The store's own SKU only identifies a product inside that source.
+    if entry["header"] == "Cikkszám":
+        return False
+    if entry["field_group"] not in SHAREABLE_GROUPS or entry["header"] in SYSTEM_GENERATED:
+        return False
+    parameter = entry.get("parameter")
+    if parameter:
+        name = field_key(parameter["name"]).replace("_", " ")
+        return not NOT_SHAREABLE_PARAMETER.search(name)
+    return True
 VALIDATION = {
     "text": {},
     "integer": {"pattern": r"^-?\d+$"},
@@ -230,6 +249,7 @@ def registry(headers):
         header = "" if raw is None else str(raw)
         entry = {"position": position, "header": header, "field_key": field_key(header),
                  **classify(header)}
+        entry["shareable"] = shareable(entry)
         if header in seen:
             entry["duplicate_of"] = seen[header]
         seen.setdefault(header, position)

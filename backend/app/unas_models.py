@@ -47,6 +47,9 @@ class UnasFieldDefinition(Base):
     validation: Mapped[dict] = mapped_column(JSON)
     note: Mapped[str | None] = mapped_column(String(500), nullable=True)
     profile: Mapped[dict] = mapped_column(JSON)  # fill rate / value shape in the export
+    # May this column's content enter the shared knowledge base? (never prices, stock,
+    # customer-group, system or integration identifiers)
+    shareable: Mapped[bool] = mapped_column(Boolean, default=False)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=now)
 
 
@@ -107,9 +110,15 @@ class ReferenceProductSource(Base):
     name: Mapped[str] = mapped_column(String(255))
     kind: Mapped[str] = mapped_column(String(32))
     store_key: Mapped[str | None] = mapped_column(String(120), nullable=True)
+    # KNOWLEDGE-01: a tenant's own uploads become a source with tenant_id set.
+    tenant_id: Mapped[int | None] = mapped_column(ForeignKey("tenants.id"), nullable=True)
     schema_source: Mapped[str | None] = mapped_column(String(160), nullable=True)
     usage_status: Mapped[str] = mapped_column(String(24), default="restricted")
+    # Why use is allowed: "owner_policy:<date>", "written_permission", "none", ...
+    usage_basis: Mapped[str] = mapped_column(String(64), default="none")
     enrichment_enabled: Mapped[bool] = mapped_column(Boolean, default=False)
+    contribution: Mapped[str] = mapped_column(String(16), default="automatic")
+    trust_level: Mapped[Decimal | None] = mapped_column(Numeric(5, 4), nullable=True)
     usage_note: Mapped[str | None] = mapped_column(String(1000), nullable=True)
     usage_decided_by: Mapped[int | None] = mapped_column(ForeignKey("users.id"), nullable=True)
     usage_decided_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
@@ -147,6 +156,8 @@ class ReferenceProduct(Base):
     raw: Mapped[dict] = mapped_column(JSON)  # every non-excluded column, value as exported
     raw_sha256: Mapped[str] = mapped_column(String(64))
     origin: Mapped[str] = mapped_column(String(64))
+    # Nothing is "verified" automatically; KNOWLEDGE-01 raises it from approvals/agreement.
+    verification: Mapped[str] = mapped_column(String(16), default="unverified")
     first_import_id: Mapped[int] = mapped_column(ForeignKey("reference_import_runs.id"))
     last_import_id: Mapped[int] = mapped_column(ForeignKey("reference_import_runs.id"))
     imported_at: Mapped[datetime] = mapped_column(DateTime, default=now)

@@ -117,7 +117,7 @@ def fields(
     return [{k: getattr(f, k) for k in (
         "id", "position", "header", "field_key", "scope", "field_group", "data_type",
         "requirement", "requirement_source", "importable", "default_value", "validation",
-        "note", "profile", "source_version", "store_key")}
+        "note", "profile", "source_version", "store_key", "shareable")}
         for f in db.scalars(stmt.order_by(UnasFieldDefinition.position))]
 
 
@@ -298,9 +298,10 @@ def source_dto(db, s):
                      .order_by(ReferenceImportRun.id.desc()).limit(1))
     return {
         **{k: getattr(s, k) for k in (
-            "id", "key", "name", "kind", "store_key", "schema_source", "usage_status",
-            "enrichment_enabled", "usage_note", "usage_decided_by", "usage_decided_at",
-            "excluded_columns", "created_at")},
+            "id", "key", "name", "kind", "store_key", "tenant_id", "schema_source",
+            "usage_status", "usage_basis", "enrichment_enabled", "contribution", "usage_note",
+            "usage_decided_by", "usage_decided_at", "excluded_columns", "created_at")},
+        "trust_level": str(s.trust_level) if s.trust_level is not None else None,
         "products": db.scalar(select(func.count()).select_from(ReferenceProduct)
                               .where(ReferenceProduct.source_id == s.id)),
         "last_import": None if not last else {
@@ -336,6 +337,7 @@ def set_usage(id: int, body: Usage, who=Depends(require("reference.manage")),
     before = {"usage_status": source.usage_status, "enrichment": source.enrichment_enabled}
     source.usage_status = body.usage_status
     source.enrichment_enabled = body.enrichment_enabled
+    source.usage_basis = "administrator_decision"
     source.usage_note = body.usage_note
     source.usage_decided_by, source.usage_decided_at = who.user.id, now()
     audit(db, who, "unas.reference_usage", source.id, before=before,

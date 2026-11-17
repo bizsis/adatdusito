@@ -1,7 +1,10 @@
 """UNAS-REF-01: UNAS schema registry, parameter definitions, eMAG-UNAS parameter mappings
 and an isolated product reference store.
 
-Additive only: eight new tables in the application database. No existing table, row or
+Additive only: eight new tables in the application database. RC-03 (owner decision on the
+knowledge base, before 0013 was applied anywhere): sources carry a usage basis, trust level,
+optional tenant and contribution mode; fields carry a shareable flag; reference products
+start "unverified" (KNOWLEDGE-01 builds the learning engine on these columns). No existing table, row or
 permission changes; pinfo_db (emag_*) and the owned catalog_* tables are not touched.
 
 Revision chain: assigned number 0013, integrated in RELEASE-CANDIDATE-03 after TEMPLATE-01's
@@ -52,6 +55,7 @@ def upgrade():
         sa.Column("validation", sa.JSON(), nullable=False),
         sa.Column("note", sa.String(500), nullable=True),
         sa.Column("profile", sa.JSON(), nullable=False),
+        sa.Column("shareable", sa.Boolean(), nullable=False, server_default=sa.false()),
         sa.Column("created_at", sa.DateTime(), nullable=False),
         sa.UniqueConstraint("schema_source", "position", name="uq_unas_field_position"),
     )
@@ -109,9 +113,13 @@ def upgrade():
         sa.Column("name", sa.String(255), nullable=False),
         sa.Column("kind", sa.String(32), nullable=False),
         sa.Column("store_key", sa.String(120), nullable=True),
+        sa.Column("tenant_id", sa.Integer(), sa.ForeignKey("tenants.id"), nullable=True),
         sa.Column("schema_source", sa.String(160), nullable=True),
         sa.Column("usage_status", sa.String(24), nullable=False, server_default="restricted"),
+        sa.Column("usage_basis", sa.String(64), nullable=False, server_default="none"),
         sa.Column("enrichment_enabled", sa.Boolean(), nullable=False, server_default=sa.false()),
+        sa.Column("contribution", sa.String(16), nullable=False, server_default="automatic"),
+        sa.Column("trust_level", sa.Numeric(5, 4), nullable=True),
         sa.Column("usage_note", sa.String(1000), nullable=True),
         sa.Column("usage_decided_by", sa.Integer(), sa.ForeignKey("users.id"), nullable=True),
         sa.Column("usage_decided_at", sa.DateTime(), nullable=True),
@@ -149,6 +157,7 @@ def upgrade():
         sa.Column("raw", sa.JSON(), nullable=False),
         sa.Column("raw_sha256", sa.String(64), nullable=False),
         sa.Column("origin", sa.String(64), nullable=False),
+        sa.Column("verification", sa.String(16), nullable=False, server_default="unverified"),
         sa.Column("first_import_id", sa.Integer(), sa.ForeignKey("reference_import_runs.id"),
                   nullable=False),
         sa.Column("last_import_id", sa.Integer(), sa.ForeignKey("reference_import_runs.id"),

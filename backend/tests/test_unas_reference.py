@@ -181,7 +181,10 @@ def test_import_keeps_identifiers_textual_multiple_eans_and_excludes_group_data(
     from app.unas_models import ReferenceProductSource
 
     source = db.get(ReferenceProductSource, first.source_id)
-    assert source.usage_status == "restricted" and not source.enrichment_enabled
+    # Owner decision (RC-03): an imported reference export is an active source by default.
+    assert (source.usage_status, source.enrichment_enabled, source.usage_basis) == (
+        "approved_enrichment", True, "owner_policy:2026-11-17")
+    assert first.verification == "unverified"
     assert "Ár: Csoport B" in source.excluded_columns and len(source.excluded_columns) == 12
     # Isolation: no eMAG/catalog or existing reference-source rows written.
     assert db.scalar(select(func.count()).select_from(CatalogParameter)) == eMAG_before
@@ -212,33 +215,52 @@ def test_larger_export_is_streamed(db, tmp_path):
     assert time.perf_counter() - start < 120
 
 
-def test_restricted_source_is_never_used_for_enrichment(environment, tmp_path):
+def test_sources_active_by_default_admin_restrict_revoke_and_shareable_only(environment,
+                                                                          tmp_path):
     client, target, _, _ = environment
+    path = export(tmp_path, ROWS)
     with Session(target) as db:
-        import_export(db, export(tmp_path, ROWS))
+        import_export(db, path)
         source_id = db.scalar(select(ReferenceProduct.source_id).limit(1))
-        assert lookup(db, gtin="5201137061819") == []  # restricted by default
+        found = lookup(db, gtin="5904517345546")  # active by default (owner policy)
+        assert [f["match"] for f in found] == ["gtin"] and found[0]["confidence"] == 0.95
+        assert found[0]["verification"] == "unverified"
+        assert "raw" not in found[0] and found[0]["overwrites_supplier_data"] is False
+        names = {a["name"] for a in found[0]["attributes"]}
+        assert "Márka" in names and not names & {"CONNESTIC_ID", "Forrás"}
+        assert lookup(db, brand="ENGER", name="légyirtó 300ml")[0]["match"] == "brand_name"
     login(client)  # superadmin: reference.manage
     r = client.put(f"/api/v1/unas/reference-sources/{source_id}/usage",
                    json={"usage_status": "internal_only", "enrichment_enabled": True,
                          "usage_note": "teszt"})
     assert r.status_code == 422
     r = client.put(f"/api/v1/unas/reference-sources/{source_id}/usage",
-                   json={"usage_status": "approved_enrichment", "enrichment_enabled": True,
-                         "usage_note": "Írásos felhasználási engedély, 2026-11-17."})
-    assert r.status_code == 200 and r.json()["products"] == 3
+                   json={"usage_status": "restricted", "usage_note": "Felhasználás felfüggesztve."})
+    assert r.status_code == 200 and r.json()["usage_basis"] == "administrator_decision"
     with Session(target) as db:
-        found = lookup(db, gtin="5904517345546")
-        assert [f["match"] for f in found] == ["gtin"] and found[0]["confidence"] == 0.95
-        assert "raw" not in found[0] and found[0]["overwrites_supplier_data"] is False
-        assert lookup(db, brand="ENGER", name="légyirtó 300ml")[0]["match"] == "brand_name"
+        assert lookup(db, gtin="5904517345546") == []  # not permitted: excluded
         assert db.scalar(select(Audit).where(Audit.action == "unas.reference_usage"))
+        import_export(db, path)  # a re-import never re-enables a restricted source
+        assert lookup(db, gtin="5904517345546") == []
     client.put(f"/api/v1/unas/reference-sources/{source_id}/usage",
                json={"usage_status": "revoked", "usage_note": "visszavonva"})
     with Session(target) as db:
         assert lookup(db, gtin="5904517345546") == []
     login(client, "admin@example.hu")  # tenant admin: no reference.manage
     assert client.get("/api/v1/unas/reference-sources").status_code == 403
+
+
+def test_shareable_classification_keeps_store_specific_data_out():
+    entries = {e["header"]: e for e in registry(UNAS_HEADERS)}
+    for header in ("Termék Név", "Rövid Leírás", "Tulajdonságok", "Kép link", "Tömeg",
+                   "Paraméter: Márka||enum|0|0|0|0|0|0|||0|1|1",
+                   "Paraméter: EAN||text|1|0|0|0|0|0|||0|1|1"):
+        assert entries[header]["shareable"], header
+    for header in ("Cikkszám", "Nettó Ár", "Raktárkészlet", "Ár: Csoport B",
+                   "Vásárló csoport láthatja", "Azonosító", "Létrehozás", "SEO Title",
+                   "Paraméter: CONNESTIC_ID|Connestic|text|0|0|0|0|0|0|||0|1|0",
+                   "Paraméter: Forrás|Connestic|text|0|0|0|0|0|0|||0|1|0"):
+        assert not entries[header]["shareable"], header
 
 
 # 7. eMAG-UNAS mappings ----------------------------------------------------------------------

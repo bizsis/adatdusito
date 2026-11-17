@@ -7,8 +7,10 @@ and the permission-gated lookup a later enrichment step may use.
   so repeating an import creates no duplicates.
 * Every row runs in its own savepoint: one bad row is logged and skipped, the rest continue.
 * Customer-group columns ("Ár: <group>", "Vásárló csoport ...") are never stored.
-* A new source is "restricted" and not enabled for enrichment; lookup() ignores it unless an
-  administrator records an explicit usage permission.
+* Owner decision (RC-03): an imported reference export is an active knowledge source by
+  default (usage_basis "owner_policy:2026-11-17"); an administrator can restrict or revoke
+  it, and a later re-import never overrides that decision. Only shareable fields are
+  returned by lookup(); nothing is marked verified automatically.
 
 CLI (inside the backend container or venv, never against pinfo_db):
     python -m app.reference_products import <export.xlsx> [--store-key KEY] [--version V]
@@ -55,6 +57,7 @@ COLUMNS = {
 }
 BRAND_PARAMETER = "Márka"
 USAGE_STATUSES = ("restricted", "internal_only", "approved_enrichment", "revoked")
+DEFAULT_USAGE_BASIS = "owner_policy:2026-11-17"
 
 
 def text(value):
@@ -159,6 +162,7 @@ def register_schema(db, headers, schema_source, store_key, version, column_profi
             requirement_source=entry["requirement_source"], importable=entry["importable"],
             default_value=None, validation=entry["validation"], note=entry["note"],
             profile=(column_profile or {}).get(entry["position"], {}),
+            shareable=entry["shareable"],
         )
         db.add(field)
         db.flush()
@@ -180,8 +184,9 @@ def source_for(db, store_key, schema_source, excluded):
     if source is None:
         source = ReferenceProductSource(
             key=key, name=f"UNAS-export – {store_key}", kind="unas_export",
-            store_key=store_key, schema_source=schema_source, usage_status="restricted",
-            enrichment_enabled=False, excluded_columns=excluded,
+            store_key=store_key, schema_source=schema_source,
+            usage_status="approved_enrichment", usage_basis=DEFAULT_USAGE_BASIS,
+            enrichment_enabled=True, contribution="automatic", excluded_columns=excluded,
         )
         db.add(source)
         db.flush()
@@ -343,14 +348,20 @@ def usable_sources(db):
 def candidate(db, product, method, confidence):
     attributes = [
         {"name": a.name, "group": a.group_name, "value": a.value_text, "unit": a.unit}
-        for a in db.scalars(select(ReferenceProductAttribute)
-                            .where(ReferenceProductAttribute.product_id == product.id))
+        for a in db.scalars(
+            select(ReferenceProductAttribute)
+            .join(UnasParameterDefinition,
+                  UnasParameterDefinition.id == ReferenceProductAttribute.parameter_id)
+            .join(UnasFieldDefinition, UnasFieldDefinition.id == UnasParameterDefinition.field_id)
+            .where(ReferenceProductAttribute.product_id == product.id,
+                   UnasFieldDefinition.shareable.is_(True)))
     ]
     return {
         "reference_product_id": product.id,
         "source_id": product.source_id,
         "match": method,
         "confidence": confidence,
+        "verification": product.verification,
         "observed_at": product.updated_at.isoformat() if product.updated_at else None,
         "name": product.name,
         "brand": product.brand,
