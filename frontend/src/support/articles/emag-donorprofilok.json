@@ -2,42 +2,121 @@
   "id": "emag-donorprofilok",
   "topic": "parameterek",
   "title": "eMAG-paraméterek és donorprofilok",
-  "summary": "Értsd meg, honnan érkeznek a kategória paraméterei és megengedett értékei.",
-  "order": 7,
+  "summary": "A donorprofil határozza meg a termékhez tartozó paraméterdefiníciókat, kötelező jelöléseket és megengedett értékeket.",
+  "order": 15,
   "blocks": [
     {
-      "type": "paragraph",
-      "text": "A felhasználó egyetlen közös kategóriafában dolgozik. A donorprofil a kiválasztott kategóriához kapcsolt eMAG-paraméterdefiníciók forrása; nem egy második kategóriafa."
+      "type": "heading",
+      "text": "Mire való, és mikor használd?"
     },
     {
-      "type": "image",
-      "src": "/help/images/kategorizalas.png",
-      "alt": "Kategória és paraméterprofil kiválasztása a besorolási szerkesztőben",
-      "caption": "A besorolási szerkesztőben a kategóriához tartozó donorprofilt is ellenőrizheted. A képen demótermék szerepel."
+      "type": "paragraph",
+      "text": "A donorprofil határozza meg a termékhez tartozó paraméterdefiníciókat, kötelező jelöléseket és megengedett értékeket. A kategória és profil kapcsolódik, de egy gyűjtőkategóriához több külön termékkör profilja is tartozhat."
+    },
+    {
+      "type": "heading",
+      "text": "Hozzáférés és előfeltételek"
+    },
+    {
+      "type": "paragraph",
+      "text": "Besorolt termék és products.read szükséges; explicit termékprofil-választáshoz products.classify. A paraméterhelyek tényleges alkalmazásához külön products.parameters jog kell."
+    },
+    {
+      "type": "note",
+      "title": "Menüútvonal",
+      "text": "Termékadatok / Termék / Paraméterprofil"
+    },
+    {
+      "type": "heading",
+      "text": "Mezők, állapotok és gombok"
+    },
+    {
+      "type": "table",
+      "caption": "A képernyő elemeinek jelentése",
+      "headers": [
+        "Elem",
+        "Mit jelent és mire figyelj?"
+      ],
+      "rows": [
+        [
+          "ready / Kész profil",
+          "Használható donor rendelkezésre áll; ettől még nem biztos, hogy a paraméterhelyeket már elmentetted."
+        ],
+        [
+          "choice_required / Profilválasztás szükséges",
+          "Több profil közül kell a termékhez illőt kifejezetten kiválasztani."
+        ],
+        [
+          "pending_review / Donor felülvizsgálatra vár",
+          "Nem engedett automatikus eMAG-helykészítés a bizonytalan kapcsolatra."
+        ],
+        [
+          "none / Nincs donor",
+          "Nincs megfelelő paraméterforrás; a nyers saját adat ettől megmarad."
+        ],
+        [
+          "Explicit paraméterprofil-választás",
+          "A termék konkrét donorát rögzíti indoklással és megerősítéssel; nem egy teljes kategóriafa módosítása."
+        ]
+      ]
+    },
+    {
+      "type": "heading",
+      "text": "Lépésről lépésre – ellenőrzött demópélda"
     },
     {
       "type": "steps",
       "items": [
-        "A Kategóriák menüben bontsd ki a főcsoportot, majd válassz kategóriát.",
-        "A kategória részleteiben nézd meg a paraméterek számát, a kötelező/opcionális jelöléseket és az elérhető profilokat.",
-        "A paramétereknél kereshetsz a megengedett értékek között. Nagy értéklistánál a lapozással töltsd be a következő oldalt.",
-        "Termékbesorolásnál több profil esetén válaszd ki a termékkörnek megfelelő profilt; ne feltételezd, hogy mindegyik profil azonos."
+        "Nyisd meg a demó mosógép termékrészletét, majd a Termékparaméterek részt.",
+        "Ellenőrizd a donor készültségi állapotát és az aktuális belső kategóriát.",
+        "Ha több profil van, az Explicit paraméterprofil-választásnál válaszd a termék jelentéséhez tartozó profilt. Lámpánál például az asztali és mennyezeti profil nem felcserélhető.",
+        "Add meg a döntés indokát és ellenőrizd a megerősítést.",
+        "Frissítsd a profiladatokat, majd nézd meg a Paraméterváltozások szerveres előnézetét. Csak ellenőrzés után alkalmazd a helyeket."
       ]
     },
     {
       "type": "note",
-      "title": "Kötelező nem jelent kitöltöttet",
-      "text": "A kötelező paraméter jelölése a profilból származik. Az üres paraméterhely önmagában nem bizonyítja a termék műszaki adatát."
+      "title": "Várt eredmény",
+      "text": "Az explicit választás megszüntetheti a choice_required állapotot. A pending_review esetet nem szabad egy tetszőleges profillal megkerülni."
     },
     {
-      "type": "warning",
-      "title": "Felülvizsgálatra váró donor",
-      "text": "A pending_review állapotú, vitatott donorprofil blokkolt. Újrapróbálással vagy másik menüponttal nem szabad megkerülni; a forráskapcsolat tisztázása szükséges."
+      "type": "image",
+      "src": "/help/images/kategoria-parameterek.png",
+      "alt": "Magyar kategória és kapcsolódó paraméterforrás részlete",
+      "caption": "A donor paraméterdefiníciót ad, nem második kategóriafát."
+    },
+    {
+      "type": "heading",
+      "text": "Ha nem sikerül"
+    },
+    {
+      "type": "list",
+      "items": [
+        "409: elavult termékrevízió; kérj friss adatot, majd ismét ellenőrizd a választást.",
+        "Profil nélküli termék: előbb a belső besorolást és kategóriaforrást kell rendezni.",
+        "Kevés paraméter: a szülő paraméterei nem öröklődnek feltételezés alapján; a konkrét donor készlete az elsődleges."
+      ]
+    },
+    {
+      "type": "heading",
+      "text": "Mi változik, és mi marad meg?"
     },
     {
       "type": "paragraph",
-      "text": "A paraméterértékek listája referencia. A műveletek nem írnak automatikusan új értékeket az eredeti eMAG referencia-adatbázisba."
+      "text": "A donorválasztás nem másolja és nem módosítja az eredeti több millió értéket. A kézi termékdöntés auditált, a nyers forrás és védett paraméterhely megmarad."
+    },
+    {
+      "type": "heading",
+      "text": "Következő lépés"
+    },
+    {
+      "type": "paragraph",
+      "text": "A kapcsolódó útmutatók az alábbi sorrendben segítenek folytatni a munkát. A látható gombok mindig az aktuális munkaterület és tényleges jogosultságok szerint használhatók."
     }
   ],
-  "related": ["termekek-kategorizalasa", "kezi-parameterek", "gyakori-hibak"]
+  "related": [
+    "parameterallapotok",
+    "kozos-kategoriafa",
+    "kezi-parameterek"
+  ]
 }

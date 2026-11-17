@@ -1,0 +1,139 @@
+{
+  "id": "beallitasok-hitelesites",
+  "topic": "hozzaferes",
+  "title": "Központi hitelesítési, MFA- és biztonsági szabályok",
+  "summary": "A központi szabályok meghatározzák a belépési módokat, kötelező második faktort és korlátozásokat.",
+  "order": 33,
+  "blocks": [
+    {
+      "type": "heading",
+      "text": "Mire való, és mikor használd?"
+    },
+    {
+      "type": "paragraph",
+      "text": "A központi szabályok meghatározzák a belépési módokat, kötelező második faktort és korlátozásokat. Ez különbözik a saját Biztonság oldaltól: itt más felhasználók következő belépésére is ható szabályt állítasz."
+    },
+    {
+      "type": "heading",
+      "text": "Hozzáférés és előfeltételek"
+    },
+    {
+      "type": "paragraph",
+      "text": "Olvasás: system.settings.read. Módosítás: system.settings.manage és superadmin. Változtatás előtt legyen ellenőrzött alternatív adminisztrátori belépés; a saját utolsó működő módodat ne kapcsold ki."
+    },
+    {
+      "type": "note",
+      "title": "Menüútvonal",
+      "text": "Rendszerbeállítások / Hitelesítés; Kétfaktoros hitelesítés; Biztonsági szabályok"
+    },
+    {
+      "type": "heading",
+      "text": "Mezők, állapotok és gombok"
+    },
+    {
+      "type": "table",
+      "caption": "A képernyő elemeinek jelentése",
+      "headers": [
+        "Elem",
+        "Mit jelent és mire figyelj?"
+      ],
+      "rows": [
+        [
+          "Jelszó / Google OIDC / Passkey",
+          "Engedélyezett hitelesítési módok. Google-hoz kliensazonosító, titok és pontos callback-beállítás kell."
+        ],
+        [
+          "Nyilvános e-mailes regisztráció",
+          "A regisztrációs útvonal láthatósága; nem ad automatikus ügyfélszerepet."
+        ],
+        [
+          "Új TOTP-aktiválás engedélyezése",
+          "Az új beállítást szabályozza; a már aktív védelmet nem kerüli meg."
+        ],
+        [
+          "Passkey elfogadása második faktorként",
+          "Csak ellenőrzött felhasználó-azonosítású passkeyre vonatkozik."
+        ],
+        [
+          "Második faktorra kötelezett szerepkörök",
+          "Rendszerszerep, sablon és helyi szerep megkülönböztetve; széles hatású követelmény."
+        ],
+        [
+          "Biztonsági korlátok",
+          "Munkamenet 1–24 óra; kísérletek 3–20; ablak 5–60 perc; jelszó minimum 12–64; meghívó 1–168 óra."
+        ]
+      ]
+    },
+    {
+      "type": "heading",
+      "text": "Lépésről lépésre – ellenőrzött demópélda"
+    },
+    {
+      "type": "steps",
+      "items": [
+        "Nyisd meg a Hitelesítés és bejelentkezés fület; olvasd el a jelenlegi módokat.",
+        "Google beállításnál a képernyőn közölt aktuális originhez tartozó callbacket regisztráld a szolgáltatónál. Titkot kizárólag a jelszó típusú mezőben adj meg.",
+        "A Kétfaktoros hitelesítés fülön ellenőrizd az aktiválást, passkey-faktor szabályt és a kötelezett szerepköröket.",
+        "A Biztonsági szabályok fülön csak jóváhagyott üzemeltetési igény alapján módosíts korlátot.",
+        "Mentsd a megfelelő fül saját gombjával, majd olvasd vissza az eredményt. A saját másik ellenőrzött munkameneteddel vizsgáld a belépést.",
+        "A tesztben ne fényképezz OIDC-titkot, TOTP-QR-t vagy helyreállítási kódot."
+      ]
+    },
+    {
+      "type": "note",
+      "title": "Várt eredmény",
+      "text": "A szerver a mentett szabályt alkalmazza. A már aktív TOTP kikapcsolását nem helyettesíti az új aktiválás tiltása; a meglévő munkameneteket a saját Biztonság oldalon kezelheted."
+    },
+    {
+      "type": "image",
+      "src": "/help/images/beallitas-auth.png",
+      "alt": "Jelszó, Google és passkey központi engedélyezése",
+      "caption": "A beállítás a belépési módokat szabályozza."
+    },
+    {
+      "type": "image",
+      "src": "/help/images/beallitas-mfa.png",
+      "alt": "Központi MFA-kötelezettség és szerepkörök",
+      "caption": "Az új TOTP-aktiválás tiltása nem kerüli meg a meglévő faktort."
+    },
+    {
+      "type": "image",
+      "src": "/help/images/beallitas-biztonsag.png",
+      "alt": "Munkamenet, belépési próbák és meghívó élettartama",
+      "caption": "A korlátozások rendszeradminisztrátori szabályok."
+    },
+    {
+      "type": "heading",
+      "text": "Ha nem sikerül"
+    },
+    {
+      "type": "list",
+      "items": [
+        "403: nem superadmin vagy nincs rendszerbeállítás-módosítási jog.",
+        "422: érvénytelen tartomány vagy hiányos OIDC-konfiguráció; előbb javítsd a beállítást.",
+        "Belépési korlátozás: ne lazítsd vakon a védelmet; ellenőrizd az alternatív hitelesítést és az üzemeltetési eljárást."
+      ]
+    },
+    {
+      "type": "heading",
+      "text": "Mi változik, és mi marad meg?"
+    },
+    {
+      "type": "paragraph",
+      "text": "A szabály több ügyfelet és adminisztrátort érinthet. Titok üresen hagyása megőrzi a meglévőt. A kézikönyv használata nem engedély biztonsági kontrollok megkerülésére."
+    },
+    {
+      "type": "heading",
+      "text": "Következő lépés"
+    },
+    {
+      "type": "paragraph",
+      "text": "A kapcsolódó útmutatók az alábbi sorrendben segítenek folytatni a munkát. A látható gombok mindig az aktuális munkaterület és tényleges jogosultságok szerint használhatók."
+    }
+  ],
+  "related": [
+    "sajat-fiok-biztonsag",
+    "totp-helyreallitas",
+    "beallitasok-smtp"
+  ]
+}

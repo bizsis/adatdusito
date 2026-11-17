@@ -2,34 +2,128 @@
   "id": "oszlopok-megfeleltetese",
   "topic": "import",
   "title": "Oszlopok megfeleltetése",
-  "summary": "Kösd a beszállító oszlopait a megfelelő belső mezőkhöz, és ellenőrizd az automatikus javaslatokat.",
-  "order": 4,
+  "summary": "Az oszlopmegfeleltetés mondja meg, hogy egy beszállítói oszlop az Adatdúsító mely belső adatát jelenti.",
+  "order": 8,
   "blocks": [
+    {
+      "type": "heading",
+      "text": "Mire való, és mikor használd?"
+    },
+    {
+      "type": "paragraph",
+      "text": "Az oszlopmegfeleltetés mondja meg, hogy egy beszállítói oszlop az Adatdúsító mely belső adatát jelenti. Az importprofil ezt a bejövő megfeleltetést őrzi; az exportprofil a kimenő webáruházmezőket írja le. A kettő nem cserélhető fel."
+    },
+    {
+      "type": "heading",
+      "text": "Hozzáférés és előfeltételek"
+    },
+    {
+      "type": "paragraph",
+      "text": "Előbb legyen elemzett, Jóváhagyásra vár állapotú futás. Megtekintéshez imports.read, véglegesítéshez imports.approve kell. Az automatikus névfelismerés javaslat: a mintacellát és az adat jelentését is ellenőrizd."
+    },
+    {
+      "type": "note",
+      "title": "Menüútvonal",
+      "text": "Beszállítói import / Oszlopok"
+    },
+    {
+      "type": "heading",
+      "text": "Mezők, állapotok és gombok"
+    },
+    {
+      "type": "table",
+      "caption": "A képernyő elemeinek jelentése",
+      "headers": [
+        "Elem",
+        "Mit jelent és mire figyelj?"
+      ],
+      "rows": [
+        [
+          "Eredeti oszlop",
+          "A fájl fejléce és indexe. Két hasonló fejléc sem feltétlenül azonos adat."
+        ],
+        [
+          "Belső mező",
+          "Például cikkszám, terméknév, kategória, GTIN. Üres megfeleltetéssel ne kényszeríts ismeretlen oszlopot rossz típusba."
+        ],
+        [
+          "Célwebáruház-exportprofil",
+          "A célmezők értelmezését segíti; kiválasztása nem állít elő exportfájlt."
+        ],
+        [
+          "Állapot / bizalom / Minta",
+          "A felismerés jelzése és tényleges példacella; az alacsony bizalom felülvizsgálatot igényel."
+        ],
+        [
+          "Ismeretlen oszlopok",
+          "Az át nem kötött forrásadat megőrizhető későbbi értelmezésre; nem feltétlenül hibás adat."
+        ]
+      ]
+    },
+    {
+      "type": "heading",
+      "text": "Lépésről lépésre – ellenőrzött demópélda"
+    },
     {
       "type": "steps",
       "items": [
-        "A feltöltött fájl elemzésénél nézd át az Eredeti oszlop értékeit és a mintákat.",
-        "Minden releváns oszlophoz válaszd ki a megfelelő belső mezőt. A felismert javaslat nem biztos döntés: ellenőrizd különösen a cikkszámot, EAN/GTIN-t, terméknevet és kategóriát.",
-        "A További / fel nem ismert oszlopok részt is nyisd meg. Csak azt rendeld ismert célmezőhöz, amelynek a jelentése egyértelmű.",
-        "Nézd meg az értelmezett előnézetet. A forrásértékeket hasonlítsd össze a célmezők tartalmával, mielőtt jóváhagysz."
+        "A demófeltöltésen keresd meg az Eredeti oszlop táblázatot.",
+        "A Cikkszám oszlop belső mezője legyen cikkszám, a Terméknév legyen név, a Kategória legyen saját forráskategória, az EAN legyen GTIN.",
+        "Minden sornál olvasd el a mintát is. Ha egy Ár oszlop beszerzési ár, ne jelöld eladási árnak pusztán a neve miatt.",
+        "Nyisd le az ismeretlen mezőket. A nem egyértelmű adatot hagyd megőrzött forrásnak, és kérdezd meg a beszállítót a jelentéséről.",
+        "Nézd meg az eredeti és értelmezett forrássorokat. A feltöltött oszlopok sorrendjét ne téveszd össze a webáruház kimenő mezősorrendjével.",
+        "Adj nevet az importprofilnak, majd a jóváhagyási útmutató szerint ellenőrizd a kulcsot, feedet és pénzügyi értelmezést."
       ]
+    },
+    {
+      "type": "note",
+      "title": "Várt eredmény",
+      "text": "A négy demóoszlop értelmezhető belső mezőre mutat; ismeretlen mezőhöz nem születik kitalált jelentés. A profil mentése a külön jóváhagyási lépés része."
+    },
+    {
+      "type": "image",
+      "src": "/help/images/fajlbeallitasok.png",
+      "alt": "Importprofil kiválasztása a haladó beállítások alatt",
+      "caption": "Az importprofil a bejövő fájl megfeleltetése, nem exportprofil."
     },
     {
       "type": "image",
       "src": "/help/images/oszlopok.png",
-      "alt": "Az import oszlopmegfeleltetési táblája szintetikus cikkszám-, név- és kategóriaoszlopokkal",
-      "caption": "Az oszlopok neve és mintája együtt segít a jelentés ellenőrzésében."
+      "alt": "Forrásoszlopok és belső mezők megfeleltetési táblázata",
+      "caption": "A mintacella segít eldönteni, hogy a felismert jelentés helyes-e."
     },
     {
-      "type": "warning",
-      "title": "Ár és készlet",
-      "text": "Ne cseréld fel a nettó és bruttó árat, pénznemet vagy készletet. Ismeretlen pénzügyi jelentést ne találgass; a hiányzó áfa/pénznem/árjelleg maradjon ismeretlen."
+      "type": "heading",
+      "text": "Ha nem sikerül"
     },
     {
-      "type": "link",
-      "article": "exportprofilok",
-      "text": "A célwebáruház exportprofiljának beállítása"
+      "type": "list",
+      "items": [
+        "Profilhoz képesti eltérés: új fejléc vagy szerkezet esetén új ellenőrzés szükséges; ne engedd automatikusan a régi profilt.",
+        "422: ütköző vagy hibás megfeleltetésnél ellenőrizd az indexeket és belső mezőket.",
+        "Hiányzó exportprofil: exports.read jogosultság vagy korábban létrehozott profil hiányozhat; ez nem indok a forrásmező rossz értelmezésére."
+      ]
+    },
+    {
+      "type": "heading",
+      "text": "Mi változik, és mi marad meg?"
+    },
+    {
+      "type": "paragraph",
+      "text": "A megőrzött nyers cellák nem lesznek pénzügyi vagy műszaki ténnyé csak a megfeleltetéstől. A mentett profil új verziója következő feltöltésekre is hatással lehet; a változó fájlt mindig ellenőrizd."
+    },
+    {
+      "type": "heading",
+      "text": "Következő lépés"
+    },
+    {
+      "type": "paragraph",
+      "text": "A kapcsolódó útmutatók az alábbi sorrendben segítenek folytatni a munkát. A látható gombok mindig az aktuális munkaterület és tényleges jogosultságok szerint használhatók."
     }
   ],
-  "related": ["import-jovahagyasa", "csv-xlsx-feltoltes"]
+  "related": [
+    "import-jovahagyasa",
+    "exportprofilok",
+    "import-kulcsok-penzugy"
+  ]
 }

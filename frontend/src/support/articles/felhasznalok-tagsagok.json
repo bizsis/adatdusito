@@ -1,0 +1,127 @@
+{
+  "id": "felhasznalok-tagsagok",
+  "topic": "hozzaferes",
+  "title": "Rendszerfelhasználók és ügyféltagságok",
+  "summary": "A rendszerfelhasználó globális fiók; az ügyféltagság egy szervezetben adott munkavégzési kapcsolat.",
+  "order": 27,
+  "blocks": [
+    {
+      "type": "heading",
+      "text": "Mire való, és mikor használd?"
+    },
+    {
+      "type": "paragraph",
+      "text": "A rendszerfelhasználó globális fiók; az ügyféltagság egy szervezetben adott munkavégzési kapcsolat. A fiók tiltása és egy tagság megszüntetése ezért eltérő hatású döntés."
+    },
+    {
+      "type": "heading",
+      "text": "Hozzáférés és előfeltételek"
+    },
+    {
+      "type": "paragraph",
+      "text": "Rendszernézetben system.users.read/manage; ügyfélnézetben members.read/manage szükséges. Szerepkör-változtatáshoz members.roles.manage is kellhet. Superadmin-védelem és adminisztrátori jelszócsere csak a megfelelő központi jogosultnak látszik."
+    },
+    {
+      "type": "note",
+      "title": "Menüútvonal",
+      "text": "Rendszerhozzáférések / Rendszerfelhasználók; Munkatársak"
+    },
+    {
+      "type": "heading",
+      "text": "Mezők, állapotok és gombok"
+    },
+    {
+      "type": "table",
+      "caption": "A képernyő elemeinek jelentése",
+      "headers": [
+        "Elem",
+        "Mit jelent és mire figyelj?"
+      ],
+      "rows": [
+        [
+          "Keresés / lapozás",
+          "Név vagy e-mail; rendszeres keresésnél legalább három karakterrel szélesebb felhasználókeresés indul. Oldalanként 25 találat."
+        ],
+        [
+          "Új rendszerfelhasználó",
+          "Központi fiók létrehozása névvel, e-maillel, felhasználónévvel és kezdeti hitelesítési adatokkal."
+        ],
+        [
+          "Fiók letiltása / aktiválása",
+          "Globális állapot, nem egyetlen ügyféltagság."
+        ],
+        [
+          "Ügyféltagság megszüntetése / visszaállítása",
+          "Csak az aktuális ügyfélkapcsolatot kezeli."
+        ],
+        [
+          "Ideiglenes jelszó beállítása",
+          "Superadminisztrátori művelet; a címzettnek saját jelszóra kell cserélnie."
+        ],
+        [
+          "Superadmin",
+          "Védett rendszerjog; az utolsó aktív superadmin védelmét nem lehet megkerülni."
+        ]
+      ]
+    },
+    {
+      "type": "heading",
+      "text": "Lépésről lépésre – ellenőrzött demópélda"
+    },
+    {
+      "type": "steps",
+      "items": [
+        "Nyisd meg a megfelelő ügyfél Munkatársak és hozzáférések oldalát, és keress egy demófelhasználóra.",
+        "A Hozzáférések gombbal ellenőrizd az állapotot és a szerepeket.",
+        "Egyetlen ügyfélhozzáférés megszüntetéséhez a tagsági műveletet használd, ne a globális fióktiltást.",
+        "Új ügyfélmunkatárshoz általában meghívót küldj. Új központi fiókot csak a Rendszerhozzáférések oldalon, tudatos rendszeradminisztrátori célra készíts.",
+        "Ha ideiglenes jelszó beállítása szükséges, azt biztonságos külön csatornán add át; ne naplóba vagy segédletbe másold.",
+        "Mentés után ellenőrizd a tényleges hozzáférést és a naplóbejegyzést."
+      ]
+    },
+    {
+      "type": "note",
+      "title": "Várt eredmény",
+      "text": "A célzott fiók- vagy tagsági állapot változik. Egy tagság megszüntetése után a felhasználó más ügyfelekhez tartozó jogos kapcsolatai megmaradnak."
+    },
+    {
+      "type": "image",
+      "src": "/help/images/rendszerfelhasznalok.png",
+      "alt": "Központi rendszerfelhasználók keresése",
+      "caption": "A rendszerfiók és az ügyféltagság eltérő hatókör."
+    },
+    {
+      "type": "heading",
+      "text": "Ha nem sikerül"
+    },
+    {
+      "type": "list",
+      "items": [
+        "403: adminisztrációs vagy superadminjog hiányzik.",
+        "409: védett állapot, foglalt felhasználói adat vagy utolsó superadmin korlátozása; az okot tisztázd.",
+        "Nem találod a személyt: pontosítsd a keresést és lapozz; ne hozz létre rögtön második fiókot."
+      ]
+    },
+    {
+      "type": "heading",
+      "text": "Mi változik, és mi marad meg?"
+    },
+    {
+      "type": "paragraph",
+      "text": "A jelszócsere nem oldja meg az elveszett második faktort. Globális tiltást csak annak hatásait megértve végezz; üzleti adatok és auditnyomok nem törlődnek."
+    },
+    {
+      "type": "heading",
+      "text": "Következő lépés"
+    },
+    {
+      "type": "paragraph",
+      "text": "A kapcsolódó útmutatók az alábbi sorrendben segítenek folytatni a munkát. A látható gombok mindig az aktuális munkaterület és tényleges jogosultságok szerint használhatók."
+    }
+  ],
+  "related": [
+    "meghivok",
+    "jogosultsagok",
+    "totp-helyreallitas"
+  ]
+}

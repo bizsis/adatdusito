@@ -1,0 +1,128 @@
+{
+  "id": "import-elozmenyek-hibak",
+  "topic": "import",
+  "title": "Importelőzmények, megállítás és hibás sorok",
+  "summary": "Az Importelőzményekből egy korábbi futás állapotát, eredeti fájlját és hibás sorait tudod visszakeresni.",
+  "order": 11,
+  "blocks": [
+    {
+      "type": "heading",
+      "text": "Mire való, és mikor használd?"
+    },
+    {
+      "type": "paragraph",
+      "text": "Az Importelőzményekből egy korábbi futás állapotát, eredeti fájlját és hibás sorait tudod visszakeresni. A futás megszakítása, az eredeti fájl retenciós törlése és az előzmény törlése három külön művelet; az utóbbi nincs kész ebben a verzióban."
+    },
+    {
+      "type": "heading",
+      "text": "Hozzáférés és előfeltételek"
+    },
+    {
+      "type": "paragraph",
+      "text": "Olvasáshoz imports.read, szüneteltetéshez és folytatáshoz imports.manage, megszakításhoz imports.cancel kell. A gombok a futás állapotától is függenek. Az ügyfélhez és erőforráshoz való hozzáférés külön feltétel."
+    },
+    {
+      "type": "note",
+      "title": "Menüútvonal",
+      "text": "Beszállítói import / Futástörténet"
+    },
+    {
+      "type": "heading",
+      "text": "Mezők, állapotok és gombok"
+    },
+    {
+      "type": "table",
+      "caption": "A képernyő elemeinek jelentése",
+      "headers": [
+        "Elem",
+        "Mit jelent és mire figyelj?"
+      ],
+      "rows": [
+        [
+          "Feldolgozott forrássor / számlálók",
+          "A haladást és eredményt mutatják; a részleges állapot nem teljes kudarc."
+        ],
+        [
+          "Szüneteltetés / Folytatás",
+          "Feldolgozás alatt kérhető szünet; megállt vagy hibás futásnál a megfelelő állapotban folytatható."
+        ],
+        [
+          "Megszakítás",
+          "Leállítja a további munkát; a már feldolgozott sorokat nem tekinti automatikusan visszavontnak."
+        ],
+        [
+          "Hibás sorok újrapróbálása",
+          "Részleges vagy befejezett futás hibás soraira használható, megfelelő kezelési joggal."
+        ],
+        [
+          "Eredeti fájl letöltése / Hibajegyzék CSV",
+          "A nyers fájl és a konkrét sorhibák vizsgálatához; hozzáférés és megőrzési idő korlátozhatja."
+        ],
+        [
+          "Korábbi oldal / Következő oldal",
+          "Az előzmények 25-ös oldalai. A jelenlegi hosszú gombos lista ismert UX-korlát."
+        ]
+      ]
+    },
+    {
+      "type": "heading",
+      "text": "Lépésről lépésre – ellenőrzött demópélda"
+    },
+    {
+      "type": "steps",
+      "items": [
+        "Nyisd meg a Beszállítói import oldalt, és az Importelőzményekből válaszd a demófutást.",
+        "Jegyezd fel a futásazonosítót, állapotot, feldolgozott forrássort és a számlálókat.",
+        "Részleges vagy hibás eredménynél nyisd meg a Hibajegyzék CSV-t. A sorazonosítót hasonlítsd össze az eredeti fájl megfelelő sorával.",
+        "Ha feldolgozás közben meg kell állni, a látható Szüneteltetés gombot használd. Várd meg az állapot visszajelzését, majd szükség esetén Folytatás.",
+        "Hibás sor újrapróbálása előtt javítsd az okot. Ne új teljes feltöltéssel próbáld eltüntetni a régi futást.",
+        "Jóváhagyásra vár állapotban az alapverzió nem kínál Megszakítás gombot. A #41 ezt külön javítja; itt ne keress nem létező előzménytörlést."
+      ]
+    },
+    {
+      "type": "note",
+      "title": "Várt eredmény",
+      "text": "A futás részadatai és hibái visszakereshetők. A 25 soros, JSON-t is tartalmazó forráselőnézet jelenlegi működés; a kompakt nézet és tartós történettörlés külön #41/#42 munka."
+    },
+    {
+      "type": "image",
+      "src": "/help/images/fajlbeallitasok.png",
+      "alt": "Importoldal a fájlbeállításokkal",
+      "caption": "A történet és kiválasztott futás ugyanazon az oldalon található."
+    },
+    {
+      "type": "heading",
+      "text": "Ha nem sikerül"
+    },
+    {
+      "type": "list",
+      "items": [
+        "503 vagy hosszú sorban állás: a worker/sor elérhetőségét az üzemeltető ellenőrizze. Előbb nézd meg, létrejött-e már a futás.",
+        "409: az állapot már megváltozott; frissítsd a futást, és csak az új állapothoz tartozó műveletet válaszd.",
+        "Eredeti fájl nem tölthető le: megőrzési idő vagy jogosultság lehet az ok; ez nem jelenti a feldolgozott termék törlését.",
+        "Nincs Megszakítás a Jóváhagyásra vár állapotban: ismert felületi korlát ebben a verzióban, nem hiányzó kattintási lépés."
+      ]
+    },
+    {
+      "type": "heading",
+      "text": "Mi változik, és mi marad meg?"
+    },
+    {
+      "type": "paragraph",
+      "text": "A megszakítás nem visszaállítás. A retencióhoz kötött forrásfájl-törlés nem történettörlés és nem terméktörlés; a már feldolgozott adatok megmaradnak. Hiba jelentésekor fájl helyett előbb titokmentes sorpéldát és futásazonosítót küldj."
+    },
+    {
+      "type": "heading",
+      "text": "Következő lépés"
+    },
+    {
+      "type": "paragraph",
+      "text": "A kapcsolódó útmutatók az alábbi sorrendben segítenek folytatni a munkát. A látható gombok mindig az aktuális munkaterület és tényleges jogosultságok szerint használhatók."
+    }
+  ],
+  "related": [
+    "csv-xlsx-feltoltes",
+    "import-jovahagyasa",
+    "gyakori-hibak"
+  ]
+}

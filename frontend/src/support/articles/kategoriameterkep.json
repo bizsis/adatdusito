@@ -1,0 +1,123 @@
+{
+  "id": "kategoriameterkep",
+  "topic": "kategoriak",
+  "title": "Saját kategóriatérkép és örökítés",
+  "summary": "A kategóriatérkép egy saját forráskategória összes érintett termékének ad közös besorolási szabályt.",
+  "order": 13,
+  "blocks": [
+    {
+      "type": "heading",
+      "text": "Mire való, és mikor használd?"
+    },
+    {
+      "type": "paragraph",
+      "text": "A kategóriatérkép egy saját forráskategória összes érintett termékének ad közös besorolási szabályt. Egyetlen termék kézi javításánál szélesebb hatású, ezért előbb az érintettséget ellenőrizd."
+    },
+    {
+      "type": "heading",
+      "text": "Hozzáférés és előfeltételek"
+    },
+    {
+      "type": "paragraph",
+      "text": "A Termékadatok Saját kategóriatérkép és profilok füle, products.read és módosításhoz products.classify szükséges. Legyen valódi forráskategória; egy szöveges terméknév nem automatikusan kategóriatérkép."
+    },
+    {
+      "type": "note",
+      "title": "Menüútvonal",
+      "text": "Termékadatok / Kategóriatérkép"
+    },
+    {
+      "type": "heading",
+      "text": "Mezők, állapotok és gombok"
+    },
+    {
+      "type": "table",
+      "caption": "A képernyő elemeinek jelentése",
+      "headers": [
+        "Elem",
+        "Mit jelent és mire figyelj?"
+      ],
+      "rows": [
+        [
+          "Jóváhagyás",
+          "A forráskategóriát belső kategóriához és szükség esetén donorhoz rendeli."
+        ],
+        [
+          "Elutasítás",
+          "Az adott térképi javaslatot utasítja el; nem törli a termékeket."
+        ],
+        [
+          "Térkép törlése és automatikus újrabesorolás",
+          "A kézi térképi döntést elengedi, újraértékeli a szabályokat."
+        ],
+        [
+          "Örökítés",
+          "A bekötött API-nál a jóváhagyás a saját kategória nem zárolt termékeire is érvényesül; a felület ezt jelzi."
+        ],
+        [
+          "2000 termék",
+          "E fölött a terjesztés háttérmunkába kerülhet; a HTTP-mentés nem a teljes munka befejezése."
+        ]
+      ]
+    },
+    {
+      "type": "heading",
+      "text": "Lépésről lépésre – ellenőrzött demópélda"
+    },
+    {
+      "type": "steps",
+      "items": [
+        "Nyisd meg a Termékadatok → Saját kategóriatérkép és profilok fület.",
+        "Válaszd a demó Háztartás / Mosógépek saját kategóriát. Olvasd el, hány termékre vonatkozik.",
+        "Válaszd ki az ellenőrzött magyar kategóriát és a szükséges paraméterprofilt.",
+        "Írj konkrét indokot, és nyisd meg a Módosítások előnézetét. A kézzel védett termékeket a rendszer kihagyja.",
+        "Csak megfelelő hatás esetén használd a Kategóriatérkép jóváhagyása gombot. Nagy halmaznál kövesd a háttérfutás állapotát.",
+        "Egy érintett terméken és egy kézzel védett terméken is ellenőrizd az eredményt."
+      ]
+    },
+    {
+      "type": "note",
+      "title": "Várt eredmény",
+      "text": "A térkép és a nem zárolt termékek besorolása összhangba kerül. A védett kézi termékdöntés továbbra is megmarad."
+    },
+    {
+      "type": "image",
+      "src": "/help/images/kategoriameterkep.png",
+      "alt": "Saját forráskategóriák és besorolási térképek",
+      "caption": "A térkép több termék besorolását is befolyásolhatja."
+    },
+    {
+      "type": "heading",
+      "text": "Ha nem sikerül"
+    },
+    {
+      "type": "list",
+      "items": [
+        "409: a térkép vagy termékek közben változtak; frissíts, majd kérj új előnézetet.",
+        "Nincs forráskategória: előbb az import Kategória oszlopának megfeleltetését ellenőrizd.",
+        "Háttérmunka még fut: ne küldj új térképdöntést csak a lassú visszajelzés miatt; ellenőrizd a futást."
+      ]
+    },
+    {
+      "type": "heading",
+      "text": "Mi változik, és mi marad meg?"
+    },
+    {
+      "type": "paragraph",
+      "text": "A saját kategóriák és nyers adatok megmaradnak. A térképtörlés nem terméktörlés, de új automatikus eredményt hozhat; ez széles körű művelet, nem névjavítás."
+    },
+    {
+      "type": "heading",
+      "text": "Következő lépés"
+    },
+    {
+      "type": "paragraph",
+      "text": "A kapcsolódó útmutatók az alábbi sorrendben segítenek folytatni a munkát. A látható gombok mindig az aktuális munkaterület és tényleges jogosultságok szerint használhatók."
+    }
+  ],
+  "related": [
+    "termekek-kategorizalasa",
+    "besorolasi-kuszob",
+    "parameter-hatterfutas"
+  ]
+}

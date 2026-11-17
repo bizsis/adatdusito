@@ -2,30 +2,132 @@
   "id": "csv-xlsx-feltoltes",
   "topic": "import",
   "title": "CSV/XLSX feltöltése",
-  "summary": "Válassz beszállítót, töltsd fel a fájlt, majd várd meg az elemzést.",
-  "order": 3,
+  "summary": "A feltöltés megőrzi az eredeti fájlt és elindítja a szerkezeti elemzést.",
+  "order": 7,
   "blocks": [
+    {
+      "type": "heading",
+      "text": "Mire való, és mikor használd?"
+    },
+    {
+      "type": "paragraph",
+      "text": "A feltöltés megőrzi az eredeti fájlt és elindítja a szerkezeti elemzést. A felismert oszlopokat még ellenőrizni kell: a sikeres feltöltés nem azonos a termékadatok jóváhagyott feldolgozásával."
+    },
+    {
+      "type": "heading",
+      "text": "Hozzáférés és előfeltételek"
+    },
+    {
+      "type": "paragraph",
+      "text": "Ügyfélmunkaterület, kiválasztott beszállító, imports.read és imports.create szükséges. Készíts egy titokmentes, két soros CSV-t a következő oszlopokkal: Cikkszám;Terméknév;Kategória;EAN. A demósor lehet DEMO-001;Demó mosógép;Háztartás / Mosógépek;5901234123457."
+    },
+    {
+      "type": "note",
+      "title": "Menüútvonal",
+      "text": "Beszállítói import / CSV/XLSX fájl"
+    },
+    {
+      "type": "heading",
+      "text": "Mezők, állapotok és gombok"
+    },
+    {
+      "type": "table",
+      "caption": "A képernyő elemeinek jelentése",
+      "headers": [
+        "Elem",
+        "Mit jelent és mire figyelj?"
+      ],
+      "rows": [
+        [
+          "Munkalap neve (üres: első)",
+          "XLSX-nél a kívánt munkalap pontos neve. Üresen az első munkalap kerül sorra."
+        ],
+        [
+          "Fejléc sora (0: felismerés)",
+          "0 automatikus felismerés az első 20 sorban; kézi választásnál a tényleges fejléc sorát add meg."
+        ],
+        [
+          "CSV elválasztó",
+          "Felismerés, pontosvessző, vessző, tabulátor vagy |. A tizedesvessző nem oszlopelválasztó bizonyítéka."
+        ],
+        [
+          "Kódolás",
+          "Felismerés, utf-8-sig, utf-16, cp1250 vagy cp1252. Hibás magyar ékezetnél az eredeti fájl kódolását ellenőrizd."
+        ],
+        [
+          "Importprofil feltöltéshez",
+          "Mentett beszállítói oszlopmegfeleltetés vagy automatikus profilfelismerés / új profil."
+        ],
+        [
+          "CSV/XLSX fájl",
+          "A fájl kiválasztása feltöltést indít; nem külön későbbi mentőgomb."
+        ]
+      ]
+    },
+    {
+      "type": "heading",
+      "text": "Lépésről lépésre – ellenőrzött demópélda"
+    },
     {
       "type": "steps",
       "items": [
-        "Nyisd meg a Beszállítói import oldalt és válaszd ki a beszállítót.",
-        "Ha szükséges, a Haladó fájlbeállítások alatt állítsd be az XLSX munkalapját, a fejléc sorát, illetve a CSV elválasztóját és kódolását. Alapesetben a rendszer felismerést használ.",
-        "Az Importprofil feltöltéshez mezőben választhatsz mentett profilt, vagy maradhat az automatikus felismerés / új profil.",
-        "A CSV/XLSX fájl mezőben válaszd ki a helyi fájlt. A feltöltés után várd meg az elemzést és a Jóváhagyásra vár állapotot.",
-        "Ellenőrizd a felismert oszlopokat és a mintasorokat; a feltöltés önmagában még nem helyettesíti a megfeleltetés jóváhagyását."
+        "Nyisd meg a Beszállítói import oldalt, válaszd a Segédlet demóbeszállítót.",
+        "A helyi demó-CSV-t mentsd pontosvesszővel, UTF-8 kódolással. Az EAN maradjon teljes szöveg, ne tudományos számjelölés.",
+        "Nyisd le a Haladó fájlbeállítások részt. Ennél a példánál állíts pontosvesszőt; fejléc: 1, kódolás: utf-8-sig. Az XLSX munkalapmező maradjon üres.",
+        "Új mintánál hagyd az Automatikus profilfelismerés / új profil opciót, majd válaszd ki a CSV/XLSX fájlt.",
+        "Várd meg az elemzést és a Jóváhagyásra vár állapotot. Ellenőrizd, hogy négy külön oszlop és a várt demósor látszik.",
+        "Ha az oszlopok összecsúsztak vagy az ékezetek hibásak, ne hagyd jóvá. Előbb tisztázd az elválasztót, fejlécet és kódolást."
       ]
+    },
+    {
+      "type": "note",
+      "title": "Várt eredmény",
+      "text": "Létrejön egy azonosítható importfutás; az előnézet az eredeti cellákat és értelmezést mutatja. Az alapverzió soronként JSON-t is megjelenít, 25 soros lapozással; az új kompakt #42 előnézet nem ennek a verziónak a része."
+    },
+    {
+      "type": "image",
+      "src": "/help/images/fajlbeallitasok.png",
+      "alt": "Munkalap, fejléc, CSV elválasztó és kódolás",
+      "caption": "A fájl kiválasztása előtt állítsd be a szükséges értelmezést."
     },
     {
       "type": "image",
       "src": "/help/images/feltoltes.png",
-      "alt": "Az importoldal CSV/XLSX fájlválasztója és beszállítólistája",
-      "caption": "A fájlválasztó a beszállító kiválasztása után használható."
+      "alt": "CSV/XLSX fájlválasztó a kijelölt demóbeszállítóval",
+      "caption": "Előbb a beszállítót, majd a fájlbeállításokat válaszd."
     },
     {
-      "type": "warning",
-      "title": "A formátum számít",
-      "text": "A támogatott feltöltés CSV vagy XLSX. Hibás ékezeteknél ellenőrizd a kódolást; összecsúszott oszlopoknál az elválasztót és a fejlécet."
+      "type": "heading",
+      "text": "Ha nem sikerül"
+    },
+    {
+      "type": "list",
+      "items": [
+        "422: ellenőrizd a CSV/XLSX formátumot, munkalapot és fejlécet. Üres vagy sérült fájlt ne ismételj jóváhagyással.",
+        "Hosszú elemzés: nézd meg a futás állapotát és hibaüzenetét. Ne tölts fel ismét ugyanazt a fájlt csak azért, mert a worker lassan indul.",
+        "Sok üres sor: az előnézet és számlálók ellenőrzése szükséges. A #42 külön importjavítását ez a kézikönyv nem állítja késznek."
+      ]
+    },
+    {
+      "type": "heading",
+      "text": "Mi változik, és mi marad meg?"
+    },
+    {
+      "type": "paragraph",
+      "text": "A nyers forrás és az értelmezés külön adat. A feltöltés még nem írhatja felül észrevétlenül a kézi paraméterdöntéseket. A teljes EAN-t az eredeti fájlból ellenőrizd; elveszett számjegyeket nem szabad kitalálni."
+    },
+    {
+      "type": "heading",
+      "text": "Következő lépés"
+    },
+    {
+      "type": "paragraph",
+      "text": "A kapcsolódó útmutatók az alábbi sorrendben segítenek folytatni a munkát. A látható gombok mindig az aktuális munkaterület és tényleges jogosultságok szerint használhatók."
     }
   ],
-  "related": ["oszlopok-megfeleltetese", "import-jovahagyasa", "gyakori-hibak"]
+  "related": [
+    "oszlopok-megfeleltetese",
+    "import-elozmenyek-hibak",
+    "import-kulcsok-penzugy"
+  ]
 }

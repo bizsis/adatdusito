@@ -68,6 +68,29 @@ export default function HelpPage() {
                 {article.title}
               </h2>
               <p className="help-summary">{article.summary}</p>
+              <nav className="help-contents" aria-label="A cikk tartalma">
+                <strong>Ebben az útmutatóban</strong>
+                <ul>
+                  {article.blocks.map((block, i) =>
+                    block.type === "heading" ? (
+                      <li key={i}>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const section = document.getElementById(
+                              `help-section-${i}`,
+                            );
+                            section?.focus({ preventScroll: true });
+                            section?.scrollIntoView({ block: "start" });
+                          }}
+                        >
+                          {block.text}
+                        </button>
+                      </li>
+                    ) : null,
+                  )}
+                </ul>
+              </nav>
               <ArticleBody blocks={article.blocks} />
               {!!article.related.length && (
                 <nav aria-label="Kapcsolódó útmutatók" className="help-related">

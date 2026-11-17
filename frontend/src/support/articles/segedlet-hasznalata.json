@@ -1,0 +1,129 @@
+{
+  "id": "segedlet-hasznalata",
+  "topic": "elso-lepesek",
+  "title": "Keresés és navigáció a segédletben",
+  "summary": "A Támogatás → Segédlet felhasználói kézikönyv.",
+  "order": 35,
+  "blocks": [
+    {
+      "type": "heading",
+      "text": "Mire való, és mikor használd?"
+    },
+    {
+      "type": "paragraph",
+      "text": "A Támogatás → Segédlet felhasználói kézikönyv. A keresés a cikkek címében, teljes szövegében és mezőtáblázataiban működik; nem termékkeresés és nem küld támogatási üzenetet."
+    },
+    {
+      "type": "heading",
+      "text": "Hozzáférés és előfeltételek"
+    },
+    {
+      "type": "paragraph",
+      "text": "Minden bejelentkezett felhasználónak elérhető, üzleti jogosultság nélkül is. Egy adminisztrátori cikk olvasása nem adja meg a benne leírt műveleti jogot. Kijelentkezve a belépőoldal jelenik meg."
+    },
+    {
+      "type": "note",
+      "title": "Menüútvonal",
+      "text": "Támogatás / Segédlet"
+    },
+    {
+      "type": "heading",
+      "text": "Mezők, állapotok és gombok"
+    },
+    {
+      "type": "table",
+      "caption": "A képernyő elemeinek jelentése",
+      "headers": [
+        "Elem",
+        "Mit jelent és mire figyelj?"
+      ],
+      "rows": [
+        [
+          "Keresés a segédletben",
+          "Ékezet nélkül is működik; több szó együttes előfordulását keresi."
+        ],
+        [
+          "Témakör",
+          "Asztalon oldalsó lista, mobilon választó; a kereséssel együtt szűkít."
+        ],
+        [
+          "Ebben az útmutatóban",
+          "A cikk szakaszához görget, az útmutató URL-jét nem írja át."
+        ],
+        [
+          "Kép nagyítása / Bezárás",
+          "Olvasható teljes kép, Escape-pel is bezárható; a fókusz visszakerül a megnyitó gombra."
+        ],
+        [
+          "Kapcsolódó útmutatók / Vissza",
+          "Másik cikk vagy találati lista; a böngésző Vissza gombja is használható."
+        ]
+      ]
+    },
+    {
+      "type": "heading",
+      "text": "Lépésről lépésre – ellenőrzött demópélda"
+    },
+    {
+      "type": "steps",
+      "items": [
+        "Nyisd le a Támogatás menüt, és válaszd a Segédlet linket.",
+        "Írd be: fejlec elvalaszto. Nyisd meg a CSV/XLSX feltöltése találatot.",
+        "A tartalomjegyzékkel ugorj a Mezők, állapotok és gombok szakaszra.",
+        "Nagyíts ki egy képet, olvasd el a képaláírást, majd Escape-pel zárd be.",
+        "A kapcsolódó cikkből lépj tovább az oszlopmegfeleltetéshez, majd a böngésző Vissza gombjával térj vissza.",
+        "Nem létező találatnál töröld a keresést és témakörszűrést. A cikk URL-je könyvjelzőzhető, de nem ügyfélváltási hivatkozás."
+      ]
+    },
+    {
+      "type": "note",
+      "title": "Várt eredmény",
+      "text": "A keresés gyorsan, helyi tartalomból működik; nem kell hozzá üzleti adatmódosító API-kérés. A régi HELP-01-cikkek címei továbbra is megnyithatók."
+    },
+    {
+      "type": "image",
+      "src": "/help/images/manual-asztali.png",
+      "alt": "Útmutató asztali nézetben tartalomjegyzékkel",
+      "caption": "A cikk elejének kivágása; a teljes szöveg lefelé görgethető."
+    },
+    {
+      "type": "image",
+      "src": "/help/images/manual-mobil.png",
+      "alt": "Útmutató 390 képpontos mobilnézetben",
+      "caption": "A mezőtáblázat saját területén görgethető, a képek nagyíthatók."
+    },
+    {
+      "type": "heading",
+      "text": "Ha nem sikerül"
+    },
+    {
+      "type": "list",
+      "items": [
+        "Nincs találat: rövidebb keresés, ékezet nélküli forma vagy minden témakör segíthet.",
+        "A cikk nem található: hibás vagy elavult URL; térj vissza a témakörökhöz.",
+        "Swagger: technikai API-dokumentáció az Áttekintésről, nem a felhasználói lépések helyettesítője."
+      ]
+    },
+    {
+      "type": "heading",
+      "text": "Mi változik, és mi marad meg?"
+    },
+    {
+      "type": "paragraph",
+      "text": "A segédlet olvasása nem ment importot, nem vált munkaterületet és nem ad új jogot. A képek szintetikus adatot mutatnak; a külső Google- és eszközablak megjelenése eltérhet."
+    },
+    {
+      "type": "heading",
+      "text": "Következő lépés"
+    },
+    {
+      "type": "paragraph",
+      "text": "A kapcsolódó útmutatók az alábbi sorrendben segítenek folytatni a munkát. A látható gombok mindig az aktuális munkaterület és tényleges jogosultságok szerint használhatók."
+    }
+  ],
+  "related": [
+    "belepes-munkaterulet",
+    "gyakori-hibak",
+    "jogosultsagok"
+  ]
+}

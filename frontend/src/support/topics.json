@@ -2,7 +2,7 @@
   {
     "id": "elso-lepesek",
     "title": "Első lépések",
-    "description": "Bejelentkezés és a megfelelő munkaterület kiválasztása.",
+    "description": "Belépés, munkaterület, ügyfelek és a kézikönyv használata.",
     "order": 1
   },
   {
@@ -37,8 +37,8 @@
   },
   {
     "id": "hozzaferes",
-    "title": "Felhasználók és jogosultságok",
-    "description": "Szerepkörök és munkaterületi hozzáférés.",
+    "title": "Fiók, hozzáférések és rendszerbeállítások",
+    "description": "Saját biztonság, munkatársak, szerepkörök, meghívók és központi szabályok.",
     "order": 7
   },
   {

@@ -1,0 +1,118 @@
+{
+  "id": "beallitasok-altalanos",
+  "topic": "hozzaferes",
+  "title": "Általános rendszerbeállítások",
+  "summary": "Az Általános beállítások az alkalmazás megjelenített nevét és környezeti jelzéseit kezelik.",
+  "order": 31,
+  "blocks": [
+    {
+      "type": "heading",
+      "text": "Mire való, és mikor használd?"
+    },
+    {
+      "type": "paragraph",
+      "text": "Az Általános beállítások az alkalmazás megjelenített nevét és környezeti jelzéseit kezelik. A Fejlesztői/Üzemi címke nem telepítési parancs és nem kapcsolja át a VPS adatbázisát."
+    },
+    {
+      "type": "heading",
+      "text": "Hozzáférés és előfeltételek"
+    },
+    {
+      "type": "paragraph",
+      "text": "system.settings.read kell a megtekintéshez, system.settings.manage a mentéshez. Rendszerszintű változtatásról van szó, nem ügyfelenkénti személyes témabeállításról."
+    },
+    {
+      "type": "note",
+      "title": "Menüútvonal",
+      "text": "Rendszerbeállítások / Általános"
+    },
+    {
+      "type": "heading",
+      "text": "Mezők, állapotok és gombok"
+    },
+    {
+      "type": "table",
+      "caption": "A képernyő elemeinek jelentése",
+      "headers": [
+        "Elem",
+        "Mit jelent és mire figyelj?"
+      ],
+      "rows": [
+        [
+          "Megjelenített név / rendszernév",
+          "Az arculat és rendszerazonosítás feliratai; 80/120 karakteres korlátokkal."
+        ],
+        [
+          "Nyelv",
+          "Jelenleg Magyar; más nyelv nincs kész választható felületként."
+        ],
+        [
+          "Időzóna",
+          "Például Europe/Budapest vagy UTC; érvényes időzónát adj meg."
+        ],
+        [
+          "Környezet",
+          "Fejlesztői vagy Üzemi megjelenítési jelzés; nincs automatikus deploy."
+        ]
+      ]
+    },
+    {
+      "type": "heading",
+      "text": "Lépésről lépésre – ellenőrzött demópélda"
+    },
+    {
+      "type": "steps",
+      "items": [
+        "Nyisd meg a Rendszerbeállítások → Általános fület.",
+        "Olvasd el a jelenlegi neveket és környezetjelzőt, mielőtt módosítasz.",
+        "Tesztkörnyezetben adj egyértelmű demó megjelenített nevet, és ellenőrizd a hosszkorlátot.",
+        "Ellenőrizd a Magyar nyelvet, Europe/Budapest időzónát és a Fejlesztői jelzést.",
+        "Mentsd az általános beállításokat, majd ellenőrizd a visszajelzést és a friss arculati feliratot."
+      ]
+    },
+    {
+      "type": "note",
+      "title": "Várt eredmény",
+      "text": "A szerver a mentett beállítást adja vissza; a megjelenítés újraindítás nélkül frissülhet. A környezetjelző átírása nem teszi élessé az adatokat."
+    },
+    {
+      "type": "image",
+      "src": "/help/images/beallitas-altalanos.png",
+      "alt": "Általános név-, nyelv-, időzóna- és környezetbeállítás",
+      "caption": "A környezetjelzés nem telepítést indít."
+    },
+    {
+      "type": "heading",
+      "text": "Ha nem sikerül"
+    },
+    {
+      "type": "list",
+      "items": [
+        "403: csak olvasási joggal nem menthető.",
+        "422: hibás időzóna vagy túl hosszú név; a mező jelentésének megfelelően javíts.",
+        "Mentési bizonytalanság: olvasd vissza a beállításokat újabb mentés előtt."
+      ]
+    },
+    {
+      "type": "heading",
+      "text": "Mi változik, és mi marad meg?"
+    },
+    {
+      "type": "paragraph",
+      "text": "A név és jelzések változnak, az ügyféladatok és a kategóriafa nem. Éles környezetnek ne nevezd át véletlenül a demót; az üzemeltetési beállítások külön kezelendők."
+    },
+    {
+      "type": "heading",
+      "text": "Következő lépés"
+    },
+    {
+      "type": "paragraph",
+      "text": "A kapcsolódó útmutatók az alábbi sorrendben segítenek folytatni a munkát. A látható gombok mindig az aktuális munkaterület és tényleges jogosultságok szerint használhatók."
+    }
+  ],
+  "related": [
+    "beallitasok-smtp",
+    "beallitasok-hitelesites",
+    "besorolasi-kuszob"
+  ]
+}

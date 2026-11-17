@@ -1,0 +1,143 @@
+{
+  "id": "elokeszitesi-jovahagyas",
+  "topic": "tomeges",
+  "title": "Előkészítési ellenőrzés és jóváhagyások",
+  "summary": "Az előkészítési jóváhagyás a későbbi kutatás bemeneti állapotát rögzíti.",
+  "order": 24,
+  "blocks": [
+    {
+      "type": "heading",
+      "text": "Mire való, és mikor használd?"
+    },
+    {
+      "type": "paragraph",
+      "text": "Az előkészítési jóváhagyás a későbbi kutatás bemeneti állapotát rögzíti. Nem importengedély, nem paraméteralkalmazás, nem kreditvásárlás és nem AI-kutatás indítása. A kutatandó hiány önmagában nem tiltja a jóváhagyást."
+    },
+    {
+      "type": "heading",
+      "text": "Hozzáférés és előfeltételek"
+    },
+    {
+      "type": "paragraph",
+      "text": "products.read kell az ellenőrzéshez, products.prepare.approve a jóváhagyáshoz, újraméréshez és visszavonáshoz. Előbb rögzített termékkör és sikeresen befejezett, még érvényes ellenőrzés szükséges."
+    },
+    {
+      "type": "note",
+      "title": "Menüútvonal",
+      "text": "Termékadatok / Paraméterek / Előkészítési ellenőrzés; Jóváhagyások"
+    },
+    {
+      "type": "heading",
+      "text": "Mezők, állapotok és gombok"
+    },
+    {
+      "type": "table",
+      "caption": "A képernyő elemeinek jelentése",
+      "headers": [
+        "Elem",
+        "Mit jelent és mire figyelj?"
+      ],
+      "rows": [
+        [
+          "Előkészítési ellenőrzés",
+          "Megvizsgálja, mely termékek jóváhagyhatók, és mi blokkolja a többieket."
+        ],
+        [
+          "Kutatandó hiány / kötelező hiány",
+          "Rögzített hiányok a későbbi munkához; nem automatikus adatkitöltés."
+        ],
+        [
+          "Jóváhagyások állapota",
+          "Aktív vagy Visszavont; a termék-, katalógus- és szabályrevízió érvényessége külön vizsgálandó."
+        ],
+        [
+          "Újramérés",
+          "A meglévő jóváhagyás tételeit újraellenőrzi; nem rejti el az időközbeni változást."
+        ],
+        [
+          "Érvényes / Érvénytelen",
+          "A legutóbbi ellenőrzés tételes eredménye; az invalid terméket rendezni kell."
+        ],
+        [
+          "Visszavonás",
+          "Indokkal megszünteti a jóváhagyás érvényét; nem terméktörlés."
+        ],
+        [
+          "Újramérés következménye",
+          "Az elavult tételeket végleg érvényteleníti ezen a jóváhagyáson belül; nem teszi őket automatikusan ismét érvényessé. Az új állapothoz új ellenőrzés és új jóváhagyás szükséges lehet."
+        ]
+      ]
+    },
+    {
+      "type": "heading",
+      "text": "Lépésről lépésre – ellenőrzött demópélda"
+    },
+    {
+      "type": "steps",
+      "items": [
+        "A Paraméteres termékáttekintésben rögzítsd a demótermékkört.",
+        "Indíts Előkészítési ellenőrzést, és várd meg a befejezést.",
+        "A tételes összesítésben ellenőrizd a jóváhagyhatók, kihagyottak és kutatandó hiányok számát.",
+        "Megfelelő joggal írj indokot, olvasd el a jóváhagyás megerősítését, majd rögzítsd a döntést.",
+        "Az Előkészítési jóváhagyások listájából nyisd meg az új azonosítót. Ellenőrizd az érvényes és érvénytelen tételeket.",
+        "Adatváltozás után végezz újramérést. Ha a döntés már nem használható, indokkal vond vissza."
+      ]
+    },
+    {
+      "type": "note",
+      "title": "Várt eredmény",
+      "text": "A jóváhagyás azonosítható és revízióhoz kötött. Az időközben elavult tételek kimaradnak vagy érvénytelenként jelennek meg; nem indul AI-kutatás."
+    },
+    {
+      "type": "image",
+      "src": "/help/images/elokeszitesi-ellenorzes.png",
+      "alt": "Előkészítési ellenőrzés tételes eredménye",
+      "caption": "A kutatandó hiány önmagában nem tiltja az előkészítési döntést."
+    },
+    {
+      "type": "image",
+      "src": "/help/images/elokeszitesi-megerosites.png",
+      "alt": "Előkészítési jóváhagyás megerősítése indokkal",
+      "caption": "A döntés még nem indít AI-kutatást."
+    },
+    {
+      "type": "image",
+      "src": "/help/images/elokeszitesi-jovahagyas.png",
+      "alt": "Létrejött előkészítési jóváhagyás részletei",
+      "caption": "Az érvényesség revízióhoz kötött, adatváltozás után újraellenőrizendő."
+    },
+    {
+      "type": "heading",
+      "text": "Ha nem sikerül"
+    },
+    {
+      "type": "list",
+      "items": [
+        "409: ellenőrzési token vagy darabszám elavult, esetleg nem kész a check. Új ellenőrzés szükséges.",
+        "Invalid tétel: rendezd a konkrét termék/donor/paraméter problémát, majd mérj újra.",
+        "403: az alkalmazási jog nem egyenlő előkészítési jóváhagyási joggal."
+      ]
+    },
+    {
+      "type": "heading",
+      "text": "Mi változik, és mi marad meg?"
+    },
+    {
+      "type": "paragraph",
+      "text": "A visszavonás és újramérés auditálható döntés. A termékadat, nyers forrás és korábbi ellenőrzési nyom megmarad. Nincs kutatási, exportálási vagy fizetési mellékhatás."
+    },
+    {
+      "type": "heading",
+      "text": "Következő lépés"
+    },
+    {
+      "type": "paragraph",
+      "text": "A kapcsolódó útmutatók az alábbi sorrendben segítenek folytatni a munkát. A látható gombok mindig az aktuális munkaterület és tényleges jogosultságok szerint használhatók."
+    }
+  ],
+  "related": [
+    "tomeges-jovahagyas",
+    "parameterallapotok",
+    "muveleti-naplo"
+  ]
+}

@@ -10,7 +10,7 @@ name: Adatdúsító CI
 
 on:
   push:
-    branches: [main, codex/category-03d-full-integration, codex/release-candidate-01, codex/help-01]
+    branches: [main, codex/category-03d-full-integration, codex/release-candidate-01, codex/help-01, codex/help-02-complete-manual]
   pull_request:
   workflow_dispatch:
 
@@ -19,8 +19,8 @@ permissions:
 
 concurrency:
   group: ci-${{ github.event.pull_request.number || github.ref }}
-  # Superseded PR pushes are cancelled; every main commit gets a full run.
-  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+  # Superseded PR and HELP-02 branch pushes are cancelled; every main commit gets a full run.
+  cancel-in-progress: ${{ github.event_name == 'pull_request' || (github.event_name == 'push' && github.ref == 'refs/heads/codex/help-02-complete-manual') }}
 
 env:
   PYTHON_VERSION: "3.12" # matches backend/Dockerfile

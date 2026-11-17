@@ -1,0 +1,124 @@
+{
+  "id": "parameterkereses",
+  "topic": "parameterek",
+  "title": "Paraméterkereső és megengedett értékek",
+  "summary": "A Paraméterkereső a referencia paraméterdefinícióit mutatja.",
+  "order": 17,
+  "blocks": [
+    {
+      "type": "heading",
+      "text": "Mire való, és mikor használd?"
+    },
+    {
+      "type": "paragraph",
+      "text": "A Paraméterkereső a referencia paraméterdefinícióit mutatja. Ez nem ugyanaz, mint egy termék ténylegesen kitöltött paraméterértéke. A referencialista meghatározza, milyen érték megengedett, nem azt, hogy a termék tudja-e azt."
+    },
+    {
+      "type": "heading",
+      "text": "Hozzáférés és előfeltételek"
+    },
+    {
+      "type": "paragraph",
+      "text": "reference.read szükséges. A közös kategória részleteiből is elérhető a kategóriához tartozó paraméterlista. Nagy értékkészletnél keresést és lapozást használj, ne teljes listaletöltést várj."
+    },
+    {
+      "type": "note",
+      "title": "Menüútvonal",
+      "text": "Paraméterkereső; Kategóriák / Paraméterek / Értékek"
+    },
+    {
+      "type": "heading",
+      "text": "Mezők, állapotok és gombok"
+    },
+    {
+      "type": "table",
+      "caption": "A képernyő elemeinek jelentése",
+      "headers": [
+        "Elem",
+        "Mit jelent és mire figyelj?"
+      ],
+      "rows": [
+        [
+          "Paraméterkeresés",
+          "Név vagy azonosító szerint szűkít; a kategórián belüli lista és a globális kereső hatóköre eltérhet."
+        ],
+        [
+          "Kötelező / Opcionális",
+          "A profilban tárolt jelölés; az ismeretlen kötelezőség nem automatikusan opcionális."
+        ],
+        [
+          "Típus / sorrend / szűrő / új érték",
+          "A forrásdefiníció adatai, nem szabadon szerkeszthető termékértékek."
+        ],
+        [
+          "Értékek / értékkeresés / lapozás",
+          "Az adott paraméter megengedett értékei külön oldalakon. A több milliós állomány nem töltődik egyszerre."
+        ]
+      ]
+    },
+    {
+      "type": "heading",
+      "text": "Lépésről lépésre – ellenőrzött demópélda"
+    },
+    {
+      "type": "steps",
+      "items": [
+        "Nyisd meg a Kategóriák oldalon a Televíziók kategóriát a TV és szórakozás ágban.",
+        "Ellenőrizd a donorprofilt és a hozzá tartozó paraméterszámot. A korábban ellenőrzött 79-es forrásprofil 46 paraméteres; telepítési adatot a saját listából olvass vissza.",
+        "Keress egy paraméternévre, majd válts kötelező szűrésre és vissza.",
+        "Nyisd meg az adott paraméter értékeit, keress egy rövid kifejezésre és nézd meg a lapozási lehetőséget.",
+        "Egy termék valódi adatainak ellenőrzéséhez térj át a Termékadatok termékrészletére."
+      ]
+    },
+    {
+      "type": "note",
+      "title": "Várt eredmény",
+      "text": "A kötelező/opcionális jelölés és a megengedett értékek megtekinthetők. Az értékkereső nem állít be értéket automatikusan egy terméken."
+    },
+    {
+      "type": "image",
+      "src": "/help/images/parameterkereso.png",
+      "alt": "Referencia paraméterek keresése és kötelezőségi szűrése",
+      "caption": "Az értéklistát paraméterenként kell megnyitni."
+    },
+    {
+      "type": "image",
+      "src": "/help/images/megengedett-ertekek.png",
+      "alt": "Egy paraméter megengedett értékei és keresője",
+      "caption": "A referenciaérték nem automatikus termékérték."
+    },
+    {
+      "type": "heading",
+      "text": "Ha nem sikerül"
+    },
+    {
+      "type": "list",
+      "items": [
+        "Üres értéklista: lehet szabad értékű vagy értékek nélküli definíció; ellenőrizd az új érték engedélyezését.",
+        "404: a paraméter nem található az aktuális katalógusban; frissítsd a kategória részleteit.",
+        "503: aktív katalógus vagy referenciaszolgáltatás hiányzik; a felület nem helyettesíti kitalált értékekkel."
+      ]
+    },
+    {
+      "type": "heading",
+      "text": "Mi változik, és mi marad meg?"
+    },
+    {
+      "type": "paragraph",
+      "text": "A keresés és lapozás olvasási művelet. Az eredeti paraméterértékek nem változnak, és a felület nem általános referencialista-szerkesztő."
+    },
+    {
+      "type": "heading",
+      "text": "Következő lépés"
+    },
+    {
+      "type": "paragraph",
+      "text": "A kapcsolódó útmutatók az alábbi sorrendben segítenek folytatni a munkát. A látható gombok mindig az aktuális munkaterület és tényleges jogosultságok szerint használhatók."
+    }
+  ],
+  "related": [
+    "parameterallapotok",
+    "kezi-parameterek",
+    "emag-donorprofilok"
+  ]
+}

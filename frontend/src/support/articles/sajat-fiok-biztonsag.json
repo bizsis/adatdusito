@@ -1,0 +1,130 @@
+{
+  "id": "sajat-fiok-biztonsag",
+  "topic": "hozzaferes",
+  "title": "Saját fiók, jelszó és munkamenetek",
+  "summary": "A Biztonság oldal a saját fiókod hitelesítőeszközeit és munkameneteit kezeli.",
+  "order": 3,
+  "blocks": [
+    {
+      "type": "heading",
+      "text": "Mire való, és mikor használd?"
+    },
+    {
+      "type": "paragraph",
+      "text": "A Biztonság oldal a saját fiókod hitelesítőeszközeit és munkameneteit kezeli. Ez különbözik a munkatársi jogosultságszerkesztőtől: itt nem egy másik ügyfél szerepkörét állítod."
+    },
+    {
+      "type": "heading",
+      "text": "Hozzáférés és előfeltételek"
+    },
+    {
+      "type": "paragraph",
+      "text": "Bejelentkezés szükséges; az érzékeny módosításokhoz öt percen belüli újraazonosítás kell. A hitelesítés jelszóval, szükség esetén második faktorral, vagy engedélyezett passkeyjel történhet."
+    },
+    {
+      "type": "note",
+      "title": "Menüútvonal",
+      "text": "Fejléc / Biztonság; Jelszó"
+    },
+    {
+      "type": "heading",
+      "text": "Mezők, állapotok és gombok"
+    },
+    {
+      "type": "table",
+      "caption": "A képernyő elemeinek jelentése",
+      "headers": [
+        "Elem",
+        "Mit jelent és mire figyelj?"
+      ],
+      "rows": [
+        [
+          "Újraazonosítás",
+          "Frissen igazolja a saját személyazonosságodat; nem új jogosultság."
+        ],
+        [
+          "Felhasználónév",
+          "3–80 karakter; kisbetű, szám, pont, aláhúzás és kötőjel. A meglévő e-maillel továbbra is beléphetsz."
+        ],
+        [
+          "Jelszó",
+          "A felső Jelszó gombnál jelenlegi jelszó, új jelszó és megerősítés; legalább a szabályzat szerinti, minimum 12 karakter."
+        ],
+        [
+          "Aktív munkamenetek / Visszavonás",
+          "Megkülönbözteti az Ez az eszköz és a másik munkamenet sorát. A jelenlegi visszavonása kijelentkeztet."
+        ]
+      ]
+    },
+    {
+      "type": "heading",
+      "text": "Lépésről lépésre – ellenőrzött demópélda"
+    },
+    {
+      "type": "steps",
+      "items": [
+        "A felső Biztonság gombbal nyisd meg a Hitelesítés és 2FA oldalt.",
+        "Végezd el az újraazonosítást a saját hitelesítőeszközöddel; a jelszót soha ne küldd el támogatásnak.",
+        "A Felhasználónév mezőben ellenőrizd vagy javítsd a nevedet, majd használd a Felhasználónév mentése gombot.",
+        "Az Aktív munkamenetek között nézd meg a belépési módot és lejáratot. Ismeretlen munkamenetet a saját sorában vonj vissza.",
+        "Jelszócseréhez használd a felső Jelszó gombot, add meg mindhárom mezőt, majd a sikeres csere után jelentkezz be újra."
+      ]
+    },
+    {
+      "type": "note",
+      "title": "Várt eredmény",
+      "text": "A mentett felhasználónév megjelenik a fiókban; a visszavont munkamenet nem használható tovább. A kötelező jelszócsere ablakát a munka folytatása előtt be kell fejezni."
+    },
+    {
+      "type": "image",
+      "src": "/help/images/sajat-fiok.png",
+      "alt": "Saját fiók újraazonosítása és felhasználóneve",
+      "caption": "Az érzékeny döntésekhez öt percen belüli újraazonosítás kell."
+    },
+    {
+      "type": "image",
+      "src": "/help/images/jelszocsere.png",
+      "alt": "Jelenlegi és új jelszó mezői üresen",
+      "caption": "A jelszavak nem szerepelnek a képernyőképen."
+    },
+    {
+      "type": "image",
+      "src": "/help/images/munkamenetek.png",
+      "alt": "Aktív munkamenetek és visszavonásuk",
+      "caption": "Az Ez az eszköz visszavonása kijelentkeztet."
+    },
+    {
+      "type": "heading",
+      "text": "Ha nem sikerül"
+    },
+    {
+      "type": "list",
+      "items": [
+        "401: új bejelentkezés kell; 403 friss újraazonosítást vagy további faktort is jelenthet.",
+        "422: névformátum, jelszóhossz vagy két eltérő új jelszó ellenőrzése szükséges.",
+        "429: túl sok próbálkozás után várd ki a korlátozási időablakot; ne próbálj automatizált újrabelépést."
+      ]
+    },
+    {
+      "type": "heading",
+      "text": "Mi változik, és mi marad meg?"
+    },
+    {
+      "type": "paragraph",
+      "text": "A munkamenet-visszavonás és a jelszócsere nem töröl termékadatokat. Ne vond vissza az utolsó használható hitelesítőeszközt, amíg a helyettesítő belépést nem ellenőrizted."
+    },
+    {
+      "type": "heading",
+      "text": "Következő lépés"
+    },
+    {
+      "type": "paragraph",
+      "text": "A kapcsolódó útmutatók az alábbi sorrendben segítenek folytatni a munkát. A látható gombok mindig az aktuális munkaterület és tényleges jogosultságok szerint használhatók."
+    }
+  ],
+  "related": [
+    "totp-helyreallitas",
+    "passkey-google-regisztracio",
+    "jogosultsagok"
+  ]
+}

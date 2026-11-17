@@ -2,30 +2,126 @@
   "id": "exportprofilok",
   "topic": "export",
   "title": "Exportprofilok beállítása",
-  "summary": "Készítsd elő a célwebáruház mezőkészletét és a saját exportprofilt.",
-  "order": 10,
+  "summary": "Az Export oldal a célwebáruház meződefinícióját és az ügyfél saját exportprofilját készíti elő.",
+  "order": 25,
   "blocks": [
+    {
+      "type": "heading",
+      "text": "Mire való, és mikor használd?"
+    },
+    {
+      "type": "paragraph",
+      "text": "Az Export oldal a célwebáruház meződefinícióját és az ügyfél saját exportprofilját készíti elő. A jelen verzió nem generál és nem tölt le UNAS-termékfájlt; a profil mentése nem exportálás."
+    },
+    {
+      "type": "heading",
+      "text": "Hozzáférés és előfeltételek"
+    },
+    {
+      "type": "paragraph",
+      "text": "Olvasáshoz exports.read, központi mezősémához exports.fields.manage, saját ügyfélprofilhoz exports.profile szükséges. A saját profil ügyfélmunkaterülethez kötődik; a központi kötelező mezőket nem lehet feloldani vele."
+    },
+    {
+      "type": "note",
+      "title": "Menüútvonal",
+      "text": "Export / Webáruházmotorok → Exportmezők"
+    },
+    {
+      "type": "heading",
+      "text": "Mezők, állapotok és gombok"
+    },
+    {
+      "type": "table",
+      "caption": "A képernyő elemeinek jelentése",
+      "headers": [
+        "Elem",
+        "Mit jelent és mire figyelj?"
+      ],
+      "rows": [
+        [
+          "Webáruházmotor",
+          "A választott célmezőséma, például UNAS; nem beszállítói importprofil."
+        ],
+        [
+          "key / label / type",
+          "Technikai mezőkulcs, látható felirat és text/number/date/boolean típus."
+        ],
+        [
+          "required / internal_field",
+          "Kötelezőség és kapcsolódó belső adat; nem minden forrásoszlop közvetlen kimenő mező."
+        ],
+        [
+          "default / allowed / validation",
+          "Alapérték, pontosvesszős megengedett értékek és url/email/gtin/nonnegative ellenőrzés."
+        ],
+        [
+          "Mező hozzáadása / törlése",
+          "A mezőlistát szerkeszti. Nincs külön sor-fel/le rendezőgomb."
+        ],
+        [
+          "Referenciaminta / Mentés",
+          "Központi joggal CSV/XLSX fejlécből mezőkészlet készülhet. Saját profilnál a meglévő központi korlátok megmaradnak."
+        ]
+      ]
+    },
+    {
+      "type": "heading",
+      "text": "Lépésről lépésre – ellenőrzött demópélda"
+    },
     {
       "type": "steps",
       "items": [
-        "Nyisd meg az Export menüt. A megjelenő lehetőségek a rendszer- és ügyféljogoktól függnek.",
-        "A Motor listában válaszd ki a célt, és ha van elérhető központi definíció, kattints a Definíció betöltése gombra. Az üres táblához a Mező hozzáadása gombbal adhatsz sort.",
-        "Ügyfél-munkaterületen, profilkezelési joggal ellenőrizd a mezők sorrendjét, oszlopnevét, kötelező jelölését, belső mezőkapcsolatát, alapértékeit és értéklistáit.",
-        "A Saját exportprofil mentése gombbal ments. Az ügyféloldalon jelenleg nincs külön profilnév-szerkesztő. Ha Központi definíció mentése látható, rendszerszintű mezősémát szerkesztesz, nem saját ügyfélprofilt.",
-        "Az import oszlopmegfeleltetésénél a Célwebáruház-exportprofil segítségével választhatod ki a mentett profilt."
+        "Nyisd meg az Export oldalt, és válaszd a megfelelő motort.",
+        "Demóban a mezősémában ellenőrizd a cikkszám és terméknév mezőt. Új, még nem mentett sorhoz használd a Mező hozzáadása gombot.",
+        "A cikkszám technikai kulcsa legyen cikkszam, felirata Cikkszám, belső mezője sku, típusa text. Az azonosító vezető nulláit nem szabad számtípussal elveszíteni.",
+        "A Terméknév sor belső mezője name. Ellenőrizd a kötelezőséget és a központi definíciót.",
+        "Csak megfelelő hatáskörrel mentsd a központi mezőket vagy saját profilt. A saját profil nem rendelkezik külön, szabad profilnév-bevitellel ezen a képernyőn.",
+        "Az importoldalon a Célwebáruház-exportprofil listában a mentett profil segít a célmezők értelmezésében. UNAS-fájlletöltést itt még ne keress."
       ]
+    },
+    {
+      "type": "note",
+      "title": "Várt eredmény",
+      "text": "A meződefiníció/profil menthető és visszaolvasható. Az oldal alján jelzett exportgenerálási hiány tényleges korlát."
     },
     {
       "type": "image",
       "src": "/help/images/exportprofil.png",
-      "alt": "Exportmezők és profil beállításai tesztkörnyezetben",
-      "caption": "A felület mező- és profilbeállítást kezel, nem termékadatokat küld a webáruháznak."
+      "alt": "Demó exportmezők belső sku és name kapcsolattal",
+      "caption": "Mezőkészlet-előkészítés, nem kész UNAS-export."
     },
     {
-      "type": "warning",
-      "title": "Nincs kész UNAS-kiküldés",
-      "text": "Ebben a modulban tényleges UNAS-termékexport nem készül. A profil mentése nem tölti fel a termékeket az UNAS-ba, és nem helyettesíti a későbbi exportfolyamatot."
+      "type": "heading",
+      "text": "Ha nem sikerül"
+    },
+    {
+      "type": "list",
+      "items": [
+        "422: hibás technikai kulcs, típus, validáció vagy alapérték; ellenőrizd az adott sort.",
+        "Központi kötelező mező módosítása tiltott: saját profil nem gyengítheti a központi szabályt.",
+        "403: a profil- és központi sémakezelés külön jog; puszta olvasási joggal nincs mentés."
+      ]
+    },
+    {
+      "type": "heading",
+      "text": "Mi változik, és mi marad meg?"
+    },
+    {
+      "type": "paragraph",
+      "text": "A központi séma több ügyfelet érinthet. Mentés előtt ellenőrizd a hatókört; sem a mezőszerkesztés, sem a profil nem küld adatot a webáruháznak és nem hoz létre termékexportot."
+    },
+    {
+      "type": "heading",
+      "text": "Következő lépés"
+    },
+    {
+      "type": "paragraph",
+      "text": "A kapcsolódó útmutatók az alábbi sorrendben segítenek folytatni a munkát. A látható gombok mindig az aktuális munkaterület és tényleges jogosultságok szerint használhatók."
     }
   ],
-  "related": ["oszlopok-megfeleltetese", "import-jovahagyasa"]
+  "related": [
+    "oszlopok-megfeleltetese",
+    "import-jovahagyasa",
+    "jogosultsagok"
+  ]
 }

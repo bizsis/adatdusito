@@ -1,0 +1,128 @@
+{
+  "id": "szerepkorok",
+  "topic": "hozzaferes",
+  "title": "Szerepkörök és jogosultsági katalógus",
+  "summary": "A szerepkör névvel ellátott jogkészlet.",
+  "order": 28,
+  "blocks": [
+    {
+      "type": "heading",
+      "text": "Mire való, és mikor használd?"
+    },
+    {
+      "type": "paragraph",
+      "text": "A szerepkör névvel ellátott jogkészlet. A Jogosultsági katalógus megmutatja az egyes technikai jogok emberi jelentését. Egy szerepkörsablon és egy helyi szerepkör nem ugyanaz: a sablon helyi szerkesztése saját példányt hozhat létre."
+    },
+    {
+      "type": "heading",
+      "text": "Hozzáférés és előfeltételek"
+    },
+    {
+      "type": "paragraph",
+      "text": "Ügyfélkörben members.read és szerkesztéshez members.roles.manage; rendszerszinten system.roles.read/manage szükséges. Rendszerengedélyt nem lehet ügyfélszerepkörrel kiosztani."
+    },
+    {
+      "type": "note",
+      "title": "Menüútvonal",
+      "text": "Hozzáférések / Szerepkörök; Jogosultsági katalógus"
+    },
+    {
+      "type": "heading",
+      "text": "Mezők, állapotok és gombok"
+    },
+    {
+      "type": "table",
+      "caption": "A képernyő elemeinek jelentése",
+      "headers": [
+        "Elem",
+        "Mit jelent és mire figyelj?"
+      ],
+      "rows": [
+        [
+          "Új szerepkör / név",
+          "A munkakör emberi neve, például Demó importellenőr."
+        ],
+        [
+          "Technikai kód",
+          "Kisbetűvel induló, kisbetű/szám/aláhúzás, 2–48 karakter; ne egy személy e-mail-címe legyen."
+        ],
+        [
+          "Jogosultsági mátrix",
+          "A kiválasztott műveleti engedélyek. Az importolvasás nem importjóváhagyás."
+        ],
+        [
+          "Védett / sablon / helyi",
+          "A szerepkör eredete és szerkeszthetősége; védett szerepkör nem törölhető szabadon."
+        ],
+        [
+          "Törlés",
+          "Nem felhasználót töröl, de a hozzáférési eredményre hatással lehet."
+        ]
+      ]
+    },
+    {
+      "type": "heading",
+      "text": "Lépésről lépésre – ellenőrzött demópélda"
+    },
+    {
+      "type": "steps",
+      "items": [
+        "Nyisd meg a Hozzáférések oldalon a Jogosultsági katalógust. Keresd meg az olvasás és jóváhagyás közti különbséget.",
+        "A Szerepkörök fülön válaszd az Új szerepkör lehetőséget.",
+        "Demóban név: Demó importellenőr, kód: demo_importellenor. Csak a szükséges ügyféljogokat jelöld.",
+        "Mentsd a szerepkört, majd ellenőrizd a listán a típusát és a hozzá tartozó felhasználószámot.",
+        "A munkatárs hozzáférési szerkesztőjében rendeld a szerepet a megfelelő személyhez, és ellenőrizd a tényleges jogokat."
+      ]
+    },
+    {
+      "type": "note",
+      "title": "Várt eredmény",
+      "text": "A szerepkör önállóan létezik; csak hozzárendelés után befolyásol egy munkatársat. A sablon eredeti központi definíciója helyi másolatnál megmarad."
+    },
+    {
+      "type": "image",
+      "src": "/help/images/szerepkorok.png",
+      "alt": "Rendszerszerepkörök típusa, védelme és használata",
+      "caption": "A védett szerepkört nem lehet szabadon törölni."
+    },
+    {
+      "type": "image",
+      "src": "/help/images/szerepkor-szerkeszto.png",
+      "alt": "Szerepkör neve, technikai kódja és jogosultsági mátrixa",
+      "caption": "A képen egy részlet látható; a teljes mátrix görgethető."
+    },
+    {
+      "type": "heading",
+      "text": "Ha nem sikerül"
+    },
+    {
+      "type": "list",
+      "items": [
+        "422: hibás vagy foglalt kód, nem megfelelő jogkészlet; javítsd a szerepkör űrlapját.",
+        "403: nincs szerkesztési vagy delegálási jog.",
+        "Nem törölhető szerep: védett vagy sablon eredetű; ne kerüld meg másik ügyfélben történő módosítással."
+      ]
+    },
+    {
+      "type": "heading",
+      "text": "Mi változik, és mi marad meg?"
+    },
+    {
+      "type": "paragraph",
+      "text": "Egy használt szerepkör módosítása több munkatársra hathat. Mentés előtt nézd meg az érintetteket; a személyes kivételek és erőforráskorlátok továbbra is érvényesülnek."
+    },
+    {
+      "type": "heading",
+      "text": "Következő lépés"
+    },
+    {
+      "type": "paragraph",
+      "text": "A kapcsolódó útmutatók az alábbi sorrendben segítenek folytatni a munkát. A látható gombok mindig az aktuális munkaterület és tényleges jogosultságok szerint használhatók."
+    }
+  ],
+  "related": [
+    "jogosultsagok",
+    "felhasznalok-tagsagok",
+    "meghivok"
+  ]
+}

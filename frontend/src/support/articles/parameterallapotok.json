@@ -1,0 +1,141 @@
+{
+  "id": "parameterallapotok",
+  "topic": "parameterek",
+  "title": "Paraméterállapotok, nyers adat és normalizálás",
+  "summary": "A paraméter-előkészítés a megőrzött forrásadatot összeveti a kiválasztott profillal.",
+  "order": 18,
+  "blocks": [
+    {
+      "type": "heading",
+      "text": "Mire való, és mikor használd?"
+    },
+    {
+      "type": "paragraph",
+      "text": "A paraméter-előkészítés a megőrzött forrásadatot összeveti a kiválasztott profillal. Az előnézet javasolt helyeket mutathat; a tárolt hely csak alkalmazás után létezik. A normalizált érték mellett a nyers forrás ellenőrizhető marad."
+    },
+    {
+      "type": "heading",
+      "text": "Hozzáférés és előfeltételek"
+    },
+    {
+      "type": "paragraph",
+      "text": "products.read szükséges; helyek alkalmazásához products.parameters. Legyen importált demótermék és rendezett donor, vagy tudatosan csak forráshelyeket előkészítő eset. A kész profil nem azonos minden paraméter kitöltöttségével."
+    },
+    {
+      "type": "note",
+      "title": "Menüútvonal",
+      "text": "Termékadatok / Paraméterek; Termék / Paraméter-előkészítés"
+    },
+    {
+      "type": "heading",
+      "text": "Mezők, állapotok és gombok"
+    },
+    {
+      "type": "table",
+      "caption": "A képernyő elemeinek jelentése",
+      "headers": [
+        "Elem",
+        "Mit jelent és mire figyelj?"
+      ],
+      "rows": [
+        [
+          "present / Meglévő",
+          "Értelmezett, meglévő érték; önmagában nem teljes termékjóváhagyás."
+        ],
+        [
+          "missing / Hiányzó hely",
+          "A profilhoz szükséges helyen nincs érték; kötelező hiány külön figyelmet kap."
+        ],
+        [
+          "review / Ellenőrzést igényel",
+          "A megfeleltetés vagy értelmezés kézi ellenőrzést kíván."
+        ],
+        [
+          "conflict / Ütközés",
+          "Több össze nem egyeztethető jelölt; ne fogadj el véletlenül egyet."
+        ],
+        [
+          "invalid / Érvénytelen",
+          "A jelölt nem felel meg a szabálynak vagy értékmegkötésnek."
+        ],
+        [
+          "source_only / Csak forrásban",
+          "Van megőrzött adat, de nincs megfelelő donorparaméter-kötés."
+        ],
+        [
+          "detached / Korábbi profilból",
+          "Korábbi profilhoz tartozó megőrzött hely; nem szabad csendben elveszíteni."
+        ],
+        [
+          "Nyers / Normalizált / Konverziós szabály",
+          "Például a 2,1 kW forrás 2100 W lehet igazolt konverzióval. Az egységet és alkalmazott szabályt is olvasd el."
+        ]
+      ]
+    },
+    {
+      "type": "heading",
+      "text": "Lépésről lépésre – ellenőrzött demópélda"
+    },
+    {
+      "type": "steps",
+      "items": [
+        "Nyisd meg a demóterméket, majd a Termékparaméterek részt.",
+        "Kattints a Paraméterváltozások szerveres előnézete gombra. A Döntés indoka mezőbe írd: Demó paraméterhelyek ellenőrzése. Ezután kattints a Paraméterváltozások előnézete gombra.",
+        "Alkalmazás előtt nézd meg a donorállapotot és a kötelező hiányokat; a pending_review nem kész profil.",
+        "A Szerveroldali változáselőnézetben ellenőrizd az összesítést. Megfelelő joggal válaszd az Előnézet jóváhagyása és alkalmazása gombot, majd kérj friss paraméteradatot.",
+        "Válassz ki egy Teljesítmény paramétert, és hasonlítsd össze a nyers kW értéket a normalizált W értékkel és a konverziós megjegyzéssel.",
+        "Szűrj Hiányzó hely és Ütközés állapotra is. A hiány értelmezése után térj át a kézi döntésre vagy a tömeges ellenőrzésre."
+      ]
+    },
+    {
+      "type": "note",
+      "title": "Várt eredmény",
+      "text": "A tárolt paraméterhelyek állapota látható. A „van tárolt hely” nem felhasználói jóváhagyás, és a hiányzó értéket ez a fázis nem tölti ki AI-kutatással."
+    },
+    {
+      "type": "image",
+      "src": "/help/images/parameterallapotok.png",
+      "alt": "Meglévő, hiányzó és ellenőrzendő paraméterhelyek",
+      "caption": "A nyers és normalizált adat a részletben hasonlítható össze."
+    },
+    {
+      "type": "image",
+      "src": "/help/images/hianyzo-parameterek.png",
+      "alt": "A csak azonosítókat tartalmazó demótermék hiányzó műszaki helyei",
+      "caption": "A hiányzó érték megértése megelőzi a kutatásra való előkészítést."
+    },
+    {
+      "type": "heading",
+      "text": "Ha nem sikerül"
+    },
+    {
+      "type": "list",
+      "items": [
+        "409: elavult revízió vagy előnézet; kérj friss adatot, ne ismételd vakon az alkalmazást.",
+        "Profilválasztás szükséges: előbb válassz konkrét donort; forráshelyből még nem lesz ellenőrzött donorhely.",
+        "Hiányzó konverzió vagy két jelölt: ellenőrizd a forrás jelentését és egységét; puszta számegyezés nem elegendő."
+      ]
+    },
+    {
+      "type": "heading",
+      "text": "Mi változik, és mi marad meg?"
+    },
+    {
+      "type": "paragraph",
+      "text": "A nyers forrás megmarad, a normalizálás nem írja át az eredeti cellát. A zárolt kézi helyek védettek. A kategória- vagy donorváltásból származó régi adat detached állapotban megőrizhető."
+    },
+    {
+      "type": "heading",
+      "text": "Következő lépés"
+    },
+    {
+      "type": "paragraph",
+      "text": "A kapcsolódó útmutatók az alábbi sorrendben segítenek folytatni a munkát. A látható gombok mindig az aktuális munkaterület és tényleges jogosultságok szerint használhatók."
+    }
+  ],
+  "related": [
+    "kezi-parameterek",
+    "aliasok",
+    "tomeges-kijeloles"
+  ]
+}
