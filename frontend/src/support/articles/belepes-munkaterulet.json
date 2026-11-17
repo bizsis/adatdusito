@@ -1,0 +1,34 @@
+{
+  "id": "belepes-munkaterulet",
+  "topic": "elso-lepesek",
+  "title": "Bejelentkezés és munkaterület kiválasztása",
+  "summary": "Lépj be a saját fiókoddal, majd ellenőrizd, melyik ügyfél adataival dolgozol.",
+  "order": 1,
+  "blocks": [
+    {
+      "type": "steps",
+      "items": [
+        "Nyisd meg az Adatdúsító bejelentkező oldalát. A fiókodhoz elérhető módot válaszd; a felület például jelszavas belépést vagy passkeyt is kínálhat.",
+        "Ha a rendszer második faktort vagy jelszócserét kér, fejezd be ezt a lépést. A biztonsági ellenőrzést nem helyettesíti a munkaterület kiválasztása.",
+        "Belépés után a bal oldali Munkaterület listában válaszd ki az ügyfelet. A Munkaterület keresése mezővel szűkítheted a listát.",
+        "Ellenőrizd a kiválasztott munkaterületet, mielőtt fájlt töltesz fel vagy adatot módosítasz."
+      ]
+    },
+    {
+      "type": "image",
+      "src": "/help/images/munkaterulet.png",
+      "alt": "Munkaterület-választó egy Segédlet demó nevű tesztügyféllel",
+      "caption": "Tesztkörnyezet: a munkaterület-kereső és a kiválasztott demóügyfél."
+    },
+    {
+      "type": "note",
+      "title": "Rendszerszint és ügyfél",
+      "text": "A Rendszerszint csak megfelelő rendszerhozzáféréssel választható. Beszállítói importhoz és termékfeldolgozáshoz ügyfél-munkaterület szükséges."
+    },
+    {
+      "type": "paragraph",
+      "text": "A Segédlet minden bejelentkezett felhasználónak elérhető a Támogatás → Segédlet menüből. Az útmutató elolvasása nem ad új jogosultságot a leírt műveletekhez."
+    }
+  ],
+  "related": ["beszallito-letrehozasa", "jogosultsagok"]
+}

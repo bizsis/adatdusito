@@ -1,0 +1,28 @@
+{
+  "id": "jogosultsagok",
+  "topic": "hozzaferes",
+  "title": "Felhasználók és jogosultságok",
+  "summary": "Tudd, miért eltérő a látható menü és az elérhető művelet felhasználónként.",
+  "order": 11,
+  "blocks": [
+    {
+      "type": "paragraph",
+      "text": "A felület az aktív ügyfélhez és a kiosztott jogosultságokhoz igazodik. Egy útmutató elérhetősége nem jelenti azt, hogy az abban szereplő összes műveletet használhatod."
+    },
+    {
+      "type": "steps",
+      "items": [
+        "Először ellenőrizd a Munkaterület listában az aktív ügyfelet.",
+        "A megfelelő adminisztrátor a Munkatársak és hozzáférések, illetve rendszerszinten a Rendszerhozzáférések oldalon tudja ellenőrizni a szerepköröket és az egyedi engedélyeket/tiltásokat.",
+        "Importnál különbözhet a megtekintési, feltöltési és jóváhagyási jog. Termékparaméter-íráshoz, tömeges művelethez és előkészítési jóváhagyáshoz is eltérő jog szükséges.",
+        "Ha egy művelet hiányzik vagy tiltott, az adminisztrátornak a művelet nevét és a munkaterületet add meg, ne jelszót vagy munkamenetadatot."
+      ]
+    },
+    {
+      "type": "note",
+      "title": "Biztonság",
+      "text": "A saját hitelesítési beállítások a Biztonság gomb alatt érhetők el. Jelszót, helyreállítási kódot vagy belépési tokent ne másolj be támogatási üzenetbe."
+    }
+  ],
+  "related": ["belepes-munkaterulet", "gyakori-hibak"]
+}

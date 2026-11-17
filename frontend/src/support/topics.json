@@ -1,0 +1,50 @@
+[
+  {
+    "id": "elso-lepesek",
+    "title": "Első lépések",
+    "description": "Bejelentkezés és a megfelelő munkaterület kiválasztása.",
+    "order": 1
+  },
+  {
+    "id": "import",
+    "title": "Beszállítók és importálás",
+    "description": "Fájlfeltöltés, oszlopok és ellenőrzött import.",
+    "order": 2
+  },
+  {
+    "id": "kategoriak",
+    "title": "Termékek és kategorizálás",
+    "description": "Az egységes kategóriafa használata.",
+    "order": 3
+  },
+  {
+    "id": "parameterek",
+    "title": "Paraméterek és adatellenőrzés",
+    "description": "Donorprofilok, megengedett értékek és kézi javítás.",
+    "order": 4
+  },
+  {
+    "id": "tomeges",
+    "title": "Tömeges feldolgozás és jóváhagyás",
+    "description": "Szerveres kijelölés, előnézet és előkészítési jóváhagyás.",
+    "order": 5
+  },
+  {
+    "id": "export",
+    "title": "Exportbeállítások",
+    "description": "Exportmezők és profilok előkészítése.",
+    "order": 6
+  },
+  {
+    "id": "hozzaferes",
+    "title": "Felhasználók és jogosultságok",
+    "description": "Szerepkörök és munkaterületi hozzáférés.",
+    "order": 7
+  },
+  {
+    "id": "hibak",
+    "title": "Gyakori kérdések és hibák",
+    "description": "Hiányzó menüpontok, eltérések és elakadt műveletek.",
+    "order": 8
+  }
+]

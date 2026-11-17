@@ -1,0 +1,35 @@
+{
+  "id": "oszlopok-megfeleltetese",
+  "topic": "import",
+  "title": "Oszlopok megfeleltetése",
+  "summary": "Kösd a beszállító oszlopait a megfelelő belső mezőkhöz, és ellenőrizd az automatikus javaslatokat.",
+  "order": 4,
+  "blocks": [
+    {
+      "type": "steps",
+      "items": [
+        "A feltöltött fájl elemzésénél nézd át az Eredeti oszlop értékeit és a mintákat.",
+        "Minden releváns oszlophoz válaszd ki a megfelelő belső mezőt. A felismert javaslat nem biztos döntés: ellenőrizd különösen a cikkszámot, EAN/GTIN-t, terméknevet és kategóriát.",
+        "A További / fel nem ismert oszlopok részt is nyisd meg. Csak azt rendeld ismert célmezőhöz, amelynek a jelentése egyértelmű.",
+        "Nézd meg az értelmezett előnézetet. A forrásértékeket hasonlítsd össze a célmezők tartalmával, mielőtt jóváhagysz."
+      ]
+    },
+    {
+      "type": "image",
+      "src": "/help/images/oszlopok.png",
+      "alt": "Az import oszlopmegfeleltetési táblája szintetikus cikkszám-, név- és kategóriaoszlopokkal",
+      "caption": "Az oszlopok neve és mintája együtt segít a jelentés ellenőrzésében."
+    },
+    {
+      "type": "warning",
+      "title": "Ár és készlet",
+      "text": "Ne cseréld fel a nettó és bruttó árat, pénznemet vagy készletet. Ismeretlen pénzügyi jelentést ne találgass; a hiányzó áfa/pénznem/árjelleg maradjon ismeretlen."
+    },
+    {
+      "type": "link",
+      "article": "exportprofilok",
+      "text": "A célwebáruház exportprofiljának beállítása"
+    }
+  ],
+  "related": ["import-jovahagyasa", "csv-xlsx-feltoltes"]
+}

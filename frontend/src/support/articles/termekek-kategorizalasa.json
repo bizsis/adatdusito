@@ -1,0 +1,32 @@
+{
+  "id": "termekek-kategorizalasa",
+  "topic": "kategoriak",
+  "title": "Termékek kategorizálása",
+  "summary": "A beszállítói kategóriát a közös magyar kategóriafához rendeld, az előnézet ellenőrzésével.",
+  "order": 6,
+  "blocks": [
+    {
+      "type": "steps",
+      "items": [
+        "Nyisd meg a Termékadatok oldalt az aktív ügyfélnél, majd keresd meg a terméket névvel, cikkszámmal vagy EAN/GTIN-nel.",
+        "Nyisd meg a termék részleteit és a Besorolás szerkesztése műveletet, ha van módosítási jogosultságod.",
+        "Keress a közös kategóriafában, és a teljes útvonal alapján válassz termékkategóriát. A navigációs gyűjtőpont nem termékbesorolási cél.",
+        "Ha több paraméterprofil áll rendelkezésre, válassz kifejezetten megfelelő profilt. A vitatott donor nem használható automatikusan.",
+        "Adj indokot, tekintsd át a Módosítások előnézete eredményét, majd a megerősítő művelettel ments.",
+        "Ellenőrizd a termék aktuális besorolását és a kézi zárolás állapotát. Beszállítói kategóriatérkép módosításánál az érintett termékek újrasorolása háttérben is futhat."
+      ]
+    },
+    {
+      "type": "image",
+      "src": "/help/images/kategorizalas.png",
+      "alt": "Termék besorolási szerkesztője a közös kategóriafával",
+      "caption": "Teszttermék kategóriájának kiválasztása; a teljes kategóriaútvonal segíti a döntést."
+    },
+    {
+      "type": "note",
+      "title": "Kategóriafa",
+      "text": "Az első szint 13 jóváhagyott magyar főcsoport. Az alkategóriákat a szülő kibontásával érheted el. Az eredeti beszállítói kategória külön forrásadat marad."
+    }
+  ],
+  "related": ["emag-donorprofilok", "kezi-parameterek", "tomeges-jovahagyas"]
+}

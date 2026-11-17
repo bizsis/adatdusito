@@ -1,0 +1,41 @@
+{
+  "id": "kezi-parameterek",
+  "topic": "parameterek",
+  "title": "Paraméterek kézi javítása és zárolása",
+  "summary": "Javíts egy konkrét termékértéket, ellenőrizd az indokot és őrizd meg a forrásadatot.",
+  "order": 8,
+  "blocks": [
+    {
+      "type": "steps",
+      "items": [
+        "A Termékadatok oldalon nyisd meg a terméket, majd a Termékparaméterek részt.",
+        "A friss paraméteradatoknál válaszd ki a javítandó paraméter részleteit. Ha még nincsenek paraméterhelyek, előbb kérj szerveres változáselőnézetet és ellenőrizd a javaslatot.",
+        "A kézi paraméterdöntésnél ellenőrizd az értéket, mértékegységet és a megengedett értékeket. Add meg a módosítás indokát.",
+        "Az Érték javítása és védelme művelet zárolja a kézi értéket. Ha csak a meglévő értéket szeretnéd védeni, válaszd a Zárolás műveletet. Zárolt hely feloldása külön, kifejezett döntés.",
+        "Nyisd meg a Kézi döntés áttekintése műveletet, ellenőrizd az előnézetet, majd a Kézi döntés mentése gombbal ments.",
+        "Frissítsd az adatokat, és ellenőrizd a mentett értéket és a zárolást."
+      ]
+    },
+    {
+      "type": "image",
+      "src": "/help/images/kezi-parameter.png",
+      "alt": "Kézi paraméterdöntés szerkesztője teszttermékhez",
+      "caption": "A döntéshez indok és kifejezett megerősítés tartozik."
+    },
+    {
+      "type": "warning",
+      "title": "Revízió és jóváhagyás",
+      "text": "Másik módosítás miatti ütközésnél töltsd újra a friss adatokat. A kézi javítás a korábbi előkészítési jóváhagyást érvénytelenítheti; szükség esetén új ellenőrzés kell."
+    },
+    {
+      "type": "note",
+      "title": "Kötött értékkészlet",
+      "text": "Kötött értékkészletnél a szabad értékadás nem érhető el ebben a szerkesztőben. Az ismert forrásjelölt elfogadását akkor használd, ha annak jelentése megfelelő."
+    },
+    {
+      "type": "paragraph",
+      "text": "A kézi érték nem írja felül az eredeti beszállítói forrásértéket. A zárolás és a forrásérték külön információ."
+    }
+  ],
+  "related": ["emag-donorprofilok", "tomeges-jovahagyas"]
+}

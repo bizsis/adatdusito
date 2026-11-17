@@ -10,7 +10,7 @@ name: Adatdúsító CI
 
 on:
   push:
-    branches: [main, codex/category-03d-full-integration, codex/release-candidate-01]
+    branches: [main, codex/category-03d-full-integration, codex/release-candidate-01, codex/help-01]
   pull_request:
   workflow_dispatch:
 
@@ -175,7 +175,7 @@ jobs:
           cache-dependency-path: frontend/package-lock.json
       - run: npm ci --no-audit --no-fund
       - name: Blocking frontend lint and configuration tests
-        run: npm run lint && npm run test:lint
+        run: npm run lint && npm test
       - name: TypeScript type check (tsc --noEmit, frontend/tsconfig.json)
         run: npx tsc --noEmit -p tsconfig.json --pretty false
       - name: Production build

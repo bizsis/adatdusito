@@ -1,0 +1,248 @@
+.help-page {
+  min-width: 0;
+}
+.help-intro {
+  color: var(--muted);
+  line-height: 1.7;
+}
+.help-search {
+  margin-bottom: 24px;
+}
+.help-search label {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+.help-layout {
+  display: grid;
+  grid-template-columns: minmax(210px, 0.75fr) minmax(0, 2fr);
+  gap: 24px;
+  align-items: start;
+}
+.help-topics a {
+  display: block;
+  padding: 10px 8px;
+  border-radius: 6px;
+  color: var(--text);
+  text-decoration: none;
+  overflow-wrap: anywhere;
+}
+.help-topics a[aria-current] {
+  background: var(--teal-soft);
+  color: var(--primary-hover);
+  font-weight: 600;
+}
+.help-topics h2 {
+  margin-top: 0;
+  font-size: 18px;
+}
+.help-results {
+  display: grid;
+  gap: 16px;
+  min-width: 0;
+}
+.help-results > p {
+  margin: 0;
+}
+.help-results h2 {
+  font-size: 21px;
+  margin-top: 0;
+}
+.help-article-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.help-article-list li + li {
+  border-top: 1px solid var(--border);
+}
+.help-article-list a {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 16px 0;
+  color: var(--text);
+  text-decoration: none;
+}
+.help-article-list svg {
+  color: var(--primary);
+  flex-shrink: 0;
+  margin-top: 3px;
+}
+.help-article-list a:hover strong {
+  color: var(--primary-hover);
+  text-decoration: underline;
+}
+.help-article-list span span {
+  display: block;
+  color: var(--muted);
+  margin-top: 6px;
+  line-height: 1.6;
+}
+.help-breadcrumb {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin: 20px 0;
+}
+.help-page a {
+  overflow-wrap: anywhere;
+}
+.help-article {
+  max-width: 1000px;
+  line-height: 1.8;
+  overflow-wrap: anywhere;
+}
+.help-article > h2 {
+  font-size: clamp(24px, 4vw, 32px);
+  margin-top: 0;
+}
+.help-summary {
+  font-size: 18px;
+  color: var(--muted);
+  padding-bottom: 20px;
+  border-bottom: 1px solid var(--border);
+}
+.help-article h3 {
+  font-size: 21px;
+  margin: 28px 0 12px;
+}
+.help-article li {
+  padding: 5px 0 5px 6px;
+}
+.help-article ol,
+.help-article ul {
+  padding-left: 26px;
+}
+.help-article figure {
+  margin: 24px 0;
+}
+.help-image-button {
+  padding: 0;
+  width: 100%;
+  display: block;
+  overflow: hidden;
+}
+.help-image-button img {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+.help-image-button > span {
+  padding: 10px;
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+  align-items: center;
+  color: var(--primary-hover);
+}
+.help-article figcaption,
+.help-image-dialog figcaption {
+  color: var(--muted);
+  font-size: 14px;
+  margin-top: 8px;
+  line-height: 1.6;
+}
+.help-callout {
+  padding: 16px 20px;
+  border-left: 4px solid var(--info);
+  background: var(--info-soft);
+  border-radius: 6px;
+  margin: 24px 0;
+}
+.help-callout.warning {
+  border-color: var(--warning);
+  background: var(--warning-soft);
+}
+.help-callout p {
+  margin: 8px 0 0;
+}
+.help-related {
+  border-top: 1px solid var(--border);
+  margin-top: 32px;
+}
+.help-related a {
+  display: block;
+  margin: 12px 0;
+}
+.help-back {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin: 24px 0;
+}
+.help-image-dialog {
+  width: min(1400px, 96vw);
+  max-width: 96vw;
+  max-height: 94dvh;
+  padding: 18px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  color: var(--text);
+  background: var(--surface);
+}
+.help-image-dialog::backdrop {
+  background: #102a38c9;
+}
+.help-image-dialog figure {
+  margin: 14px 0 0;
+}
+.help-image-dialog img {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+.help-image-close {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  margin-left: auto;
+}
+@media (max-width: 900px) {
+  .help-layout {
+    grid-template-columns: 1fr;
+  }
+}
+@media (max-width: 650px) {
+  .support-menu {
+    margin: 0;
+    flex-basis: 100%;
+  }
+  .support-menu summary {
+    padding: 10px 9px;
+    font-size: 12px;
+  }
+  .support-menu > a {
+    padding: 10px;
+    font-size: 12px;
+    margin-left: 20px;
+  }
+  .help-article {
+    padding: 18px;
+  }
+  .help-search input {
+    min-width: 0;
+  }
+}
+
+.help-search label[for="help-search"] {
+  flex-direction: row;
+}
+.help-search .help-topic-mobile {
+  display: none;
+}
+@media (max-width: 650px) {
+  .help-topics {
+    display: none;
+  }
+  .help-search .help-topic-mobile {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    margin-top: 16px;
+  }
+  .help-topic-mobile select {
+    min-width: 0;
+    width: 100%;
+  }
+}

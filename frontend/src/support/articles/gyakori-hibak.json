@@ -1,0 +1,59 @@
+{
+  "id": "gyakori-hibak",
+  "topic": "hibak",
+  "title": "Gyakori kérdések és hibák",
+  "summary": "Mit ellenőrizz hiányzó menü, hibás fájl, lejárt előnézet vagy elakadt futás esetén?",
+  "order": 12,
+  "blocks": [
+    {
+      "type": "heading",
+      "text": "Nem látok egy menüpontot"
+    },
+    {
+      "type": "paragraph",
+      "text": "Ellenőrizd az aktív munkaterületet és kérd az adminisztrátor segítségét a jogosultságokhoz. A Segédlet leírása nem kerülheti meg a hozzáférési szabályokat."
+    },
+    {
+      "type": "heading",
+      "text": "Hibásak az ékezetek vagy az oszlopok"
+    },
+    {
+      "type": "paragraph",
+      "text": "A feltöltés Haladó fájlbeállításainál ellenőrizd a CSV kódolását, elválasztóját és a fejléc sorát. XLSX-nél a megfelelő munkalapot válaszd. Jóváhagyás előtt nézd meg az előnézetet."
+    },
+    {
+      "type": "heading",
+      "text": "Megváltoztak az adatok vagy lejárt az előnézet"
+    },
+    {
+      "type": "paragraph",
+      "text": "Töltsd újra a termék adatait, majd készíts új előnézetet. Tömeges műveletnél lejárt szerveres kijelölést ne próbálj régi előnézettel alkalmazni."
+    },
+    {
+      "type": "heading",
+      "text": "Nem érhető el a donorprofil"
+    },
+    {
+      "type": "paragraph",
+      "text": "A vitatott, felülvizsgálatra váró profil blokkolt. Több megfelelő forrásprofil esetén kifejezetten választani kell; a rendszer nem találgat helyetted."
+    },
+    {
+      "type": "heading",
+      "text": "A futás elakadt vagy részben sikerült"
+    },
+    {
+      "type": "paragraph",
+      "text": "Nézd meg a futás állapotát és tételes eredményeit. A felkínált frissítés/folytatás csak arra az állapotra használható. Már alkalmazott részeredményt a megszakítás nem von vissza."
+    },
+    {
+      "type": "warning",
+      "title": "Mit adj át hibajelzéskor?",
+      "text": "A művelet neve, munkaterület, futásazonosító és a felület hibaszövege segíthet. Jelszót, tokent, API-kulcsot és ügyféladatot tartalmazó képet ne küldj."
+    },
+    {
+      "type": "paragraph",
+      "text": "Az AI-kutatás és a tényleges UNAS-export még nem teljes végfelhasználói folyamat. Ha ilyen műveletet keresel, a jelenlegi profil- és előkészítési oldalak nem helyettesítik azt."
+    }
+  ],
+  "related": ["csv-xlsx-feltoltes", "jogosultsagok", "tomeges-jovahagyas"]
+}
