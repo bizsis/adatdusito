@@ -1,3 +1,4 @@
+import { TemplatePanel } from "./templates/TemplatePanel";
 import type {
   ParameterJob,
   ParameterServices,
@@ -694,6 +695,7 @@ export function ImportWorkspace({
               {run.analysis.empty_rows?.toLocaleString("hu-HU")}
             </p>
           )}
+          {run.analysis.headers && <TemplatePanel key={run.id} api={api} runId={run.id} headers={run.analysis.headers} canCreate={canCreate} canClassify={permissions?.includes("products.classify") ?? canManage} />}
           {!!Object.keys(run.counters).length && (
             <p>
               Eredmény:{" "}
