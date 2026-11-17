@@ -1,5 +1,7 @@
 """Immutable, tenant-owned worktable snapshots; no AI or reference writes."""
 
+from datetime import datetime
+
 from sqlalchemy import ForeignKey, Integer, String, JSON, LargeBinary, DateTime, Index
 from sqlalchemy.orm import Mapped, mapped_column
 from app.models import Base, now
