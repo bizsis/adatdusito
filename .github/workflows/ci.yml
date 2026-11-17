@@ -353,12 +353,21 @@ jobs:
           python "$RUNNER_TEMP/mysql_ci_db.py" reset
           set -o pipefail
           python ../scripts/mysql_release01_check.py 2>&1 | tee ../reports/mysql-release01.log
+      - name: KNOWLEDGE-02 check (0015 <-> 0016, copy suspicion, merges, guarded downgrade)
+        working-directory: backend
+        env:
+          PYTHONPATH: .
+          KNOWLEDGE02_FIXTURE_ACK: isolated-knowledge-02
+        run: |
+          python "$RUNNER_TEMP/mysql_ci_db.py" reset
+          set -o pipefail
+          python ../scripts/mysql_knowledge02_check.py 2>&1 | tee ../reports/mysql-knowledge02.log
       - name: MySQL job summary
         if: always()
         run: |
           {
             echo "### MySQL 8 migrations"
-            for f in reports/mysql-release02.log reports/mysql-b1-control.log reports/mysql-release01.log; do
+            for f in reports/mysql-release02.log reports/mysql-b1-control.log reports/mysql-release01.log reports/mysql-knowledge02.log; do
               [ -f "$f" ] || continue
               echo "**$f**: $(grep -c '^OK ' "$f" 2>/dev/null || true) OK, $(grep -c '^ERR ' "$f" 2>/dev/null || true) ERR"
               echo '```'

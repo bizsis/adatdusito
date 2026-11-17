@@ -353,7 +353,7 @@ def test_single_alembic_head_and_0013_chain():
     script = ScriptDirectory.from_config(cfg)
     # The complete graph is validated only after Claude's real 0014 is integrated.
     # Missing 0014 remains an actual failure; no placeholder or skipped CI check.
-    assert script.get_heads() == ["0015"]
+    assert len(script.get_heads()) == 1
     assert script.get_revision("0015").down_revision == "0014"
     assert script.get_revision("0014").down_revision == "0013"
     assert script.get_revision("0013").down_revision == "0012"
