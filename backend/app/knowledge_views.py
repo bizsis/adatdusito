@@ -9,6 +9,7 @@ and returns consolidated values only, never other tenants' records.
 from decimal import Decimal
 
 from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi.responses import JSONResponse
 from pydantic import BaseModel, ConfigDict, Field
 from sqlalchemy import func, or_, select
 from sqlalchemy.orm import Session
@@ -19,8 +20,11 @@ from app.knowledge_models import (
     KnowledgeEvent,
     KnowledgeIdentity,
     KnowledgeLink,
+    KnowledgeMerge,
     KnowledgeObservation,
     KnowledgeProduct,
+    KnowledgeSourceRelation,
+    KnowledgeText,
     KnowledgeValue,
 )
 from app.security import audit, database, require
@@ -41,7 +45,8 @@ def value_dto(v):
             "confidence": dec(v.confidence), "support_sources": v.support_sources,
             "observations": v.observations, "verification_basis": v.verification_basis,
             "verified_by": v.verified_by, "verified_at": v.verified_at,
-            "rejected_values": v.rejected_values or [], "updated_at": v.updated_at}
+            "rejected_values": v.rejected_values or [], "updated_at": v.updated_at,
+            "independent_sources": v.independent_sources}
 
 
 def conflict_dto(c):
@@ -54,7 +59,8 @@ def conflict_dto(c):
 
 def product_dto(db, p, counts=True):
     out = {"id": p.id, "status": p.status, "display_name": p.display_name, "brand": p.brand,
-           "created_at": p.created_at, "updated_at": p.updated_at}
+           "merged_into_id": p.merged_into_id, "created_at": p.created_at,
+           "updated_at": p.updated_at}
     if counts:
         out["links"] = db.scalar(select(func.count()).select_from(KnowledgeLink).where(
             KnowledgeLink.knowledge_product_id == p.id))
@@ -93,7 +99,8 @@ class PlanInput(BaseModel):
     brand: str | None = Field(None, max_length=255)
     name: str | None = Field(None, max_length=500)
     attributes: list[str] = Field(min_length=1, max_length=500)
-    threshold: Decimal = Field(Decimal("0.8"), ge=0, le=1)
+    threshold: Decimal | None = Field(None, ge=0, le=1)  # default: knowledge settings
+    texts: list[str] = Field(default_factory=list, max_length=3)
 
 
 @router.get("/stats")
@@ -270,5 +277,279 @@ def enrichment_plan(body: PlanInput, who=Depends(require("products.read")),
                     db: Session = Depends(database)):
     if not any((body.gtin, body.mpn and body.brand, body.brand and body.name)):
         raise HTTPException(422, "GTIN, márka+gyártói cikkszám vagy márka+név szükséges.")
+    if set(body.texts) - set(kb.TEXT_KINDS):
+        raise HTTPException(422, "Ismeretlen szövegtípus.")
     return kb.enrichment_plan(db, body.attributes, body.gtin, body.mpn, body.brand, body.name,
-                              body.threshold)
+                              body.threshold, tuple(body.texts))
+
+
+# --- KNOWLEDGE-02 ---------------------------------------------------------------------------------
+
+MERGE_ERRORS = {
+    "same_product": "A két termék azonos.",
+    "not_found": "A termék nem található.",
+    "not_active": "Csak aktív (nem összevont) termékek vonhatók össze.",
+    "stale_preview": "Az előnézet óta változott az adat; kérj új előnézetet.",
+    "blocked": "Az összevonás nem végezhető el (lásd: blocking).",
+    "variant_risk_not_acknowledged": "Változatgyanú: kifejezett nyugtázás szükséges.",
+    "not_applied": "Ez az összevonás már vissza van vonva.",
+    "later_merge_first": "Előbb a későbbi, érintett összevonást kell visszavonni.",
+}
+
+
+def merge_error(exc):
+    """Same envelope as every other error ({"error": {"code", "message"}}, message stays a
+    Hungarian string); `merge_error` and `details` are the machine-readable additions."""
+    return JSONResponse({"error": {"code": str(exc.status), "message": MERGE_ERRORS[exc.code],
+                                   "merge_error": exc.code, "details": exc.details}},
+                        status_code=exc.status, headers={"Cache-Control": "no-store"})
+
+
+def relation_dto(r):
+    return {"id": r.id, "source_a_id": r.source_a_id, "source_b_id": r.source_b_id,
+            "shared_values": r.shared_values, "identical_values": r.identical_values,
+            "identical_texts": r.identical_texts, "ratio": dec(r.ratio), "state": r.state,
+            "reason": r.reason, "decided_by": r.decided_by, "decided_at": r.decided_at,
+            "updated_at": r.updated_at}
+
+
+def merge_dto(m):
+    return {"id": m.id, "survivor_id": m.survivor_id, "merged_id": m.merged_id,
+            "state": m.state, "variant_risk_acknowledged": m.variant_risk_acknowledged,
+            "moved": {k: len(v) for k, v in m.moved.items()}, "reason": m.reason,
+            "applied_by": m.applied_by, "applied_at": m.applied_at,
+            "reverted_by": m.reverted_by, "reverted_at": m.reverted_at,
+            "revert_reason": m.revert_reason}
+
+
+def text_dto(t, source):
+    return {"id": t.id, "knowledge_product_id": t.knowledge_product_id, "link_id": t.link_id,
+            "source_id": t.source_id, "source_key": source.key, "kind": t.kind,
+            "text": t.text, "format": t.format, "language": t.language,
+            "language_confidence": dec(t.language_confidence),
+            "language_method": t.language_method, "verification": t.verification,
+            "usage": t.usage, "pii_flags": t.pii_flags or [],
+            "pii_reviewed_by": t.pii_reviewed_by, "current": t.current,
+            "observed_at": t.observed_at, "superseded_at": t.superseded_at,
+            "usable_for_ai": kb.text_usable(t, source)}
+
+
+class Required(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    reason: str = Field(min_length=3, max_length=500)
+
+
+class RelationDecision(Required):
+    state: str = Field(pattern="^(confirmed_dependent|confirmed_independent)$")
+
+
+class Lineage(Required):
+    lineage_group: str | None = Field(None, max_length=64, pattern=r"^[A-Za-z0-9._:-]+$")
+
+
+class MergePreview(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    survivor_id: int = Field(gt=0)
+    merged_id: int = Field(gt=0)
+
+
+class MergeApply(MergePreview, Required):
+    preview_token: str = Field(min_length=64, max_length=64)
+    acknowledge_variant_risk: bool = False
+
+
+class TextDecision(Required):
+    verification: str | None = Field(None, pattern="^(unverified|verified|rejected)$")
+    usage: str | None = Field(None, pattern="^(inherited|reuse_allowed|internal_only|restricted)$")
+    language: str | None = Field(None, pattern="^([a-z]{2,3}|unknown)$")
+    pii_release: bool | None = None
+
+
+class PiiReview(Required):
+    release: bool
+
+
+@router.get("/source-relations")
+def source_relations(state: str | None = Query(None, pattern="^(suspected|below_threshold|"
+                                                            "confirmed_dependent|"
+                                                            "confirmed_independent)$"),
+                     who=Depends(require("reference.manage")), db: Session = Depends(database)):
+    stmt = select(KnowledgeSourceRelation)
+    if state:
+        stmt = stmt.where(KnowledgeSourceRelation.state == state)
+    return [relation_dto(r) for r in db.scalars(stmt.order_by(KnowledgeSourceRelation.id))]
+
+
+@router.post("/source-relations/detect")
+def detect(who=Depends(require("reference.manage")), db: Session = Depends(database)):
+    changed = kb.detect_relations(db, kb.Context(db))
+    if changed:
+        kb.refresh_sources(db, changed)
+    audit(db, who, "knowledge.relations_detect", "all", changed=len(changed))
+    db.commit()
+    return {"changed": len(changed)}
+
+
+@router.post("/source-relations/{id}/decision")
+def relation_decision(id: int, body: RelationDecision, who=Depends(require("reference.manage")),
+                      db: Session = Depends(database)):
+    relation = db.get(KnowledgeSourceRelation, id)
+    if relation is None:
+        raise HTTPException(404, "A forráskapcsolat nem található.")
+    before = relation.state
+    relation.state, relation.reason = body.state, body.reason
+    relation.decided_by, relation.decided_at = who.user.id, kb.now()
+    kb.event(db, "copy_relation_decided", actor_id=who.user.id, relation_id=id,
+             before=before, after=body.state, reason=body.reason)
+    audit(db, who, "knowledge.relation_decision", id, before=before, after=body.state)
+    db.flush()
+    kb.refresh_sources(db, [(relation.source_a_id, relation.source_b_id)])
+    db.commit()
+    return relation_dto(relation)
+
+
+@router.put("/sources/{id}/lineage")
+def lineage(id: int, body: Lineage, who=Depends(require("reference.manage")),
+            db: Session = Depends(database)):
+    source = db.get(ReferenceProductSource, id)
+    if source is None:
+        raise HTTPException(404, "A forrás nem található.")
+    before = source.lineage_group
+    source.lineage_group = body.lineage_group
+    kb.event(db, "lineage_changed", actor_id=who.user.id, source_id=id, before=before,
+             after=body.lineage_group, reason=body.reason)
+    audit(db, who, "knowledge.lineage", id, before=before, after=body.lineage_group)
+    db.flush()
+    family = {s.id for s in db.scalars(select(ReferenceProductSource).where(
+        ReferenceProductSource.lineage_group.in_([g for g in (before, body.lineage_group) if g])))}
+    kb.refresh_sources(db, [(id, other) for other in family | {id}])
+    db.commit()
+    return {"id": id, "lineage_group": source.lineage_group}
+
+
+@router.post("/merges/preview")
+def merges_preview(body: MergePreview, who=Depends(require("reference.manage")),
+                   db: Session = Depends(database)):
+    try:
+        return kb.merge_preview(db, body.survivor_id, body.merged_id)
+    except kb.MergeError as exc:
+        return merge_error(exc)
+
+
+@router.post("/merges")
+def merges_apply(body: MergeApply, who=Depends(require("reference.manage")),
+                 db: Session = Depends(database)):
+    for pid in sorted((body.survivor_id, body.merged_id)):  # serialise concurrent merges
+        db.scalar(select(KnowledgeProduct).where(KnowledgeProduct.id == pid).with_for_update())
+    try:
+        record = kb.merge_apply(db, body.survivor_id, body.merged_id, body.preview_token,
+                                body.reason, who.user.id, body.acknowledge_variant_risk)
+    except kb.MergeError as exc:
+        db.rollback()
+        return merge_error(exc)
+    audit(db, who, "knowledge.merge", record.id, survivor=body.survivor_id,
+          merged=body.merged_id, variant_risk_acknowledged=body.acknowledge_variant_risk)
+    db.commit()
+    return merge_dto(record)
+
+
+@router.get("/merges")
+def merges(state: str | None = Query(None, pattern="^(applied|reverted)$"),
+           offset: int = Query(0, ge=0), who=Depends(require("reference.manage")),
+           db: Session = Depends(database)):
+    stmt = select(KnowledgeMerge)
+    if state:
+        stmt = stmt.where(KnowledgeMerge.state == state)
+    return [merge_dto(m) for m in db.scalars(stmt.order_by(KnowledgeMerge.id.desc())
+                                             .offset(offset).limit(100))]
+
+
+@router.post("/merges/{id}/revert")
+def merge_revert(id: int, body: Required, who=Depends(require("reference.manage")),
+                 db: Session = Depends(database)):
+    record = db.scalar(select(KnowledgeMerge).where(KnowledgeMerge.id == id).with_for_update())
+    if record is None:
+        raise HTTPException(404, "Az összevonás nem található.")
+    try:
+        kb.merge_revert(db, record, who.user.id, body.reason)
+    except kb.MergeError as exc:
+        db.rollback()
+        return merge_error(exc)
+    audit(db, who, "knowledge.merge_revert", id)
+    db.commit()
+    return merge_dto(record)
+
+
+@router.get("/products/{id}/texts")
+def texts(id: int, kind: str | None = Query(None, pattern="^(name|short_description|"
+                                                           "long_description)$"),
+          language: str | None = Query(None, max_length=8),
+          usable: str | None = Query(None, pattern="^ai_generation$"),
+          include_history: bool = False,
+          who=Depends(require("reference.manage")), db: Session = Depends(database)):
+    if db.get(KnowledgeProduct, id) is None:
+        raise HTTPException(404, "A termék nem található.")
+    sources = {s.id: s for s in db.scalars(select(ReferenceProductSource))}
+    stmt = select(KnowledgeText).where(KnowledgeText.knowledge_product_id == id)
+    if not include_history:
+        stmt = stmt.where(KnowledgeText.current.is_(True))
+    if kind:
+        stmt = stmt.where(KnowledgeText.kind == kind)
+    if language:
+        stmt = stmt.where(KnowledgeText.language == language)
+    items = [text_dto(t, sources[t.source_id]) for t in db.scalars(stmt.order_by(KnowledgeText.id))]
+    if usable:
+        items = [t for t in items if t["usable_for_ai"]]
+    return items
+
+
+@router.put("/texts/{id}")
+def text_decision(id: int, body: TextDecision, who=Depends(require("reference.manage")),
+                  db: Session = Depends(database)):
+    text = db.scalar(select(KnowledgeText).where(KnowledgeText.id == id).with_for_update())
+    if text is None:
+        raise HTTPException(404, "A szöveg nem található.")
+    kb.decide_text(db, text, who.user.id, body.reason, body.verification, body.usage,
+                   body.language, body.pii_release)
+    audit(db, who, "knowledge.text", id, verification=text.verification, usage=text.usage,
+          language=text.language, pii_reviewed=text.pii_reviewed_by is not None)
+    db.commit()
+    return text_dto(text, db.get(ReferenceProductSource, text.source_id))
+
+
+@router.get("/pii-holds")
+def pii_holds(offset: int = Query(0, ge=0), who=Depends(require("reference.manage")),
+              db: Session = Depends(database)):
+    """Values and texts held back because they look like personal data (not yet reviewed)."""
+    observations = [{"type": "observation", "id": o.id,
+                     "knowledge_product_id": o.knowledge_product_id,
+                     "attribute_key": o.attribute_key, "value": o.value_raw,
+                     "pii_flags": o.pii_flags, "source_id": o.source_id}
+                    for o in db.scalars(select(KnowledgeObservation).where(
+                        KnowledgeObservation.current.is_(True),
+                        KnowledgeObservation.pii_flags.is_not(None),
+                        KnowledgeObservation.pii_reviewed_by.is_(None))
+                        .order_by(KnowledgeObservation.id).offset(offset).limit(100))
+                    if o.pii_flags]
+    held_texts = [{"type": "text", "id": t.id, "knowledge_product_id": t.knowledge_product_id,
+                   "kind": t.kind, "pii_flags": t.pii_flags, "source_id": t.source_id}
+                  for t in db.scalars(select(KnowledgeText).where(
+                      KnowledgeText.current.is_(True), KnowledgeText.pii_reviewed_by.is_(None))
+                      .order_by(KnowledgeText.id).offset(offset).limit(500))
+                  if t.pii_flags]
+    return {"observations": observations, "texts": held_texts}
+
+
+@router.post("/observations/{id}/pii-review")
+def observation_pii_review(id: int, body: PiiReview, who=Depends(require("reference.manage")),
+                           db: Session = Depends(database)):
+    obs = db.scalar(select(KnowledgeObservation).where(KnowledgeObservation.id == id)
+                    .with_for_update())
+    if obs is None or not obs.pii_flags:
+        raise HTTPException(404, "Felülvizsgálandó érték nem található.")
+    if obs.pii_reviewed_by is not None:
+        raise HTTPException(409, "Ezt az értéket már felülvizsgálták.")
+    kb.review_observation_pii(db, obs, who.user.id, body.release, body.reason)
+    audit(db, who, "knowledge.pii_review", id, released=body.release)
+    db.commit()
+    return {"id": id, "released": body.release}
