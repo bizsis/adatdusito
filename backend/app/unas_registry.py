@@ -17,7 +17,8 @@ class TemplateContext:
     def __init__(self, db):
         self.schema_source = db.scalar(
             select(UnasFieldDefinition.schema_source)
-            .where(UnasFieldDefinition.scope == "standard")
+            .where(UnasFieldDefinition.scope == "standard",
+                   UnasFieldDefinition.schema_source.like("unas_export/%"))
             .order_by(UnasFieldDefinition.id.desc()).limit(1))
         self.fields = {}
         if self.schema_source:

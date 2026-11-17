@@ -78,6 +78,8 @@ def main():
             stack.enter_context(patch.object(api,'login_guard',lambda *a,**k:Guard()))
             stack.enter_context(patch.object(security,'limit_failures',lambda *a,**k:None))
             stack.enter_context(patch.object(import_api,'enqueue',worker))
+            from app.knowledge import process_rebuild
+            stack.enter_context(patch.object(process_rebuild,'apply_async',lambda *a,**k:None))
             stack.enter_context(patch.dict(os.environ,{'APP_ORIGIN':'https://testserver'}))
             client=stack.enter_context(TestClient(app,base_url='https://testserver'))
             def login(name):

@@ -25,6 +25,7 @@ import { setDisplayTimezone } from "./ui";
 import { SupportNav } from "./support/SupportNav";
 import { isHelpHash } from "./support/model";
 import "./support/menu.css";
+const ReferenceDatabases = lazy(() => import("./knowledge/ReferenceDatabases"));
 const HelpPage = lazy(() => import("./support/HelpPage"));
 import {
   LayoutDashboard,
@@ -37,6 +38,7 @@ import {
   FileDown,
   PackageSearch,
   Network,
+  Database,
   ListFilter,
   LockKeyhole,
   type LucideIcon,
@@ -54,6 +56,7 @@ function NavIcon({ name }: { name: string }) {
     products: PackageSearch,
     categories: Network,
     parameters: ListFilter,
+    "reference-databases": Database,
     security: LockKeyhole,
   };
   const Icon = icons[name] || PackageSearch;
@@ -1860,6 +1863,9 @@ function App() {
     ...(me.tenant_id && can("members.read")
       ? [["members", "", "Munkatársak és hozzáférések"]]
       : []),
+    ...(!me.tenant_id && can("reference.manage")
+      ? [["reference-databases", "", "Referencia-adatbázisok"]]
+      : []),
     ...(can("system.settings.read")
       ? [["settings", "", "Rendszerbeállítások"]]
       : []),
@@ -2128,6 +2134,7 @@ function App() {
               canProfile={Boolean(me.tenant_id && can("exports.profile"))}
             />
           )}
+          {page === "reference-databases" && !me.tenant_id && can("reference.manage") && <Suspense fallback={<p role="status">Referenciaforrások betöltése…</p>}><ReferenceDatabases api={api} /></Suspense>}
           {page === "categories" && can("reference.read") && <Categories />}
           {page === "parameters" && can("reference.read") && <Parameters />}
           {page === "audit" &&

@@ -34,6 +34,20 @@ DEFAULTS = {
     # CATEGORY-02A: minimum measured precision a classification method needs
     # before it may classify automatically. A target, not a measured accuracy.
     "classification": {"auto_threshold": 0.98},
+    # KNOWLEDGE-02: knowledge base scoring (owner decision 2026-11-17; KNOWLEDGE-01 values).
+    "knowledge": {
+        "trust_reference": 0.6,
+        "trust_tenant": 0.5,
+        "trust_approved_correction": 0.9,
+        "suggest_threshold": 0.8,
+        "confidence_cap": 0.95,
+        "copy_min_shared_values": 50,
+        "copy_identical_ratio": 0.9,
+        "copy_min_identical_texts": 20,
+        "variant_attributes": ["méret", "szín", "kivitel", "változat", "kiszerelés",
+                               "size", "color", "colour", "variant"],
+        "languages": ["hu", "en", "ro", "de"],
+    },
 }
 
 

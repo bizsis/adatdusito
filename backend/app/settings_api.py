@@ -181,6 +181,7 @@ def read(who=Depends(require("system.settings.read")), db: Session = Depends(dat
         "mfa": config(db, "mfa"),
         "security": config(db, "security"),
         "classification": config(db, "classification"),
+        "knowledge": config(db, "knowledge"),
         "roles": [
             {
                 "id": r.id,
@@ -402,4 +403,42 @@ def classification(
     before = config(db, "classification")
     store(db, "classification", body.model_dump())
     log_change(db, who, "classification", before, body.model_dump())
+    return body.model_dump()
+
+
+class KnowledgeSettings(BaseModel):
+    """KNOWLEDGE-02: scoring of the central knowledge base (audited; triggers a recompute)."""
+
+    model_config = ConfigDict(extra="forbid")
+    trust_reference: float = Field(ge=0, le=1)
+    trust_tenant: float = Field(ge=0, le=1)
+    trust_approved_correction: float = Field(ge=0, le=1)
+    suggest_threshold: float = Field(ge=0, le=1)
+    confidence_cap: float = Field(gt=0, lt=1)
+    copy_min_shared_values: int = Field(ge=1, le=1_000_000)
+    copy_identical_ratio: float = Field(gt=0, le=1)
+    copy_min_identical_texts: int = Field(ge=1, le=1_000_000)
+    variant_attributes: list[str] = Field(max_length=100)
+    languages: list[str] = Field(min_length=1, max_length=30)
+
+
+@router.put("/knowledge")
+def knowledge_settings(
+    body: KnowledgeSettings,
+    who=Depends(require("system.settings.manage")),
+    db: Session = Depends(database),
+):
+    recent(who, db)
+    if body.suggest_threshold > body.confidence_cap:
+        raise HTTPException(422, "A javaslati küszöb nem lehet nagyobb a confidence-plafonnál.")
+    if any(not re.fullmatch(r"[a-z]{2,3}", code) for code in body.languages):
+        raise HTTPException(422, "Hibás nyelvkód (ISO 639, pl. hu, en).")
+    if any(not 1 <= len(term.strip()) <= 60 for term in body.variant_attributes):
+        raise HTTPException(422, "Hibás változatjellegű tulajdonság.")
+    before = config(db, "knowledge")
+    store(db, "knowledge", body.model_dump())
+    log_change(db, who, "knowledge", before, body.model_dump())
+    from app.knowledge import schedule
+
+    schedule(recompute=True)  # confidences follow the new settings
     return body.model_dump()

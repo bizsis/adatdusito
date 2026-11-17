@@ -250,6 +250,8 @@ def apply(db, source, run, item):
     if product is not None and product.raw_sha256 == item["raw_sha256"]:
         product.last_import_id = run.id
         return "unchanged"
+    if product is not None and product.verification not in (None, "unverified"):
+        return "protected"  # A refresh must never replace a verified/approved record.
     created = product is None
     if created:
         product = ReferenceProduct(source_id=source.id, source_sku=item["sku"],
@@ -278,58 +280,95 @@ def apply(db, source, run, item):
     return "created" if created else "updated"
 
 
-def import_export(db, path, store_key=None, version=None, limit=None):
-    """Import one UNAS XLSX export; returns the finished ReferenceImportRun."""
+def import_export(
+    db, path, store_key=None, version=None, limit=None, *,
+    run=None, checkpoint=None, prepared=None,
+):
+    """Import an UNAS export or prepared stream through the same upsert engine."""
     path = Path(path)
     store, version, schema_source = export_identity(path, store_key, version)
-    digest = hashlib.sha256(path.read_bytes()).hexdigest()
-    headers, total, column_profile = profile(path)
+    digest_builder = hashlib.sha256()
+    with path.open("rb") as file:
+        for chunk in iter(lambda: file.read(60000), b""):
+            digest_builder.update(chunk)
+    digest = digest_builder.hexdigest()
+    if run is not None and run.ui_config.get("web_upload"):
+        schema_source = f"reference_upload/{store}/{version}"
+    if prepared is not None:
+        headers, total, column_profile = prepared["headers"], prepared["total"], {}
+    else:
+        headers, total, column_profile = profile(path)
     if not headers or "Cikkszám" not in headers:
         raise ValueError("Nem UNAS-termékexport: hiányzik a Cikkszám oszlop.")
     fields = register_schema(db, headers, schema_source, store, version, column_profile)
     excluded = [h for h in headers if excluded_from_reference(h)]
-    source = source_for(db, store, schema_source, excluded)
+    source = db.get(ReferenceProductSource, run.source_id) if run else source_for(db, store, schema_source, excluded)
+    source.schema_source = schema_source
+    if run:
+        source.excluded_columns = run.ui_config.get("excluded_headers", [])
     parameters = {
         position: db.scalar(select(UnasParameterDefinition)
                             .where(UnasParameterDefinition.field_id == field.id))
         for position, field in fields.items() if field.field_group == "parameter"
     }
-    run = ReferenceImportRun(source_id=source.id, file_name=path.name[:255], file_sha256=digest,
-                             state="running", counters={}, errors=[])
-    db.add(run)
+    if run is None:
+        run = ReferenceImportRun(source_id=source.id, file_name=path.name[:255], file_sha256=digest,
+                                 state="running", counters={}, errors=[])
+        db.add(run)
     db.commit()
     counters = {"rows": 0, "created": 0, "updated": 0, "unchanged": 0, "errors": 0,
-                "empty": 0, "columns": len(headers), "excluded_columns": len(excluded)}
-    errors = []
+                "empty": 0, "columns": len(headers), "excluded_columns": len(excluded), "protected": 0}
+    if run.ui_cursor:
+        counters.update(run.counters)
+    elif run.ui_config.get("web_upload"):
+        counters.update({k: v for k, v in run.counters.items() if k in ("prepared_rows", "excluded_cells")})
+    errors = list(run.errors or [])
     pending = 0
-    for line, _, row in read_rows(path):
+    row_iterator = prepared["rows"]() if prepared is not None else read_rows(path)
+    for line, _, row in row_iterator:
+        if line <= run.ui_cursor:
+            continue
+        if checkpoint and pending == 0 and not checkpoint(db, run):
+            return run
         if limit is not None and counters["rows"] >= limit:
             break
         counters["rows"] += 1
         if all(v is None or text(v) == "" for v in row):
             counters["empty"] += 1
-            continue
-        try:
-            with db.begin_nested():
-                item = build(headers, row, parameters)
-                if not item["sku"]:
-                    raise ValueError("missing_sku")
-                counters[apply(db, source, run, item)] += 1
-        except Exception as exc:  # one row never stops the import
-            counters["errors"] += 1
-            if len(errors) < MAX_ERRORS:
-                code = str(exc) if str(exc) in ("missing_sku",) else type(exc).__name__
-                errors.append({"line": line, "code": code})
+        else:
+            try:
+                with db.begin_nested():
+                    item = build(headers, row, parameters)
+                    if not item["sku"]:
+                        raise ValueError("missing_sku")
+                    counters[apply(db, source, run, item)] += 1
+            except Exception as exc:
+                counters["errors"] += 1
+                if len(errors) < MAX_ERRORS:
+                    code = str(exc) if str(exc) == "missing_sku" else type(exc).__name__
+                    errors.append({"line": line + run.ui_config.get("source_line_offset", 0), "code": code})
+        if prepared is not None:
+            for warning in prepared["warnings"]:
+                if len(errors) < MAX_ERRORS and warning not in errors:
+                    errors.append(warning)
+            prepared["warnings"].clear()
+            counters["excluded_cells"] = prepared["excluded_cells"]
+        run.ui_cursor = line
         pending += 1
         if pending >= BATCH:
             run.counters = dict(counters)
+            run.errors = list(errors)
             db.commit()
             pending = 0
     run.counters = counters
     run.errors = errors
+    if checkpoint and not checkpoint(db, run):
+        return run
     run.state = "completed" if not counters["errors"] else "partial"
     run.finished_at = now()
     db.commit()
+    from app.knowledge_bridge import schedule_source
+    schedule_source(source.id)
     return run
 
 
@@ -340,6 +379,7 @@ TIME_DEPENDENT_HEADERS = re.compile(r"(Ár|Akció|Raktárkészlet|Létrehozás|U
 
 def usable_sources(db):
     return list(db.scalars(select(ReferenceProductSource.id).where(
+        ReferenceProductSource.tenant_id.is_(None),
         ReferenceProductSource.usage_status == "approved_enrichment",
         ReferenceProductSource.enrichment_enabled.is_(True),
     )))

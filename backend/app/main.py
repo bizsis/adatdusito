@@ -251,6 +251,11 @@ from app.unas_views import router as unas_router  # noqa: E402
 
 app.include_router(unas_router)
 
+# KNOWLEDGE-01: central product knowledge base.
+from app.knowledge_views import router as knowledge_router  # noqa: E402
+
+app.include_router(knowledge_router)
+
 from app.auth_logging import install_auth_log_filter
 
 install_auth_log_filter()
@@ -258,3 +263,7 @@ install_auth_log_filter()
 from app.template_api import router as template_router
 
 app.include_router(template_router)
+
+from app.knowledge_admin_views import router as knowledge_admin_router
+
+app.include_router(knowledge_admin_router)

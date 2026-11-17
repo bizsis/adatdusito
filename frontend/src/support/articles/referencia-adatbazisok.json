@@ -1,0 +1,107 @@
+{
+  "id": "referencia-adatbazisok",
+  "topic": "hozzaferes",
+  "title": "Referencia-adatbázisok kezelése",
+  "summary": "Rendszerszintű CSV/XLSX referenciaimport, adatminőség és forrásjogosultságok.",
+  "order": 39,
+  "blocks": [
+    {
+      "type": "heading",
+      "text": "Mire való, és mikor használd?"
+    },
+    {
+      "type": "paragraph",
+      "text": "A Referencia-adatbázisok menüpont a közös terméktudás forrásait és importelőzményeit kezeli. CSV/XLSX fájlokból bővíthető a referenciatár, AI-kutatás indítása nélkül."
+    },
+    {
+      "type": "heading",
+      "text": "Hozzáférés és előfeltételek"
+    },
+    {
+      "type": "paragraph",
+      "text": "Rendszerszint munkaterület és rendszerszintű referenciakezelési jogosultság szükséges. Az ügyfél-adminisztrátorok nem férnek hozzá. Közös importhoz igazolni kell az adatok újrahasznosíthatóságát."
+    },
+    {
+      "type": "heading",
+      "text": "Mezők, állapotok és gombok"
+    },
+    {
+      "type": "paragraph",
+      "text": "A feltöltés után a háttérfeldolgozó felismeri az oszlopokat. Az előnézet külön ellenőrzésre vár; csak a Referenciaimport indítása gomb után kerülnek be a termékek."
+    },
+    {
+      "type": "table",
+      "caption": "Referenciaimport és forráskezelés",
+      "headers": [
+        "Elem",
+        "Működés"
+      ],
+      "rows": [
+        [
+          "Import hatóköre",
+          "A rendszerszintű import engedélyezett terméktudás; az ügyfélforrás a későbbi KNOWLEDGE-01 átvételre készül elő, közös keresésbe nem kerül."
+        ],
+        [
+          "Oszlopmegfeleltetés",
+          "Cikkszám, név, EAN, gyártó és termékparaméter választható. Az ismeretlen, személyes, árat vagy készletet tartalmazó mezők kizártak."
+        ],
+        [
+          "Előnézet frissítése",
+          "A választott oszlopokat megmutatja, termékadatot nem importál."
+        ],
+        [
+          "Import ismétlése",
+          "A tárolt feltöltés új futással ismételhető; azonos termékből nem lesz még egy."
+        ],
+        [
+          "Feldolgozás folytatása",
+          "Megszakított vagy sikertelen webes import folytatható a mentett pozíciótól."
+        ],
+        [
+          "Forrásbeállítás mentése",
+          "A korlátozás és kizárás azonnal hat a közös keresésre, a döntés auditnaplóba kerül."
+        ]
+      ]
+    },
+    {
+      "type": "heading",
+      "text": "Lépésről lépésre – ellenőrzött demópélda"
+    },
+    {
+      "type": "steps",
+      "items": [
+        "Válts Rendszerszint munkaterületre, és nyisd meg a Referencia-adatbázisok menüt.",
+        "Adj meg forrásnevet, válassz rendszerszintű hatókört és egy szintetikus, kéttermékes CSV-t.",
+        "Igazold a termékadatok újrahasznosításának jogát, majd válaszd a Feltöltés és oszlopfelismerés gombot.",
+        "Az előnézetben ellenőrizd a cikkszám, EAN, név és gyártó megfeleltetését; az e-mail és ár mezőt hagyd kizárva.",
+        "Indítsd el a referenciaimportot, majd ellenőrizd a két új terméket és az importelőzményt.",
+        "Ismételd meg az importot: a termékek száma maradjon kettő, a változatlan rekordok száma legyen kettő."
+      ]
+    },
+    {
+      "type": "note",
+      "title": "Várt eredmény",
+      "text": "Két termék, változatlan vezető nullák, kizárt e-mail és ár mező, ismétléskor nulla új termék. A hitelesített adatok nem íródnak felül."
+    },
+    {
+      "type": "heading",
+      "text": "Ha nem sikerül"
+    },
+    {
+      "type": "paragraph",
+      "text": "A hibák és figyelmeztetések az import megnyitásakor láthatók, forrássorszámmal. Háttérfeldolgozó-hiba után később próbáld újra. A CLI-vel betöltött régi források ismétléséhez tölts fel fájlt; azokhoz nem tároltunk webes feltöltést."
+    },
+    {
+      "type": "heading",
+      "text": "Mi változik, és mi marad meg?"
+    },
+    {
+      "type": "paragraph",
+      "text": "Csak az alkalmazás referenciatára és sématára bővül. A pinfo_db eMAG táblái, az ügyféltermékek és a jóváhagyott értékek megmaradnak. A teljes KNOWLEDGE-01 tanulómotor külön fejlesztés."
+    }
+  ],
+  "related": [
+    "parameterkereses",
+    "muveleti-naplo"
+  ]
+}
