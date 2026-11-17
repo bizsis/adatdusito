@@ -258,3 +258,7 @@ install_auth_log_filter()
 from app.template_api import router as template_router
 
 app.include_router(template_router)
+
+from app.knowledge_admin_views import router as knowledge_admin_router
+
+app.include_router(knowledge_admin_router)

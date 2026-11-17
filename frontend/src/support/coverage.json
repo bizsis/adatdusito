@@ -628,5 +628,18 @@
       "/help/images/elokeszitesi-megerosites.png",
       "/help/images/elokeszitesi-jovahagyas.png"
     ]
+  },
+  {
+    "article": "referencia-adatbazisok",
+    "screen": "Referencia-adatbázisok",
+    "access": "Rendszerszint; reference.manage",
+    "source": "knowledge/ReferenceDatabases.tsx",
+    "api": "knowledge_admin_views.py",
+    "actions": "Feltöltés; oszlopfelismerés; előnézet; háttérimport; ismétlés; folytatás; forrásjog; audit",
+    "status": "documented",
+    "browser_evidence": "backend/tests/test_knowledge_admin_browser.py",
+    "review": "awaiting_human_content_review",
+    "images": [],
+    "evidence_scope": "Szintetikus import; asztali és mobil böngészőteszt; API-jogosultságtesztek"
   }
 ]

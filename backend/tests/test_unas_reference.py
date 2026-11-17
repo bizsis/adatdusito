@@ -343,11 +343,12 @@ def test_single_alembic_head_and_0013_chain():
     cfg = Config(str(BACKEND / "alembic.ini"))
     cfg.set_main_option("script_location", str(BACKEND / "migrations"))
     script = ScriptDirectory.from_config(cfg)
-    # Fails with two heads once 0012 is integrated: then set 0013.down_revision = "0012".
-    assert script.get_heads() == ["0013"]
-    revisions = {r.revision for r in script.walk_revisions()}
-    expected = "0012" if "0012" in revisions else "0011"
-    assert script.get_revision("0013").down_revision == expected
+    # The complete graph is validated only after Claude's real 0014 is integrated.
+    # Missing 0014 remains an actual failure; no placeholder or skipped CI check.
+    assert script.get_heads() == ["0015"]
+    assert script.get_revision("0015").down_revision == "0014"
+    assert script.get_revision("0014").down_revision == "0013"
+    assert script.get_revision("0013").down_revision == "0012"
 
 
 def test_0013_is_additive_and_downgrade_is_guarded():
