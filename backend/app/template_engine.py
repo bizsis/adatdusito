@@ -226,16 +226,23 @@ def build(db, id):
                 {"key": f"source:{i}", "header": h, "source_index": i, "kind": "source"}
                 for i, h in enumerate(headers)
             ]
+            # RC-03: the UNAS schema registry (UNAS-REF-01) annotates the worktable fields
+            # and routes approved eMAG parameters; empty registry = previous behaviour.
+            from app.unas_registry import TemplateContext, place_parameter
+
+            registry = TemplateContext(db)
             for field in UNAS_REQUIRED + UNAS_RECOMMENDED:
                 if field not in mapping:
                     mapping[field] = len(columns)
                     columns.append(
-                        {
-                            "key": f"unas:{field}",
-                            "header": field,
-                            "kind": "unas",
-                            "required": field in UNAS_REQUIRED,
-                        }
+                        registry.annotate(
+                            {
+                                "key": f"unas:{field}",
+                                "header": field,
+                                "kind": "unas",
+                                "required": field in UNAS_REQUIRED,
+                            }
+                        )
                     )
             warnings = []
             if not donors:
@@ -258,7 +265,9 @@ def build(db, id):
                         for i, h in enumerate(headers)
                         if fold(h) == fold(param["name"])
                     ]
-                    columns.append(
+                    place_parameter(
+                        registry,
+                        columns,
                         {
                             **param,
                             "key": f"emag:{donor}:{param['emag_parameter_id']}",
@@ -268,7 +277,7 @@ def build(db, id):
                             "source_index": (
                                 source_indices[0] if len(source_indices) == 1 else None
                             ),
-                        }
+                        },
                     )
             if len(columns) > 16384 or physical_count > 1048575:
                 raise ValueError(
@@ -315,7 +324,8 @@ def build(db, id):
                             source_index = column.get("source_index")
                             if (
                                 column["kind"] == "parameter"
-                                and column["donor"] == chosen["donor"]
+                                and chosen["donor"]
+                                in column.get("donors", [column["donor"]])
                                 and source_index is not None
                                 and source_index < len(raw)
                             ):
