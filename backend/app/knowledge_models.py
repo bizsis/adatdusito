@@ -7,6 +7,8 @@ from decimal import Decimal
 from sqlalchemy import (
     JSON,
     BigInteger,
+    Boolean,
+    Text,
     DateTime,
     ForeignKey,
     Integer,
@@ -14,6 +16,7 @@ from sqlalchemy import (
     String,
     UniqueConstraint,
 )
+from sqlalchemy.dialects import mysql
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.models import Base, now
@@ -87,6 +90,11 @@ class KnowledgeObservation(Base):
     current: Mapped[bool] = mapped_column(default=True)
     observed_at: Mapped[datetime] = mapped_column(DateTime, default=now)
     superseded_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+    # KNOWLEDGE-02 (0016): recompute basis and personal-data hold.
+    identity_confidence: Mapped[Decimal | None] = mapped_column(Numeric(5, 4), nullable=True)
+    pii_flags: Mapped[list | None] = mapped_column(JSON, nullable=True)
+    pii_reviewed_by: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    pii_reviewed_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
 
 
 class KnowledgeValue(Base):
@@ -113,6 +121,7 @@ class KnowledgeValue(Base):
     verified_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
     rejected_values: Mapped[list] = mapped_column(JSON, default=list)
     updated_at: Mapped[datetime] = mapped_column(DateTime, default=now)
+    independent_sources: Mapped[int] = mapped_column(Integer, default=0)
 
 
 class KnowledgeConflict(Base):
@@ -144,3 +153,75 @@ class KnowledgeEvent(Base):
     actor_id: Mapped[int | None] = mapped_column(ForeignKey("users.id"), nullable=True)
     details: Mapped[dict] = mapped_column(JSON, default=dict)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=now)
+
+
+# --- KNOWLEDGE-02 (migration 0016) ------------------------------------------------------------
+
+
+class KnowledgeSourceRelation(Base):
+    """Suspected or decided dependency between two sources (copying); a pair is ordered a<b."""
+
+    __tablename__ = "knowledge_source_relations"
+    __table_args__ = (UniqueConstraint("source_a_id", "source_b_id",
+                                       name="uq_knowledge_source_pair"),)
+    id: Mapped[int] = mapped_column(primary_key=True)
+    source_a_id: Mapped[int] = mapped_column(ForeignKey("reference_product_sources.id"))
+    source_b_id: Mapped[int] = mapped_column(ForeignKey("reference_product_sources.id"))
+    shared_values: Mapped[int] = mapped_column(Integer)
+    identical_values: Mapped[int] = mapped_column(Integer)
+    identical_texts: Mapped[int] = mapped_column(Integer)
+    ratio: Mapped[Decimal] = mapped_column(Numeric(5, 4))
+    # suspected | below_threshold | confirmed_dependent | confirmed_independent
+    state: Mapped[str] = mapped_column(String(24))
+    reason: Mapped[str | None] = mapped_column(String(500), nullable=True)
+    decided_by: Mapped[int | None] = mapped_column(ForeignKey("users.id"), nullable=True)
+    decided_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+    updated_at: Mapped[datetime] = mapped_column(DateTime, default=now)
+
+
+class KnowledgeMerge(Base):
+    __tablename__ = "knowledge_merges"
+    id: Mapped[int] = mapped_column(primary_key=True)
+    survivor_id: Mapped[int] = mapped_column(ForeignKey("knowledge_products.id"), index=True)
+    merged_id: Mapped[int] = mapped_column(ForeignKey("knowledge_products.id"))
+    state: Mapped[str] = mapped_column(String(16))  # applied | reverted
+    preview_token: Mapped[str] = mapped_column(String(64))
+    variant_risk_acknowledged: Mapped[bool] = mapped_column(Boolean, default=False)
+    moved: Mapped[dict] = mapped_column(JSON)
+    reason: Mapped[str] = mapped_column(String(500))
+    applied_by: Mapped[int] = mapped_column(ForeignKey("users.id"))
+    applied_at: Mapped[datetime] = mapped_column(DateTime, default=now)
+    reverted_by: Mapped[int | None] = mapped_column(ForeignKey("users.id"), nullable=True)
+    reverted_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+    revert_reason: Mapped[str | None] = mapped_column(String(500), nullable=True)
+
+
+class KnowledgeText(Base):
+    """Every name / description variant of every source record, kept verbatim."""
+
+    __tablename__ = "knowledge_texts"
+    __table_args__ = (UniqueConstraint("link_id", "kind", "text_hash",
+                                       name="uq_knowledge_text_variant"),)
+    id: Mapped[int] = mapped_column(BigId, primary_key=True)
+    knowledge_product_id: Mapped[int] = mapped_column(ForeignKey("knowledge_products.id"),
+                                                      index=True)
+    link_id: Mapped[int] = mapped_column(ForeignKey("knowledge_links.id"))
+    source_id: Mapped[int] = mapped_column(ForeignKey("reference_product_sources.id"))
+    kind: Mapped[str] = mapped_column(String(24))  # name | short_description | long_description
+    text: Mapped[str] = mapped_column(Text().with_variant(mysql.MEDIUMTEXT(), "mysql"))
+    text_hash: Mapped[str] = mapped_column(String(64))
+    format: Mapped[str] = mapped_column(String(8))  # plain | html
+    language: Mapped[str] = mapped_column(String(8))  # ISO 639-1 or "unknown"
+    language_confidence: Mapped[Decimal] = mapped_column(Numeric(5, 4))
+    language_method: Mapped[str] = mapped_column(String(16))  # heuristic | admin
+    verification: Mapped[str] = mapped_column(String(16), default="unverified")
+    # inherited | reuse_allowed | internal_only | restricted
+    usage: Mapped[str] = mapped_column(String(16), default="inherited")
+    pii_flags: Mapped[list] = mapped_column(JSON, default=list)
+    pii_reviewed_by: Mapped[int | None] = mapped_column(ForeignKey("users.id"), nullable=True)
+    pii_reviewed_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+    current: Mapped[bool] = mapped_column(Boolean, default=True)
+    observed_at: Mapped[datetime] = mapped_column(DateTime, default=now)
+    superseded_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+    decided_by: Mapped[int | None] = mapped_column(ForeignKey("users.id"), nullable=True)
+    decided_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)

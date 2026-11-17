@@ -120,6 +120,8 @@ class ReferenceProductSource(Base):
     enrichment_enabled: Mapped[bool] = mapped_column(Boolean, default=False)
     contribution: Mapped[str] = mapped_column(String(16), default="automatic")
     trust_level: Mapped[Decimal | None] = mapped_column(Numeric(5, 4), nullable=True)
+    # KNOWLEDGE-02: sources in one lineage group count as one independent source.
+    lineage_group: Mapped[str | None] = mapped_column(String(64), nullable=True)
     usage_note: Mapped[str | None] = mapped_column(String(1000), nullable=True)
     usage_decided_by: Mapped[int | None] = mapped_column(ForeignKey("users.id"), nullable=True)
     usage_decided_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
