@@ -466,6 +466,14 @@ def advance(db, run_id):
 def process_import(run_id):
     with Session(engine()) as db:
         advance(db, run_id)
+        # The independent worktable must never change import/research outcomes.
+        try:
+            from app.template_engine import auto_template
+            auto_template(db, run_id)
+        except Exception:
+            db.rollback()
+            import logging
+            logging.getLogger(__name__).exception("Automatic template scheduling failed: run_id=%s", run_id)
 
 
 def enqueue(run_id):
