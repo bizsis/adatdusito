@@ -158,8 +158,16 @@ def main():
             response(client.post('/api/v1/auth/logout'),204)
             response(client.delete(f'/api/v1/imports/runs/{third}'),401)
             ok('real_tenant_permission_csrf_origin_and_auth_guards')
-            with engine.connect() as conn:assert conn.scalar(text('SELECT version_num FROM alembic_version'))=='0012'
-            ok('schema_at_0012_with_rc02_guards_preserved')
+            # RC-03: TEMPLATE-01 (0012) and UNAS-REF-01 (0013) both sit in the chain; the database
+            # must be at the current Alembic head, with 0012 an applied ancestor of it.
+            from alembic.config import Config
+            from alembic.script import ScriptDirectory
+            alembic_cfg=Config(str(ROOT/'backend/alembic.ini'));alembic_cfg.set_main_option('script_location',str(ROOT/'backend/migrations'))
+            script=ScriptDirectory.from_config(alembic_cfg)
+            head=script.get_current_head()
+            assert '0012' in {r.revision for r in script.iterate_revisions(head,'base')}
+            with engine.connect() as conn:assert conn.scalar(text('SELECT version_num FROM alembic_version'))==head
+            ok('schema_at_alembic_head_with_0012_template_tables')
     finally:
         app.dependency_overrides.clear();app.dependency_overrides.update(prior);engine.dispose()
     print(json.dumps({'mysql':version,'checks':len(checks),'failed':0,'fixture':'synthetic_27_columns_3_products_4945_empty','reference_access':False}))

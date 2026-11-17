@@ -246,6 +246,10 @@ app.include_router(registration_router)
 from app.workspace_views import router as workspace_views_router
 
 app.include_router(workspace_views_router)
+# UNAS-REF-01: UNAS schema registry, eMAG-UNAS mappings, isolated reference store.
+from app.unas_views import router as unas_router  # noqa: E402
+
+app.include_router(unas_router)
 
 from app.auth_logging import install_auth_log_filter
 
