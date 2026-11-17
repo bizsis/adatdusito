@@ -145,8 +145,14 @@ def main():
             response(client.post('/api/v1/auth/logout'),204)
             response(client.delete(f'/api/v1/imports/runs/{third}'),401)
             ok('real_tenant_permission_csrf_origin_and_auth_guards')
-            with engine.connect() as conn:assert conn.scalar(text('SELECT version_num FROM alembic_version'))=='0011'
-            ok('schema_stays_at_0011_no_new_migration')
+            # UNAS-REF-01 (#50, owner-approved change): expect the current Alembic head
+            # instead of a fixed '0011', so later assigned revisions (0012, 0013) keep this check valid.
+            from alembic.config import Config
+            from alembic.script import ScriptDirectory
+            alembic_cfg=Config(str(ROOT/'backend/alembic.ini'));alembic_cfg.set_main_option('script_location',str(ROOT/'backend/migrations'))
+            head=ScriptDirectory.from_config(alembic_cfg).get_current_head()
+            with engine.connect() as conn:assert conn.scalar(text('SELECT version_num FROM alembic_version'))==head
+            ok('schema_at_alembic_head')
     finally:
         app.dependency_overrides.clear();app.dependency_overrides.update(prior);engine.dispose()
     print(json.dumps({'mysql':version,'checks':len(checks),'failed':0,'fixture':'synthetic_27_columns_3_products_4945_empty','reference_access':False}))
