@@ -1,7 +1,6 @@
 """KNOWLEDGE-UI-01: durable web jobs over the existing reference import engine.
 
-Owner-assigned revision. 0014 belongs to claude/knowledge-01 and is deliberately
-not supplied here. Full chain validation requires integration of that branch.
+Owner-assigned revision, following Claude's unchanged KNOWLEDGE-01 migration 0014.
 """
 
 from alembic import op
@@ -52,6 +51,34 @@ def downgrade():
         raise RuntimeError(
             "Reference administration jobs are running; stop them before downgrading."
         )
+    # MySQL commits DDL immediately: a lower revision's refusal must be checked
+    # before any 0015 DDL, or Alembic's version rollback leaves a partial schema.
+    destination = op.get_context().opts.get("destination_rev", "0014")
+    target = int(destination) if str(destination).isdigit() else 0
+    guards = [
+        (14, "SELECT COUNT(*) FROM knowledge_values WHERE verified_by IS NOT NULL"),
+        (14, "SELECT COUNT(*) FROM knowledge_conflicts WHERE resolved_by IS NOT NULL"),
+        (14, "SELECT COUNT(*) FROM knowledge_links WHERE decided_by IS NOT NULL"),
+        (13, "SELECT COUNT(*) FROM parameter_mappings WHERE decided_by IS NOT NULL"),
+        (
+            13,
+            "SELECT COUNT(*) FROM reference_product_sources WHERE usage_decided_by IS NOT NULL",
+        ),
+        (11, "SELECT COUNT(*) FROM preparation_approvals"),
+        (10, "SELECT COUNT(*) FROM parameter_aliases"),
+        (
+            10,
+            "SELECT COUNT(*) FROM product_parameter_values WHERE locked = 1 OR origin = 'user'",
+        ),
+        (9, "SELECT COUNT(*) FROM category_maps"),
+        (9, "SELECT COUNT(*) FROM product_events"),
+        (9, "SELECT COUNT(*) FROM product_classifications WHERE locked = 1"),
+    ]
+    for revision_number, query in guards:
+        if target < revision_number and c.scalar(sa.text(query)):
+            raise RuntimeError(
+                "Protected decisions exist; restore the verified backup instead of downgrading."
+            )
     op.drop_table("reference_import_chunks")
     with op.batch_alter_table("reference_import_runs") as batch:
         for name in ("ui_lease_until", "ui_task_token", "ui_cursor", "ui_config"):

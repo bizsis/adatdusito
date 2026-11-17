@@ -4,7 +4,7 @@ Bázis: `claude/release-candidate-03` @ `d0e2c2c`. Saját ág: `codex/knowledge-
 
 ## Migráció és integrációs függőség
 
-A Tulajdonos által kiosztott **0015** a Claude-hoz rendelt **0014**-re épül. Lánc: `0011 → 0012 → 0013 → 0014 → 0015`. Ez az ág nem hoz létre helyettesítő 0014-et, és az RC-03 migrációit nem módosítja. A teljes Alembic- és MySQL-lánc ellenőrzése csak a `claude/knowledge-01` valódi 0014-ének integrációja után történhet meg. Addig az ág nem telepíthető.
+A Tulajdonos által kiosztott **0015** a Claude-hoz rendelt **0014**-re épül. Lánc: `0011 → 0012 → 0013 → 0014 → 0015`. Claude valódi `0014` migrációja a tulajdonos külön engedélyével, a `9854587` commit integrálásával került a munkágba (`1298f9f`). Az RC-03 és a main ág változatlan maradt. A teljes láncteszt aktív; nincs helyettesítő vagy átugrott migráció.
 
 A 0015 kizárólag:
 
@@ -66,7 +66,7 @@ Az importmotor új, opcionális keyword argumentumai: `run=<ReferenceImportRun>`
 
 Fájlonként 50 MB, a meglévő XLSX kibontási védelem, legfeljebb 512 forrásoszlop és egymillió forrásrekord. Feldolgozás Celeryben; a webes kérés nem végez teljes importot. Egy forráshoz egyszerre egy adatíró import indulhat. Az alkalmazás-adatbázison kívül nincs írás; `pinfo_db`, `.env`, Compose, Nginx, VPS változatlan.
 
-Önállóan ellenőrizhető: API/SQLite üzleti és jogosultsági tesztek, a 0015 DDL-je külön műveleti tesztben, frontend build/lint/tesztek, asztali és 390 px-es böngészőteszt. A teljes Alembic-/MySQL-/hosted CI-kapu **függőben marad a valódi 0014 integrációjáig**; nincs átugrott vagy ál-migráció.
+Önállóan ellenőrizhető: API/SQLite üzleti és jogosultsági tesztek, a 0015 DDL-je külön műveleti tesztben, frontend build/lint/tesztek, asztali és 390 px-es böngészőteszt. Az integrált Alembic- és MySQL-tesztek a teljes `0013→0014→0015` láncot ellenőrzik, beleértve a régi adatok megőrzését és a visszaállítás előtti döntésvédelmeket. A hosted CI ugyanazokat a kapukat futtatja.
 
 ## Publikált KNOWLEDGE-01 szerződés (9854587)
 
@@ -78,19 +78,23 @@ Integrációs hook: `knowledge_bridge.schedule_source(source_id)` kizárólag Cl
 
 A motor által létrehozott, engedélyezett `tenant_import`/`contribution=automatic` források a motor saját, megosztható megfigyeléseivel dolgozhatnak. Ezeket az adminfelület nem jelöli függőben levőnek és engedélyük kezelhető. Az adminfelületen külön feltöltött ügyfélfájl továbbra is `contribution=pending`; a közvetlen referencia-lookup nem adhat vissza tenant nyers rekordját. A két adatút nem azonos.
 
-A két ág automatikus egyesítése nem történt meg. Az integrált ág teljes lánctesztjének elvárt headje `0015`, szigorú `0013 → 0014 → 0015` szülőellenőrzéssel; a KNOWLEDGE-01 tesztjeit és az adminfelület tesztjeit együtt kell futtatni.
+A két ág egyesítése a tulajdonos kifejezett engedélyével kizárólag a `codex/knowledge-ui-01` ágon történt meg. Az importütemezés és a head-teszt két ütközése mindkét fejlesztés megőrzésével oldódott fel. Az integrált ág teljes lánctesztjének elvárt headje `0015`, szigorú `0013 → 0014 → 0015` szülőellenőrzéssel; a KNOWLEDGE-01 tesztjeit és az adminfelület tesztjeit együtt kell futtatni.
 
 A `tenant_import` források fájlos frissítését a referenciakezelő nem engedi: ezeket továbbra is a beszállítói importmotor frissíti. Az adminisztráció az engedélyüket kezeli és naplózza; új ügyfél-referenciafájl külön, átvételre váró forrásként tölthető fel.
 
-## Ellenőrzési parancsok a két ág egyesítése előtt
+## Az integrált ág ellenőrzése
 
 ```bash
 PYTHONPATH=backend .venv/bin/pytest -q backend/tests/test_knowledge_admin.py backend/tests/test_knowledge_ui_migration.py
-PYTHONPATH=backend .venv/bin/pytest -q backend/tests scripts/tests --ignore-glob='*_browser.py' --ignore=scripts/tests/test_emag_menu_export.py -k 'not test_single_alembic_head_and_0013_chain'
+PYTHONPATH=backend .venv/bin/pytest -q backend/tests scripts/tests --ignore-glob='*_browser.py' --ignore=scripts/tests/test_emag_menu_export.py
 npm --prefix frontend run build
 npm --prefix frontend run lint
 npm --prefix frontend test
 PYTHONPATH=backend .venv/bin/pytest -q backend/tests/test_knowledge_admin_browser.py backend/tests/test_template_browser.py scripts/tests/test_help_browser.py
 ```
 
-Az egyszeri, helyi `-k` szűrés kizárólag a publikált, de még nem integrált 0014-től függő teljes gráftesztet választja le. **A CI-ben nincs kikapcsolva teszt vagy migrációs kapu.** Integráció után ezt a szűrést el kell hagyni, a teljes 0015-head lánctesztet, a MySQL-próbákat és a hosted CI-t is le kell futtatni. A feltöltött ág önmagában még nem telepíthető.
+Az integrált futásban nincs `-k` szűrés vagy migrációs tesztkihagyás. A közös tesztfixture a KNOWLEDGE-01 ütemező hálózati küldését leválasztja; a motor tényleges újraépítését a tesztek a saját SQLite/MySQL adatbázison hajtják végre. Ezzel a szintetikus rekordok nem kerülnek egy fejlesztő esetleg futó brokerébe.
+
+A `scripts/mysql_knowledge_ui_check.py` kizárólag üres, loopback MySQL 8.0 tesztadatbázist fogad, `KNOWLEDGE_UI_FIXTURE_ACK=isolated-knowledge-ui-01` megjelöléssel. A CI külön eldobható szolgáltatáson futtatja, a régi RC02- és migrációs próbák mellett. Ellenőrzi a 0013-as rekord megőrzését, a webes feltöltést, az ismételhetőséget, a tényleges KNOWLEDGE-01 újraépítést, a feltöltésvédelmet, a több lépéses downgrade előtti döntésvédelmet és az `0015→0014→0015`, `0015→0013→0015` köröket. Nem VPS-telepítési parancs.
+
+Telepítés kizárólag tulajdonosi jóváhagyás és mentés után: a teljes migrációs lánc sorrendben futtatandó, majd a backend/worker/frontend frissítendő. Ebben a munkában sem VPS-telepítés, sem main-/RC-03-merge nem történt.

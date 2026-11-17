@@ -470,3 +470,50 @@ def test_bridge_uses_published_scheduler_only(monkeypatch):
     )
     assert knowledge_bridge.schedule_source(11) is True
     assert called == [{"source_id": 11}]
+
+
+def test_integrated_import_schedules_once_and_rebuild_uses_shared_source(
+    admin, monkeypatch
+):
+    from app import knowledge as kb
+    from app.knowledge_models import KnowledgeLink, KnowledgeObservation
+
+    c, target, _, _ = admin
+    published = []
+    monkeypatch.setattr(kb, "schedule", lambda **kwargs: published.append(kwargs))
+    run = upload(admin)
+    start(admin, run)
+    assert published == [{"source_id": run["source_id"]}]
+    assert c.get("/api/v1/knowledge/stats").status_code == 200
+    with Session(target) as db:
+        kb.rebuild(db, source_id=run["source_id"])
+        assert db.scalar(select(func.count()).select_from(KnowledgeLink)) == 2
+        assert (
+            db.scalar(
+                select(func.count())
+                .select_from(KnowledgeObservation)
+                .where(KnowledgeObservation.current.is_(True))
+            )
+            >= 2
+        )
+    response = c.put(
+        BASE + f"/sources/{run['source_id']}",
+        json={
+            "name": "Kizárt",
+            "usage_status": "revoked",
+            "enrichment_enabled": False,
+            "usage_note": "Felhasználási jog visszavonva",
+        },
+    )
+    assert response.status_code == 200
+    assert published == [{"source_id": run["source_id"]}] * 2
+    with Session(target) as db:
+        kb.rebuild(db, source_id=run["source_id"])
+        assert (
+            db.scalar(
+                select(func.count())
+                .select_from(KnowledgeObservation)
+                .where(KnowledgeObservation.current.is_(True))
+            )
+            == 0
+        )
