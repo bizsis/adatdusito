@@ -1,5 +1,7 @@
 # UNAS-REF-01 – UNAS-sématár és termékreferencia-adatbázis
 
+> **RC-03 frissítés:** a tulajdonosi döntés szerint az importált referenciaforrások alapból aktív tudásforrások. A mezők `shareable` jelölést kapnak, a referenciatermékek `unverified` állapotban indulnak. A `0013` a `0012` után áll. Lásd: `docs/development/RELEASE-CANDIDATE-03.md`.
+
 - **Ág:** `claude/unas-reference-database`, kiindulás: `codex/release-candidate-02` @ `0580a74`; a PR célága is ez.
 - **Migráció:** `0013` (a Tulajdonos kiosztása). A `0012`-t a Codex párhuzamosan fejleszti.
 - **Mintafájl:** `UnasShop_engermarket-unas-hu_20261117-084322.xlsx` – 1 munkalap, 135 oszlop, 18 454 termék.
@@ -70,7 +72,7 @@ Működés:
 
 | Tábla | Tartalom |
 |---|---|
-| `reference_product_sources` | forrás (`unas_export:<áruház>`), `usage_status` (`restricted` alapból, `internal_only`, `approved_enrichment`, `revoked`), `enrichment_enabled` (alapból `false`), döntéshozó és időpont, kizárt oszlopok |
+| `reference_product_sources` | forrás (`unas_export:<áruház>`, KNOWLEDGE-01-től tenant-import is: `tenant_id`), `usage_status` (`restricted`, `internal_only`, `approved_enrichment`, `revoked`), `usage_basis` (jogalap), `enrichment_enabled`, `contribution`, `trust_level`, döntéshozó és időpont, kizárt oszlopok. **RC-03:** az importált export alapból `approved_enrichment` / `owner_policy:2026-11-17`, aktív. |
 | `reference_import_runs` | futásonként: fájlnév, SHA-256, állapot, számlálók, az első 200 sorhiba (`line`, `code`) |
 | `reference_products` | forrás és cikkszám (egyedi a forráson belül), UNAS-azonosító, név, márka, kategóriaút, rövid és részletes leírás, képlinkek, termék-URL, **`raw`** (minden nem kizárt, nem üres oszlop az exportált értékkel), `raw_sha256`, első és utolsó import |
 | `reference_product_identifiers` | szöveges azonosítók: `gtin` (minden EAN-oszlopból, ellenőrzőszámmal, `valid` és `issues`), `source_sku`, `external_id` |
@@ -88,7 +90,8 @@ Megjegyzések:
 - csak az alkalmazás-adatbázist írja.
 
 **Felhasználás** (`lookup`):
-- Csak `approved_enrichment` állapotú **és** `enrichment_enabled` forrásból ad találatot.
+- Csak `approved_enrichment` állapotú **és** `enrichment_enabled` forrásból ad találatot. Az importált források ilyenek alapból (RC-03 tulajdonosi döntés). Az adminisztrátor `restricted` vagy `revoked` döntését egy újraimport nem írja felül.
+- Csak a közös tudásba átvehető (`shareable`) mezőket és paramétereket adja vissza. A termék `verification` értéke `unverified`, automatikusan semmi nem válik hitelessé.
 - Sorrend és megbízhatóság:
   - érvényes GTIN: 0,95;
   - érvénytelen GTIN: 0,60;
@@ -153,7 +156,7 @@ Egyetlen oszlop sem szerepelhet kétszer (normalizált név alapján). Az XLSX/C
     | 2. | 18 454 változatlan, 38 s |
     | Létrejött | 26 366 GTIN, 88 555 attribútum, 135 meződefiníció, 26 paraméterdefiníció; kb. 112 MB |
 
-    A forrás állapota `restricted`, a dúsítás kikapcsolva.
+    A forrás állapota (RC-03) `approved_enrichment`, `owner_policy:2026-11-17`, és 50 mező vehető át a közös tudásba.
 
 **A referenciaadatokat nem töltöttük be semmilyen tartós (staging vagy éles) adatbázisba.** Csak az importáló készült el, a fenti eldobható ellenőrzéssel.
 
@@ -161,5 +164,5 @@ Egyetlen oszlop sem szerepelhet kétszer (normalizált név alapján). Az XLSX/C
 
 1. A kötelező UNAS-oszlopok ellenőrzése az élő UNAS-dokumentáción: az unas.hu ebből a környezetből nem volt elérhető.
 2. A paraméterfejléc 3–9. és 11–13. pozíciójának jelentése (UNAS-dokumentáció kell hozzá).
-3. Felhasználási jog: kell-e írásos engedély az engermarket-adatok más ügyfelek dúsításához való használatához (`approved_enrichment`)?
+3. ~~Felhasználási jog~~: eldöntve (RC-03). A megengedett források alapból aktívak; a forrásszintű nyilvántartás és az adminisztrátori korlátozás megmarad.
 4. Az éles importot a Tulajdonos indítja (a `0012` integrálása után), mentéssel: `docker compose exec backend python -m app.reference_products import <fájl> --store-key engermarket-unas-hu --version 20261117-084322`.
