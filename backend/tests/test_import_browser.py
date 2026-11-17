@@ -87,7 +87,10 @@ def test_upload_approve_preview_and_export_admin(
         expect(page.get_by_role("heading", name="#1 – Befejezve")).to_be_visible(
             timeout=15000
         )
-        expect(page.get_by_text('"stock": "-2.5"', exact=False)).to_be_visible()
+        # IMPORT-UX-02: compact table cell instead of a per-row JSON dump.
+        processed = page.locator(".preview-table").last
+        expect(processed.get_by_role("cell", name="-2.5", exact=True)).to_be_visible()
+        expect(processed.get_by_text("negatív érték", exact=False)).to_be_visible()
         page.get_by_role("navigation").get_by_role(
             "button", name="Export", exact=True
         ).click()

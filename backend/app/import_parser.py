@@ -27,10 +27,16 @@ FIELDS = {
     "weight": ("Tömeg", "weight tömeg súly"),
     "dimensions": ("Méretek", "dimensions méretek"),
     "attributes": ("Műszaki attribútum", "attributes specification paraméter"),
-    "purchase_price": ("Beszerzési ár (jóváhagyott)", "purchase_price"),
-    "list_price": ("Listaár (jóváhagyott)", "list_price"),
+    # IMPORT-UX-02: cost-like headers point to the purchase price and LISTPRICE to the
+    # list price; neither is ever an automatic "Ár" (sale) mapping. Monetary headers
+    # only produce a suggestion that an operator must choose explicitly (see analyze).
+    "purchase_price": (
+        "Beszerzési ár (jóváhagyott)",
+        "purchase_price lastinitialcost initialcost lastcost cost beszerzési_ár",
+    ),
+    "list_price": ("Listaár (jóváhagyott)", "list_price listaár"),
     "price_type": ("Ártípus", "price_type ártípus"),
-    "price": ("Ár", "price ár listprice lastinitialcost cost"),
+    "price": ("Ár", "price ár"),
     "tax_basis": ("Nettó/bruttó", "tax_basis net_gross"),
     "currency": ("Pénznem", "currencycode currency pénznem deviza"),
     "vat": ("Áfakulcs", "tax vat áfa afa"),
@@ -56,6 +62,16 @@ NUMERIC = {
     "vat",
     "weight",
 }
+# Monetary amounts: a header match is only a suggestion, never a preselected mapping.
+AMOUNTS = {"purchase_price", "list_price", "price", "sale_price"}
+# Owner decision (issue #42, 2026-11-17): these exact headers have a confirmed meaning,
+# so they are preselected. The financial approval of the run is still required.
+CONFIRMED_HEADERS = {
+    "lastinitialcost": ("purchase_price", "last_purchase_price", None),
+    "listprice": ("list_price", "list_price_net_huf", {"tax_basis": "nettó", "currency": "HUF"}),
+}
+# Invisible characters that some exports leave in otherwise empty cells.
+INVISIBLE = "\u200b\u200c\u200d\u2060\ufeff"
 FINANCIAL = {
     "purchase_price",
     "list_price",
@@ -66,6 +82,30 @@ FINANCIAL = {
     "vat",
     "price_type",
 }
+
+
+def blank(value):
+    """A cell without content: whitespace (incl. NBSP) and invisible characters only."""
+    return not text(value).strip().strip(INVISIBLE).strip()
+
+
+def blank_row(row):
+    return all(blank(c) for c in row)
+
+
+def review_flags(field, value):
+    """Row-level review flags on top of normalize(); they never change the stored raw value.
+
+    * stock below zero: kept as source data, but its business meaning (backorder,
+      correction, ...) needs an explicit rule; exports already clamp it to zero.
+    """
+    if field == "stock" and value is not None:
+        try:
+            if Decimal(value) < 0:
+                return ["negative_value_requires_rule"]
+        except InvalidOperation:
+            pass
+    return []
 
 
 def norm(value):
@@ -245,7 +285,7 @@ def analyze(path, filename, config):
     if not header or header_line < 1:
         raise ValueError("Érvénytelen fejlécsor")
     config["header_line"] = header_line
-    data = [r for i, r in sample if i > header_line and any(c.strip() for c in r)][:30]
+    data = [r for i, r in sample if i > header_line and not blank_row(r)][:30]
     columns = []
     for i, h in enumerate(header):
         matches = [
@@ -254,7 +294,14 @@ def analyze(path, filename, config):
             if norm(h) in [norm(a) for a in aliases.split()]
         ]
         key = matches[0] if len(matches) == 1 else None
-        vals = [r[i] for r in data if i < len(r) and r[i].strip()]
+        suggestion = None
+        confirmed = CONFIRMED_HEADERS.get(norm(h))
+        if confirmed:
+            key = confirmed[0]
+        elif key in AMOUNTS:
+            # Purchase cost vs list vs sale price cannot be told from a header alone.
+            suggestion, key = key, None
+        vals = [r[i] for r in data if i < len(r) and not blank(r[i])]
         if (
             not key
             and vals
@@ -263,9 +310,27 @@ def analyze(path, filename, config):
             key = "gtin"
             method = "content"
             confidence = 0.65
+        elif confirmed:
+            method = "owner_confirmed"
+            confidence = 1.0
+        elif suggestion:
+            method = "financial_suggestion"
+            confidence = 0
         else:
             method = "header" if key else "unknown"
             confidence = 0.98 if key else 0
+        target = key or suggestion
+        warnings = []
+        if target in IDENTIFIERS and any(
+            "scientific_identifier_requires_review" in normalize(target, v)[1] for v in vals
+        ):
+            warnings.append("scientific_notation_identifier")
+        if target == "gtin" and any("invalid_gtin" in normalize("gtin", v)[1] for v in vals):
+            warnings.append("invalid_gtin_samples")
+        if target == "stock" and any(
+            review_flags("stock", normalize("stock", v)[0]) for v in vals
+        ):
+            warnings.append("negative_values")
         numeric = (
             sum(not normalize("price", v)[1] for v in vals) / len(vals)
             if vals
@@ -289,7 +354,12 @@ def analyze(path, filename, config):
                 "numeric_ratio": numeric,
                 "numeric_mean": numeric_mean,
                 "unique_ratio": len(set(vals)) / len(vals) if vals else None,
-                "critical": key in FINANCIAL or key == "gtin",
+                "critical": target in FINANCIAL or target == "gtin",
+                "suggested_field": suggestion,
+                "requires_decision": bool(suggestion),
+                "warnings": warnings,
+                "meaning": confirmed[1] if confirmed else None,
+                "confirmed_context": confirmed[2] if confirmed else None,
             }
         )
     return config, {"headers": header, "columns": columns, "preview": data[:10]}
