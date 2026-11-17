@@ -1,0 +1,122 @@
+{
+  "id": "parameter-hatterfutas",
+  "topic": "tomeges",
+  "title": "Paraméterhelyek háttérfutása és hibakezelése",
+  "summary": "A Paraméterhelyek háttérfutása önálló szerveroldali újraszámítás.",
+  "order": 21,
+  "blocks": [
+    {
+      "type": "heading",
+      "text": "Mire való, és mikor használd?"
+    },
+    {
+      "type": "paragraph",
+      "text": "A Paraméterhelyek háttérfutása önálló szerveroldali újraszámítás. Nem egy korábbi tokenes tömeges előnézet alkalmazása. Ha rögzített termékhalmazhoz kötött ellenőrzött alkalmazás kell, a tömeges előkészítési útvonalat használd."
+    },
+    {
+      "type": "heading",
+      "text": "Hozzáférés és előfeltételek"
+    },
+    {
+      "type": "paragraph",
+      "text": "products.read, indításhoz megfelelő paramétermódosítási jog szükséges. A termékrészletben elérhető hatókörök az aktuális termékhez, beszállítóhoz vagy munkaterülethez kötődnek."
+    },
+    {
+      "type": "note",
+      "title": "Menüútvonal",
+      "text": "Termékadatok / Termék / Paraméterhelyek háttérfutása"
+    },
+    {
+      "type": "heading",
+      "text": "Mezők, állapotok és gombok"
+    },
+    {
+      "type": "table",
+      "caption": "A képernyő elemeinek jelentése",
+      "headers": [
+        "Elem",
+        "Mit jelent és mire figyelj?"
+      ],
+      "rows": [
+        [
+          "Futás hatóköre",
+          "Az indításkor kiválasztott kör; a teljes munkaterület minden elérhető terméke lényegesen nagyobb hatás."
+        ],
+        [
+          "preview / apply",
+          "Az előnézet számol; az alkalmazás tárolt helyeket módosíthat."
+        ],
+        [
+          "Futásazonosító",
+          "Későbbi visszakeresésre; a meglévő futást töltsd be új indítás helyett."
+        ],
+        [
+          "50000 termék",
+          "Egy futás korlátja, nem a teljes adatbázis mérete."
+        ],
+        [
+          "Sorba állítás sikertelen",
+          "A futás létrejöhetett, miközben a worker nem kapta meg. Ez nem biztonságos ok vak újraindításra."
+        ]
+      ]
+    },
+    {
+      "type": "heading",
+      "text": "Lépésről lépésre – ellenőrzött demópélda"
+    },
+    {
+      "type": "steps",
+      "items": [
+        "Nyisd meg egy demótermék paraméterrészletében a háttérfutás részt.",
+        "Válassz szűk hatókört, és először preview módot.",
+        "Ellenőrizd a megjelenő megerősítést; indítás után jegyezd fel a futásazonosítót.",
+        "Kövesd a feldolgozott és hibás tételek számát. Másik oldalon végzett munka után az azonosítóval keresd vissza a meglévő futást.",
+        "Sorba állítási hibát az üzemeltetőnek jelezz a futásazonosítóval. Alkalmazást csak az előnézet és hatókör megértése után indíts."
+      ]
+    },
+    {
+      "type": "note",
+      "title": "Várt eredmény",
+      "text": "A futás állapota és haladása visszakereshető. A completed itt a háttérfutás befejezését jelenti, nem kutatási vagy exportjóváhagyást."
+    },
+    {
+      "type": "image",
+      "src": "/help/images/parameter-futas.png",
+      "alt": "Paraméterhelyek háttérfutásának hatóköre és módja",
+      "caption": "Ez az önálló újraszámítás különbözik a tokenes tömeges alkalmazástól."
+    },
+    {
+      "type": "heading",
+      "text": "Ha nem sikerül"
+    },
+    {
+      "type": "list",
+      "items": [
+        "503: katalógus/worker elérhetőségét ellenőriztetni kell.",
+        "404: a futás más ügyfélhez tartozhat vagy nem létezik; ellenőrizd a munkaterületet.",
+        "Részleges hibák: a pontos tételhibát vizsgáld; ne indíts teljes munkaterületi apply-t a probléma elfedésére."
+      ]
+    },
+    {
+      "type": "heading",
+      "text": "Mi változik, és mi marad meg?"
+    },
+    {
+      "type": "paragraph",
+      "text": "A már alkalmazott eredmény megmarad. A nyers forrás és védett kézi döntés nem írható felül csendben; az újraszámítás nem referenciaérték-import."
+    },
+    {
+      "type": "heading",
+      "text": "Következő lépés"
+    },
+    {
+      "type": "paragraph",
+      "text": "A kapcsolódó útmutatók az alábbi sorrendben segítenek folytatni a munkát. A látható gombok mindig az aktuális munkaterület és tényleges jogosultságok szerint használhatók."
+    }
+  ],
+  "related": [
+    "tomeges-kijeloles",
+    "tomeges-jovahagyas",
+    "gyakori-hibak"
+  ]
+}

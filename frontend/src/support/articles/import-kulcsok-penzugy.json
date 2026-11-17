@@ -1,0 +1,123 @@
+{
+  "id": "import-kulcsok-penzugy",
+  "topic": "import",
+  "title": "Összekapcsolási kulcsok, feedek és pénzügyi adatok",
+  "summary": "Egy árlista és egy műszaki fájl akkor kapcsolható ugyanahhoz a beszállítói termékhez, ha az engedélyezett kulcs pontosan egyezik.",
+  "order": 10,
+  "blocks": [
+    {
+      "type": "heading",
+      "text": "Mire való, és mikor használd?"
+    },
+    {
+      "type": "paragraph",
+      "text": "Egy árlista és egy műszaki fájl akkor kapcsolható ugyanahhoz a beszállítói termékhez, ha az engedélyezett kulcs pontosan egyezik. A hasonló név nem kulcs. Az ár jelentése pedig nem következik egy szám nagyságából."
+    },
+    {
+      "type": "heading",
+      "text": "Hozzáférés és előfeltételek"
+    },
+    {
+      "type": "paragraph",
+      "text": "Elemzett futás, a beszállító adatleírása és imports.approve szükséges. Teljes feedet csak akkor használj, ha a fájl ténylegesen teljes terméktörzs. Egy rövid tesztfájlt ne kezelj teljes kínálatként."
+    },
+    {
+      "type": "note",
+      "title": "Menüútvonal",
+      "text": "Beszállítói import / Feed és összekapcsolás"
+    },
+    {
+      "type": "heading",
+      "text": "Mezők, állapotok és gombok"
+    },
+    {
+      "type": "table",
+      "caption": "A képernyő elemeinek jelentése",
+      "headers": [
+        "Elem",
+        "Mit jelent és mire figyelj?"
+      ],
+      "rows": [
+        [
+          "Cikkszám / beszállítói azonosító / MPN / GTIN / modell",
+          "A megfeleltetett és jóváhagyott mezők lehetnek kulcsjelöltek; egy beszállítón belüli stabil, egyedi értéket válassz."
+        ],
+        [
+          "Részleges és Teljes terméktörzs",
+          "A részleges nem állítja, hogy a kimaradt termék megszűnt. A teljes feed hiánykezelése üzleti hatással járhat."
+        ],
+        [
+          "Árlista / Készletlista / Műszaki adatok",
+          "A frissítés rendeltetése; nem hoz létre kitalált adatot a hiányzó mezőkből."
+        ],
+        [
+          "Ártípus / Nettó-bruttó jelleg / Pénznem",
+          "Csak igazolt értéket adj meg. A beszerzési ár, listaár és eladási ár külön fogalom."
+        ],
+        [
+          "Pontos mintaegyezések",
+          "Segít a kulcs döntésében, de a kulcs jóváhagyása külön lépés."
+        ]
+      ]
+    },
+    {
+      "type": "heading",
+      "text": "Lépésről lépésre – ellenőrzött demópélda"
+    },
+    {
+      "type": "steps",
+      "items": [
+        "A DEMO-001 termékhez készíts külön, ugyanazon beszállítói cikkszámot tartalmazó műszaki mintát.",
+        "Az elemzés után válaszd a cikkszámot kulcsnak, és nézd meg a korábbi tételekkel közölt pontos mintaegyezést.",
+        "A műszaki mintánál válaszd a Műszaki adatok feedet; ne jelöld Teljes terméktörzsnek.",
+        "A jóváhagyott forrásjelentések szerint LASTINITIALCOST = utolsó beszerzési ár, LISTPRICE = listaár; mindkettő nettó HUF. Ezek előre kiválasztva jelennek meg, a LISTPRICE nettó/HUF környezetet tölthet elő, de a pénzügyi megerősítés továbbra is kötelező. Eladási árat egyikből sem következtetünk.",
+        "A BARCODE tudományos jelölését, például 8,71999E+12 értéket az eredeti teljes vonalkóddal ellenőrizd. A hiányzó számjegy nem állítható helyre biztosan.",
+        "Negatív QUANTITY esetén tisztázd a jelentést; ne fordítsd pozitív eladható készletté. A negatív érték változatlanul megmarad, figyelmeztetéssel; nem válik pozitív eladható készletté."
+      ]
+    },
+    {
+      "type": "note",
+      "title": "Várt eredmény",
+      "text": "A tudatos kulcsválasztás megakadályozza a hasonló nevű termékek összekeverését. Az integrált változat külön figyelmeztetést mutat a tudományos vagy hibás GTIN-re és a negatív készletre. A tudományos azonosítót nem menti érvényes GTIN-ként; új, teljes számjegyes forrás kell. Az utólagos Excel-formázás nem állítja helyre az elveszett számjegyeket."
+    },
+    {
+      "type": "image",
+      "src": "/help/images/rc02-jovahagyas.png",
+      "alt": "Kulcs, feed és pénzügyi értelmezés a jóváhagyás előtt",
+      "caption": "Nettó/HUF környezet mellett is külön pénzügyi jóváhagyás kell."
+    },
+    {
+      "type": "heading",
+      "text": "Ha nem sikerül"
+    },
+    {
+      "type": "list",
+      "items": [
+        "Nem található korábbi egyezés: ellenőrizd a beszállítót, a szóközöket, a szövegként megőrzött vezető nullákat és a mező megfeleltetését.",
+        "Ismeretlen áfa vagy pénznem: maradjon ismeretlen; ne pipálj be megerősítést csak a feldolgozás továbbviteléhez.",
+        "422: a kulcs nem szerepel a megfeleltetésben vagy a pénzügyi jelölés hibás. Javítsd a jelentést, ne csak a formátumot."
+      ]
+    },
+    {
+      "type": "heading",
+      "text": "Mi változik, és mi marad meg?"
+    },
+    {
+      "type": "paragraph",
+      "text": "A kulcs és feed a későbbi frissítések jelentését módosítja. A forrásértéket őrizd meg; tudományos EAN-ból, negatív készletből és bizonytalan árjellegből nem szabad csendes üzleti következtetést levonni."
+    },
+    {
+      "type": "heading",
+      "text": "Következő lépés"
+    },
+    {
+      "type": "paragraph",
+      "text": "A kapcsolódó útmutatók az alábbi sorrendben segítenek folytatni a munkát. A látható gombok mindig az aktuális munkaterület és tényleges jogosultságok szerint használhatók."
+    }
+  ],
+  "related": [
+    "import-jovahagyasa",
+    "oszlopok-megfeleltetese",
+    "import-elozmenyek-hibak"
+  ]
+}

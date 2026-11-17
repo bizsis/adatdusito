@@ -1,0 +1,122 @@
+{
+  "id": "muveleti-naplo",
+  "topic": "hozzaferes",
+  "title": "Napló és auditbejegyzések olvasása",
+  "summary": "A Napló / Audit oldal mutatja, ki, mikor és mely célon végzett adminisztratív műveletet.",
+  "order": 34,
+  "blocks": [
+    {
+      "type": "heading",
+      "text": "Mire való, és mikor használd?"
+    },
+    {
+      "type": "paragraph",
+      "text": "A Napló / Audit oldal mutatja, ki, mikor és mely célon végzett adminisztratív műveletet. Az audit nem visszavonásgomb és nem helyettesíti a termékenkénti besorolási vagy paraméterrészletet."
+    },
+    {
+      "type": "heading",
+      "text": "Hozzáférés és előfeltételek"
+    },
+    {
+      "type": "paragraph",
+      "text": "Ügyfélnél audit.read, rendszerszinten system.audit.read szükséges. A lista az aktuális hozzáférés szerint szűrt; nem jogosít másik ügyfél vizsgálatára."
+    },
+    {
+      "type": "note",
+      "title": "Menüútvonal",
+      "text": "Műveleti napló"
+    },
+    {
+      "type": "heading",
+      "text": "Mezők, állapotok és gombok"
+    },
+    {
+      "type": "table",
+      "caption": "A képernyő elemeinek jelentése",
+      "headers": [
+        "Elem",
+        "Mit jelent és mire figyelj?"
+      ],
+      "rows": [
+        [
+          "Időpont",
+          "A megjelenített esemény ideje; hibajelentésben az időzónát is tisztázd."
+        ],
+        [
+          "Művelet",
+          "Magyar magyarázat az eseményhez."
+        ],
+        [
+          "Technikai eseménykód",
+          "Lenyitható kód és esetleges részletek; a felhasználói név és a technikai azonosító külön adat."
+        ],
+        [
+          "Végrehajtó / Cél",
+          "A személy vagy rendszer, és az érintett erőforrás/ügyfél."
+        ],
+        [
+          "Lapozás",
+          "Régebbi és újabb bejegyzések; nincs szabad auditadat-szerkesztés."
+        ]
+      ]
+    },
+    {
+      "type": "heading",
+      "text": "Lépésről lépésre – ellenőrzött demópélda"
+    },
+    {
+      "type": "steps",
+      "items": [
+        "Egy demóbesorolás vagy hozzáférésmentés után nyisd meg a Napló / Audit oldalt.",
+        "Ellenőrizd az ügyfélmunkaterületet és az esemény időpontját.",
+        "Keresd meg a megfelelő műveletet lapozással, majd nyisd le a Technikai eseménykód részletet.",
+        "Hasonlítsd össze a célt a termék vagy felhasználó saját részleteivel.",
+        "Támogatásnak az eseménykódot, időpontot és titokmentes erőforrásazonosítót add meg; a teljes adatkészletet ne másold ki."
+      ]
+    },
+    {
+      "type": "note",
+      "title": "Várt eredmény",
+      "text": "A döntés nyoma a megfelelő végrehajtóval és céllal ellenőrizhető. A lista olvasása nem hoz létre új üzleti döntést."
+    },
+    {
+      "type": "image",
+      "src": "/help/images/audit.png",
+      "alt": "Adminisztrációs napló időponttal, művelettel és céllal",
+      "caption": "Minden adat elkülönített tesztadat, nem éles ügyféladat."
+    },
+    {
+      "type": "heading",
+      "text": "Ha nem sikerül"
+    },
+    {
+      "type": "list",
+      "items": [
+        "Hiányzó menü vagy 403: ügyfél- és rendszer-auditjog külön engedély.",
+        "Nem találod az eseményt: ellenőrizd az ügyfelet, időzónát és lapozást.",
+        "Technikai részlet nem teljes termékadat: a termékrészlet és a futás saját története további bizonyítékot adhat."
+      ]
+    },
+    {
+      "type": "heading",
+      "text": "Mi változik, és mi marad meg?"
+    },
+    {
+      "type": "paragraph",
+      "text": "Az audit olvasható nyom, nem felhasználói törlőfelület. A látható személyadatot ne tedd nyilvános hibajegybe; jelszó vagy token semmilyen hibajelentésbe nem való."
+    },
+    {
+      "type": "heading",
+      "text": "Következő lépés"
+    },
+    {
+      "type": "paragraph",
+      "text": "A kapcsolódó útmutatók az alábbi sorrendben segítenek folytatni a munkát. A látható gombok mindig az aktuális munkaterület és tényleges jogosultságok szerint használhatók."
+    }
+  ],
+  "related": [
+    "jogosultsagok",
+    "kezi-parameterek",
+    "gyakori-hibak"
+  ]
+}

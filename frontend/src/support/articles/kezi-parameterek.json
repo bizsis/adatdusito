@@ -1,0 +1,133 @@
+{
+  "id": "kezi-parameterek",
+  "topic": "parameterek",
+  "title": "Paraméterek kézi javítása és zárolása",
+  "summary": "A kézi döntés egy már tárolt paraméterhely javítása, forrásjelölt elfogadása vagy védelmének kezelése.",
+  "order": 19,
+  "blocks": [
+    {
+      "type": "heading",
+      "text": "Mire való, és mikor használd?"
+    },
+    {
+      "type": "paragraph",
+      "text": "A kézi döntés egy már tárolt paraméterhely javítása, forrásjelölt elfogadása vagy védelmének kezelése. Nem szerkeszti az eredeti eMAG-értékkészletet, és nem változtatja meg észrevétlenül a beszállítói nyers adatot."
+    },
+    {
+      "type": "heading",
+      "text": "Hozzáférés és előfeltételek"
+    },
+    {
+      "type": "paragraph",
+      "text": "products.parameters szükséges, és előbb alkalmazott, tárolt helynek kell léteznie. Csak előnézeti helyen nincs kézi mentés. Zárolt hely új értékéhez előbb kifejezetten oldd fel a védelmet."
+    },
+    {
+      "type": "note",
+      "title": "Menüútvonal",
+      "text": "Termékadatok / Termék / Kézi paraméterdöntés"
+    },
+    {
+      "type": "heading",
+      "text": "Mezők, állapotok és gombok"
+    },
+    {
+      "type": "table",
+      "caption": "A képernyő elemeinek jelentése",
+      "headers": [
+        "Elem",
+        "Mit jelent és mire figyelj?"
+      ],
+      "rows": [
+        [
+          "Érték javítása és védelme",
+          "Szabadon engedett helyen új kézi értéket és egységet ad; védi a döntést."
+        ],
+        [
+          "Forrásjelölt elfogadása",
+          "Egy ténylegesen megőrzött forrásjelöltet választ, indokkal."
+        ],
+        [
+          "Zárolás / Védelem feloldása",
+          "Az aktuális hely védelmét kezeli; a feloldás későbbi automatikus változást engedhet."
+        ],
+        [
+          "Védelem feloldása és újraszámítás",
+          "Felold és újraértékel; nem ugyanaz, mint a jelenlegi érték egyszerű megőrzése."
+        ],
+        [
+          "Kötött értékkészlet",
+          "A szabad értékadás itt nem elérhető. Ismert forrásjelölt elfogadható; univerzális értékválasztó nincs bekötve."
+        ],
+        [
+          "Kézi döntés indoka / revízió",
+          "A döntés magyarázata és a szerver által ellenőrzött adatverzió."
+        ]
+      ]
+    },
+    {
+      "type": "heading",
+      "text": "Lépésről lépésre – ellenőrzött demópélda"
+    },
+    {
+      "type": "steps",
+      "items": [
+        "Nyisd meg az alkalmazott demótermék Teljesítmény paraméterrészletét.",
+        "A Kézi művelet listából válaszd az Érték javítása és védelme opciót, ha ez nem kötött vagy zárolt hely.",
+        "Az Új kézi érték mezőbe adj ellenőrzött értéket, például 2100, az egységbe W-t. Írj indokot: Ellenőrzött demó adatlap szerinti javítás.",
+        "Kattints a Kézi döntés áttekintése gombra. Olvasd el a helyi megerősítést, majd a Kézi döntés mentése gombbal véglegesíts. A friss helyen ellenőrizd a védelmet.",
+        "Zárolás feloldását külön műveletként, saját indokkal végezd. A resetet csak akkor válaszd, ha valóban újraszámítást akarsz.",
+        "409-es ütközés esetén előbb töltsd újra a helyet; az új érték ellenőrzése nélkül ne küldd el ugyanazt a döntést."
+      ]
+    },
+    {
+      "type": "note",
+      "title": "Várt eredmény",
+      "text": "A kézi döntés revíziózott és auditált, a nyers forrás változatlan. Zárolt hely automatikus újraszámításnál is védett marad."
+    },
+    {
+      "type": "image",
+      "src": "/help/images/kezi-parameter.png",
+      "alt": "Tárolt paraméterhely kézi műveletei, értéke és indoklása",
+      "caption": "Kézi javítás előtt a revízió és a zárolás is ellenőrizendő."
+    },
+    {
+      "type": "heading",
+      "text": "Ha nem sikerül"
+    },
+    {
+      "type": "list",
+      "items": [
+        "Csak olvasható: nincs paramétermódosítási jog, vagy még nincs tárolt hely.",
+        "409: időközben más döntés történt; friss adat és új megerősítés szükséges.",
+        "422 vagy kötött lista: ne kerülőúton írj be nem megengedett szabad értéket. Válassz valódi jelöltet vagy kérj adatellenőrzést."
+      ]
+    },
+    {
+      "type": "image",
+      "src": "/help/images/revizio-utkozes.png",
+      "alt": "Valódi szerveres 409 revízióütközés kézi paramétermentéskor",
+      "caption": "Közben másik döntés módosította a terméket. A felület nem ismétli meg vakon a mentést; előbb friss helyadat kell."
+    },
+    {
+      "type": "heading",
+      "text": "Mi változik, és mi marad meg?"
+    },
+    {
+      "type": "paragraph",
+      "text": "A feloldás és reset kifejezett döntés. Az indokot úgy írd meg, hogy később más munkatárs is értse az auditban; titkot vagy személyes adatot ne tegyél bele."
+    },
+    {
+      "type": "heading",
+      "text": "Következő lépés"
+    },
+    {
+      "type": "paragraph",
+      "text": "A kapcsolódó útmutatók az alábbi sorrendben segítenek folytatni a munkát. A látható gombok mindig az aktuális munkaterület és tényleges jogosultságok szerint használhatók."
+    }
+  ],
+  "related": [
+    "parameterallapotok",
+    "parameterkereses",
+    "muveleti-naplo"
+  ]
+}

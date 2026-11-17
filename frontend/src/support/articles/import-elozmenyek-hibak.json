@@ -1,0 +1,145 @@
+{
+  "id": "import-elozmenyek-hibak",
+  "topic": "import",
+  "title": "Importelőzmények, megállítás és hibás sorok",
+  "summary": "Importelőzmények megnyitása, biztonságos törlés, állapotok és hibakezelés az integrált verzióban.",
+  "order": 11,
+  "blocks": [
+    {
+      "type": "heading",
+      "text": "Mire való, és mikor használd?"
+    },
+    {
+      "type": "paragraph",
+      "text": "Az Importelőzmények kompakt listájából megnyithatsz korábbi futást. A még nem jóváhagyott és nem feldolgozott, hivatkozásmentes import biztonságos törlése külön megerősítést kér. Ez nem a feldolgozott termékek visszavonása, és nem a forrásfájl retenciós törlése."
+    },
+    {
+      "type": "heading",
+      "text": "Hozzáférés és előfeltételek"
+    },
+    {
+      "type": "paragraph",
+      "text": "Olvasáshoz imports.read, biztonságos importtörléshez és kezeléshez imports.manage, megszakításhoz imports.cancel szükséges. A szerver az aktuális ügyfelet, erőforráshatókört, állapotot, jóváhagyást, futó elemzést és hivatkozásokat is ellenőrzi."
+    },
+    {
+      "type": "note",
+      "title": "Menüútvonal",
+      "text": "Beszállítói import / Futástörténet"
+    },
+    {
+      "type": "heading",
+      "text": "Mezők, állapotok és gombok"
+    },
+    {
+      "type": "table",
+      "caption": "A képernyő elemeinek jelentése",
+      "headers": [
+        "Elem",
+        "Mit jelent és mire figyelj?"
+      ],
+      "rows": [
+        [
+          "Importelőzmények",
+          "Fájlnév, állapot, létrehozási idő és műveletek; 25-ös lapozás. Mobilon kártyanézet, a hosszú név nem nyújtja szét az oldalt."
+        ],
+        [
+          "Megnyitás",
+          "A kiválasztott futás elemzése, forrása és állapota."
+        ],
+        [
+          "Törlés",
+          "Csak megfelelő joggal és előzetesen törölhetőnek jelzett importnál. A szerver külön megvizsgálja a tényleges törölhetőséget."
+        ],
+        [
+          "Végleges törlés / Mégsem",
+          "A megerősítés felsorolja a törlődő importrekordot, elemzést és tárolt forrásfájlt. A beszállító, profilok, termékek, más importok és audit megmaradnak."
+        ],
+        [
+          "Szüneteltetés / Folytatás / Megszakítás",
+          "Állapotfüggő kezelési műveletek. A Megszakítás most Jóváhagyásra vár állapotban is elérhető imports.cancel joggal."
+        ],
+        [
+          "Sorok oldalanként",
+          "A nem üres forrássorok kompakt előnézetén 5/10/25/50; alapérték 10. A fizikai forrássorszám változatlan."
+        ],
+        [
+          "Technikai részletek",
+          "Nyers cellák és JSON csak külön lenyitás után; az üres sorokat a számláló mutatja."
+        ],
+        [
+          "Eredeti fájl / Hibajegyzék CSV",
+          "A forrás és konkrét sorhibák vizsgálata; hozzáférés és megőrzési idő korlátozhatja."
+        ]
+      ]
+    },
+    {
+      "type": "heading",
+      "text": "Lépésről lépésre – ellenőrzött demópélda"
+    },
+    {
+      "type": "steps",
+      "items": [
+        "A megfelelő ügyfél Beszállítói import oldalán az Importelőzményekben keresd a futás fájlnevét, azonosítóját és állapotát. A Korábbi oldal és További importok gombokkal lapozhatsz.",
+        "A Megnyitás gombbal ellenőrizd a számlálókat, megfeleltetést és figyelmeztetéseket. Üres sorból nem készül termék.",
+        "Törléshez csak még nem jóváhagyott és nem feldolgozott próbafutást válassz. A Törlés gomb megnyitja a szerver aktuális tervén alapuló megerősítést.",
+        "Olvasd el a Véglegesen törlődik és Megmarad részt. Ha nem ez a célod, válaszd a Mégsem gombot.",
+        "A Végleges törlés gombbal véglegesíts, majd várd meg a szerverről újraolvasott listát és a törölve visszajelzést. A művelet az eredeti feltöltött fájl tárolt példányát is eltávolítja.",
+        "Frissítsd az oldalt, nyisd meg újra a Beszállítói import menüt, válaszd ki ugyanazt a beszállítót, majd tölts fel új szintetikus mintát. A törölt futás nem térhet vissza az előzmények közé.",
+        "Jóváhagyott vagy feldolgozott importot ne próbálj törölni. Archiválás jelenleg nincs; a meglévő termék- és változásnyomok megmaradnak.",
+        "Részleges futásnál töltsd le a Hibajegyzék CSV-t és vizsgáld a sorhibát. A sikeresen feldolgozott rész miatt ne indíts vak teljes újraimportot."
+      ]
+    },
+    {
+      "type": "note",
+      "title": "Várt eredmény",
+      "text": "Törlés után a szerver és az oldalfrissítés is ugyanazt az eredményt mutatja: az importrekord nem elérhető és új feltöltés után sem jelenik meg újra. A megmaradó adatokat a megerősítés felsorolja. Feldolgozott importhoz nem kínálunk törlést."
+    },
+    {
+      "type": "image",
+      "src": "/help/images/rc02-importtortenet.png",
+      "alt": "Integrált kompakt importelőzménylista",
+      "caption": "25-ös lapozás, állapot és külön megnyitás/törlés műveletek. Mobilon kártyanézet jelenik meg."
+    },
+    {
+      "type": "image",
+      "src": "/help/images/rc02-importtorles.png",
+      "alt": "Importtörlés szerveres megerősítése a megmaradó adatokkal",
+      "caption": "A törlést külön meg kell erősíteni; jóváhagyott vagy feldolgozott importnál a szerver elutasítja."
+    },
+    {
+      "type": "heading",
+      "text": "Ha nem sikerül"
+    },
+    {
+      "type": "list",
+      "items": [
+        "403: a törléshez imports.manage és megfelelő ügyfél-/erőforrás-hozzáférés szükséges; a csak olvasási jog nem elég.",
+        "409: jóváhagyott/feldolgozott, futó vagy hivatkozott import nem törölhető. A szerver indokát olvasd el; ne kerüld meg a védelmet.",
+        "404: másik ügyfél rekordja, nem létező vagy már törölt import. Ellenőrizd a munkaterületet, ne küldj vak ismételt törlést.",
+        "Bizonytalan hálózati válasz: előbb frissítsd az előzménylistát; csak a visszaolvasott állapotból következtess az eredményre.",
+        "503 vagy elakadt feldolgozás: a meglévő futás azonosítójával kérj üzemeltetői vizsgálatot. A megszakítás nem automatikus adat-visszaállítás."
+      ]
+    },
+    {
+      "type": "heading",
+      "text": "Mi változik, és mi marad meg?"
+    },
+    {
+      "type": "paragraph",
+      "text": "A Végleges törlés visszafordíthatatlan: az engedélyezett feldolgozatlan importrekordot és tárolt forrásfájlt távolítja el, auditnyom mellett. A feldolgozott termékek nem törölhetők ezzel. A megszakítás nem rollback; a retenciós forrásfájltörlés külön művelet. Valódi üzleti adatok helyett előbb szintetikus mintával próbáld ki."
+    },
+    {
+      "type": "heading",
+      "text": "Következő lépés"
+    },
+    {
+      "type": "paragraph",
+      "text": "A kapcsolódó útmutatók az alábbi sorrendben segítenek folytatni a munkát. A látható gombok mindig az aktuális munkaterület és tényleges jogosultságok szerint használhatók."
+    }
+  ],
+  "related": [
+    "csv-xlsx-feltoltes",
+    "import-jovahagyasa",
+    "gyakori-hibak"
+  ]
+}

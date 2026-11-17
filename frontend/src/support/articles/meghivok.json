@@ -1,0 +1,123 @@
+{
+  "id": "meghivok",
+  "topic": "hozzaferes",
+  "title": "Meghívás, kézbesítés és elfogadás",
+  "summary": "A meghívó ellenőrzött úton ad tagságot vagy hozzáférést a címzettnek.",
+  "order": 29,
+  "blocks": [
+    {
+      "type": "heading",
+      "text": "Mire való, és mikor használd?"
+    },
+    {
+      "type": "paragraph",
+      "text": "A meghívó ellenőrzött úton ad tagságot vagy hozzáférést a címzettnek. Az e-mail elküldése, kézbesítése és a meghívó elfogadása külön állapot. A sikertelen levélküldés nem bizonyítja, hogy nincs létrejött meghívó."
+    },
+    {
+      "type": "heading",
+      "text": "Hozzáférés és előfeltételek"
+    },
+    {
+      "type": "paragraph",
+      "text": "Ügyfélnél members.invite, rendszernél system.users.manage kell. A kívánt szerepköröknek és erőforrásoknak már létezniük kell; működő SMTP szükséges a levélkézbesítéshez. A címzettnek a saját fiókjával kell elfogadnia."
+    },
+    {
+      "type": "note",
+      "title": "Menüútvonal",
+      "text": "Hozzáférések / Meghívások; Meghívó elfogadása"
+    },
+    {
+      "type": "heading",
+      "text": "Mezők, állapotok és gombok"
+    },
+    {
+      "type": "table",
+      "caption": "A képernyő elemeinek jelentése",
+      "headers": [
+        "Elem",
+        "Mit jelent és mire figyelj?"
+      ],
+      "rows": [
+        [
+          "E-mail / szerepkörök / hatókör",
+          "A címzett és a megadandó hozzáférés; a téves címzett valódi biztonsági kockázat."
+        ],
+        [
+          "pending / accepted / expired / revoked",
+          "Függő, elfogadott, lejárt vagy visszavont meghívó."
+        ],
+        [
+          "delivery: sent / failed / pending",
+          "A kézbesítés külön eredménye; nem az elfogadás állapota."
+        ],
+        [
+          "Újraküldés",
+          "Új hivatkozást készít; a korábbi link érvényét veszti."
+        ],
+        [
+          "Visszavonás",
+          "A még felhasználható meghívó használatát tiltja; nem már létrejött tagság megszüntetése."
+        ]
+      ]
+    },
+    {
+      "type": "heading",
+      "text": "Lépésről lépésre – ellenőrzött demópélda"
+    },
+    {
+      "type": "steps",
+      "items": [
+        "A megfelelő munkaterületen nyisd meg a Meghívások fület.",
+        "Demóban saját ellenőrzött tesztcímzettet használj; válaszd a szűk szükséges szerepkört és cég/webáruház-hatókört.",
+        "Kattints a Meghívás küldése gombra, majd ellenőrizd az állapotot, kézbesítést és lejáratot.",
+        "A címzett a saját leveléből nyissa meg a linket. Meglévő fióknál előbb azzal jelentkezzen be; új fióknál adja meg a kért saját nevet és jelszót.",
+        "Elfogadás után az adminisztrátor ellenőrizze az accepted állapotot és a munkatárs tényleges hozzáférését.",
+        "Lejárt vagy sikertelenül kézbesített meghívónál előbb nézd meg a listát és az SMTP állapotát, majd indokolt esetben küldd újra."
+      ]
+    },
+    {
+      "type": "note",
+      "title": "Várt eredmény",
+      "text": "A címzett elfogadása után a hozzáférés ellenőrizhető. Az újraküldött link felváltja a régit, ezért a címzett a legfrissebb levelet használja."
+    },
+    {
+      "type": "image",
+      "src": "/help/images/meghivo-urlap.png",
+      "alt": "Meghívó űrlapja a hozzáférési választással",
+      "caption": "Nincs küldés és nincs titkos meghívólink a képen."
+    },
+    {
+      "type": "heading",
+      "text": "Ha nem sikerül"
+    },
+    {
+      "type": "list",
+      "items": [
+        "503 vagy kézbesítési hiba: a létrejött meghívó listáját ellenőrizd, ne küldj vakon sok új meghívót.",
+        "Lejárt/visszavont link: az adminisztrátor új meghívót vagy újraküldést adhat; a link nem javítható kézzel.",
+        "403 vagy eltérő fiók: a címzett saját azonosítójával fogadjon el, ne a meghívó adminisztrátor munkamenetével."
+      ]
+    },
+    {
+      "type": "heading",
+      "text": "Mi változik, és mi marad meg?"
+    },
+    {
+      "type": "paragraph",
+      "text": "A meghívó hivatkozása titkos belépési képességet hordozhat; ne tedd képernyőképbe, chatbe vagy naplóba. Már elfogadott tagság módosításához a munkatársi szerkesztőt használd."
+    },
+    {
+      "type": "heading",
+      "text": "Következő lépés"
+    },
+    {
+      "type": "paragraph",
+      "text": "A kapcsolódó útmutatók az alábbi sorrendben segítenek folytatni a munkát. A látható gombok mindig az aktuális munkaterület és tényleges jogosultságok szerint használhatók."
+    }
+  ],
+  "related": [
+    "felhasznalok-tagsagok",
+    "cegek-webaruhazak",
+    "beallitasok-smtp"
+  ]
+}

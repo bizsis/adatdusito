@@ -1840,3 +1840,135 @@ fieldset.fieldless {
 .tree-toggle {
   min-width: 32px;
 }
+
+/* IMPORT-UX-01/02 (#41, #42): compact import history, preview and confirmation. */
+.import-history {
+  table-layout: fixed;
+}
+.import-history th:nth-child(1) {
+  width: 46%;
+}
+.import-history th:nth-child(4) {
+  width: 190px;
+}
+.file-name,
+.run-file,
+.cell-trunc {
+  display: block;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.cell-trunc {
+  max-width: 28ch;
+}
+.run-title {
+  min-width: 0;
+}
+.run-file {
+  color: var(--muted);
+  margin-top: -6px;
+}
+.row-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.import-history tr[aria-current="true"] td {
+  background: var(--teal-soft);
+}
+.empty-state {
+  color: var(--muted);
+  padding: 12px 0;
+}
+.confirm-panel {
+  border: 1px solid #fecaca;
+  background: var(--danger-soft);
+  border-radius: var(--radius);
+  padding: 14px 16px;
+  margin: 12px 0;
+}
+.confirm-panel h3 {
+  margin-top: 0;
+  overflow-wrap: anywhere;
+}
+.confirm-panel button + button {
+  margin-left: 8px;
+}
+.import-steps ol {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 18px;
+  padding-left: 18px;
+  margin: 8px 0 4px;
+}
+.warning-text {
+  display: block;
+  color: #92400e;
+  font-size: 12px;
+  margin-top: 4px;
+  white-space: normal;
+}
+.decision {
+  display: block;
+  color: #92400e;
+  font-weight: 600;
+  white-space: normal;
+}
+.preview-table th small {
+  display: block;
+  color: var(--muted);
+  font-weight: 400;
+}
+.preview-table td,
+.preview-table th,
+.raw-table td,
+.raw-table th {
+  padding: 8px 10px;
+  vertical-align: top;
+}
+.tech-json {
+  max-height: 320px;
+  overflow: auto;
+  white-space: pre;
+  font-size: 12px;
+  background: var(--app-bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 10px;
+}
+@media (max-width: 650px) {
+  /* Each import becomes a stacked card instead of a wide row. */
+  .import-history,
+  .import-history tbody,
+  .import-history tr,
+  .import-history td {
+    display: block;
+    width: 100%;
+  }
+  .import-history thead {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+  }
+  .import-history tr {
+    border-bottom: 1px solid var(--border);
+    padding: 8px 0;
+  }
+  .import-history td {
+    border: 0;
+    padding: 4px 12px;
+  }
+  .import-history td::before {
+    content: attr(data-label);
+    display: block;
+    font-size: 11px;
+    color: var(--muted);
+  }
+  .cell-trunc {
+    max-width: 18ch;
+  }
+}

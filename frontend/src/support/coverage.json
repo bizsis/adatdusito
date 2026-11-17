@@ -1,0 +1,632 @@
+[
+  {
+    "article": "belepes-munkaterulet",
+    "screen": "Fejléc / Munkaterület",
+    "access": "bejelentkezett; engedélyezett ügyfél",
+    "source": "main.tsx",
+    "api": "api.py",
+    "actions": "Keresés; munkaterületváltás; további találatok; Rendszerszint",
+    "status": "documented",
+    "browser_evidence": "scripts/tests/test_help_manual_browser.py; scripts/tests/test_help_browser.py",
+    "review": "awaiting_human_content_review",
+    "images": [
+      "/help/images/ugyfelek.png",
+      "/help/images/munkaterulet.png"
+    ],
+    "evidence_scope": "forrásellenőrzés + képernyő/vezérlő megnyitás; nem minden adminisztratív írási művelet E2E-tesztje"
+  },
+  {
+    "article": "attekintes-ugyfelek",
+    "screen": "Áttekintés; Ügyfelek",
+    "access": "tenants.read/create/edit/suspend",
+    "source": "main.tsx",
+    "api": "api.py",
+    "actions": "Állapot; ügyfél létrehozás/szerkesztés/felfüggesztés; lapozás; munkaterület megnyitása; technikai Swagger",
+    "status": "documented",
+    "browser_evidence": "scripts/tests/test_help_manual_browser.py; scripts/tests/test_help_browser.py",
+    "review": "awaiting_human_content_review",
+    "images": [
+      "/help/images/attekintes.png",
+      "/help/images/ugyfel-letrehozas.png"
+    ],
+    "evidence_scope": "forrásellenőrzés + képernyő/vezérlő megnyitás; nem minden adminisztratív írási művelet E2E-tesztje"
+  },
+  {
+    "article": "sajat-fiok-biztonsag",
+    "screen": "Fejléc / Biztonság; Jelszó",
+    "access": "saját bejelentkezett fiók",
+    "source": "AuthViews.tsx",
+    "api": "auth_api.py",
+    "actions": "Újraazonosítás; felhasználónév; jelszócsere; munkamenet visszavonás; kijelentkezés",
+    "status": "documented",
+    "browser_evidence": "scripts/tests/test_help_manual_browser.py; scripts/tests/test_help_browser.py",
+    "review": "awaiting_human_content_review",
+    "images": [
+      "/help/images/sajat-fiok.png",
+      "/help/images/jelszocsere.png",
+      "/help/images/munkamenetek.png"
+    ],
+    "evidence_scope": "forrásellenőrzés + képernyő/vezérlő megnyitás; nem minden adminisztratív írási művelet E2E-tesztje"
+  },
+  {
+    "article": "totp-helyreallitas",
+    "screen": "Biztonság / TOTP és helyreállítási kódok",
+    "access": "saját fiók + friss újraazonosítás; admin-helyreállítás: superadmin",
+    "source": "AuthViews.tsx",
+    "api": "auth_api.py",
+    "actions": "Aktiválás; csere; kódforgatás; visszavonás; kétlépcsős admin-helyreállítás",
+    "status": "documented",
+    "browser_evidence": "scripts/tests/test_help_manual_browser.py; scripts/tests/test_help_browser.py",
+    "review": "awaiting_human_content_review",
+    "images": [
+      "/help/images/totp-allapot.png",
+      "/help/images/admin-helyreallitas.png"
+    ],
+    "evidence_scope": "forrásellenőrzés + képernyő/vezérlő megnyitás; nem minden adminisztratív írási művelet E2E-tesztje"
+  },
+  {
+    "article": "passkey-google-regisztracio",
+    "screen": "Bejelentkezés; Biztonság / Passkey; Google",
+    "access": "engedélyezett mód; eszköz/HTTPS; saját fiók",
+    "source": "AuthViews.tsx",
+    "api": "oidc_api.py",
+    "actions": "Passkey hozzáadás/törlés/bejelentkezés; Google kapcsolás; e-mail regisztráció/megerősítés",
+    "status": "documented",
+    "browser_evidence": "scripts/tests/test_help_manual_browser.py; scripts/tests/test_help_browser.py",
+    "review": "awaiting_human_content_review",
+    "images": [
+      "/help/images/passkey-allapot.png",
+      "/help/images/google-allapot.png"
+    ],
+    "evidence_scope": "forrásellenőrzés + képernyő/vezérlő megnyitás; nem minden adminisztratív írási művelet E2E-tesztje"
+  },
+  {
+    "article": "beszallito-letrehozasa",
+    "screen": "Beszállítói import / Beszállító",
+    "access": "ügyfél; imports.read/manage",
+    "source": "ImportWorkspace.tsx",
+    "api": "import_api.py",
+    "actions": "Létrehozás; kiválasztás; beszállítónkénti profilok",
+    "status": "documented",
+    "browser_evidence": "scripts/tests/test_help_manual_browser.py; scripts/tests/test_help_browser.py",
+    "review": "awaiting_human_content_review",
+    "images": [
+      "/help/images/fajlbeallitasok.png",
+      "/help/images/beszallito.png"
+    ],
+    "evidence_scope": "forrásellenőrzés + képernyő/vezérlő megnyitás; nem minden adminisztratív írási művelet E2E-tesztje"
+  },
+  {
+    "article": "csv-xlsx-feltoltes",
+    "screen": "Beszállítói import / CSV/XLSX fájl",
+    "access": "ügyfél; imports.read/create",
+    "source": "ImportWorkspace.tsx",
+    "api": "import_api.py",
+    "actions": "Feltöltés; elemzés; munkalap; fejléc; elválasztó; kódolás",
+    "status": "documented",
+    "browser_evidence": "scripts/tests/test_help_manual_browser.py; scripts/tests/test_help_browser.py",
+    "review": "awaiting_human_content_review",
+    "images": [
+      "/help/images/rc02-elozet.png",
+      "/help/images/fajlbeallitasok.png",
+      "/help/images/feltoltes.png"
+    ],
+    "evidence_scope": "forrásellenőrzés + képernyő/vezérlő megnyitás; nem minden adminisztratív írási művelet E2E-tesztje"
+  },
+  {
+    "article": "oszlopok-megfeleltetese",
+    "screen": "Beszállítói import / Oszlopok",
+    "access": "imports.read; mentés: imports.approve",
+    "source": "ImportWorkspace.tsx",
+    "api": "import_engine.py",
+    "actions": "Forrás/belső/cél oszlop; bizalom; minta; ismeretlen adatok; importprofil vs exportprofil",
+    "status": "documented",
+    "browser_evidence": "scripts/tests/test_help_manual_browser.py; scripts/tests/test_help_browser.py",
+    "review": "awaiting_human_content_review",
+    "images": [
+      "/help/images/fajlbeallitasok.png",
+      "/help/images/rc02-oszlopok.png"
+    ],
+    "evidence_scope": "forrásellenőrzés + képernyő/vezérlő megnyitás; nem minden adminisztratív írási művelet E2E-tesztje"
+  },
+  {
+    "article": "import-jovahagyasa",
+    "screen": "Beszállítói import / Jóváhagyás",
+    "access": "imports.approve",
+    "source": "ImportWorkspace.tsx",
+    "api": "import_api.py",
+    "actions": "Importprofil; pénzügyi megerősítés; feldolgozás; jóváhagyás és olvasás különbsége",
+    "status": "documented",
+    "browser_evidence": "scripts/tests/test_help_manual_browser.py; scripts/tests/test_help_browser.py",
+    "review": "awaiting_human_content_review",
+    "images": [
+      "/help/images/rc02-jovahagyas.png"
+    ],
+    "evidence_scope": "forrásellenőrzés + képernyő/vezérlő megnyitás; nem minden adminisztratív írási művelet E2E-tesztje"
+  },
+  {
+    "article": "import-kulcsok-penzugy",
+    "screen": "Beszállítói import / Feed és összekapcsolás",
+    "access": "imports.approve",
+    "source": "ImportWorkspace.tsx",
+    "api": "import_engine.py",
+    "actions": "Identitás; csatlakozási kulcs; teljes/részleges/ár/készlet/műszaki feed; beszerzési és eladási ár",
+    "status": "documented",
+    "browser_evidence": "scripts/tests/test_help_manual_browser.py; scripts/tests/test_help_browser.py",
+    "review": "awaiting_human_content_review",
+    "images": [
+      "/help/images/rc02-jovahagyas.png"
+    ],
+    "evidence_scope": "forrásellenőrzés + képernyő/vezérlő megnyitás; nem minden adminisztratív írási művelet E2E-tesztje"
+  },
+  {
+    "article": "import-elozmenyek-hibak",
+    "screen": "Beszállítói import / Futástörténet",
+    "access": "imports.read/cancel/manage/create műveletfüggő",
+    "source": "ImportWorkspace.tsx",
+    "api": "import_api.py",
+    "actions": "Állapot; szünet/folytatás; hibák CSV; eredeti fájl; forrásretenció; jelenlegi UX-korlátok",
+    "status": "documented",
+    "browser_evidence": "scripts/tests/test_help_manual_browser.py; scripts/tests/test_help_browser.py",
+    "review": "awaiting_human_content_review",
+    "images": [
+      "/help/images/rc02-importtortenet.png",
+      "/help/images/rc02-importtorles.png"
+    ],
+    "evidence_scope": "forrásellenőrzés + képernyő/vezérlő megnyitás; nem minden adminisztratív írási művelet E2E-tesztje"
+  },
+  {
+    "article": "termekek-kategorizalasa",
+    "screen": "Termékadatok / Termékek / Megnyitás",
+    "access": "products.read; módosítás: products.classify",
+    "source": "classification/ClassificationWorkspace.tsx",
+    "api": "workspace_views.py",
+    "actions": "Keresés; állapotszűrés; saját/belső kategória; kézi besorolás; előnézet; védelem; revízió",
+    "status": "documented",
+    "browser_evidence": "scripts/tests/test_help_manual_browser.py; scripts/tests/test_help_browser.py",
+    "review": "awaiting_human_content_review",
+    "images": [
+      "/help/images/termeklista.png",
+      "/help/images/kategorizalas.png"
+    ],
+    "evidence_scope": "forrásellenőrzés + képernyő/vezérlő megnyitás; nem minden adminisztratív írási művelet E2E-tesztje"
+  },
+  {
+    "article": "kategoriameterkep",
+    "screen": "Termékadatok / Kategóriatérkép",
+    "access": "products.read/classify",
+    "source": "classification/ClassificationEditor.tsx",
+    "api": "workspace_views.py",
+    "actions": "Saját kategória megfeleltetés; örökítés; jóváhagyás/elutasítás/törlés; 2000 felett háttér",
+    "status": "documented",
+    "browser_evidence": "scripts/tests/test_help_manual_browser.py; scripts/tests/test_help_browser.py",
+    "review": "awaiting_human_content_review",
+    "images": [
+      "/help/images/kategoriameterkep.png"
+    ],
+    "evidence_scope": "forrásellenőrzés + képernyő/vezérlő megnyitás; nem minden adminisztratív írási művelet E2E-tesztje"
+  },
+  {
+    "article": "kozos-kategoriafa",
+    "screen": "Kategóriák",
+    "access": "reference.read; szerkesztő: system.manage",
+    "source": "main.tsx",
+    "api": "web_navigation.py",
+    "actions": "13 gyökér; fix hierarchia; keresés; profilok; admin hozzárendelés; hiányzó forrás; forráslefedettség",
+    "status": "documented",
+    "browser_evidence": "scripts/tests/test_help_manual_browser.py; scripts/tests/test_help_browser.py",
+    "review": "awaiting_human_content_review",
+    "images": [
+      "/help/images/kozos-kategoriafa.png",
+      "/help/images/kategoria-parameterek.png"
+    ],
+    "evidence_scope": "forrásellenőrzés + képernyő/vezérlő megnyitás; nem minden adminisztratív írási művelet E2E-tesztje"
+  },
+  {
+    "article": "emag-donorprofilok",
+    "screen": "Termékadatok / Termék / Paraméterprofil",
+    "access": "products.read/classify",
+    "source": "parameters/LiveParameters.tsx",
+    "api": "product_parameters.py",
+    "actions": "Egy/több profil; explicit választás; pending_review; navigáció vs paraméterforrás",
+    "status": "documented",
+    "browser_evidence": "scripts/tests/test_help_manual_browser.py; scripts/tests/test_help_browser.py",
+    "review": "awaiting_human_content_review",
+    "images": [
+      "/help/images/kategoria-parameterek.png"
+    ],
+    "evidence_scope": "forrásellenőrzés + képernyő/vezérlő megnyitás; nem minden adminisztratív írási művelet E2E-tesztje"
+  },
+  {
+    "article": "besorolasi-kuszob",
+    "screen": "Termékadatok / Automatikus besorolás; Rendszerbeállítások / Kategóriabesorolás",
+    "access": "products.read/classify; system.settings.read/manage",
+    "source": "classification/ClassificationThreshold.tsx",
+    "api": "product_catalog.py",
+    "actions": "98% küszöb; kalibráció; mérés hiánya; kézi védett döntés",
+    "status": "documented",
+    "browser_evidence": "scripts/tests/test_help_manual_browser.py; scripts/tests/test_help_browser.py",
+    "review": "awaiting_human_content_review",
+    "images": [
+      "/help/images/beallitas-kuszob.png"
+    ],
+    "evidence_scope": "forrásellenőrzés + képernyő/vezérlő megnyitás; nem minden adminisztratív írási művelet E2E-tesztje"
+  },
+  {
+    "article": "parameterkereses",
+    "screen": "Paraméterkereső; Kategóriák / Paraméterek / Értékek",
+    "access": "reference.read",
+    "source": "main.tsx",
+    "api": "reference.py",
+    "actions": "Paraméternév/ID; kötelező/opcionális; keresés; értékoldalazás; nincs globális értékszerkesztő",
+    "status": "documented",
+    "browser_evidence": "scripts/tests/test_help_manual_browser.py; scripts/tests/test_help_browser.py",
+    "review": "awaiting_human_content_review",
+    "images": [
+      "/help/images/parameterkereso.png",
+      "/help/images/megengedett-ertekek.png"
+    ],
+    "evidence_scope": "forrásellenőrzés + képernyő/vezérlő megnyitás; nem minden adminisztratív írási művelet E2E-tesztje"
+  },
+  {
+    "article": "parameterallapotok",
+    "screen": "Termékadatok / Paraméterek; Termék / Paraméter-előkészítés",
+    "access": "products.read; alkalmazás: products.parameters",
+    "source": "parameters/ParameterWorkspace.tsx",
+    "api": "product_parameters.py",
+    "actions": "Nyers/normalizált; konverzió; hét állapot; előnézet/alkalmazás; eredeti forrás",
+    "status": "documented",
+    "browser_evidence": "scripts/tests/test_help_manual_browser.py; scripts/tests/test_help_browser.py",
+    "review": "awaiting_human_content_review",
+    "images": [
+      "/help/images/parameterallapotok.png",
+      "/help/images/hianyzo-parameterek.png"
+    ],
+    "evidence_scope": "forrásellenőrzés + képernyő/vezérlő megnyitás; nem minden adminisztratív írási művelet E2E-tesztje"
+  },
+  {
+    "article": "kezi-parameterek",
+    "screen": "Termékadatok / Termék / Kézi paraméterdöntés",
+    "access": "products.parameters",
+    "source": "parameters/LiveSlotEditor.tsx",
+    "api": "parameter_views.py",
+    "actions": "Érték; forrásjelölt; zárolás/feloldás/reset; indok; revízió; audit; kötött értéklista",
+    "status": "documented",
+    "browser_evidence": "scripts/tests/test_help_manual_browser.py; scripts/tests/test_help_browser.py",
+    "review": "awaiting_human_content_review",
+    "images": [
+      "/help/images/kezi-parameter.png",
+      "/help/images/revizio-utkozes.png"
+    ],
+    "evidence_scope": "forrásellenőrzés + képernyő/vezérlő megnyitás; nem minden adminisztratív írási művelet E2E-tesztje"
+  },
+  {
+    "article": "aliasok",
+    "screen": "Termékadatok / Termék / Aliasszabályok",
+    "access": "products.parameters; globális: parameters.global_aliases.manage",
+    "source": "parameters/LiveAliases.tsx",
+    "api": "parameter_views.py",
+    "actions": "Keresés; hatókör; státusz; új alias; jóváhagyás; visszavonás",
+    "status": "documented",
+    "browser_evidence": "scripts/tests/test_help_manual_browser.py; scripts/tests/test_help_browser.py",
+    "review": "awaiting_human_content_review",
+    "images": [
+      "/help/images/aliasok.png"
+    ],
+    "evidence_scope": "forrásellenőrzés + képernyő/vezérlő megnyitás; nem minden adminisztratív írási művelet E2E-tesztje"
+  },
+  {
+    "article": "parameter-hatterfutas",
+    "screen": "Termékadatok / Termék / Paraméterhelyek háttérfutása",
+    "access": "products.read/parameters",
+    "source": "parameters/LiveRuns.tsx",
+    "api": "product_jobs.py",
+    "actions": "Hatókör; preview/apply; futásazonosító; 50000-es limit; elakadás; nincs vak újraindítás",
+    "status": "documented",
+    "browser_evidence": "scripts/tests/test_help_manual_browser.py; scripts/tests/test_help_browser.py",
+    "review": "awaiting_human_content_review",
+    "images": [
+      "/help/images/parameter-futas.png"
+    ],
+    "evidence_scope": "forrásellenőrzés + képernyő/vezérlő megnyitás; nem minden adminisztratív írási művelet E2E-tesztje"
+  },
+  {
+    "article": "tomeges-kijeloles",
+    "screen": "Termékadatok / Paraméterek / Rögzített termékkör",
+    "access": "products.read",
+    "source": "parameters/LiveBulkPreparation.tsx",
+    "api": "bulk_operations.py",
+    "actions": "Aktuális oldal vs teljes szűrt állomány; 250000; 2 óra; token; szűrőváltás",
+    "status": "documented",
+    "browser_evidence": "scripts/tests/test_help_manual_browser.py; scripts/tests/test_help_browser.py",
+    "review": "awaiting_human_content_review",
+    "images": [
+      "/help/images/tomeges-kijeloles.png"
+    ],
+    "evidence_scope": "forrásellenőrzés + képernyő/vezérlő megnyitás; nem minden adminisztratív írási művelet E2E-tesztje"
+  },
+  {
+    "article": "tomeges-jovahagyas",
+    "screen": "Termékadatok / Paraméterek / Tömeges paraméter-előnézet",
+    "access": "products.parameters + products.bulk",
+    "source": "parameters/LiveBulkPreparation.tsx",
+    "api": "bulk_views.py",
+    "actions": "Előnézet; eligible/kihagyott/hibás; alkalmazás; idempotencia; 50000/futás; megszakítás/folytatás",
+    "status": "documented",
+    "browser_evidence": "scripts/tests/test_help_manual_browser.py; scripts/tests/test_help_browser.py",
+    "review": "awaiting_human_content_review",
+    "images": [
+      "/help/images/tomeges-olvasasi-jog.png",
+      "/help/images/tomeges.png"
+    ],
+    "evidence_scope": "forrásellenőrzés + képernyő/vezérlő megnyitás; nem minden adminisztratív írási művelet E2E-tesztje"
+  },
+  {
+    "article": "elokeszitesi-jovahagyas",
+    "screen": "Termékadatok / Paraméterek / Előkészítési ellenőrzés; Jóváhagyások",
+    "access": "products.read; döntés: products.prepare.approve",
+    "source": "parameters/ApprovalReview.tsx",
+    "api": "bulk_operations.py",
+    "actions": "Check/approve; invalid; újramérés; visszavonás; elavult termékek; nincs kutatásindítás",
+    "status": "documented",
+    "browser_evidence": "scripts/tests/test_help_manual_browser.py; scripts/tests/test_help_browser.py",
+    "review": "awaiting_human_content_review",
+    "images": [
+      "/help/images/elokeszitesi-ellenorzes.png",
+      "/help/images/elokeszitesi-megerosites.png",
+      "/help/images/elokeszitesi-jovahagyas.png"
+    ],
+    "evidence_scope": "forrásellenőrzés + képernyő/vezérlő megnyitás; nem minden adminisztratív írási művelet E2E-tesztje"
+  },
+  {
+    "article": "exportprofilok",
+    "screen": "Export / Webáruházmotorok → Exportmezők",
+    "access": "exports.read/profile; központi: exports.fields.manage",
+    "source": "ImportWorkspace.tsx",
+    "api": "import_api.py",
+    "actions": "Motor; mező; típus; kötelező; alapérték; validáció; referenciaminta; saját profil; nincs exportgenerálás",
+    "status": "documented",
+    "browser_evidence": "scripts/tests/test_help_manual_browser.py; scripts/tests/test_help_browser.py",
+    "review": "awaiting_human_content_review",
+    "images": [
+      "/help/images/exportprofil.png"
+    ],
+    "evidence_scope": "forrásellenőrzés + képernyő/vezérlő megnyitás; nem minden adminisztratív írási művelet E2E-tesztje"
+  },
+  {
+    "article": "jogosultsagok",
+    "screen": "Munkatársak és hozzáférések; Rendszerhozzáférések",
+    "access": "members.read vagy system.users.read/system.roles.read",
+    "source": "AccessWorkspace.tsx",
+    "api": "access_api.py",
+    "actions": "Tényleges jogok; szerepek; egyedi engedély/tiltás; tiltás elsőbbsége; erőforráshatókör",
+    "status": "documented",
+    "browser_evidence": "scripts/tests/test_help_manual_browser.py; scripts/tests/test_help_browser.py",
+    "review": "awaiting_human_content_review",
+    "images": [
+      "/help/images/munkatarsak.png",
+      "/help/images/jogkatalogus.png"
+    ],
+    "evidence_scope": "forrásellenőrzés + képernyő/vezérlő megnyitás; nem minden adminisztratív írási művelet E2E-tesztje"
+  },
+  {
+    "article": "felhasznalok-tagsagok",
+    "screen": "Rendszerhozzáférések / Rendszerfelhasználók; Munkatársak",
+    "access": "system.users.manage vagy members.manage; szerepkör: members.roles.manage",
+    "source": "AccessWorkspace.tsx",
+    "api": "access_api.py",
+    "actions": "Új rendszerfelhasználó; keresés; hozzáférés; fióktiltás vs tagság; superadmin; ideiglenes jelszó",
+    "status": "documented",
+    "browser_evidence": "scripts/tests/test_help_manual_browser.py; scripts/tests/test_help_browser.py",
+    "review": "awaiting_human_content_review",
+    "images": [
+      "/help/images/rendszerfelhasznalok.png"
+    ],
+    "evidence_scope": "forrásellenőrzés + képernyő/vezérlő megnyitás; nem minden adminisztratív írási művelet E2E-tesztje"
+  },
+  {
+    "article": "szerepkorok",
+    "screen": "Hozzáférések / Szerepkörök; Jogosultsági katalógus",
+    "access": "system.roles.read/manage vagy members.read/roles.manage",
+    "source": "AccessWorkspace.tsx",
+    "api": "access_api.py",
+    "actions": "Saját szerepkör; kód; jogosultsági mátrix; sablonmásolat; védett szerep; törlés",
+    "status": "documented",
+    "browser_evidence": "scripts/tests/test_help_manual_browser.py; scripts/tests/test_help_browser.py",
+    "review": "awaiting_human_content_review",
+    "images": [
+      "/help/images/szerepkorok.png",
+      "/help/images/szerepkor-szerkeszto.png"
+    ],
+    "evidence_scope": "forrásellenőrzés + képernyő/vezérlő megnyitás; nem minden adminisztratív írási művelet E2E-tesztje"
+  },
+  {
+    "article": "meghivok",
+    "screen": "Hozzáférések / Meghívások; Meghívó elfogadása",
+    "access": "members.invite vagy system.users.manage; elfogadás: címzett",
+    "source": "AccessWorkspace.tsx",
+    "api": "invitations.py",
+    "actions": "E-mail; szerepek/hatókör; küldés; kézbesítés; lejárat; újraküldés; visszavonás; elfogadás",
+    "status": "documented",
+    "browser_evidence": "scripts/tests/test_help_manual_browser.py; scripts/tests/test_help_browser.py",
+    "review": "awaiting_human_content_review",
+    "images": [
+      "/help/images/meghivo-urlap.png"
+    ],
+    "evidence_scope": "forrásellenőrzés + képernyő/vezérlő megnyitás; nem minden adminisztratív írási művelet E2E-tesztje"
+  },
+  {
+    "article": "cegek-webaruhazak",
+    "screen": "Munkatársak és hozzáférések / Cégek és webáruházak",
+    "access": "companies.read/manage; webshops.read/manage",
+    "source": "AccessWorkspace.tsx",
+    "api": "access_api.py",
+    "actions": "Cég; szülő cég/webshop; szervezeti nyilvántartás; selected/all erőforrásmód",
+    "status": "documented",
+    "browser_evidence": "scripts/tests/test_help_manual_browser.py; scripts/tests/test_help_browser.py",
+    "review": "awaiting_human_content_review",
+    "images": [
+      "/help/images/cegek-webaruhazak.png"
+    ],
+    "evidence_scope": "forrásellenőrzés + képernyő/vezérlő megnyitás; nem minden adminisztratív írási művelet E2E-tesztje"
+  },
+  {
+    "article": "beallitasok-altalanos",
+    "screen": "Rendszerbeállítások / Általános",
+    "access": "system.settings.read/manage",
+    "source": "SystemSettings.tsx",
+    "api": "settings_api.py",
+    "actions": "Megjelenített név; rendszernév; nyelv; időzóna; környezetjelző; mentés",
+    "status": "documented",
+    "browser_evidence": "scripts/tests/test_help_manual_browser.py; scripts/tests/test_help_browser.py",
+    "review": "awaiting_human_content_review",
+    "images": [
+      "/help/images/beallitas-altalanos.png"
+    ],
+    "evidence_scope": "forrásellenőrzés + képernyő/vezérlő megnyitás; nem minden adminisztratív írási művelet E2E-tesztje"
+  },
+  {
+    "article": "beallitasok-smtp",
+    "screen": "Rendszerbeállítások / SMTP / Levelezés",
+    "access": "system.settings.read/manage",
+    "source": "SystemSettings.tsx",
+    "api": "system_config.py",
+    "actions": "Host; port; TLS; felhasználó; titok megtartása; feladó; tesztkapcsolat/tesztlevél",
+    "status": "documented",
+    "browser_evidence": "scripts/tests/test_help_manual_browser.py; scripts/tests/test_help_browser.py",
+    "review": "awaiting_human_content_review",
+    "images": [
+      "/help/images/beallitas-smtp.png"
+    ],
+    "evidence_scope": "forrásellenőrzés + képernyő/vezérlő megnyitás; nem minden adminisztratív írási művelet E2E-tesztje"
+  },
+  {
+    "article": "beallitasok-hitelesites",
+    "screen": "Rendszerbeállítások / Hitelesítés és bejelentkezés; Kétfaktoros hitelesítés; Biztonsági szabályok",
+    "access": "olvasás: system.settings.read; írás: system.settings.manage + superadmin",
+    "source": "SystemSettings.tsx",
+    "api": "settings_api.py",
+    "actions": "Módok; OIDC; regisztráció; kötelező MFA; passkey faktor; munkamenet/jelszó/meghívó korlátok",
+    "status": "documented",
+    "browser_evidence": "scripts/tests/test_help_manual_browser.py; scripts/tests/test_help_browser.py",
+    "review": "awaiting_human_content_review",
+    "images": [
+      "/help/images/beallitas-auth.png",
+      "/help/images/beallitas-mfa.png",
+      "/help/images/beallitas-biztonsag.png"
+    ],
+    "evidence_scope": "forrásellenőrzés + képernyő/vezérlő megnyitás; nem minden adminisztratív írási művelet E2E-tesztje"
+  },
+  {
+    "article": "muveleti-naplo",
+    "screen": "Napló / Audit",
+    "access": "ügyfél: audit.read; rendszer: system.audit.read",
+    "source": "main.tsx",
+    "api": "api.py",
+    "actions": "Időpont; végrehajtó; cél; technikai esemény és részletek; lapozás",
+    "status": "documented",
+    "browser_evidence": "scripts/tests/test_help_manual_browser.py; scripts/tests/test_help_browser.py",
+    "review": "awaiting_human_content_review",
+    "images": [
+      "/help/images/audit.png"
+    ],
+    "evidence_scope": "forrásellenőrzés + képernyő/vezérlő megnyitás; nem minden adminisztratív írási művelet E2E-tesztje"
+  },
+  {
+    "article": "segedlet-hasznalata",
+    "screen": "Támogatás / Segédlet",
+    "access": "minden bejelentkezett felhasználó, üzleti jogosultság nélkül is",
+    "source": "support/HelpPage.tsx",
+    "api": "— helyi statikus tartalom",
+    "actions": "Keresés; témakör; URL; vissza; kapcsolódó cikk; képnagyítás; Swagger külön",
+    "status": "documented",
+    "browser_evidence": "scripts/tests/test_help_manual_browser.py; scripts/tests/test_help_browser.py",
+    "review": "awaiting_human_content_review",
+    "images": [
+      "/help/images/manual-asztali.png",
+      "/help/images/manual-mobil.png"
+    ],
+    "evidence_scope": "forrásellenőrzés + képernyő/vezérlő megnyitás; nem minden adminisztratív írási művelet E2E-tesztje"
+  },
+  {
+    "article": "gyakori-hibak",
+    "screen": "Minden képernyő / Hibajelzés",
+    "access": "műveletfüggő",
+    "source": "ui.tsx",
+    "api": "api.py",
+    "actions": "401/403/404/409/422/429/503; megőrzött részmunka; biztonságos hibajelentés",
+    "status": "documented",
+    "browser_evidence": "scripts/tests/test_help_manual_browser.py; scripts/tests/test_help_browser.py",
+    "review": "awaiting_human_content_review",
+    "images": [
+      "/help/images/tomeges-olvasasi-jog.png",
+      "/help/images/revizio-utkozes.png"
+    ],
+    "evidence_scope": "forrásellenőrzés + képernyő/vezérlő megnyitás; nem minden adminisztratív írási művelet E2E-tesztje"
+  },
+  {
+    "article": "import-elozmenyek-hibak",
+    "screen": "Beszállítói import / Biztonságos törlés és importtörténet",
+    "access": "imports.read; törlés: imports.manage; megszakítás: imports.cancel",
+    "source": "ImportWorkspace.tsx",
+    "api": "import_api.py",
+    "actions": "Kompakt lista; megerősített feldolgozatlan-importtörlés; awaiting_approval megszakítás",
+    "status": "documented",
+    "browser_evidence": "scripts/tests/test_help_manual_browser.py; scripts/tests/test_help_browser.py",
+    "review": "awaiting_human_content_review",
+    "evidence_scope": "forrásellenőrzés + képernyő/vezérlő megnyitás; nem minden adminisztratív írási művelet E2E-tesztje",
+    "images": [
+      "/help/images/rc02-importtortenet.png",
+      "/help/images/rc02-importtorles.png"
+    ]
+  },
+  {
+    "article": "csv-xlsx-feltoltes",
+    "screen": "Beszállítói import / Kompakt előnézet és figyelmeztetések",
+    "access": "imports.read; jóváhagyás: imports.approve",
+    "source": "ImportWorkspace.tsx",
+    "api": "import_api.py",
+    "actions": "5/10/25/50 nem üres sor; technikai részletek külön; pénz/EAN/negatív készlet",
+    "status": "documented",
+    "browser_evidence": "scripts/tests/test_help_manual_browser.py; scripts/tests/test_help_browser.py",
+    "review": "awaiting_human_content_review",
+    "evidence_scope": "forrásellenőrzés + képernyő/vezérlő megnyitás; nem minden adminisztratív írási művelet E2E-tesztje",
+    "images": [
+      "/help/images/rc02-elozet.png",
+      "/help/images/fajlbeallitasok.png",
+      "/help/images/feltoltes.png"
+    ]
+  },
+  {
+    "article": "exportprofilok",
+    "screen": "UNAS fájlgenerálás",
+    "access": "nem elérhető a vizsgált alapverzióban",
+    "source": "ImportWorkspace.tsx",
+    "api": "—",
+    "actions": "Exportfájl előállítás/letöltés; nem elérhető",
+    "status": "unavailable",
+    "browser_evidence": "scripts/tests/test_help_manual_browser.py; scripts/tests/test_help_browser.py",
+    "review": "awaiting_human_content_review",
+    "evidence_scope": "forrásellenőrzés + képernyő/vezérlő megnyitás; nem minden adminisztratív írási művelet E2E-tesztje",
+    "images": [
+      "/help/images/exportprofil.png"
+    ]
+  },
+  {
+    "article": "elokeszitesi-jovahagyas",
+    "screen": "AI-kutatás/kredit/fizetés",
+    "access": "nem elérhető a vizsgált alapverzióban",
+    "source": "parameters/LiveBulkPreparation.tsx",
+    "api": "—",
+    "actions": "Jóváhagyás nem indít AI-kutatást; nincs kész kutatómotor",
+    "status": "unavailable",
+    "browser_evidence": "scripts/tests/test_help_manual_browser.py; scripts/tests/test_help_browser.py",
+    "review": "awaiting_human_content_review",
+    "evidence_scope": "forrásellenőrzés + képernyő/vezérlő megnyitás; nem minden adminisztratív írási művelet E2E-tesztje",
+    "images": [
+      "/help/images/elokeszitesi-ellenorzes.png",
+      "/help/images/elokeszitesi-megerosites.png",
+      "/help/images/elokeszitesi-jovahagyas.png"
+    ]
+  }
+]

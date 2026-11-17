@@ -173,7 +173,7 @@ def test_late_session_refresh_cannot_restore_logged_out_user(workspace_page):
 def test_import_polling_preserves_mapping_without_fetch_loops(workspace_page):
     page, state = workspace_page
     page.get_by_role("navigation").get_by_role("button", name="Beszállítói import", exact=True).click()
-    page.get_by_role("button", name="#1 sample.csv · Jóváhagyásra vár", exact=True).click()
+    page.get_by_role("button", name="#1 sample.csv megnyitása", exact=True).click()
     mapping = page.get_by_label("Megfeleltetés: SKU", exact=True)
     mapping.select_option("name")
     page.get_by_label("Profil neve", exact=True).fill("Saját szerkesztés")
@@ -205,12 +205,12 @@ def test_upload_proxy_413_preserves_supplier_and_csrf(workspace_page):
 def test_late_import_poll_cannot_restore_previous_selection(workspace_page):
     page, state = workspace_page
     page.get_by_role("navigation").get_by_role("button", name="Beszállítói import", exact=True).click()
-    page.get_by_role("button", name="#1 sample.csv · Jóváhagyásra vár", exact=True).click()
+    page.get_by_role("button", name="#1 sample.csv megnyitása", exact=True).click()
     expect(page.get_by_role("heading", name="#1 – Jóváhagyásra vár", exact=True)).to_be_visible()
     state["hold_run"] = 1
     with page.expect_request("**/imports/runs/1"):
         page.clock.run_for(2100)
-    page.get_by_role("button", name="#2 second.csv · Jóváhagyásra vár", exact=True).click()
+    page.get_by_role("button", name="#2 second.csv megnyitása", exact=True).click()
     expect(page.get_by_role("heading", name="#2 – Jóváhagyásra vár", exact=True)).to_be_visible()
     assert len(state["pending_runs"]) == 1
     route, old_run = state["pending_runs"].pop()

@@ -1,0 +1,123 @@
+{
+  "id": "aliasok",
+  "topic": "parameterek",
+  "title": "Ügyfél- és globális aliasszabályok",
+  "summary": "Az alias egy forrásmező nevét és egységét egy adott donorparaméterhez köti.",
+  "order": 20,
+  "blocks": [
+    {
+      "type": "heading",
+      "text": "Mire való, és mikor használd?"
+    },
+    {
+      "type": "paragraph",
+      "text": "Az alias egy forrásmező nevét és egységét egy adott donorparaméterhez köti. Nem az érték szabad átnevezése és nem automatikus szinonimaszótár minden termékhez. A hatókör és donor környezete meghatározza a hatását."
+    },
+    {
+      "type": "heading",
+      "text": "Hozzáférés és előfeltételek"
+    },
+    {
+      "type": "paragraph",
+      "text": "A termék Termékparaméterek részében nyisd le a Tenant- és globális aliasszabályok részt. Ügyfélszabályhoz products.parameters, globális szabályhoz parameters.global_aliases.manage szükséges. Globális szabály több ügyfelet érinthet."
+    },
+    {
+      "type": "note",
+      "title": "Menüútvonal",
+      "text": "Termékadatok / Termék / Aliasszabályok"
+    },
+    {
+      "type": "heading",
+      "text": "Mezők, állapotok és gombok"
+    },
+    {
+      "type": "table",
+      "caption": "A képernyő elemeinek jelentése",
+      "headers": [
+        "Elem",
+        "Mit jelent és mire figyelj?"
+      ],
+      "rows": [
+        [
+          "Aliasok hatóköre",
+          "Ügyfél és globális; Ez az ügyfél; Minden ügyfél. A szűrés nem változtat jogosultságot."
+        ],
+        [
+          "Aliasok állapota",
+          "Jóváhagyott vagy Visszavont szabályok; a régi döntés visszakereshető."
+        ],
+        [
+          "Forrásnév és egység",
+          "Az eredeti oszlop neve és mértékegysége, például Motor teljesítmény / W."
+        ],
+        [
+          "Alias célparamétere",
+          "Létező donorparaméter a kiválasztott környezetben; nem új referenciaparaméter."
+        ],
+        [
+          "Új alias hatóköre / indok",
+          "Csak ez az ügyfél vagy rendszerjoggal minden ügyfél; a döntést meg kell indokolni."
+        ]
+      ]
+    },
+    {
+      "type": "heading",
+      "text": "Lépésről lépésre – ellenőrzött demópélda"
+    },
+    {
+      "type": "steps",
+      "items": [
+        "Nyisd meg a demótermék aliasrészét. Előbb keress a már meglévő szabályok között.",
+        "Szűrj az Ez az ügyfél és Jóváhagyott értékekre, hogy ne hozz létre szükségtelen duplikátumot.",
+        "Új szabálynál add meg az ellenőrzött forrásnevet és egységet, majd válassz létező célparamétert.",
+        "Helyi beszállítói sajátosságnál válaszd a Csak ez az ügyfél hatókört. A globális lehetőséget csak több ügyfélnél igazolt azonosságnál használd.",
+        "Írj indokot, olvasd el az Aliasszabály megerősítése részt és véglegesíts.",
+        "Az érintett paraméterekre kérj új előnézetet. Hibás szabályt visszavonással kezelj, ne a forrásadat átírásával."
+      ]
+    },
+    {
+      "type": "note",
+      "title": "Várt eredmény",
+      "text": "A szabály a megfelelő hatókörben látszik. Egy alias mentése nem jelent automatikusan minden korábbi terméken alkalmazott paraméterváltozást."
+    },
+    {
+      "type": "image",
+      "src": "/help/images/aliasok.png",
+      "alt": "Aliaslista, hatókör és új szabály mezői",
+      "caption": "Ügyfélszabály és globális szabály eltérő jogot igényel."
+    },
+    {
+      "type": "heading",
+      "text": "Ha nem sikerül"
+    },
+    {
+      "type": "list",
+      "items": [
+        "403: ügyfélszintű joggal nem hozhatsz létre globális aliast.",
+        "409: frissítsd az aliaslistát, ellenőrizd az időközbeni szabályt.",
+        "Nem található célparaméter: ellenőrizd a termék donorprofilját; más profil azonos nevű paramétere nem feltétlenül megfelelő."
+      ]
+    },
+    {
+      "type": "heading",
+      "text": "Mi változik, és mi marad meg?"
+    },
+    {
+      "type": "paragraph",
+      "text": "A szabály nem módosítja az eredeti forrásértékeket vagy a referencialistát. Globális visszavonás előtt a szélesebb hatást is vizsgáld meg; a zárolt kézi helyek védelmét nem oldja fel."
+    },
+    {
+      "type": "heading",
+      "text": "Következő lépés"
+    },
+    {
+      "type": "paragraph",
+      "text": "A kapcsolódó útmutatók az alábbi sorrendben segítenek folytatni a munkát. A látható gombok mindig az aktuális munkaterület és tényleges jogosultságok szerint használhatók."
+    }
+  ],
+  "related": [
+    "parameterallapotok",
+    "parameter-hatterfutas",
+    "jogosultsagok"
+  ]
+}

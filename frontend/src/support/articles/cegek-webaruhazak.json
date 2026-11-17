@@ -1,0 +1,122 @@
+{
+  "id": "cegek-webaruhazak",
+  "topic": "hozzaferes",
+  "title": "Cégek, webáruházak és erőforráshatókör",
+  "summary": "A cég és webáruház szervezeti nyilvántartás és hozzáférési határ.",
+  "order": 30,
+  "blocks": [
+    {
+      "type": "heading",
+      "text": "Mire való, és mikor használd?"
+    },
+    {
+      "type": "paragraph",
+      "text": "A cég és webáruház szervezeti nyilvántartás és hozzáférési határ. Létrehozásuk nem állít be webáruház-integrációt és nem rendeli automatikusan hozzájuk az összes korábbi terméket."
+    },
+    {
+      "type": "heading",
+      "text": "Hozzáférés és előfeltételek"
+    },
+    {
+      "type": "paragraph",
+      "text": "Ügyfélmunkaterület és companies.read/webshops.read szükséges. Új szervezethez companies.manage vagy webshops.manage. Más személy erőforrásainak módosítása a munkatársi vagy központi hozzáférésszerkesztő megfelelő jogát is igényli."
+    },
+    {
+      "type": "note",
+      "title": "Menüútvonal",
+      "text": "Munkatársak és hozzáférések / Cégek és webáruházak"
+    },
+    {
+      "type": "heading",
+      "text": "Mezők, állapotok és gombok"
+    },
+    {
+      "type": "table",
+      "caption": "A képernyő elemeinek jelentése",
+      "headers": [
+        "Elem",
+        "Mit jelent és mire figyelj?"
+      ],
+      "rows": [
+        [
+          "Új cég neve",
+          "Az ügyfélen belüli szervezet neve."
+        ],
+        [
+          "Cég / Új webáruház neve",
+          "A webáruház szülőcége és neve; nem domain/HTTPS-telepítés."
+        ],
+        [
+          "Teljes ügyfél",
+          "A jelenlegi és későbbi szervezeti erőforrásokat is magában foglaló hatókör."
+        ],
+        [
+          "Csak kijelölt erőforrások",
+          "Kifejezetten megadott cégek/webáruházak. A később létrejövők nem adódnak hozzá automatikusan."
+        ],
+        [
+          "Rendszerfelhasználó erőforrásainak mentése",
+          "Központi superadmin a külön kiválasztott ügyfélre ment; nem globálisan mindenhová."
+        ]
+      ]
+    },
+    {
+      "type": "heading",
+      "text": "Lépésről lépésre – ellenőrzött demópélda"
+    },
+    {
+      "type": "steps",
+      "items": [
+        "Válaszd a demóügyfelet, majd a Munkatársak és hozzáférések → Cégek és webáruházak fület.",
+        "Hozd létre a Demó cég szervezetet, ha a tesztkörnyezetben még nem szerepel.",
+        "Válaszd szülőcégként, majd hozz létre Demó webáruház nevű rekordot.",
+        "A demómunkatárs hozzáférési szerkesztőjében válaszd a kijelölt erőforrásmódot, és jelöld a megfelelő cég/webshop rekordot.",
+        "Mentsd, majd ellenőrizd a tényleges hozzáférést. A korábbi, szervezethez nem rendelt importok elérhetőségét külön vizsgáld."
+      ]
+    },
+    {
+      "type": "note",
+      "title": "Várt eredmény",
+      "text": "A szervezeti rekord és a szűkített hatókör megjelenik. Nem indul termékátadás, UNAS-kapcsolat vagy domainbeállítás."
+    },
+    {
+      "type": "image",
+      "src": "/help/images/cegek-webaruhazak.png",
+      "alt": "Cég és webáruház szervezeti nyilvántartása",
+      "caption": "A létrehozás nem jelent kész webáruház-integrációt."
+    },
+    {
+      "type": "heading",
+      "text": "Ha nem sikerül"
+    },
+    {
+      "type": "list",
+      "items": [
+        "Hiányzó fül: companies.read vagy megfelelő ügyfélmunkaterület szükséges.",
+        "403: a szervezet olvasási joga nem elég új rekordhoz vagy hozzáférés-kiosztáshoz.",
+        "Üres termék/importlista szűkítés után: a régi adatok hozzárendelés nélküli állapotát ellenőrizd; ne másold át őket másik ügyfélbe."
+      ]
+    },
+    {
+      "type": "heading",
+      "text": "Mi változik, és mi marad meg?"
+    },
+    {
+      "type": "paragraph",
+      "text": "A hatókör szűkítése elrejthet adatot, de nem törli azt. A teljes ügyfélhozzáférés szélesebb a kijelölt erőforráslistánál; csak tudatosan használd."
+    },
+    {
+      "type": "heading",
+      "text": "Következő lépés"
+    },
+    {
+      "type": "paragraph",
+      "text": "A kapcsolódó útmutatók az alábbi sorrendben segítenek folytatni a munkát. A látható gombok mindig az aktuális munkaterület és tényleges jogosultságok szerint használhatók."
+    }
+  ],
+  "related": [
+    "jogosultsagok",
+    "meghivok",
+    "beszallito-letrehozasa"
+  ]
+}

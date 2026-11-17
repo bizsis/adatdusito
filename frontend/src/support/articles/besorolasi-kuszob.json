@@ -1,0 +1,118 @@
+{
+  "id": "besorolasi-kuszob",
+  "topic": "kategoriak",
+  "title": "Automatikus besorolás és a 98%-os küszöb",
+  "summary": "A 98% adminisztratív elfogadási küszöb, nem állítás a rendszer mért pontosságáról.",
+  "order": 16,
+  "blocks": [
+    {
+      "type": "heading",
+      "text": "Mire való, és mikor használd?"
+    },
+    {
+      "type": "paragraph",
+      "text": "A 98% adminisztratív elfogadási küszöb, nem állítás a rendszer mért pontosságáról. Az automatikus döntés a szerver szabályait és kalibrációs feltételeit követi; az alacsony bizalom felülvizsgálatot jelenthet."
+    },
+    {
+      "type": "heading",
+      "text": "Hozzáférés és előfeltételek"
+    },
+    {
+      "type": "paragraph",
+      "text": "A terméklistához products.read, kézi besoroláshoz products.classify kell. A küszöb központi módosításához system.settings.read/manage szükséges; nem minden ügyféladmin írhat rendszerszintű szabályt."
+    },
+    {
+      "type": "note",
+      "title": "Menüútvonal",
+      "text": "Termékadatok / Automatikus besorolás; Rendszerbeállítások / Kategóriabesorolás"
+    },
+    {
+      "type": "heading",
+      "text": "Mezők, állapotok és gombok"
+    },
+    {
+      "type": "table",
+      "caption": "A képernyő elemeinek jelentése",
+      "headers": [
+        "Elem",
+        "Mit jelent és mire figyelj?"
+      ],
+      "rows": [
+        [
+          "Kategória-besorolási admin küszöb (%)",
+          "50–100 közötti százalék; a szerver mentett beállítása."
+        ],
+        [
+          "Kalibráció",
+          "A módszer ellenőrzött mérési feltétele. Egy beállított szám nem helyettesít valós pontosságmérést."
+        ],
+        [
+          "Ellenőrzést igényel",
+          "A javaslat kézi vizsgálata szükséges; nem feltétlenül importhiba."
+        ],
+        [
+          "Kézi javítás védett",
+          "Az automatikus folyamat nem írhatja át észrevétlenül az ellenőrzött kézi döntést."
+        ]
+      ]
+    },
+    {
+      "type": "heading",
+      "text": "Lépésről lépésre – ellenőrzött demópélda"
+    },
+    {
+      "type": "steps",
+      "items": [
+        "A Termékadatokban nézd meg a besorolt és felülvizsgálandó termékek állapotát.",
+        "Nyiss meg egy bizonytalan demóterméket, és hasonlítsd össze a saját kategóriát a javasolt belső útvonallal.",
+        "Kézi javítást a besorolási szerkesztőben végezz, konkrét indokkal; ne a küszöb csökkentésével próbálj minden terméket elfogadtatni.",
+        "Rendszeradminisztrátorként a Rendszerbeállítások → Kategóriabesorolás fülön olvasd el a jelenlegi küszöböt.",
+        "Módosításkor ellenőrzött döntés alapján adj meg értéket, mentsd, majd olvasd vissza a szerver beállítását."
+      ]
+    },
+    {
+      "type": "note",
+      "title": "Várt eredmény",
+      "text": "A felület a ténylegesen mentett küszöböt mutatja. A 98-ra állítás önmagában nem bizonyít 98%-os besorolási pontosságot és nem old fel kézi védelmet."
+    },
+    {
+      "type": "image",
+      "src": "/help/images/beallitas-kuszob.png",
+      "alt": "A központi besorolási küszöb beállítása",
+      "caption": "A 98% küszöb, nem empirikusan mért pontosság."
+    },
+    {
+      "type": "heading",
+      "text": "Ha nem sikerül"
+    },
+    {
+      "type": "list",
+      "items": [
+        "422: 50–100 közé eső érték szükséges.",
+        "403 vagy csak olvasható mező: központi beállításmódosítási jog hiányzik.",
+        "Nincs automatikus döntés: vizsgáld meg a kalibrációt, egyértelműséget és forráskörnyezetet; ne találj ki mérési eredményt."
+      ]
+    },
+    {
+      "type": "heading",
+      "text": "Mi változik, és mi marad meg?"
+    },
+    {
+      "type": "paragraph",
+      "text": "A beállítás központi szabály, több ügyfelet érinthet. Nem módosítja a fix magyar kategóriahierarchiát és nem törli a termékek eredeti besorolását."
+    },
+    {
+      "type": "heading",
+      "text": "Következő lépés"
+    },
+    {
+      "type": "paragraph",
+      "text": "A kapcsolódó útmutatók az alábbi sorrendben segítenek folytatni a munkát. A látható gombok mindig az aktuális munkaterület és tényleges jogosultságok szerint használhatók."
+    }
+  ],
+  "related": [
+    "termekek-kategorizalasa",
+    "kategoriameterkep",
+    "beallitasok-altalanos"
+  ]
+}

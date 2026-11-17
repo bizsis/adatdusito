@@ -1,0 +1,137 @@
+{
+  "id": "tomeges-jovahagyas",
+  "topic": "tomeges",
+  "title": "Tömeges feldolgozás és előkészítési jóváhagyás",
+  "summary": "A tömeges paraméter-előnézet termékenként számolja ki az alkalmazható változásokat.",
+  "order": 23,
+  "blocks": [
+    {
+      "type": "heading",
+      "text": "Mire való, és mikor használd?"
+    },
+    {
+      "type": "paragraph",
+      "text": "A tömeges paraméter-előnézet termékenként számolja ki az alkalmazható változásokat. A tömeges alkalmazás csak a megerősített, szerver által rögzített halmazon írhat. Ez nem azonos az előkészítési jóváhagyással."
+    },
+    {
+      "type": "heading",
+      "text": "Hozzáférés és előfeltételek"
+    },
+    {
+      "type": "paragraph",
+      "text": "Előnézethez products.read, alkalmazáshoz egyszerre products.parameters és products.bulk szükséges. Legyen még érvényes, legfeljebb kétórás kiválasztás; a paraméterforrásokat és zárolásokat előbb rendezd."
+    },
+    {
+      "type": "note",
+      "title": "Menüútvonal",
+      "text": "Termékadatok / Paraméterek / Tömeges paraméter-előnézet"
+    },
+    {
+      "type": "heading",
+      "text": "Mezők, állapotok és gombok"
+    },
+    {
+      "type": "table",
+      "caption": "A képernyő elemeinek jelentése",
+      "headers": [
+        "Elem",
+        "Mit jelent és mire figyelj?"
+      ],
+      "rows": [
+        [
+          "eligible / unchanged",
+          "Van alkalmazható változás / nincs szükséges változás."
+        ],
+        [
+          "skipped_pending_review / choice_required / no_donor",
+          "Felülvizsgálatra váró, explicit profilt igénylő vagy donor nélküli termék kimarad; nem automatikusan hiba."
+        ],
+        [
+          "blocked_locked / source_overwrites",
+          "Védett helyek kihagyva; a nyers forrás felülírásának száma nullának kell maradnia."
+        ],
+        [
+          "Tömeges döntés indoka",
+          "Az ellenőrzött csoportos művelet magyarázata."
+        ],
+        [
+          "Tömeges alkalmazás áttekintése",
+          "Újabb megerősítés a tényleges darabszámmal és hatással."
+        ],
+        [
+          "50000 / futás",
+          "A nagyobb kiválasztást a szerver több egymást követő futásban dolgozza fel."
+        ],
+        [
+          "Idempotencia",
+          "Ugyanazon megerősített kérés ismétlődő kézbesítését kezeli; nem engedély új, eltérő tartalmú vak ismétlésre."
+        ]
+      ]
+    },
+    {
+      "type": "heading",
+      "text": "Lépésről lépésre – ellenőrzött demópélda"
+    },
+    {
+      "type": "steps",
+      "items": [
+        "Rögzítsd a demótermékkört a kijelölési útmutató szerint.",
+        "Kattints a Tömeges paraméter-előnézet gombra, majd várd meg a befejezést.",
+        "Olvasd el a Tényleges tételes összesítést és a tétellista hibáit. Ellenőrizd, hogy nincs váratlan donorhiány vagy felülvizsgálat.",
+        "Ha van alkalmazható termék és megfelelő jogod, írj indokot, majd válaszd a Tömeges alkalmazás áttekintése lehetőséget.",
+        "Olvasd el a megerősítést és véglegesíts. Jegyezd fel a futásazonosítót.",
+        "Megszakításnál várd meg a visszajelzett állapotot; folytatás előtt nézd át a megmaradt részmunka és hibák számát. A teljes állományt ne indítsd újra helyette."
+      ]
+    },
+    {
+      "type": "note",
+      "title": "Várt eredmény",
+      "text": "A futás termékenkénti eredménnyel zárul. A kihagyott, elavult vagy hibás tételt a listából kell rendezni; a sikeres rész megmarad."
+    },
+    {
+      "type": "image",
+      "src": "/help/images/tomeges-olvasasi-jog.png",
+      "alt": "Ugyanaz az előnézet alkalmazási és jóváhagyási jog nélkül",
+      "caption": "A jogosultság nem a cikk olvasásától, hanem a szerver engedélyeitől függ."
+    },
+    {
+      "type": "image",
+      "src": "/help/images/tomeges.png",
+      "alt": "Rögzített termékkör és tömeges előnézet tételes összesítése",
+      "caption": "Előbb a szerveres eredményt, utána az alkalmazási döntést vizsgáld."
+    },
+    {
+      "type": "heading",
+      "text": "Ha nem sikerül"
+    },
+    {
+      "type": "list",
+      "items": [
+        "409: token lejárt, darabszám vagy revízió eltér. Kérj új rögzítést/előnézetet, ne kerüld meg a megerősítést.",
+        "403: a két alkalmazási jog közül valamelyik hiányzik.",
+        "Elakadt worker: a meglévő futást töltsd be; a már alkalmazott rész nem vész el attól, hogy a böngészőlapot bezártad."
+      ]
+    },
+    {
+      "type": "heading",
+      "text": "Mi változik, és mi marad meg?"
+    },
+    {
+      "type": "paragraph",
+      "text": "A megszakítás nem rollback. Az alkalmazás védett helyeket kihagy, és a forrásadatokat megőrzi. A tételes hibát és futásazonosítót naplózd titok nélkül; tokent ne másolj."
+    },
+    {
+      "type": "heading",
+      "text": "Következő lépés"
+    },
+    {
+      "type": "paragraph",
+      "text": "A kapcsolódó útmutatók az alábbi sorrendben segítenek folytatni a munkát. A látható gombok mindig az aktuális munkaterület és tényleges jogosultságok szerint használhatók."
+    }
+  ],
+  "related": [
+    "elokeszitesi-jovahagyas",
+    "tomeges-kijeloles",
+    "parameter-hatterfutas"
+  ]
+}

@@ -22,6 +22,11 @@ type Column = {
   method: string;
   critical: boolean;
   samples: string[];
+  suggested_field?: string | null;
+  requires_decision?: boolean;
+  warnings?: string[];
+  meaning?: string | null;
+  confirmed_context?: Record<string, string> | null;
 };
 type Run = {
   id: number;
@@ -32,8 +37,12 @@ type Run = {
   cursor: number;
   error: string | null;
   counters: Record<string, number>;
+  created_at?: string;
+  deletable?: boolean;
   analysis: {
     data_rows?: number;
+    physical_rows?: number;
+    empty_rows?: number;
     run_product_limit?: number;
     columns?: Column[];
     preview?: string[][];
@@ -54,6 +63,68 @@ type Field = {
   allowed?: string[];
   validation?: string;
 };
+type DeletionPlan = {
+  run_id: number;
+  filename: string;
+  state: string;
+  deletable: boolean;
+  reason: string | null;
+  deletes: { source_file_chunks: number; source_file_bytes: number };
+  references: Record<string, number>;
+};
+type Interpreted = Record<
+  string,
+  { value: string | null; raw: string; issues: string[] }
+>;
+const PAGE = 25;
+const issueLabels: Record<string, string> = {
+  scientific_identifier_requires_review:
+    "tudományos jelölés – a teljes azonosító nem bizonyítható",
+  invalid_gtin: "nem érvényes EAN/GTIN – nem mentjük EAN-ként",
+  negative_value_requires_rule: "negatív érték – értelmezési szabály szükséges",
+  excel_identifier_precision_requires_review: "Excel-pontosság ellenőrizendő",
+  formula_requires_review: "képlet – ellenőrizendő",
+  invalid_number: "nem szám",
+  uncertain_date: "bizonytalan dátum",
+  missing_identity_or_name: "nincs név vagy azonosító",
+  column_count_mismatch: "eltérő oszlopszám",
+  duplicate_key: "ismétlődő kulcs",
+  conflicting_duplicate_key: "ütköző ismétlődő kulcs",
+};
+const columnWarnings: Record<string, string> = {
+  scientific_notation_identifier:
+    "Tudományos jelölésű azonosítók (pl. 8,71999E+12): a teljes EAN nem rekonstruálható, ezek a sorok nem kapnak EAN-t. Kérj új, teljes számjegyes forrásadatot. Az utólagos Excel-formázás nem állítja helyre a már elveszett számjegyeket. Csak az eredetileg is teljes azonosító megőrzésére használd a Szám (0 tizedesjegy) vagy Szöveg formátumot, majd az ellenőrzött forrásból tölts fel újra.",
+  invalid_gtin_samples:
+    "Érvénytelen EAN/GTIN minták: ezek a sorok nem kapnak EAN-t, a nyers érték megmarad.",
+  negative_values:
+    "Negatív értékek: nyers forrásadatként megmaradnak, eladható készlet nem lesz belőlük; az értelmezés külön döntés.",
+};
+const counterLabels: Record<string, string> = {
+  ready: "feldolgozva",
+  empty: "üres sor",
+  error: "hibás",
+  conflict: "ütközés",
+  duplicate: "ismétlődés",
+  not_seen_in_full_feed: "teljes feedből hiányzó",
+};
+// Owner decision (#42, 2026-11-17): confirmed meanings of these source headers.
+const meanings: Record<string, string> = {
+  last_purchase_price: "utolsó beszerzési ár",
+  list_price_net_huf: "listaár – mindig nettó, HUF",
+};
+const deleteRefusals: Record<string, string> = {
+  approved_or_processed:
+    "Jóváhagyott vagy feldolgozott import nem törölhető; a termékek és a napló megmaradnak.",
+  running: "Az elemzés éppen fut; várd meg a végét, vagy szakítsd meg.",
+  referenced: "Az importra termék vagy változásnapló hivatkozik.",
+};
+const issueText = (code: string) => {
+  const [field, problem] = code.includes(":") ? code.split(":") : ["", code];
+  const text = issueLabels[problem] || problem;
+  return field ? `${field}: ${text}` : text;
+};
+const formatDate = (value?: string) =>
+  value ? new Date(value).toLocaleString("hu-HU") : "–";
 const labels: Record<string, string> = {
   uploaded: "Feltöltve / elemzésre vár",
   awaiting_approval: "Jóváhagyásra vár",
@@ -93,8 +164,11 @@ export function ImportWorkspace({
   const [chosenProfile, CP] = useState("");
   const [historyOffset, HO] = useState(0);
   const [sourceOffset, SO] = useState(0);
+  const [previewSize, PZ] = useState(10);
+  const [deletion, DL] = useState<DeletionPlan | null>(null);
+  const [notice, NT] = useState("");
   const [sourcePreview, SP] = useState<{
-    items: { line: number; raw: string[]; interpreted?: unknown }[];
+    items: { line: number; raw: string[]; interpreted?: Interpreted }[];
     has_more: boolean;
   }>({ items: [], has_more: false });
   const [financialDefaults, FD] = useState({
@@ -122,7 +196,10 @@ export function ImportWorkspace({
       {
         line: number;
         raw: string[];
-        normalized: unknown;
+        normalized: { fields?: Record<string, string | null> } & Record<
+          string,
+          unknown
+        >;
         issues: string[];
         state: string;
       }[]
@@ -164,6 +241,7 @@ export function ImportWorkspace({
   const canReadExports = !permissions || permissions.includes("exports.read");
   const refresh = useCallback(async () => {
     S(await api("/imports/suppliers"));
+    HO(0);
     R(await api("/imports/runs"));
     if (canReadExports) EP(await api("/imports/export-profiles"));
     else EP([]);
@@ -172,10 +250,18 @@ export function ImportWorkspace({
     U(r);
     T(String(r.supplier_id));
     CP(r.profile_id ? String(r.profile_id) : "");
+    // Owner-confirmed context (e.g. LISTPRICE is net HUF) only prefills empty
+    // defaults; the operator still has to approve the financial mapping.
+    const context = Object.assign(
+      {},
+      ...(r.analysis.columns || [])
+        .filter((c) => c.field && c.confirmed_context)
+        .map((c) => c.confirmed_context),
+    ) as Record<string, string>;
     FD({
-      currency: String(r.config.currency || ""),
-      price_type: String(r.config.price_type || ""),
-      tax_basis: String(r.config.tax_basis || ""),
+      currency: String(r.config.currency || context.currency || ""),
+      price_type: String(r.config.price_type || context.price_type || ""),
+      tax_basis: String(r.config.tax_basis || context.tax_basis || ""),
     });
     A(false);
     G("partial");
@@ -256,10 +342,43 @@ export function ImportWorkspace({
       api<typeof sourcePreview>(`/imports/runs/${runId}/preview`, "POST", {
         mapping,
         offset: sourceOffset,
+        limit: previewSize,
       })
         .then(SP)
         .catch((e) => E(String(e)));
-  }, [api, runId, runState, sourceOffset, mapping]);
+  }, [api, runId, runState, sourceOffset, previewSize, mapping]);
+  const fieldLabel = (key: string) =>
+    fields.find((f) => f.key === key)?.label || key;
+  const mappedFields = Object.entries(mapping).filter(([, v]) => v);
+  // Processed rows show the mapping that was actually approved for the run.
+  const approvedFields = Object.entries(
+    (run?.config.mapping as Record<string, string> | undefined) || {},
+  );
+  const loadHistory = async (next: number) => {
+    const page = await api<Run[]>(`/imports/runs?offset=${next}`);
+    HO(next);
+    R(page);
+    return page;
+  };
+  // Deletion is confirmed against the server's own dry run, and success is
+  // reported only after the list has been re-read from the server.
+  const askDelete = (id: number) =>
+    act(async () => {
+      NT("");
+      DL(await api<DeletionPlan>(`/imports/runs/${id}/deletion`));
+    });
+  const confirmDelete = (plan: DeletionPlan) =>
+    act(async () => {
+      await api(`/imports/runs/${plan.run_id}`, "DELETE");
+      DL(null);
+      if (run?.id === plan.run_id) U(null);
+      const page = await loadHistory(historyOffset);
+      NT(
+        page.some((r) => r.id === plan.run_id)
+          ? `A(z) #${plan.run_id} import még szerepel a listában; frissítsd az oldalt.`
+          : `A(z) #${plan.run_id} import (${plan.filename}) törölve.`,
+      );
+    });
   const targetFields =
     exportProfiles.find((p) => p.id === Number(exportProfile))?.fields || [];
   return (
@@ -424,49 +543,168 @@ export function ImportWorkspace({
           </>
         )}
       </section>
-      <section className="card padded">
-        <h2>Importelőzmények</h2>
-        <button
-          disabled={!historyOffset}
-          onClick={() =>
-            act(async () => {
-              const next = Math.max(0, historyOffset - 25);
-              HO(next);
-              R(await api(`/imports/runs?offset=${next}`));
-            })
-          }
-        >
-          Korábbi oldal
-        </button>
-        <button
-          disabled={runs.length < 25}
-          onClick={() =>
-            act(async () => {
-              const next = historyOffset + 25;
-              HO(next);
-              R(await api(`/imports/runs?offset=${next}`));
-            })
-          }
-        >
-          További importok
-        </button>
-        {runs.map((r) => (
-          <button key={r.id} onClick={() => select(r)}>
-            #{r.id} {r.filename} · {labels[r.state] || r.state}
+      <section className="card padded" aria-labelledby="import-history-title">
+        <h2 id="import-history-title">Importelőzmények</h2>
+        {notice && <p role="status">{notice}</p>}
+        {deletion && (
+          <div
+            className="confirm-panel"
+            role="alertdialog"
+            aria-labelledby="delete-title"
+            aria-describedby="delete-body"
+          >
+            <h3 id="delete-title">
+              #{deletion.run_id} {deletion.filename} törlése
+            </h3>
+            <div id="delete-body">
+              {deletion.deletable ? (
+                <>
+                  <p>Véglegesen törlődik:</p>
+                  <ul>
+                    <li>az importrekord, az elemzés és a fájlbeállítások;</li>
+                    <li>
+                      a tárolt forrásfájl (
+                      {deletion.deletes.source_file_bytes.toLocaleString("hu-HU")}{" "}
+                      bájt).
+                    </li>
+                  </ul>
+                  <p>
+                    Megmarad: a beszállító, a mentett importprofilok, a
+                    termékek, a többi import és az auditnapló. Ebből az
+                    importból termék nem készült.
+                  </p>
+                </>
+              ) : (
+                <p role="alert">
+                  Nem törölhető:{" "}
+                  {deleteRefusals[deletion.reason || ""] || deletion.reason}
+                </p>
+              )}
+            </div>
+            {deletion.deletable && (
+              <button
+                className="danger"
+                disabled={busy}
+                onClick={() => confirmDelete(deletion)}
+              >
+                Végleges törlés
+              </button>
+            )}
+            <button disabled={busy} onClick={() => DL(null)}>
+              Mégsem
+            </button>
+          </div>
+        )}
+        {!runs.length ? (
+          <p className="empty-state">
+            {historyOffset ? "Nincs több import." : "Még nincs import."}
+          </p>
+        ) : (
+          <div className="table-wrap">
+            <table className="import-history">
+              <thead>
+                <tr>
+                  <th scope="col">Import</th>
+                  <th scope="col">Állapot</th>
+                  <th scope="col">Létrehozva</th>
+                  <th scope="col">Műveletek</th>
+                </tr>
+              </thead>
+              <tbody>
+                {runs.map((r) => (
+                  <tr
+                    key={r.id}
+                    aria-current={run?.id === r.id ? "true" : undefined}
+                  >
+                    <td data-label="Import">
+                      <span className="file-name" title={r.filename}>
+                        #{r.id} {r.filename}
+                      </span>
+                    </td>
+                    <td data-label="Állapot">{labels[r.state] || r.state}</td>
+                    <td data-label="Létrehozva">{formatDate(r.created_at)}</td>
+                    <td data-label="Műveletek" className="row-actions">
+                      <button
+                        onClick={() => select(r)}
+                        aria-label={`#${r.id} ${r.filename} megnyitása`}
+                      >
+                        Megnyitás
+                      </button>
+                      {canManage && r.deletable && (
+                        <button
+                          className="danger"
+                          disabled={busy}
+                          onClick={() => askDelete(r.id)}
+                          aria-label={`#${r.id} ${r.filename} törlése`}
+                        >
+                          Törlés
+                        </button>
+                      )}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+        <div className="pager">
+          <button
+            disabled={!historyOffset || busy}
+            onClick={() =>
+              act(async () => {
+                await loadHistory(Math.max(0, historyOffset - PAGE));
+              })
+            }
+          >
+            Korábbi oldal
           </button>
-        ))}
+          <span>
+            {runs.length
+              ? `${historyOffset + 1}–${historyOffset + runs.length}`
+              : "–"}
+          </span>
+          <button
+            disabled={runs.length < PAGE || busy}
+            onClick={() =>
+              act(async () => {
+                await loadHistory(historyOffset + PAGE);
+              })
+            }
+          >
+            További importok
+          </button>
+        </div>
       </section>
       {run && (
         <section className="card padded">
-          <h2>
-            #{run.id} – {labels[run.state] || run.state}
+          <h2 className="run-title">
+            <span className="file-name" title={run.filename}>
+              #{run.id} – {labels[run.state] || run.state}
+            </span>
           </h2>
-          <p>
-            Feldolgozott forrássor: {run.cursor} ·{" "}
-            {Object.entries(run.counters)
-              .map(([k, v]) => `${k}: ${v}`)
-              .join(" · ")}
+          <p className="run-file" title={run.filename}>
+            {run.filename}
           </p>
+          {run.analysis.physical_rows !== undefined && (
+            <p className="row-counts">
+              Összes sor:{" "}
+              {run.analysis.physical_rows.toLocaleString("hu-HU")} · nem üres
+              (termékjelölt): {run.analysis.data_rows?.toLocaleString("hu-HU")}{" "}
+              · kihagyott üres sor:{" "}
+              {run.analysis.empty_rows?.toLocaleString("hu-HU")}
+            </p>
+          )}
+          {!!Object.keys(run.counters).length && (
+            <p>
+              Eredmény:{" "}
+              {Object.entries(run.counters)
+                .map(
+                  ([k, v]) =>
+                    `${counterLabels[k] || k}: ${v.toLocaleString("hu-HU")}`,
+                )
+                .join(" · ")}
+            </p>
+          )}
           {run.error && <p role="alert">{run.error}</p>}
           <a href={`/api/v1/imports/runs/${run.id}/file`}>
             Eredeti fájl letöltése
@@ -485,7 +723,9 @@ export function ImportWorkspace({
                     ? ["resume", "cancel"]
                     : run.state === "uploaded"
                       ? ["analyze", "cancel"]
-                      : ["partial", "completed"].includes(run.state)
+                      : run.state === "awaiting_approval"
+                        ? ["cancel"]
+                        : ["partial", "completed"].includes(run.state)
                         ? ["retry-errors"]
                         : []
               )
@@ -516,10 +756,33 @@ export function ImportWorkspace({
                     }
                   </button>
                 ))}
+              {canManage && run.deletable && (
+                <button
+                  className="danger"
+                  disabled={busy}
+                  onClick={() => askDelete(run.id)}
+                >
+                  Import törlése
+                </button>
+              )}
             </div>
           )}
           {run.state === "awaiting_approval" && (
             <>
+              <nav aria-label="Import lépései" className="import-steps">
+                <ol>
+                  <li>Feltöltés ✓</li>
+                  <li>
+                    <a href="#import-mapping">Oszlopmegfeleltetés</a>
+                  </li>
+                  <li>
+                    <a href="#import-preview">Adatelőnézet</a>
+                  </li>
+                  <li>
+                    <a href="#import-approval">Jóváhagyás</a>
+                  </li>
+                </ol>
+              </nav>
               {!!run.analysis.drift?.length && (
                 <p role="alert">
                   A mentett profilhoz képest eltérés van:{" "}
@@ -599,6 +862,7 @@ export function ImportWorkspace({
                   ))}
                 </select>
               </label>
+              <h3 id="import-mapping">Oszlopmegfeleltetés</h3>
               <div className="table-wrap">
                 <table>
                   <thead>
@@ -612,7 +876,13 @@ export function ImportWorkspace({
                   </thead>
                   <tbody>
                     {columns
-                      .filter((c) => c.field || mapping[c.index])
+                      .filter(
+                        (c) =>
+                          c.field ||
+                          mapping[c.index] ||
+                          c.suggested_field ||
+                          c.warnings?.length,
+                      )
                       .map((c) => (
                         <tr key={c.index}>
                           <td>{c.header}</td>
@@ -641,10 +911,35 @@ export function ImportWorkspace({
                               .join(", ") || "Exportprofil szerint"}
                           </td>
                           <td>
-                            {c.critical ? "Jóváhagyás szükséges" : "Javaslat"} ·{" "}
-                            {Math.round(c.confidence * 100)}%
+                            {c.meaning ? (
+                              <strong className="decision">
+                                Megerősített jelentés: {meanings[c.meaning] || c.meaning}
+                                . Pénzügyi jóváhagyás szükséges.
+                              </strong>
+                            ) : c.requires_decision && c.suggested_field ? (
+                              <strong className="decision">
+                                Döntés szükséges – lehetséges jelentés:{" "}
+                                {fieldLabel(c.suggested_field)}. Automatikusan
+                                nem választjuk ki; eladási árra nem
+                                következtetünk.
+                              </strong>
+                            ) : (
+                              <>
+                                {c.critical ? "Jóváhagyás szükséges" : "Javaslat"}{" "}
+                                · {Math.round(c.confidence * 100)}%
+                              </>
+                            )}
+                            {c.warnings?.map((w) => (
+                              <span key={w} className="warning-text" role="note">
+                                {columnWarnings[w] || w}
+                              </span>
+                            ))}
                           </td>
-                          <td>{c.samples.join(" | ")}</td>
+                          <td>
+                            <span className="cell-trunc" title={c.samples.join(" | ")}>
+                              {c.samples.join(" | ")}
+                            </span>
+                          </td>
                         </tr>
                       ))}
                   </tbody>
@@ -653,7 +948,13 @@ export function ImportWorkspace({
               <details>
                 <summary>További / fel nem ismert oszlopok</summary>
                 {columns
-                  .filter((c) => !c.field && !mapping[c.index])
+                  .filter(
+                    (c) =>
+                      !c.field &&
+                      !mapping[c.index] &&
+                      !c.suggested_field &&
+                      !c.warnings?.length,
+                  )
                   .map((c) => (
                     <label key={c.index}>
                       {c.header}
@@ -674,47 +975,137 @@ export function ImportWorkspace({
                     </label>
                   ))}
               </details>
-              <h3>Eredeti adatelőnézet</h3>
+              <h3 id="import-preview">Adatelőnézet</h3>
               <p>
-                Forrássorok: {sourceOffset + 1}–
-                {sourceOffset + sourcePreview.items.length}
+                {run.analysis.data_rows?.toLocaleString("hu-HU")} nem üres
+                forrássor; az üres sorokat (
+                {run.analysis.empty_rows?.toLocaleString("hu-HU") ?? 0}) nem
+                mutatjuk és nem importáljuk.
               </p>
-              <button
-                disabled={!sourceOffset}
-                onClick={() => SO(Math.max(0, sourceOffset - 25))}
-              >
-                Előző forrássorok
-              </button>
-              <button
-                disabled={!sourcePreview.has_more}
-                onClick={() => SO(sourceOffset + 25)}
-              >
-                Következő forrássorok
-              </button>
-              <div className="table-wrap">
+              <div className="pager">
+                <label>
+                  Sorok oldalanként
+                  <select
+                    value={previewSize}
+                    onChange={(e) => {
+                      SO(0);
+                      PZ(Number(e.target.value));
+                    }}
+                  >
+                    {[5, 10, 25, 50].map((n) => (
+                      <option key={n} value={n}>
+                        {n}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+                <button
+                  disabled={!sourceOffset}
+                  onClick={() => SO(Math.max(0, sourceOffset - previewSize))}
+                >
+                  Előző forrássorok
+                </button>
+                <span>
+                  {sourcePreview.items.length
+                    ? `${sourceOffset + 1}–${sourceOffset + sourcePreview.items.length}`
+                    : "–"}
+                </span>
+                <button
+                  disabled={!sourcePreview.has_more}
+                  onClick={() => SO(sourceOffset + previewSize)}
+                >
+                  Következő forrássorok
+                </button>
+              </div>
+              <div className="table-wrap preview-table">
                 <table>
+                  <thead>
+                    <tr>
+                      <th scope="col">Sor</th>
+                      {mappedFields.map(([i, f]) => (
+                        <th scope="col" key={i}>
+                          {fieldLabel(f)}
+                          <small>{run.analysis.headers?.[Number(i)]}</small>
+                        </th>
+                      ))}
+                    </tr>
+                  </thead>
                   <tbody>
-                    {sourcePreview.items.map(
-                      ({ raw: r, line: i, interpreted }) => (
-                        <tr key={i}>
-                          <td>
-                            <pre>{JSON.stringify(interpreted, null, 2)}</pre>
-                          </td>
-                          {r.map((c, j) => (
-                            <td key={j}>{c}</td>
-                          ))}
-                        </tr>
-                      ),
-                    )}
+                    {sourcePreview.items.map(({ line, interpreted }) => (
+                      <tr key={line}>
+                        <th scope="row">{line}</th>
+                        {mappedFields.map(([i, f]) => {
+                          const cell = interpreted?.[f];
+                          return (
+                            <td key={i}>
+                              <span
+                                className="cell-trunc"
+                                title={cell?.raw || ""}
+                              >
+                                {cell?.value ?? (cell?.raw ? "–" : "")}
+                              </span>
+                              {cell?.issues.map((x) => (
+                                <span key={x} className="warning-text">
+                                  {issueText(x)}
+                                </span>
+                              ))}
+                            </td>
+                          );
+                        })}
+                      </tr>
+                    ))}
                   </tbody>
                 </table>
               </div>
+              <details>
+                <summary>Technikai részletek (nyers forrássorok)</summary>
+                <div className="table-wrap">
+                  <table className="raw-table">
+                    <thead>
+                      <tr>
+                        <th scope="col">Sor</th>
+                        {(run.analysis.headers || []).map((h, j) => (
+                          <th scope="col" key={j}>
+                            {h}
+                          </th>
+                        ))}
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {sourcePreview.items.map(({ raw, line }) => (
+                        <tr key={line}>
+                          <th scope="row">{line}</th>
+                          {raw.map((c, j) => (
+                            <td key={j}>
+                              <span className="cell-trunc" title={c}>
+                                {c}
+                              </span>
+                            </td>
+                          ))}
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+                <pre className="tech-json">
+                  {JSON.stringify(
+                    sourcePreview.items.map((r) => ({
+                      line: r.line,
+                      interpreted: r.interpreted,
+                    })),
+                    null,
+                    2,
+                  )}
+                </pre>
+              </details>
               <p>
                 A célwebáruház-mezők az exportprofil szerint határozhatók meg;
                 árból nem következtetünk eladási árra.
               </p>
               {canApprove && (
                 <form
+                  id="import-approval"
+                  aria-label="Jóváhagyás"
                   onSubmit={(e) => {
                     e.preventDefault();
                     act(async () => {
@@ -852,32 +1243,68 @@ export function ImportWorkspace({
           )}
           {!!rows.length && (
             <>
-              <h3>Eredeti és értelmezett sorok</h3>
-              <div className="table-wrap">
+              <h3>Feldolgozott sorok</h3>
+              <p>
+                Az üres forrássorokat csak számoljuk (
+                {(run.counters.empty || 0).toLocaleString("hu-HU")}), nem
+                listázzuk.
+              </p>
+              <div className="table-wrap preview-table">
                 <table>
                   <thead>
                     <tr>
-                      <th>Sor / állapot</th>
-                      <th>Eredeti</th>
-                      <th>Értelmezett / hibák</th>
+                      <th scope="col">Sor</th>
+                      <th scope="col">Állapot</th>
+                      {approvedFields.map(([i, f]) => (
+                        <th scope="col" key={i}>
+                          {fieldLabel(f)}
+                        </th>
+                      ))}
+                      <th scope="col">Problémák</th>
                     </tr>
                   </thead>
                   <tbody>
                     {rows.map((r) => (
                       <tr key={r.line}>
+                        <th scope="row">{r.line}</th>
+                        <td>{r.state}</td>
+                        {approvedFields.map(([i, f]) => (
+                          <td key={i}>
+                            <span
+                              className="cell-trunc"
+                              title={String(r.raw[Number(i)] ?? "")}
+                            >
+                              {r.normalized.fields?.[f] ?? ""}
+                            </span>
+                          </td>
+                        ))}
                         <td>
-                          {r.line} · {r.state}
-                        </td>
-                        <td>{JSON.stringify(r.raw)}</td>
-                        <td>
-                          <pre>{JSON.stringify(r.normalized, null, 2)}</pre>
-                          {r.issues.join(", ")}
+                          {r.issues.map((x) => (
+                            <span key={x} className="warning-text">
+                              {issueText(x)}
+                            </span>
+                          ))}
                         </td>
                       </tr>
                     ))}
                   </tbody>
                 </table>
               </div>
+              <details>
+                <summary>Technikai részletek (normalizált JSON)</summary>
+                <pre className="tech-json">
+                  {JSON.stringify(
+                    rows.map((r) => ({
+                      line: r.line,
+                      raw: r.raw,
+                      normalized: r.normalized,
+                      issues: r.issues,
+                    })),
+                    null,
+                    2,
+                  )}
+                </pre>
+              </details>
             </>
           )}
           <button

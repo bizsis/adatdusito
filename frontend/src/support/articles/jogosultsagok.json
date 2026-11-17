@@ -1,0 +1,129 @@
+{
+  "id": "jogosultsagok",
+  "topic": "hozzaferes",
+  "title": "Felhasználók és jogosultságok",
+  "summary": "A tényleges hozzáférést a szerepkör, egyedi engedély vagy tiltás, ügyfélhatókör és cég/webáruház-korlátozás együtt határozza meg.",
+  "order": 26,
+  "blocks": [
+    {
+      "type": "heading",
+      "text": "Mire való, és mikor használd?"
+    },
+    {
+      "type": "paragraph",
+      "text": "A tényleges hozzáférést a szerepkör, egyedi engedély vagy tiltás, ügyfélhatókör és cég/webáruház-korlátozás együtt határozza meg. Egy látható menüpont nem jelent korlátlan szerkesztést. A tiltás elsőbbséget élvez az engedéllyel szemben."
+    },
+    {
+      "type": "heading",
+      "text": "Hozzáférés és előfeltételek"
+    },
+    {
+      "type": "paragraph",
+      "text": "Ügyfélnél a Munkatársak és hozzáférések, központilag a Rendszerhozzáférések menüt használd. Olvasás: members.read vagy system.users.read/system.roles.read. Szerepkiosztás: members.roles.manage vagy system.users.manage; a jogkatalógus további műveletenkénti jogokat mutat."
+    },
+    {
+      "type": "note",
+      "title": "Menüútvonal",
+      "text": "Munkatársak és hozzáférések; Rendszerhozzáférések"
+    },
+    {
+      "type": "heading",
+      "text": "Mezők, állapotok és gombok"
+    },
+    {
+      "type": "table",
+      "caption": "A képernyő elemeinek jelentése",
+      "headers": [
+        "Elem",
+        "Mit jelent és mire figyelj?"
+      ],
+      "rows": [
+        [
+          "Szerepkörök",
+          "Összefüggő engedélycsomagok, külön rendszer- és ügyfélkörnyezetben."
+        ],
+        [
+          "Egyedi engedélyek és tiltások",
+          "Személyre szabott kivételek. A tiltás meglévő szerepkörengedélyt is felülírhat."
+        ],
+        [
+          "Ténylegesen érvényes jogosultságok és forrásuk",
+          "A kiszámított eredmény; itt ellenőrizd, miért látszik vagy hiányzik egy művelet."
+        ],
+        [
+          "Ügyfélhozzáférés",
+          "Nincs / minden aktív ügyfél / kijelölt ügyfelek. Rendszerjog önmagában nem ad minden ügyféladatot."
+        ],
+        [
+          "Adathozzáférés",
+          "Teljes ügyfél vagy kijelölt cégek/webáruházak. A régi, szervezethez nem rendelt importokhoz teljes ügyfélhatókör kell."
+        ]
+      ]
+    },
+    {
+      "type": "heading",
+      "text": "Lépésről lépésre – ellenőrzött demópélda"
+    },
+    {
+      "type": "steps",
+      "items": [
+        "Válaszd ki a módosítandó ügyfél munkaterületét, majd nyisd meg a Munkatársak és hozzáférések menüt.",
+        "Keress egy demómunkatársra, és a ceruzagombbal nyisd meg a hozzáféréseit.",
+        "Olvasd el a jelenlegi szerepköröket, egyedi kivételeket és tényleges jogok forrását.",
+        "A szükséges legszűkebb szerepkört válaszd. Ne adj globális jogot csak egy import jóváhagyásához.",
+        "Ellenőrizd a cég/webáruház-hatókört, majd használd a Hozzáférések mentése gombot.",
+        "A munkatárs következő kérésénél a szerver már az új hozzáférést ellenőrzi. A segédlet továbbra is elérhető üzleti jogok nélkül is."
+      ]
+    },
+    {
+      "type": "note",
+      "title": "Várt eredmény",
+      "text": "A tényleges jogosultságlista a mentett szerepkörökkel és kivételekkel egyezik. A látható menük frissülhetnek; a másik ügyfél adatai nem kerülnek át ide."
+    },
+    {
+      "type": "image",
+      "src": "/help/images/munkatarsak.png",
+      "alt": "Ügyfélmunkatársak és hozzáférési fülek",
+      "caption": "A munkatárs menü ügyfélkörnyezetben működik."
+    },
+    {
+      "type": "image",
+      "src": "/help/images/jogkatalogus.png",
+      "alt": "Az importműveletek jogosultsági katalógusa",
+      "caption": "Az olvasás, feltöltés, jóváhagyás és kezelés külön engedély."
+    },
+    {
+      "type": "heading",
+      "text": "Ha nem sikerül"
+    },
+    {
+      "type": "list",
+      "items": [
+        "403: nincs delegálási jogod az adott hatókörben; saját jogodnál szélesebbet nem adhatsz.",
+        "Hiányzó menü meglévő szerepkör mellett: nézd meg az egyedi tiltást és erőforrásblokkot.",
+        "Nem látszik egy régi import: lehet, hogy kijelölt erőforrásmód mellett a régi adat szervezethez nem rendelt."
+      ]
+    },
+    {
+      "type": "heading",
+      "text": "Mi változik, és mi marad meg?"
+    },
+    {
+      "type": "paragraph",
+      "text": "A hozzáférés-módosítás azonnali üzleti hatású és auditált. A tagság megszüntetése nem globális fióktörlés; a fiók tiltása viszont más ügyfeleknél is érintheti a személyt."
+    },
+    {
+      "type": "heading",
+      "text": "Következő lépés"
+    },
+    {
+      "type": "paragraph",
+      "text": "A kapcsolódó útmutatók az alábbi sorrendben segítenek folytatni a munkát. A látható gombok mindig az aktuális munkaterület és tényleges jogosultságok szerint használhatók."
+    }
+  ],
+  "related": [
+    "felhasznalok-tagsagok",
+    "szerepkorok",
+    "cegek-webaruhazak"
+  ]
+}

@@ -1,7 +1,14 @@
 import { auditLabel } from "./help";
 import { readApiResponse, apiErrorMessage, ApiHttpError } from "./apiResponse";
 import { dateTime } from "./ui";
-import React, { useEffect, useState, useRef, useCallback } from "react";
+import React, {
+  useEffect,
+  useState,
+  useRef,
+  useCallback,
+  lazy,
+  Suspense,
+} from "react";
 import { createRoot } from "react-dom/client";
 import "@fontsource/inter/latin-400.css";
 import "@fontsource/inter/latin-ext-400.css";
@@ -15,6 +22,10 @@ import { SystemSettings } from "./SystemSettings";
 import { AuthLogin, SecurityCenter, RegistrationConfirm } from "./AuthViews";
 import { ProductData } from "./ProductData";
 import { setDisplayTimezone } from "./ui";
+import { SupportNav } from "./support/SupportNav";
+import { isHelpHash } from "./support/model";
+import "./support/menu.css";
+const HelpPage = lazy(() => import("./support/HelpPage"));
 import {
   LayoutDashboard,
   Building2,
@@ -1634,6 +1645,23 @@ function App() {
     setDisplayTimezone(r.branding.timezone);
     document.title = r.branding.display_name;
   }, []);
+
+  const [me, setMe] = useState<Me | null>(null),
+    [loading, setLoading] = useState(true),
+    [error, setError] = useState(""),
+    [page, setPageState] = useState(() =>
+      isHelpHash(window.location.hash) ? "help" : "dashboard",
+    ),
+    [password, setPassword] = useState(false);
+  const setPage = useCallback((next: string) => {
+    if (next !== "help" && isHelpHash(window.location.hash))
+      window.history.replaceState(
+        null,
+        "",
+        window.location.pathname + window.location.search,
+      );
+    setPageState(next);
+  }, []);
   useEffect(() => {
     refreshBranding().catch(() => {});
     if (location.hash === "#security") setPage("security");
@@ -1641,13 +1669,7 @@ function App() {
       "auth_error",
     );
     if (authError) setError(authError);
-  }, [refreshBranding]);
-
-  const [me, setMe] = useState<Me | null>(null),
-    [loading, setLoading] = useState(true),
-    [error, setError] = useState(""),
-    [page, setPage] = useState("dashboard"),
-    [password, setPassword] = useState(false);
+  }, [refreshBranding, setPage]);
   const [invitation, setInvitation] = useState(
     () =>
       new URLSearchParams(window.location.hash.slice(1)).get("invite") || "",
@@ -1655,6 +1677,9 @@ function App() {
   const [inviteLogin, setInviteLogin] = useState(false);
   useEffect(() => {
     const changed = () => {
+      if (isHelpHash(window.location.hash)) setPage("help");
+      else
+        setPageState((current) => (current === "help" ? "dashboard" : current));
       setInvitation(
         new URLSearchParams(window.location.hash.slice(1)).get("invite") || "",
       );
@@ -1662,7 +1687,7 @@ function App() {
     };
     window.addEventListener("hashchange", changed);
     return () => window.removeEventListener("hashchange", changed);
-  }, []);
+  }, [setPage]);
   const [workspaceQuery, WQ] = useState(""),
     [workspaceOffset, WO] = useState(0),
     [workspaceItems, WI] = useState<{ tenant_id: number; name: string }[]>([]);
@@ -1843,9 +1868,11 @@ function App() {
       : []),
   ];
   const title =
-    page === "security"
-      ? "Hitelesítés és 2FA"
-      : pages.find((p) => p[0] === page)?.[2] || "Áttekintés";
+    page === "help"
+      ? "Segédlet"
+      : page === "security"
+        ? "Hitelesítés és 2FA"
+        : pages.find((p) => p[0] === page)?.[2] || "Áttekintés";
   const visibleWorkspaces = (
     workspaceItems.length ? workspaceItems : me.workspaces || me.memberships
   ).filter(
@@ -1935,6 +1962,7 @@ function App() {
               {label}
             </button>
           ))}
+          <SupportNav active={page === "help"} />
         </nav>
         <div className="sidebar-bottom">
           <span className="status-dot ok" />{" "}
@@ -2004,6 +2032,11 @@ function App() {
               Munkaterületed létrejött. Az előfizetés beállításáig a
               feldolgozási funkciók nem aktívak.
             </p>
+          )}
+          {page === "help" && (
+            <Suspense fallback={<p role="status">Segédlet betöltése…</p>}>
+              <HelpPage />
+            </Suspense>
           )}
           {page === "dashboard" && (
             <>

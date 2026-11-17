@@ -1,0 +1,137 @@
+{
+  "id": "gyakori-hibak",
+  "topic": "hibak",
+  "title": "Gyakori kérdések és hibák",
+  "summary": "A hibaelhárítás első lépése a pontos munkaterület, művelet és szerverállapot azonosítása.",
+  "order": 36,
+  "blocks": [
+    {
+      "type": "heading",
+      "text": "Mire való, és mikor használd?"
+    },
+    {
+      "type": "paragraph",
+      "text": "A hibaelhárítás első lépése a pontos munkaterület, művelet és szerverállapot azonosítása. Egy hálózati hiba nem bizonyítja, hogy a kérés nem mentődött; a vak újraküldés duplikált vagy ellentétes döntést okozhat."
+    },
+    {
+      "type": "heading",
+      "text": "Hozzáférés és előfeltételek"
+    },
+    {
+      "type": "paragraph",
+      "text": "A hibát kiváltó képernyőhöz tartozó hozzáférés szükséges. A jogosultság vagy referenciaállapot hiánya nem javítható kliensoldali védelem kikapcsolásával. Termék- vagy importazonosítót titok nélkül jegyezz fel."
+    },
+    {
+      "type": "note",
+      "title": "Menüútvonal",
+      "text": "Minden képernyő / Hibajelzés"
+    },
+    {
+      "type": "heading",
+      "text": "Mezők, állapotok és gombok"
+    },
+    {
+      "type": "table",
+      "caption": "A képernyő elemeinek jelentése",
+      "headers": [
+        "Elem",
+        "Mit jelent és mire figyelj?"
+      ],
+      "rows": [
+        [
+          "401",
+          "Lejárt vagy hiányzó hitelesítés. Új belépés után ellenőrizd a munkaterületet és a művelet állapotát."
+        ],
+        [
+          "403",
+          "Nincs megfelelő jog, erőforráshatókör vagy friss újraazonosítás. A kontextushoz tartozó adminisztrátor segít."
+        ],
+        [
+          "404",
+          "Nem létező vagy más ügyfélhez tartozó erőforrás. Ellenőrizd a munkaterületet és az azonosítót."
+        ],
+        [
+          "409",
+          "Állapot-, revízió-, token- vagy idempotenciaütközés. Friss adatok, új előnézet/ellenőrzés szükséges."
+        ],
+        [
+          "422",
+          "Érvénytelen mező, tartomány, kulcs vagy kiválasztás. Javítsd a konkrét bemenetet."
+        ],
+        [
+          "429",
+          "Túl sok próbálkozás; várd ki a korlátozást. Ne automatizálj ismétlést."
+        ],
+        [
+          "503",
+          "Hiányzó aktív katalógus vagy nem elérhető szolgáltatás. Üzemeltetői vizsgálat kellhet."
+        ]
+      ]
+    },
+    {
+      "type": "heading",
+      "text": "Lépésről lépésre – ellenőrzött demópélda"
+    },
+    {
+      "type": "steps",
+      "items": [
+        "Állj meg, és jegyezd fel: melyik képernyőn, melyik gomb után, melyik ügyfélben jelentkezett a hiba.",
+        "Olvasd el a teljes felületi hibaüzenetet és a futás/termék aktuális állapotát.",
+        "409-nél töltsd újra az adatot, és kérj új előnézetet. A régi döntést ne küldd el vakon új revízióval.",
+        "Részleges futásnál nézd meg a tételes hibákat; a sikeres rész megmarad, nem kell automatikusan teljes új import.",
+        "Joghiánynál a tényleges hozzáférési listát és erőforrásmódot ellenőriztesd. Szolgáltatáshibánál a meglévő futásazonosítót add az üzemeltetőnek.",
+        "Hibajegybe csak titokmentes üzenetet, időpontot, műveletet és szintetikus mintát tegyél."
+      ]
+    },
+    {
+      "type": "note",
+      "title": "Várt eredmény",
+      "text": "A következő lépés a hiba valódi okát kezeli. Az új előnézet új megerősítést igényelhet; az eltűnő hiba önmagában nem bizonyítja minden rekord sikerét."
+    },
+    {
+      "type": "image",
+      "src": "/help/images/tomeges-olvasasi-jog.png",
+      "alt": "Tömeges előnézet alkalmazási jog nélküli felhasználónál",
+      "caption": "Az olvasó megnézheti az előnézetet, de nincs alkalmazás vagy jóváhagyás gomb."
+    },
+    {
+      "type": "heading",
+      "text": "Ha nem sikerül"
+    },
+    {
+      "type": "list",
+      "items": [
+        "Ha továbbra sem egyértelmű: ne törölj adatot a helyreállítás kedvéért; az adminisztrátor vizsgálja a naplót.",
+        "Képernyőkép előtt rejtsd el a személyes adatokat és titkokat. TOTP/QR, helyreállítási kód, meghívólink vagy token nem kérhető támogatási bizonyítékként.",
+        "Ismert hiányok: nincs kész UNAS-fájlgenerálás, AI-kutatás/kredit/fizetés. A RELEASE-CANDIDATE-02 tartalmazza a #43 importjavításait: biztonságos feldolgozatlan-importtörlés és kompakt előnézet. A feldolgozott import továbbra sem törölhető."
+      ]
+    },
+    {
+      "type": "image",
+      "src": "/help/images/revizio-utkozes.png",
+      "alt": "Valódi szerveres 409 revízióütközés kézi paramétermentéskor",
+      "caption": "Közben másik döntés módosította a terméket. A felület nem ismétli meg vakon a mentést; előbb friss helyadat kell."
+    },
+    {
+      "type": "heading",
+      "text": "Mi változik, és mi marad meg?"
+    },
+    {
+      "type": "paragraph",
+      "text": "A visszakeresés és frissítés nem automatikus visszavonás. A törlés, reset, zárolásfeloldás és csoportos alkalmazás külön döntés; a hibaüzenet elhallgattatása nem indok rájuk."
+    },
+    {
+      "type": "heading",
+      "text": "Következő lépés"
+    },
+    {
+      "type": "paragraph",
+      "text": "A kapcsolódó útmutatók az alábbi sorrendben segítenek folytatni a munkát. A látható gombok mindig az aktuális munkaterület és tényleges jogosultságok szerint használhatók."
+    }
+  ],
+  "related": [
+    "import-elozmenyek-hibak",
+    "tomeges-jovahagyas",
+    "muveleti-naplo"
+  ]
+}

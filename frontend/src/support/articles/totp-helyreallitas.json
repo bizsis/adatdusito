@@ -1,0 +1,142 @@
+{
+  "id": "totp-helyreallitas",
+  "topic": "hozzaferes",
+  "title": "TOTP, helyreállítási kódok és elveszett eszköz",
+  "summary": "A TOTP egy hitelesítőalkalmazásban időszakosan változó második faktor.",
+  "order": 4,
+  "blocks": [
+    {
+      "type": "heading",
+      "text": "Mire való, és mikor használd?"
+    },
+    {
+      "type": "paragraph",
+      "text": "A TOTP egy hitelesítőalkalmazásban időszakosan változó második faktor. A helyreállítási kód nem jelszó és nem újrafelhasználható TOTP: egyetlen alkalomra való tartalék."
+    },
+    {
+      "type": "heading",
+      "text": "Hozzáférés és előfeltételek"
+    },
+    {
+      "type": "paragraph",
+      "text": "A saját Biztonság oldal és friss újraazonosítás szükséges. Az új aktiválást a központi szabályzat engedélyezi; bizonyos szerepköröknél a második faktor kötelező lehet. Az alkalmazás órájának pontosnak kell lennie."
+    },
+    {
+      "type": "note",
+      "title": "Menüútvonal",
+      "text": "Biztonság / TOTP és helyreállítási kódok"
+    },
+    {
+      "type": "heading",
+      "text": "Mezők, állapotok és gombok"
+    },
+    {
+      "type": "table",
+      "caption": "A képernyő elemeinek jelentése",
+      "headers": [
+        "Elem",
+        "Mit jelent és mire figyelj?"
+      ],
+      "rows": [
+        [
+          "TOTP beállítása",
+          "QR-kódot és kézi beállítási titkot ad. Ezeket kizárólag a saját hitelesítőalkalmazásodba vidd át."
+        ],
+        [
+          "Aktiválási ellenőrzőkód",
+          "Hat számjegy a hitelesítőalkalmazásból; a QR megjelenítése még nem aktiválás."
+        ],
+        [
+          "TOTP-eszköz cseréje",
+          "Új titok megerősítésével cseréli az eszközt; a régi titok nem archiválási adat."
+        ],
+        [
+          "Új helyreállítási kódok",
+          "Új készletet ad, a korábbi készlet érvényét veszti."
+        ],
+        [
+          "TOTP visszavonása és kijelentkezés",
+          "Kikapcsolja a faktort és kijelentkeztet; kötelező szabályzatnál új beállítás válhat szükségessé."
+        ]
+      ]
+    },
+    {
+      "type": "heading",
+      "text": "Lépésről lépésre – ellenőrzött demópélda"
+    },
+    {
+      "type": "steps",
+      "items": [
+        "Nyisd meg: Biztonság → TOTP és helyreállítási kódok. Ellenőrizd az állapotot és a maradék kódok számát.",
+        "Újraazonosítás után válaszd a TOTP beállítása gombot. A megjelenő titkot ne fotózd és ne másold ügyféltámogatási üzenetbe.",
+        "A saját hitelesítőalkalmazásodban rögzítsd a beállítást; a hatjegyű kódot írd az Aktiválási ellenőrzőkód mezőbe.",
+        "Kattints a TOTP aktiválása gombra. A most megjelenő egyszer használható helyreállítási kódokat mentsd biztonságos, elkülönített helyre.",
+        "A következő belépésnél ellenőrizd az új faktort. Elveszett eszköznél a belépő képernyő helyreállítási módját és egy még fel nem használt kódot használd."
+      ]
+    },
+    {
+      "type": "note",
+      "title": "Várt eredmény",
+      "text": "A státusz aktív TOTP-eszközt jelez. Az aktiválás a többi munkamenetet visszavonja; a kódok később nem olvashatók vissza. A kézikönyv képei szándékosan nem tartalmaznak QR-kódot vagy titkot."
+    },
+    {
+      "type": "image",
+      "src": "/help/images/totp-allapot.png",
+      "alt": "TOTP inaktív állapot és beállításindító gomb",
+      "caption": "A kézikönyv nem rögzít QR-kódot, titkot vagy helyreállítási kódokat."
+    },
+    {
+      "type": "image",
+      "src": "/help/images/admin-helyreallitas.png",
+      "alt": "Felügyelt TOTP-helyreállítás üres kérőűrlapja",
+      "caption": "A két adminisztrátoros folyamat titkos egyszeri kérése nem látható."
+    },
+    {
+      "type": "heading",
+      "text": "Felügyelt helyreállítás adminisztrátornak"
+    },
+    {
+      "type": "steps",
+      "items": [
+        "A superadmin a Biztonság → Felügyelt TOTP-helyreállítás részben legalább három karakterrel keresse az érintett felhasználót, és válassza ki a fiókot.",
+        "Az ellenőrzés dokumentált indoka mezőben 20–500 karakterrel írja le az elvégzett személyazonosítást. Kattintson a Helyreállítás jóváhagyásának kérése gombra.",
+        "Az egyszeri kérést kizárólag biztonságos csatornán adja át egy másik jogosult superadminnak. A kézikönyvbe vagy képernyőképbe ne kerüljön.",
+        "A másik superadmin a saját frissen újraazonosított munkamenetében illessze a kérést a jóváhagyó mezőbe, majd használja a Másik superadminként jóváhagyom gombot.",
+        "Az érintett következő belépésénél új TOTP-beállítás szükséges. Az adminisztrátor jelszócserével nem kerüli meg ezt a folyamatot."
+      ]
+    },
+    {
+      "type": "heading",
+      "text": "Ha nem sikerül"
+    },
+    {
+      "type": "list",
+      "items": [
+        "Hibás vagy lejárt kód: ellenőrizd az eszköz idejét, és használd az aktuális kódot. A már felhasznált helyreállítási kód nem használható újra.",
+        "403: újraazonosítás vagy a kötelező MFA-szabály teljesítése hiányozhat.",
+        "Minden eszköz és kód elveszett: az adminisztrátori helyreállítás két külön jogosult superadmin közreműködését igényli; nem intézhető sima jelszócserével."
+      ]
+    },
+    {
+      "type": "heading",
+      "text": "Mi változik, és mi marad meg?"
+    },
+    {
+      "type": "paragraph",
+      "text": "A faktor cseréje vagy visszavonása belépési jogosultságot érint, üzleti adatot nem töröl. A rendszer nem kér chatben QR-t, TOTP-t vagy helyreállítási kódot."
+    },
+    {
+      "type": "heading",
+      "text": "Következő lépés"
+    },
+    {
+      "type": "paragraph",
+      "text": "A kapcsolódó útmutatók az alábbi sorrendben segítenek folytatni a munkát. A látható gombok mindig az aktuális munkaterület és tényleges jogosultságok szerint használhatók."
+    }
+  ],
+  "related": [
+    "sajat-fiok-biztonsag",
+    "passkey-google-regisztracio",
+    "beallitasok-hitelesites"
+  ]
+}

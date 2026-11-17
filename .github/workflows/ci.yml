@@ -10,7 +10,7 @@ name: Adatdúsító CI
 
 on:
   push:
-    branches: [main, codex/category-03d-full-integration, codex/release-candidate-01]
+    branches: [main, codex/category-03d-full-integration, codex/release-candidate-01, codex/help-01, codex/help-02-complete-manual, codex/release-candidate-02]
   pull_request:
   workflow_dispatch:
 
@@ -19,8 +19,8 @@ permissions:
 
 concurrency:
   group: ci-${{ github.event.pull_request.number || github.ref }}
-  # Superseded PR pushes are cancelled; every main commit gets a full run.
-  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+  # Superseded PR and these integration branches cancel old runs; main keeps every run.
+  cancel-in-progress: ${{ github.event_name == 'pull_request' || (github.event_name == 'push' && (github.ref == 'refs/heads/codex/help-02-complete-manual' || github.ref == 'refs/heads/codex/release-candidate-02')) }}
 
 env:
   PYTHON_VERSION: "3.12" # matches backend/Dockerfile
@@ -33,6 +33,16 @@ jobs:
     name: Backend tests
     runs-on: ubuntu-24.04
     timeout-minutes: 20
+    services:
+      rc02-import-mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_ROOT_PASSWORD: rc02-ci-only-throwaway
+          MYSQL_DATABASE: adatdusito_dev
+        ports: ["33307:3306"]
+        options: >-
+          --health-cmd="mysqladmin ping -h 127.0.0.1 --silent"
+          --health-interval=5s --health-timeout=3s --health-retries=30
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -57,6 +67,13 @@ jobs:
           --ignore-glob='*_browser.py'
           --ignore=scripts/tests/test_emag_menu_export.py
           --junitxml=reports/backend.xml
+      - name: RC-02 import API regression on isolated MySQL 8 (no reference database)
+        env:
+          APP_DATABASE_URL: mysql+pymysql://root:rc02-ci-only-throwaway@127.0.0.1:33307/adatdusito_dev
+          RC02_FIXTURE_ACK: isolated-release-candidate-02
+        run: |
+          set -o pipefail
+          python scripts/mysql_rc02_import_check.py 2>&1 | tee reports/mysql-rc02-import.log
       - name: Test summary
         if: always()
         run: python .github/scripts/ci_report.py junit reports/backend.xml --title "Backend tests" --summary
@@ -175,7 +192,7 @@ jobs:
           cache-dependency-path: frontend/package-lock.json
       - run: npm ci --no-audit --no-fund
       - name: Blocking frontend lint and configuration tests
-        run: npm run lint && npm run test:lint
+        run: npm run lint && npm test
       - name: TypeScript type check (tsc --noEmit, frontend/tsconfig.json)
         run: npx tsc --noEmit -p tsconfig.json --pretty false
       - name: Production build

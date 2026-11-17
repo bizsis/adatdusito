@@ -1,0 +1,124 @@
+{
+  "id": "belepes-munkaterulet",
+  "topic": "elso-lepesek",
+  "title": "Bejelentkezés és munkaterület kiválasztása",
+  "summary": "A munkaterület határozza meg, melyik ügyfél beszállítóit, termékeit és hozzáféréseit látod.",
+  "order": 1,
+  "blocks": [
+    {
+      "type": "heading",
+      "text": "Mire való, és mikor használd?"
+    },
+    {
+      "type": "paragraph",
+      "text": "A munkaterület határozza meg, melyik ügyfél beszállítóit, termékeit és hozzáféréseit látod. A közös kategóriafa minden ügyfélnek ugyanaz; az árak, készletek és importok ügyfelenként elkülönülnek. Egy segédletlink megnyitása nem vált ügyfelet."
+    },
+    {
+      "type": "heading",
+      "text": "Hozzáférés és előfeltételek"
+    },
+    {
+      "type": "paragraph",
+      "text": "Érvényes fiók és aktív munkamenet szükséges. A munkaterületlistában csak az engedélyezett ügyfelek szerepelnek. A Rendszerszint központi adminisztráció, nem egy új ügyfél. Ügyféladatokkal ott ne kezdj importálni."
+    },
+    {
+      "type": "note",
+      "title": "Menüútvonal",
+      "text": "Fejléc / Munkaterület"
+    },
+    {
+      "type": "heading",
+      "text": "Mezők, állapotok és gombok"
+    },
+    {
+      "type": "table",
+      "caption": "A képernyő elemeinek jelentése",
+      "headers": [
+        "Elem",
+        "Mit jelent és mire figyelj?"
+      ],
+      "rows": [
+        [
+          "Bejelentkezés",
+          "Felhasználónév vagy e-mail és jelszó; a Google/passkey csak központi engedélyezés után látszik."
+        ],
+        [
+          "Munkaterület keresése",
+          "Szűkíti az engedélyezett ügyfelek listáját; nem ad új jogosultságot."
+        ],
+        [
+          "Munkaterület",
+          "A választás után a szerver újratölti a munkaterületet és a hozzá tartozó menüket."
+        ],
+        [
+          "További találatok",
+          "Nagy listán további ügyfeleket tölt be; a keresést előbb érdemes pontosítani."
+        ]
+      ]
+    },
+    {
+      "type": "heading",
+      "text": "Lépésről lépésre – ellenőrzött demópélda"
+    },
+    {
+      "type": "steps",
+      "items": [
+        "Jelentkezz be a saját, rendszergazdától kapott fiókoddal. Kötelező jelszócsere vagy második faktor esetén előbb fejezd be az ellenőrzést.",
+        "A bal felső Munkaterület keresése mezőbe írd be: Segédlet demó. Ez az útmutatók szintetikus példaügyfele; a saját rendszerben a saját ügyfeledet válaszd.",
+        "A Munkaterület listából válaszd az ügyfelet. Várd meg az Áttekintés és a menük frissülését.",
+        "Ellenőrizd a munkaterület nevét, majd nyisd meg a Beszállítói import oldalt. Ha nem látszik, előbb kérj jogosultságot; ne próbálj más ügyfélben dolgozni.",
+        "Váltás előtt mentsd a szükséges szerkesztést. A visszaállított böngészőlap önmagában nem igazolja, hogy a szerver még ugyanazt az ügyfelet használja."
+      ]
+    },
+    {
+      "type": "note",
+      "title": "Várt eredmény",
+      "text": "A kijelölt ügyfél neve látható a választóban; a menük az ott érvényes jogaidat tükrözik. A Segédlet üzleti jogosultság nélkül is megnyitható."
+    },
+    {
+      "type": "image",
+      "src": "/help/images/ugyfelek.png",
+      "alt": "Szintetikus ügyfelek listája",
+      "caption": "A demóadatok nem valódi ügyféladatok."
+    },
+    {
+      "type": "image",
+      "src": "/help/images/munkaterulet.png",
+      "alt": "Munkaterületválasztó a Segédlet demó ügyféllel",
+      "caption": "A művelet előtt mindig az ügyfél nevét ellenőrizd."
+    },
+    {
+      "type": "heading",
+      "text": "Ha nem sikerül"
+    },
+    {
+      "type": "list",
+      "items": [
+        "401: a munkamenet lejárt. Jelentkezz be újra, majd ellenőrizd ismét az ügyfelet.",
+        "403 vagy hiányzó ügyfél: aktív tagság, ügyfélengedély és erőforráshatókör ellenőrzése szükséges az adminisztrátornál.",
+        "Üres keresés: töröld a keresőkifejezést, vagy kérj további találatokat. Nem minden felhasználónak van Rendszerszint opciója."
+      ]
+    },
+    {
+      "type": "heading",
+      "text": "Mi változik, és mi marad meg?"
+    },
+    {
+      "type": "paragraph",
+      "text": "A váltás a munkavégzés környezetét változtatja; nem másol termékeket és nem írja át a közös kategóriafát. Kijelentkezéskor a szerveres munkamenet megszűnik."
+    },
+    {
+      "type": "heading",
+      "text": "Következő lépés"
+    },
+    {
+      "type": "paragraph",
+      "text": "A kapcsolódó útmutatók az alábbi sorrendben segítenek folytatni a munkát. A látható gombok mindig az aktuális munkaterület és tényleges jogosultságok szerint használhatók."
+    }
+  ],
+  "related": [
+    "beszallito-letrehozasa",
+    "jogosultsagok",
+    "sajat-fiok-biztonsag"
+  ]
+}
