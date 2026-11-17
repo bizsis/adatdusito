@@ -41,7 +41,37 @@ def upgrade():
 
 
 def downgrade():
-    # Explicit schema rollback removes only the newly introduced generated artifacts.
+    # MySQL DDL commits immediately. Preflight the lower revisions' decision
+    # guards before dropping anything, otherwise a later refusal rolls back the
+    # Alembic version update but cannot restore already dropped template tables.
+    destination = op.get_context().opts.get("destination_rev", "0011")
+    target = int(destination) if str(destination).isdigit() else 0
+    c = op.get_bind()
+    guards = [
+        (
+            11,
+            "SELECT COUNT(*) FROM preparation_approvals",
+            "Preparation approvals exist",
+        ),
+        (10, "SELECT COUNT(*) FROM parameter_aliases", "Parameter decisions exist"),
+        (
+            10,
+            "SELECT COUNT(*) FROM product_parameter_values WHERE locked = 1 OR origin = 'user'",
+            "Parameter decisions exist",
+        ),
+        (9, "SELECT COUNT(*) FROM category_maps", "Category decisions exist"),
+        (9, "SELECT COUNT(*) FROM product_events", "Category decisions exist"),
+        (
+            9,
+            "SELECT COUNT(*) FROM product_classifications WHERE locked = 1",
+            "Category decisions exist",
+        ),
+    ]
+    for level, query, reason in guards:
+        if target < level and c.scalar(sa.text(query)):
+            raise RuntimeError(
+                f"{reason}; restore the verified backup instead of downgrading."
+            )
+    # drop_table also removes its own indexes, including those needed by a FK.
     op.drop_table("import_template_chunks")
-    op.drop_index("ix_import_template_run", table_name="import_templates")
     op.drop_table("import_templates")

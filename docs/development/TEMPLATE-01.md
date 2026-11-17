@@ -51,6 +51,6 @@ npm --prefix frontend test
 PYTHONPATH=backend .venv/bin/pytest -q backend/tests/test_template_browser.py
 ```
 
-Az új migrációt SQLite round-trip teszt, a tényleges MySQL FK-kaszkádot és generálást az elkülönített RC02 MySQL CI-próba ellenőrzi. Ez a próba kizárólag üres, helyi teszt-MySQL-en futtatható; nem VPS-telepítési parancs. A meglévő MySQL migrációs CI-job változatlan.
+Az új migrációt SQLite round-trip teszt, a tényleges MySQL FK-kaszkádot és generálást az elkülönített RC02 MySQL CI-próba ellenőrzi. Ez a próba kizárólag üres, helyi teszt-MySQL-en futtatható; nem VPS-telepítési parancs. A meglévő MySQL migrációs CI-job változatlan. Az új downgrade a régebbi revíziók döntésvédelmeit több lépéses visszaállításnál még az első DDL előtt ellenőrzi; MySQL-en a táblával együtt távolítja el az idegen kulcshoz szükséges indexet.
 
 Telepítéskor az `0012` upgrade és a backend/worker/frontend újraépítése szükséges, a szokásos mentési/PR-jóváhagyási folyamatban. Ebben a fejlesztésben nem történt VPS-művelet vagy `.env`-módosítás.
