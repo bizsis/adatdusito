@@ -1,0 +1,124 @@
+{
+  "id": "passkey-google-regisztracio",
+  "topic": "hozzaferes",
+  "title": "Passkey, Google és e-mailes regisztráció",
+  "summary": "A passkey az eszköz natív azonosítását használja; a Google-belépés külső fiókkal igazol.",
+  "order": 5,
+  "blocks": [
+    {
+      "type": "heading",
+      "text": "Mire való, és mikor használd?"
+    },
+    {
+      "type": "paragraph",
+      "text": "A passkey az eszköz natív azonosítását használja; a Google-belépés külső fiókkal igazol. Azonos e-mail-cím önmagában nem kapcsol össze két fiókot. A regisztráció fiókot hoz létre, nem automatikus ügyfélhozzáférést."
+    },
+    {
+      "type": "heading",
+      "text": "Hozzáférés és előfeltételek"
+    },
+    {
+      "type": "paragraph",
+      "text": "A központi Hitelesítés és bejelentkezés beállításban az adott módot engedélyezni kell. Passkeyhez HTTPS, támogató böngésző és felhasználó-ellenőrzésre képes eszköz kell. Kapcsoláshoz saját bejelentkezett fiók és friss újraazonosítás szükséges."
+    },
+    {
+      "type": "note",
+      "title": "Menüútvonal",
+      "text": "Bejelentkezés; Biztonság / Passkey; Google"
+    },
+    {
+      "type": "heading",
+      "text": "Mezők, állapotok és gombok"
+    },
+    {
+      "type": "table",
+      "caption": "A képernyő elemeinek jelentése",
+      "headers": [
+        "Elem",
+        "Mit jelent és mire figyelj?"
+      ],
+      "rows": [
+        [
+          "Eszköz megnevezése",
+          "Emberi név, például Saját laptop; nem a kulcs titka."
+        ],
+        [
+          "Passkey hozzáadása / törlése",
+          "A böngésző rendszerablaka rögzíti az eszközt; a törlés ezt az eszközt vonja vissza."
+        ],
+        [
+          "Saját Google-fiók összekapcsolása",
+          "A Google jóváhagyó oldalára visz; csak a saját fiókodat kapcsold."
+        ],
+        [
+          "Nyilvános regisztráció",
+          "Engedélyezés esetén e-mailes megerősítést igénylő regisztrációs űrlap jelenhet meg."
+        ]
+      ]
+    },
+    {
+      "type": "heading",
+      "text": "Lépésről lépésre – ellenőrzött demópélda"
+    },
+    {
+      "type": "steps",
+      "items": [
+        "A Biztonság oldalon végezd el az újraazonosítást, majd nyisd meg a Passkey hitelesítőeszközök részt.",
+        "Adj nevet az eszköznek, majd kattints a Passkey hozzáadása gombra. A rendszerablakban fejezd be a személyazonosság ellenőrzését.",
+        "A listában ellenőrizd az új eszköz nevét. Kijelentkezés előtt legyen legalább egy kipróbált belépési módod.",
+        "Google-hoz válaszd a Saját Google-fiók összekapcsolása gombot és a megfelelő Google-fiókot. Visszatérés után ellenőrizd a kapcsolt állapotot.",
+        "Új fiók regisztrációjánál töltsd ki az elérhető regisztrációs űrlapot, majd a saját e-mailben kapott megerősítő hivatkozást nyisd meg. Ügyfélhozzáféréshez külön meghívás szükséges lehet."
+      ]
+    },
+    {
+      "type": "note",
+      "title": "Várt eredmény",
+      "text": "A passkey a saját eszközlistádban szerepel, a Google-rész pedig hozzákapcsolt állapotot jelez. A külső szolgáltató és az operációs rendszer ablaka eltérhet; a kézikönyv nem ígér minden eszközön azonos megjelenést."
+    },
+    {
+      "type": "image",
+      "src": "/help/images/passkey-allapot.png",
+      "alt": "Passkey-eszközök saját állapotnézete",
+      "caption": "A külső eszközablakot a böngésző és operációs rendszer adja."
+    },
+    {
+      "type": "image",
+      "src": "/help/images/google-allapot.png",
+      "alt": "A Google-fiók kapcsolatának állapota",
+      "caption": "Az e-mail-egyezés nem automatikus fiókösszekapcsolás."
+    },
+    {
+      "type": "heading",
+      "text": "Ha nem sikerül"
+    },
+    {
+      "type": "list",
+      "items": [
+        "Megszakított rendszerablak: a passkey nincs bizonyítottan létrehozva; ellenőrizd a listát, mielőtt újra próbálod.",
+        "Lejárt regisztrációs vagy Google-visszatérési hivatkozás: indíts új folyamatot a belépőoldalról, ne más felhasználó linkjét használd.",
+        "Nem látszik a mód: központi engedélyezés vagy eszköztámogatás hiányzik; ezt nem oldja meg egy munkatársi szerepkör."
+      ]
+    },
+    {
+      "type": "heading",
+      "text": "Mi változik, és mi marad meg?"
+    },
+    {
+      "type": "paragraph",
+      "text": "A hitelesítőeszköz törlése nem törli a fiókot. Google-kapcsolat megszüntetése előtt ellenőrizd a másik belépési módot; az OIDC titkot kizárólag a rendszergazda kezeli, nem a saját profilodban."
+    },
+    {
+      "type": "heading",
+      "text": "Következő lépés"
+    },
+    {
+      "type": "paragraph",
+      "text": "A kapcsolódó útmutatók az alábbi sorrendben segítenek folytatni a munkát. A látható gombok mindig az aktuális munkaterület és tényleges jogosultságok szerint használhatók."
+    }
+  ],
+  "related": [
+    "sajat-fiok-biztonsag",
+    "meghivok",
+    "beallitasok-hitelesites"
+  ]
+}

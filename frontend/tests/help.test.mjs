@@ -50,7 +50,11 @@ test("title and full body search are accent-insensitive and combine terms", () =
       .searchArticles(articles, "xlsx")
       .some((a) => a.id === "csv-xlsx-feltoltes"),
   );
-  assert.ok(model.searchArticles(articles, "cp1250").length === 0);
+  assert.ok(
+    model
+      .searchArticles(articles, "cp1250")
+      .some((a) => a.id === "csv-xlsx-feltoltes"),
+  );
   assert.ok(
     model
       .searchArticles(articles, "fejlec elvalaszto")
@@ -102,7 +106,7 @@ test("article deep links, query context and malformed links are safe", () => {
 test("repository content has eight topics, unique URLs and valid internal links", () => {
   assert.equal(topics.length, 8);
   assert.equal(new Set(topics.map((t) => t.id)).size, 8);
-  assert.ok(articles.length >= 12);
+  assert.ok(articles.length >= 36);
   const ids = new Set(articles.map((a) => a.id));
   assert.equal(ids.size, articles.length);
   for (const a of articles) {
@@ -122,6 +126,7 @@ test("repository content has eight topics, unique URLs and valid internal links"
           "warning",
           "link",
           "image",
+          "table",
         ].includes(block.type),
       );
       if ("items" in block)
@@ -202,4 +207,140 @@ test("renderer supports ordered steps, notes, captions and multiple pictures", (
   assert.ok(html.includes('role="note"'));
   assert.ok(html.includes("<figcaption>Képaláírás</figcaption>"));
   assert.equal((html.match(/<figure>/g) || []).length, 2);
+});
+
+test("manual field tables are searchable, escaped and structurally valid", () => {
+  const table = {
+    type: "table",
+    caption: "Mértékegységek",
+    headers: ["Mező", "Jelentés"],
+    rows: [
+      ["cp1250", "Közép-európai"],
+      ["<img onerror=alert(1)>", "<script>bad</script>"],
+    ],
+  };
+  const html = renderToStaticMarkup(
+    React.createElement(ArticleBody, { blocks: [table] }),
+  );
+  assert.ok(html.includes("<caption>Mértékegységek</caption>"));
+  assert.ok(html.includes('scope="col"') && html.includes('scope="row"'));
+  assert.ok(!html.includes("<script") && !html.includes("<img"));
+  assert.ok(html.includes("&lt;script&gt;"));
+  const article = {
+    id: "demo",
+    title: "Demo",
+    summary: "",
+    topic: "import",
+    order: 1,
+    related: [],
+    blocks: [table],
+  };
+  assert.equal(
+    model.searchArticles([article], "mertekegysegek cp1250").length,
+    1,
+  );
+  assert.equal(
+    model.searchArticles([article], "cp1250 hiányzó-kifejezés").length,
+    0,
+  );
+  for (const a of articles)
+    for (const b of a.blocks.filter((b) => b.type === "table")) {
+      assert.ok(b.caption && b.headers.length >= 2 && b.rows.length >= 3, a.id);
+      assert.ok(
+        b.rows.every(
+          (row) =>
+            row.length === b.headers.length &&
+            row.every((v) => typeof v === "string"),
+        ),
+        a.id,
+      );
+    }
+});
+
+test("coverage inventory links every real menu and article to existing source evidence", async () => {
+  const coverage = JSON.parse(
+    await readFile("src/support/coverage.json", "utf8"),
+  );
+  const ids = new Set(articles.map((a) => a.id));
+  const menus = [
+    "Munkaterület",
+    "Áttekintés",
+    "Ügyfelek",
+    "Termékadatok",
+    "Kategóriák",
+    "Paraméterkereső",
+    "Beszállítói import",
+    "Export",
+    "Rendszerhozzáférések",
+    "Munkatársak és hozzáférések",
+    "Rendszerbeállítások",
+    "Napló / Audit",
+    "Segédlet",
+    "Biztonság",
+  ];
+  for (const menu of menus)
+    assert.ok(
+      coverage.some((r) => r.screen.includes(menu)),
+      `missing ${menu}`,
+    );
+  for (const r of coverage) {
+    assert.ok(ids.has(r.article), r.article);
+    assert.ok(
+      r.access &&
+        r.actions &&
+        ["documented", "partial", "unavailable"].includes(r.status),
+    );
+    await access(`src/${r.source}`);
+    if (r.api.endsWith(".py")) await access(`../backend/app/${r.api}`);
+  }
+  for (const a of articles) {
+    assert.ok(
+      coverage.some((r) => r.article === a.id),
+      `unlisted article ${a.id}`,
+    );
+    for (const heading of [
+      "Mire való, és mikor használd?",
+      "Hozzáférés és előfeltételek",
+      "Mezők, állapotok és gombok",
+      "Lépésről lépésre – ellenőrzött demópélda",
+      "Ha nem sikerül",
+      "Mi változik, és mi marad meg?",
+    ])
+      assert.ok(
+        a.blocks.some((b) => b.type === "heading" && b.text === heading),
+        `${a.id}: ${heading}`,
+      );
+    assert.ok(
+      a.blocks.some((b) => b.type === "steps" && b.items.length >= 5),
+      a.id,
+    );
+    assert.ok(
+      a.blocks.some((b) => b.type === "table"),
+      a.id,
+    );
+    assert.ok(
+      a.blocks.some((b) => b.type === "note" && b.title === "Várt eredmény"),
+      a.id,
+    );
+  }
+  assert.ok(coverage.filter((r) => r.status === "unavailable").length >= 4);
+});
+
+test("every sidebar page in the actual application has an inventory row", async () => {
+  const source=await readFile('src/main.tsx','utf8');
+  const tree=ts.createSourceFile('main.tsx',source,ts.ScriptTarget.Latest,true,ts.ScriptKind.TSX);
+  const coverage=JSON.parse(await readFile('src/support/coverage.json','utf8'));
+  let pages;
+  function walk(node) {
+    if(ts.isVariableDeclaration(node) && ts.isIdentifier(node.name) && node.name.text==='pages') pages=node.initializer;
+    ts.forEachChild(node,walk);
+  }
+  walk(tree);assert.ok(pages);
+  const labels=[];
+  function entries(node) {
+    if(ts.isArrayLiteralExpression(node) && node.elements.length===3 && node.elements.every(ts.isStringLiteral)) labels.push(node.elements[2].text);
+    ts.forEachChild(node,entries);
+  }
+  entries(pages);assert.ok(labels.length>=10);
+  for(const label of labels) assert.ok(coverage.some(r=>r.screen.includes(label)),`undocumented actual menu: ${label}`);
 });

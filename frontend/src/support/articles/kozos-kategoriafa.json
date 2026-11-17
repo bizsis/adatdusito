@@ -1,0 +1,133 @@
+{
+  "id": "kozos-kategoriafa",
+  "topic": "kategoriak",
+  "title": "A közös magyar kategóriafa és forrásai",
+  "summary": "A Kategóriák oldal a rögzített 13 magyar főcsoportból induló közös navigáció.",
+  "order": 14,
+  "blocks": [
+    {
+      "type": "heading",
+      "text": "Mire való, és mikor használd?"
+    },
+    {
+      "type": "paragraph",
+      "text": "A Kategóriák oldal a rögzített 13 magyar főcsoportból induló közös navigáció. Nem egy második Marketplace-fa: a forrásprofilok a magyar termékkategóriák paramétereit adják, nem cserélik le a jóváhagyott hierarchiát."
+    },
+    {
+      "type": "heading",
+      "text": "Hozzáférés és előfeltételek"
+    },
+    {
+      "type": "paragraph",
+      "text": "Olvasáshoz reference.read szükséges. A paraméterforrás adminisztrátori szerkesztője és a forráslefedettség karbantartása system.manage joghoz kötött. A pinfo_db referenciaadatbázis olvasási jogosultsága változatlan."
+    },
+    {
+      "type": "note",
+      "title": "Menüútvonal",
+      "text": "Kategóriák"
+    },
+    {
+      "type": "heading",
+      "text": "Mezők, állapotok és gombok"
+    },
+    {
+      "type": "table",
+      "caption": "A képernyő elemeinek jelentése",
+      "headers": [
+        "Elem",
+        "Mit jelent és mire figyelj?"
+      ],
+      "rows": [
+        [
+          "Közös kategóriafa",
+          "Csak a 13 jóváhagyott főcsoport a gyökér. Az alkategóriák kibontáskor látszanak."
+        ],
+        [
+          "Kategóriakeresés",
+          "A rögzített fa egészében keres, az útvonal segít megkülönböztetni azonos neveket."
+        ],
+        [
+          "Strukturális pont",
+          "Navigációs gyűjtő; nem minden ilyen ponthoz kell termékparaméter."
+        ],
+        [
+          "Paraméterforrás nélküli kategóriák",
+          "A fix termékkategória látszik, de nincs elérhető egyértelmű profil. Nem azt jelenti, hogy a kategória inaktív."
+        ],
+        [
+          "Paraméter-hozzárendelés szerkesztése",
+          "Adminisztrátori forrásválasztás; a kapcsolás nem írja át a magyar fa szülőkapcsolatait."
+        ],
+        [
+          "Források és tényleges lefedettség",
+          "A rendelkezésre álló forrásállapotok nyilvántartása; nem bizonyít teljes webshop-lefedettséget."
+        ]
+      ]
+    },
+    {
+      "type": "heading",
+      "text": "Lépésről lépésre – ellenőrzött demópélda"
+    },
+    {
+      "type": "steps",
+      "items": [
+        "Nyisd meg a Kategóriák menüt a Közös kategóriafa nézettel.",
+        "Bontsd ki a Háztartási gépek és klíma főcsoportot, majd a Mosógépek és szárítógépek megfelelő ágát.",
+        "Válaszd az Elöltöltős mosógépek kategóriát, és olvasd el a teljes útvonalat és paraméterszámot.",
+        "Keress egy kategórianévre; a keresésből megnyitott találat útvonalát is ellenőrizd.",
+        "Adminisztrátorként csak valóban hibás vagy hiányzó profil esetén nyisd le a Paraméter-hozzárendelés szerkesztése részt, keress a megfelelő forrásra és ellenőrizd mentés előtt.",
+        "A Paraméterforrás nélküli nézetben a hiányt tekintsd paraméterkapcsolati feladatnak, ne a fix kategóriafa törlési javaslatának."
+      ]
+    },
+    {
+      "type": "note",
+      "title": "Várt eredmény",
+      "text": "A főcsoportok és sorrendjük változatlanok, a megfelelő profilhoz kapcsolódó paraméterek és értékek külön lekérdezhetők. Az is_allowed nem dönt a fix magyar fa láthatóságáról."
+    },
+    {
+      "type": "image",
+      "src": "/help/images/kozos-kategoriafa.png",
+      "alt": "A közös kategóriafa 13 magyar főcsoportja",
+      "caption": "Az alkategória csak a szülő kibontásakor jelenik meg."
+    },
+    {
+      "type": "image",
+      "src": "/help/images/kategoria-parameterek.png",
+      "alt": "Elöltöltős mosógépek kategóriarészlete és paraméterei",
+      "caption": "A kép kis szintetikus referenciaállományt használ; a szám nem éles lefedettségi mérés."
+    },
+    {
+      "type": "heading",
+      "text": "Ha nem sikerül"
+    },
+    {
+      "type": "list",
+      "items": [
+        "Nincs paraméter: navigációs gyűjtőnél ez rendben lehet; termékkategóriánál ellenőrizd a forrásprofilt.",
+        "503: aktív katalógus hiányzik; ezt az üzemeltető/adminisztrátor rendezi.",
+        "Eltérő forrásnév: csak jelentés és környezet szerint azonos profilt kapcsolj; a webshopazonosító nem automatikusan eMAG-kategóriaazonosító."
+      ]
+    },
+    {
+      "type": "heading",
+      "text": "Mi változik, és mi marad meg?"
+    },
+    {
+      "type": "paragraph",
+      "text": "A profilkapcsolat az alkalmazásban változik, az eredeti referenciaazonosítók és megengedett értékek megmaradnak. Új kategória vagy szülőkapcsolat nem keletkezik a forrás aktív/inaktív jelzéséből."
+    },
+    {
+      "type": "heading",
+      "text": "Következő lépés"
+    },
+    {
+      "type": "paragraph",
+      "text": "A kapcsolódó útmutatók az alábbi sorrendben segítenek folytatni a munkát. A látható gombok mindig az aktuális munkaterület és tényleges jogosultságok szerint használhatók."
+    }
+  ],
+  "related": [
+    "parameterkereses",
+    "emag-donorprofilok",
+    "termekek-kategorizalasa"
+  ]
+}

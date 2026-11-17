@@ -48,7 +48,11 @@ export function ArticleBody({ blocks }: { blocks: Block[] }) {
       {blocks.map((block, i) => {
         switch (block.type) {
           case "heading":
-            return <h3 key={i}>{block.text}</h3>;
+            return (
+              <h3 key={i} id={`help-section-${i}`} tabIndex={-1}>
+                {block.text}
+              </h3>
+            );
           case "paragraph":
             return <p key={i}>{block.text}</p>;
           case "steps":
@@ -84,6 +88,44 @@ export function ArticleBody({ blocks }: { blocks: Block[] }) {
               <p key={i}>
                 <a href={helpHref(block.article)}>{block.text} →</a>
               </p>
+            );
+          case "table":
+            return (
+              <div
+                key={i}
+                className="help-table"
+                role="region"
+                aria-label={block.caption}
+                tabIndex={0}
+              >
+                <table>
+                  <caption>{block.caption}</caption>
+                  <thead>
+                    <tr>
+                      {block.headers.map((cell, j) => (
+                        <th key={j} scope="col">
+                          {cell}
+                        </th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {block.rows.map((row, j) => (
+                      <tr key={j}>
+                        {row.map((cell, k) =>
+                          k === 0 ? (
+                            <th scope="row" key={k}>
+                              {cell}
+                            </th>
+                          ) : (
+                            <td key={k}>{cell}</td>
+                          ),
+                        )}
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
             );
           case "image":
             return safeImage(block.src) ? (

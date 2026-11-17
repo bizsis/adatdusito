@@ -2,42 +2,127 @@
   "id": "import-jovahagyasa",
   "topic": "import",
   "title": "Import ellenőrzése és jóváhagyása",
-  "summary": "Az előnézet után tudatosan indítsd a feldolgozást, majd ellenőrizd annak eredményét.",
-  "order": 5,
+  "summary": "A jóváhagyás rögzíti a megfeleltetést és engedi a feldolgozást.",
+  "order": 9,
   "blocks": [
     {
-      "type": "image",
-      "src": "/help/images/oszlopok.png",
-      "alt": "Az importban felismert oszlopok jóváhagyás előtti ellenőrzése",
-      "caption": "Először ellenőrizd a megfeleltetést, majd az alábbi jóváhagyási beállításokat."
+      "type": "heading",
+      "text": "Mire való, és mikor használd?"
+    },
+    {
+      "type": "paragraph",
+      "text": "A jóváhagyás rögzíti a megfeleltetést és engedi a feldolgozást. Nem azonos a fájl megtekintésével, a kategóriatérkép jóváhagyásával vagy a későbbi paraméter-előkészítési jóváhagyással."
+    },
+    {
+      "type": "heading",
+      "text": "Hozzáférés és előfeltételek"
+    },
+    {
+      "type": "paragraph",
+      "text": "Jóváhagyásra váró, ellenőrzött futás és imports.approve kell. Olvasási jogosultsággal az elemzés megtekinthető, de a véglegesítő űrlap nem használható. A beszállítót és ügyfelet a döntés előtt újra ellenőrizd."
+    },
+    {
+      "type": "note",
+      "title": "Menüútvonal",
+      "text": "Beszállítói import / Jóváhagyás"
+    },
+    {
+      "type": "heading",
+      "text": "Mezők, állapotok és gombok"
+    },
+    {
+      "type": "table",
+      "caption": "A képernyő elemeinek jelentése",
+      "headers": [
+        "Elem",
+        "Mit jelent és mire figyelj?"
+      ],
+      "rows": [
+        [
+          "Profil neve",
+          "A beszállítói importmegfeleltetés mentett neve, például Segédlet CSV v1."
+        ],
+        [
+          "Jóváhagyott összekapcsolási kulcs",
+          "Csak a megfeleltetett, megengedett azonosítók választhatók; nincs kulcs esetén soronként külön tétel."
+        ],
+        [
+          "Feed típusa",
+          "Részleges, Teljes terméktörzs, Árlista, Készletlista vagy Műszaki adatok; a hiányzó sor jelentése ettől is függ."
+        ],
+        [
+          "Pénzügyi megerősítés",
+          "Az ár és kapcsolódó áfa/pénznem/jelleg értelmezésének kifejezett vállalása; ismeretlen adatot ne állíts bizonyítottnak."
+        ],
+        [
+          "Következő feltöltésnél automatikus feldolgozás",
+          "Csak eltérés nélküli következő fájlnál segít; mostani hibás megfeleltetést nem javít."
+        ],
+        [
+          "Megfeleltetés jóváhagyása és feldolgozás",
+          "A mentett döntés után a worker dolgozza fel a sorokat; nem egyszerű előnézet."
+        ]
+      ]
+    },
+    {
+      "type": "heading",
+      "text": "Lépésről lépésre – ellenőrzött demópélda"
     },
     {
       "type": "steps",
       "items": [
-        "Ellenőrizd az oszlopmegfeleltetést, a mintasorokat és az összekapcsolási javaslatokat.",
-        "Adj felismerhető nevet az importprofilnak. Ha összekapcsolási kulcsot használsz, válassz megbízható, stabil azonosítót a Jóváhagyott összekapcsolási kulcs listából.",
-        "Állítsd be a Feed típusa mezőt. A részleges fájlt ne jelöld Teljes terméktörzsnek, ha nem tartalmazza a teljes állományt.",
-        "Ellenőrizd a pénzügyi mezők jelentését és a vonatkozó jelölőnégyzetet.",
-        "Kattints a Megfeleltetés jóváhagyása és feldolgozás gombra. Várd meg a feldolgozás végét; a Részben sikeres vagy Hibás állapot további ellenőrzést igényel.",
-        "Az Eredeti és értelmezett sorok nézetben nézd meg az eredményt és a sorhibákat."
+        "A demó négy oszlopát az oszlopmegfeleltetési útmutató szerint ellenőrizd.",
+        "A Profil neve legyen Segédlet CSV v1. A demóban válaszd a cikkszámot összekapcsolási kulcsnak, ha stabil, egyedi és teljes.",
+        "Válassz Részleges feedet, mert a két demósor nem a beszállító teljes kínálata.",
+        "A demó nem tartalmaz árat: a pénzügyi értelmezéshez ne írj kitalált nettó/bruttó vagy pénznemadatot. Automatikus következő feldolgozást első próbánál ne engedélyezz.",
+        "Kattints a Megfeleltetés jóváhagyása és feldolgozás gombra, és várd meg a friss állapotot.",
+        "A feldolgozás befejeztével ellenőrizd a sorok állapotát, számlálókat, majd a Termékadatokban keress rá: DEMO-001."
       ]
+    },
+    {
+      "type": "note",
+      "title": "Várt eredmény",
+      "text": "A futás feldolgozási állapotba kerül, majd sikeres, részleges vagy hibás eredményt ad. A sikerességet a tényleges termék és sorállapot igazolja; nem önmagában a gomb megnyomása."
     },
     {
       "type": "image",
       "src": "/help/images/import-jovahagyas.png",
-      "alt": "Az import jóváhagyási beállításai és feldolgozást indító gombja",
-      "caption": "A jóváhagyás adatfeldolgozást indít. A képen tesztfájl beállításai láthatók."
+      "alt": "Importprofil, kulcs és feed a jóváhagyási űrlapon",
+      "caption": "A véglegesítés előtt a kulcsot és a feed típusát is ellenőrizni kell."
     },
     {
-      "type": "warning",
-      "title": "Pontos azonosító szükséges",
-      "text": "Az összekapcsolás azonos beszállítón belül pontos kulcsegyezést használ; egy hasonló név nem elegendő. Újrapróbálás előtt ellenőrizd az előző futás állapotát."
+      "type": "heading",
+      "text": "Ha nem sikerül"
     },
     {
-      "type": "note",
-      "title": "Automatikus következő feldolgozás",
-      "text": "A következő feltöltés automatikus feldolgozását csak ellenőrzött profilnál engedélyezd. Eltérő fájlszerkezet új ellenőrzést igényelhet."
+      "type": "list",
+      "items": [
+        "403: a megtekintéshez adott jog nem elég a jóváhagyáshoz.",
+        "409 vagy időközben változott futás: töltsd újra és ellenőrizd a szerver állapotát. Ne próbáld régi űrlappal felülírni.",
+        "422: hibás kulcs, hiányos oszlopmegfeleltetés vagy érvénytelen pénzügyi adat. Előbb javítsd az érintett mezőt.",
+        "Részleges eredmény: olvasd el a Hibajegyzék CSV-t. A sikeresen feldolgozott sorok miatt nem szükséges teljes új import."
+      ]
+    },
+    {
+      "type": "heading",
+      "text": "Mi változik, és mi marad meg?"
+    },
+    {
+      "type": "paragraph",
+      "text": "A feldolgozás üzleti adatot írhat. Az újrapróbálást a futás állapotához és hibás soraihoz kösd; ugyanazt a fájlt ne töltsd fel vakon újra. A nyers forrás megőrzése és a kézi döntések védelme továbbra is fontos."
+    },
+    {
+      "type": "heading",
+      "text": "Következő lépés"
+    },
+    {
+      "type": "paragraph",
+      "text": "A kapcsolódó útmutatók az alábbi sorrendben segítenek folytatni a munkát. A látható gombok mindig az aktuális munkaterület és tényleges jogosultságok szerint használhatók."
     }
   ],
-  "related": ["termekek-kategorizalasa", "gyakori-hibak"]
+  "related": [
+    "import-elozmenyek-hibak",
+    "termekek-kategorizalasa",
+    "import-kulcsok-penzugy"
+  ]
 }

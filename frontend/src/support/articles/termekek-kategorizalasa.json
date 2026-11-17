@@ -2,31 +2,122 @@
   "id": "termekek-kategorizalasa",
   "topic": "kategoriak",
   "title": "Termékek kategorizálása",
-  "summary": "A beszállítói kategóriát a közös magyar kategóriafához rendeld, az előnézet ellenőrzésével.",
-  "order": 6,
+  "summary": "A saját vagy beszállítói kategória az eredeti fájlból származik.",
+  "order": 12,
   "blocks": [
+    {
+      "type": "heading",
+      "text": "Mire való, és mikor használd?"
+    },
+    {
+      "type": "paragraph",
+      "text": "A saját vagy beszállítói kategória az eredeti fájlból származik. A belső besorolás a jóváhagyott közös magyar fára mutat. A donor pedig a paraméterprofilt adja; e három fogalom szétválasztása megőrzi az eredeti adat jelentését."
+    },
+    {
+      "type": "heading",
+      "text": "Hozzáférés és előfeltételek"
+    },
+    {
+      "type": "paragraph",
+      "text": "Ügyfélmunkaterület és products.read szükséges. Szerkesztéshez products.classify kell. A demóhoz előbb importáld a DEMO-001 terméket; a képeken Mosógép A néven külön szintetikus termék is szerepel."
+    },
+    {
+      "type": "note",
+      "title": "Menüútvonal",
+      "text": "Termékadatok / Termékek / Megnyitás"
+    },
+    {
+      "type": "heading",
+      "text": "Mezők, állapotok és gombok"
+    },
+    {
+      "type": "table",
+      "caption": "A képernyő elemeinek jelentése",
+      "headers": [
+        "Elem",
+        "Mit jelent és mire figyelj?"
+      ],
+      "rows": [
+        [
+          "Terméklista",
+          "Név/cikkszám, saját kategória, belső útvonal, állapot, védelem és forrás; a keresés és lapozás együtt szűkíti a listát."
+        ],
+        [
+          "Megnyitás",
+          "Részletek és besorolási előzmények; nem véglegesít döntést."
+        ],
+        [
+          "Besorolás szerkesztése / módosítása",
+          "Kategóriaválasztó, paraméterprofil, indok és előnézet."
+        ],
+        [
+          "Kézi védelem feloldása és automatikus újrabesorolás",
+          "Visszaengedi az automatikus szabályt; az eredeti saját kategóriát nem törli."
+        ],
+        [
+          "Módosítások előnézete",
+          "Egyes besorolási műveleteknél helyi összesítő, nem szerveres próbafuttatás. Az ütközés és pontos érintettség mentéskor dől el."
+        ]
+      ]
+    },
+    {
+      "type": "heading",
+      "text": "Lépésről lépésre – ellenőrzött demópélda"
+    },
     {
       "type": "steps",
       "items": [
-        "Nyisd meg a Termékadatok oldalt az aktív ügyfélnél, majd keresd meg a terméket névvel, cikkszámmal vagy EAN/GTIN-nel.",
-        "Nyisd meg a termék részleteit és a Besorolás szerkesztése műveletet, ha van módosítási jogosultságod.",
-        "Keress a közös kategóriafában, és a teljes útvonal alapján válassz termékkategóriát. A navigációs gyűjtőpont nem termékbesorolási cél.",
-        "Ha több paraméterprofil áll rendelkezésre, válassz kifejezetten megfelelő profilt. A vitatott donor nem használható automatikusan.",
-        "Adj indokot, tekintsd át a Módosítások előnézete eredményét, majd a megerősítő művelettel ments.",
-        "Ellenőrizd a termék aktuális besorolását és a kézi zárolás állapotát. Beszállítói kategóriatérkép módosításánál az érintett termékek újrasorolása háttérben is futhat."
+        "A Termékadatok → Terméklista nézetben keress rá a DEMO-001 cikkszámra, majd nyisd meg a terméket.",
+        "Olvasd el az eredeti/saját kategóriát és a belső besorolást. A saját Háztartás / Mosógépek útvonalnak nem kell a belső útvonallal azonosnak lennie.",
+        "Nyisd meg a Besorolás szerkesztése lehetőséget. A Kategória keresése mezőben keress Elöltöltős névre, majd válaszd a megfelelő magyar kategóriát.",
+        "Ha profilválasztást kér, kifejezetten a mosógép-profilt válaszd. Írj indokot: Ellenőrzött demótermék besorolása.",
+        "Nyisd meg a Módosítások előnézetét, ellenőrizd az útvonalat és érintettséget, majd a Módosítás mentése gombbal véglegesíts.",
+        "Frissítsd a termékrészletet. Ellenőrizd a védett kézi döntés jelzését és a Besorolási előzményeket; ezután következhet a paraméter-előkészítés."
       ]
+    },
+    {
+      "type": "note",
+      "title": "Várt eredmény",
+      "text": "A termék a közös kategóriához kötődik, az eredeti forrásútvonal pedig megmarad. A kategória kiválasztása nem feltétlenül jelent már elmentett paraméterhelyeket."
     },
     {
       "type": "image",
       "src": "/help/images/kategorizalas.png",
-      "alt": "Termék besorolási szerkesztője a közös kategóriafával",
-      "caption": "Teszttermék kategóriájának kiválasztása; a teljes kategóriaútvonal segíti a döntést."
+      "alt": "Elöltöltős mosógépek kiválasztása indoklással",
+      "caption": "A magyar kategória és a donorprofil két külön döntési adat."
     },
     {
-      "type": "note",
-      "title": "Kategóriafa",
-      "text": "Az első szint 13 jóváhagyott magyar főcsoport. Az alkategóriákat a szülő kibontásával érheted el. Az eredeti beszállítói kategória külön forrásadat marad."
+      "type": "heading",
+      "text": "Ha nem sikerül"
+    },
+    {
+      "type": "list",
+      "items": [
+        "409: közben változott revízió; a régi előnézettel nem menthetsz. Használd a Friss adatok betöltése gombot és vizsgáld felül a döntést.",
+        "403: a termék olvasása és a besorolás módosítása külön jog.",
+        "503: nincs használható aktív közös katalógus; az adminisztrátornak kell rendeznie, nem új kategória létrehozásával."
+      ]
+    },
+    {
+      "type": "heading",
+      "text": "Mi változik, és mi marad meg?"
+    },
+    {
+      "type": "paragraph",
+      "text": "A kézi döntés védett és auditált. Automatikus besorolás nem írhatja át észrevétlenül; feloldás/reset előtt olvasd el a következményt. A fix fa szerkezetét egy termék besorolása nem módosítja."
+    },
+    {
+      "type": "heading",
+      "text": "Következő lépés"
+    },
+    {
+      "type": "paragraph",
+      "text": "A kapcsolódó útmutatók az alábbi sorrendben segítenek folytatni a munkát. A látható gombok mindig az aktuális munkaterület és tényleges jogosultságok szerint használhatók."
     }
   ],
-  "related": ["emag-donorprofilok", "kezi-parameterek", "tomeges-jovahagyas"]
+  "related": [
+    "emag-donorprofilok",
+    "parameterallapotok",
+    "kategoriameterkep"
+  ]
 }

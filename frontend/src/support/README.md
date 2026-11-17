@@ -82,3 +82,44 @@ HELP_SCREENSHOTS=1 PYTHONPATH=backend .venv/bin/pytest -q \
 A kapcsoló nélkül a teszt ellenőriz, de nem írja át a képeket. Nem futtatható
 VPS-en vagy meglévő adatbázison. Meglévő felület hiányát ne pótold kitalált képpel;
 ilyenkor maradjon pontos szöveges leírás és dokumentált hiányosság.
+
+## HELP-02: részletes kézikönyv
+
+A 36 cikk megtartja a 12 eredeti URL-t. Minden cikk tartalmaz célt,
+előfeltételt és jogosultságot, pontos menüutat, mezőmagyarázatot,
+demóeljárást, várt eredményt, hibakezelést és adatmegőrzési következményt.
+A cikkek hosszúsága és a zöld teszt nem helyettesíti az emberi tartalmi ellenőrzést.
+
+Új blokk a `table`: `caption`, `headers: string[]`, `rows: string[][]`.
+A sorok elemszáma egyezzen az oszlopok számával. A cellák szövegek, HTML nem
+futtatható. A teljes szöveges keresés a táblázatokat is figyelembe veszi.
+A tartalomjegyzék a `heading` blokkokból készül; nem írja át a cikk URL-jét.
+
+A képernyő- és műveletleltár a `coverage.json`; olvasható, képekkel és
+forrásokkal összekötött változata:
+[HELP-02-COVERAGE.md](../../../../docs/development/HELP-02-COVERAGE.md).
+Új menü vagy cikk esetén ezt is frissíteni kell. A teszt a valódi `main.tsx`
+menütömbjét TypeScript AST-ből olvassa, így az új, leltár nélküli menü hibát ad.
+
+Az új képek újragyűjtése (a fenti 9 eredeti kép ettől külön marad):
+
+```bash
+HELP_SCREENSHOTS=1 PYTHONPATH=backend .venv/bin/pytest -q \
+  scripts/tests/test_help_manual_browser.py
+```
+
+A képek legfeljebb 1400 px magas, natív DOM-/oldalkivágások; a hosszú űrlapból
+csak a feliratozott részlet látható. Nincs rajzolt vezérlő vagy utólag módosított
+képtartalom. A 390 px-es kép mobilnézet, a többi 1440 px-es asztali nézet.
+A referencia-képek apró, szintetikus SQLite-forrásból készülnek, nem az éles
+2,85 millió értékből. A kész katalógus tesztbeli előállítása és aktiválása
+kizárólag ezen az eldobható fixture-ön történik. Soha ne futtasd a gyűjtőt VPS-en.
+
+TOTP/QR, eszköztitok, helyreállítási kód, meghívó- vagy jóváhagyási token,
+SMTP-/OIDC-jelszó nem rögzíthető. Külső Google- és natív passkey-ablakból nem
+készítünk kitalált képet. A forrásszintű leírás mellett ez külön emberi/eszközös
+ellenőrzési pont marad.
+
+A #41/#42 még nincs ebben a vizsgált alapverzióban. Az előzménytörlést,
+kompakt importelőnézetet, UNAS-fájlgenerálást, AI-kutatást és kredit/fizetési
+folyamatot ne írd le elkészült funkcióként.

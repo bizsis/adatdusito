@@ -97,6 +97,64 @@
   font-size: clamp(24px, 4vw, 32px);
   margin-top: 0;
 }
+.help-article > h2:focus,
+.help-article h3[tabindex="-1"]:focus {
+  outline: none;
+  box-shadow: none;
+}
+.help-article h3 {
+  scroll-margin-top: 24px;
+}
+.help-article > p,
+.help-article > ol,
+.help-article > ul {
+  max-width: 78ch;
+}
+.help-contents {
+  padding: 16px;
+  background: var(--surface);
+  border-radius: 8px;
+}
+.help-contents ul {
+  margin-bottom: 0;
+}
+.help-contents button {
+  border: 0;
+  background: transparent;
+  color: var(--primary-hover);
+  padding: 4px 0;
+  text-align: left;
+  text-decoration: underline;
+  white-space: normal;
+}
+.help-table {
+  max-width: 100%;
+  overflow-x: auto;
+  margin: 20px 0;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+}
+.help-table table {
+  width: 100%;
+  border-collapse: collapse;
+}
+.help-table caption {
+  text-align: left;
+  font-weight: 600;
+  padding: 12px;
+}
+.help-table th,
+.help-table td {
+  white-space: normal;
+  min-width: 125px;
+  padding: 12px;
+  text-align: left;
+  vertical-align: top;
+  border-top: 1px solid var(--border);
+}
+.help-table th {
+  background: var(--teal-soft);
+}
 .help-summary {
   font-size: 18px;
   color: var(--muted);

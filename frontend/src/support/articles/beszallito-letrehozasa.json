@@ -2,29 +2,123 @@
   "id": "beszallito-letrehozasa",
   "topic": "import",
   "title": "Beszállító létrehozása",
-  "summary": "Hozz létre beszállítót az aktív ügyfélen belül, hogy hozzá tudd kötni az importfájlokat.",
-  "order": 2,
+  "summary": "A beszállító fogja össze ugyanazon forrás fájljait és importprofiljait az adott ügyfélen belül.",
+  "order": 6,
   "blocks": [
+    {
+      "type": "heading",
+      "text": "Mire való, és mikor használd?"
+    },
+    {
+      "type": "paragraph",
+      "text": "A beszállító fogja össze ugyanazon forrás fájljait és importprofiljait az adott ügyfélen belül. Nem azonos az ügyféllel vagy az export célwebáruházával. Az összekapcsolás később beszállítón belüli pontos kulcsegyezésre épül."
+    },
+    {
+      "type": "heading",
+      "text": "Hozzáférés és előfeltételek"
+    },
+    {
+      "type": "paragraph",
+      "text": "Előbb válaszd ki az ügyfél munkaterületét. Az oldalhoz imports.read, új beszállítóhoz imports.manage, fájlfeltöltéshez imports.create kell. A puszta feltöltési jog nem jogosít új beszállító létrehozására."
+    },
+    {
+      "type": "note",
+      "title": "Menüútvonal",
+      "text": "Beszállítói import / Beszállító"
+    },
+    {
+      "type": "heading",
+      "text": "Mezők, állapotok és gombok"
+    },
+    {
+      "type": "table",
+      "caption": "A képernyő elemeinek jelentése",
+      "headers": [
+        "Elem",
+        "Mit jelent és mire figyelj?"
+      ],
+      "rows": [
+        [
+          "Beszállító",
+          "A kijelölt beszállítóhoz kötődik a következő feltöltés és a hozzá elérhető importprofilok."
+        ],
+        [
+          "Új beszállító neve",
+          "Azonosítható emberi név; demóban Segédlet demóbeszállító."
+        ],
+        [
+          "Beszállító létrehozása",
+          "Elmenti az új beszállítót és kiválasztja. Nem indít importot."
+        ],
+        [
+          "Importprofil feltöltéshez",
+          "A kiválasztott beszállító mentett profiljai; új beszállítónál üres lehet."
+        ]
+      ]
+    },
+    {
+      "type": "heading",
+      "text": "Lépésről lépésre – ellenőrzött demópélda"
+    },
     {
       "type": "steps",
       "items": [
-        "Válaszd ki a megfelelő ügyfél-munkaterületet.",
-        "Nyisd meg a Beszállítói import menüt.",
-        "Az Új beszállító neve mezőben adj meg egy jól felismerhető nevet.",
-        "Kattints a Beszállító létrehozása gombra. A létrehozott beszállító kiválasztva jelenik meg a listában."
+        "Válaszd a Segédlet demó munkaterületet, majd a Beszállítói import menüt.",
+        "Ellenőrizd a beszállítólistát, hogy nincs-e már meg a használni kívánt forrás.",
+        "Az Új beszállító neve mezőbe írd: Segédlet demóbeszállító. Kattints a Beszállító létrehozása gombra.",
+        "Várd meg, hogy a választóban az új beszállító szerepeljen. Csak ezután válassz importfájlt.",
+        "Ha már létező forrással dolgozol, inkább azt válaszd ki; azonos célra új beszállítóval nem fognak a korábbi kulcsok automatikusan összekapcsolódni."
       ]
+    },
+    {
+      "type": "note",
+      "title": "Várt eredmény",
+      "text": "Az új beszállító megjelenik és kijelölődik. Terméksor ekkor még nem jön létre; a fájlfeltöltés és jóváhagyás külön lépés."
+    },
+    {
+      "type": "image",
+      "src": "/help/images/fajlbeallitasok.png",
+      "alt": "Beszállítóválasztó és haladó fájlbeállítások",
+      "caption": "A feltöltés a kiválasztott beszállítóhoz kötődik."
     },
     {
       "type": "image",
       "src": "/help/images/beszallito.png",
-      "alt": "Beszállító kiválasztása és új beszállító létrehozása az importoldalon",
-      "caption": "A képen kizárólag szintetikus demóbeszállító szerepel."
+      "alt": "Új beszállító neve és létrehozó gomb",
+      "caption": "A létrehozás és a fájlfeltöltés külön jogosultság."
     },
     {
-      "type": "note",
-      "title": "Ha hiányzik a létrehozás",
-      "text": "A beszállítók megtekintése, létrehozása és az import jóváhagyása külön jogosultságokhoz kapcsolódhat. A hozzáférést az ügyféladminisztrátorral egyeztesd."
+      "type": "heading",
+      "text": "Ha nem sikerül"
+    },
+    {
+      "type": "list",
+      "items": [
+        "Nincs létrehozási mező: imports.manage hiányzik; a feltöltő jog ettől független.",
+        "403: ellenőrizd az aktív ügyfelet és a saját erőforráshatókört.",
+        "Mentési hiba vagy hálózatmegszakadás után előbb frissítsd a listát. Ne hozz létre egymás után több azonos demóbeszállítót."
+      ]
+    },
+    {
+      "type": "heading",
+      "text": "Mi változik, és mi marad meg?"
+    },
+    {
+      "type": "paragraph",
+      "text": "A beszállító kiválasztása nem módosít korábbi futást vagy más ügyfél adatait. A régi fájlok helyes beszállítóhoz kötését nem lehet egy név átírásával visszamenőleg feltételezni."
+    },
+    {
+      "type": "heading",
+      "text": "Következő lépés"
+    },
+    {
+      "type": "paragraph",
+      "text": "A kapcsolódó útmutatók az alábbi sorrendben segítenek folytatni a munkát. A látható gombok mindig az aktuális munkaterület és tényleges jogosultságok szerint használhatók."
     }
   ],
-  "related": ["csv-xlsx-feltoltes", "jogosultsagok"]
+  "related": [
+    "csv-xlsx-feltoltes",
+    "oszlopok-megfeleltetese",
+    "import-kulcsok-penzugy"
+  ]
 }

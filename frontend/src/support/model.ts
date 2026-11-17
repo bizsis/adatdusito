@@ -9,6 +9,7 @@ export type Block =
   | { type: "list" | "steps"; items: string[] }
   | { type: "note" | "warning"; title: string; text: string }
   | { type: "link"; article: string; text: string }
+  | { type: "table"; caption: string; headers: string[]; rows: string[][] }
   | { type: "image"; src: string; alt: string; caption?: string };
 export type Article = {
   id: string;
@@ -70,6 +71,8 @@ export function articleText(article: Article): string {
       article.title,
       article.summary,
       ...article.blocks.flatMap((b) => {
+        if (b.type === "table")
+          return [b.caption, ...b.headers, ...b.rows.flat()];
         if ("items" in b) return b.items;
         if (b.type === "image") return [b.alt, b.caption || ""];
         if (b.type === "note" || b.type === "warning") return [b.title, b.text];

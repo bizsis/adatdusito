@@ -1,0 +1,127 @@
+{
+  "id": "beallitasok-smtp",
+  "topic": "hozzaferes",
+  "title": "SMTP, tesztkapcsolat és tesztlevél",
+  "summary": "Az SMTP-beállítás a meghívó- és regisztrációs levelek kézbesítését biztosítja.",
+  "order": 32,
+  "blocks": [
+    {
+      "type": "heading",
+      "text": "Mire való, és mikor használd?"
+    },
+    {
+      "type": "paragraph",
+      "text": "Az SMTP-beállítás a meghívó- és regisztrációs levelek kézbesítését biztosítja. A sikeres kapcsolatteszt nem ugyanaz, mint a levél megérkezése vagy a meghívó elfogadása."
+    },
+    {
+      "type": "heading",
+      "text": "Hozzáférés és előfeltételek"
+    },
+    {
+      "type": "paragraph",
+      "text": "system.settings.read/manage szükséges. A levelezési szolgáltató ellenőrzött adatait biztonságos csatornán szerezd be. A szolgáltatói jelszó és a titkosított tárolás részlete nem ügyfélfelhasználói adat."
+    },
+    {
+      "type": "note",
+      "title": "Menüútvonal",
+      "text": "Rendszerbeállítások / SMTP / Levelezés"
+    },
+    {
+      "type": "heading",
+      "text": "Mezők, állapotok és gombok"
+    },
+    {
+      "type": "table",
+      "caption": "A képernyő elemeinek jelentése",
+      "headers": [
+        "Elem",
+        "Mit jelent és mire figyelj?"
+      ],
+      "rows": [
+        [
+          "Host / port",
+          "A szolgáltató címe és 1–65535 közötti port; a port önmagában nem határozza meg a titkosítást."
+        ],
+        [
+          "STARTTLS / TLS",
+          "A szolgáltató által előírt titkosítási mód; ne találgasd."
+        ],
+        [
+          "Felhasználó / jelszó",
+          "A jelszó üresen hagyva megőrzi a már beállított titkot; nem olvasható vissza."
+        ],
+        [
+          "Feladó e-mail / név",
+          "A küldő megjelenése; a szolgáltatónak engedélyeznie kell a feladót."
+        ],
+        [
+          "SMTP ellenőrzése és mentése",
+          "A konfiguráció ellenőrzött mentése; a környezeti és webes forrás külön jelezhető."
+        ],
+        [
+          "Kapcsolat tesztelése / Tesztlevél küldése",
+          "A kapcsolat és a megadott címzettnek tényleges küldés külön művelet."
+        ]
+      ]
+    },
+    {
+      "type": "heading",
+      "text": "Lépésről lépésre – ellenőrzött demópélda"
+    },
+    {
+      "type": "steps",
+      "items": [
+        "Nyisd meg a Rendszerbeállítások → SMTP / Levelezés fület.",
+        "Nézd meg a beállítás forrását. A meglévő titkot hagyd üresen, ha nem kívánod lecserélni.",
+        "Ellenőrizd a hostot, portot, titkosítást és feladót a szolgáltató dokumentációjához képest.",
+        "Használd a Kapcsolat tesztelése gombot, és olvasd el a titkosítás/hitelesítés eredményét.",
+        "Saját ellenőrzött tesztcímzettel küldj tesztlevelet; nézd meg a beérkező és spam mappát is.",
+        "Csak ellenőrzött eredménnyel ments. Ezután egy meglévő hibás meghívó kézbesítését a saját listájából kezeld."
+      ]
+    },
+    {
+      "type": "note",
+      "title": "Várt eredmény",
+      "text": "A kapcsolatteszt a titkosítást és hitelesítést jelzi; a tesztlevél külön visszajelzést ad. A sikeres kézbesítés sem jelenti a címzett meghívóelfogadását."
+    },
+    {
+      "type": "image",
+      "src": "/help/images/beallitas-smtp.png",
+      "alt": "SMTP mezők, mentés és tesztlevél gombok",
+      "caption": "A titokmező üres; sem jelszó, sem valós címzett nem szerepel."
+    },
+    {
+      "type": "heading",
+      "text": "Ha nem sikerül"
+    },
+    {
+      "type": "list",
+      "items": [
+        "503 vagy teszthiba: ellenőriztesd a hálózatot, szolgáltatói adatokat és feladóengedélyt. A szolgáltatói hiba titkos részletét ne másold chatbe.",
+        "Üres jelszó nem törlés: meglévő titok szándékos megőrzése.",
+        "Meghívó failed állapot: előbb rendezd a levelezést, utána küldd újra a megfelelő meghívót."
+      ]
+    },
+    {
+      "type": "heading",
+      "text": "Mi változik, és mi marad meg?"
+    },
+    {
+      "type": "paragraph",
+      "text": "A mentés központi levelezésre hat. A tesztlevél valódi külső küldés, ezért csak saját kijelölt tesztcímre indítsd. Titok, címzettlista vagy SMTP-jelszó nem kerülhet képernyőképbe."
+    },
+    {
+      "type": "heading",
+      "text": "Következő lépés"
+    },
+    {
+      "type": "paragraph",
+      "text": "A kapcsolódó útmutatók az alábbi sorrendben segítenek folytatni a munkát. A látható gombok mindig az aktuális munkaterület és tényleges jogosultságok szerint használhatók."
+    }
+  ],
+  "related": [
+    "meghivok",
+    "passkey-google-regisztracio",
+    "beallitasok-hitelesites"
+  ]
+}

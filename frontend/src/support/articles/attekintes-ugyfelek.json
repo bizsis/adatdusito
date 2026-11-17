@@ -1,0 +1,128 @@
+{
+  "id": "attekintes-ugyfelek",
+  "topic": "elso-lepesek",
+  "title": "Áttekintés és ügyfelek kezelése",
+  "summary": "Az Áttekintés a belépési pont és a szolgáltatások állapotának összefoglalója.",
+  "order": 2,
+  "blocks": [
+    {
+      "type": "heading",
+      "text": "Mire való, és mikor használd?"
+    },
+    {
+      "type": "paragraph",
+      "text": "Az Áttekintés a belépési pont és a szolgáltatások állapotának összefoglalója. Az Ügyfelek oldal szervezeteket kezel; nem beszállítólista és nem felhasználói regisztráció. Új ügyfélhez később külön hozzáféréseket kell kiosztani."
+    },
+    {
+      "type": "heading",
+      "text": "Hozzáférés és előfeltételek"
+    },
+    {
+      "type": "paragraph",
+      "text": "Az Áttekintés minden belépett felhasználónak elérhető. Az Ügyfelekhez tenants.read, létrehozáshoz tenants.create, szerkesztéshez tenants.edit, felfüggesztéshez tenants.suspend szükséges. A gomb láthatósága nem helyettesíti a szerver ellenőrzését."
+    },
+    {
+      "type": "note",
+      "title": "Menüútvonal",
+      "text": "Áttekintés; Ügyfelek"
+    },
+    {
+      "type": "heading",
+      "text": "Mezők, állapotok és gombok"
+    },
+    {
+      "type": "table",
+      "caption": "A képernyő elemeinek jelentése",
+      "headers": [
+        "Elem",
+        "Mit jelent és mire figyelj?"
+      ],
+      "rows": [
+        [
+          "Szolgáltatások állapota",
+          "A backend által közölt állapot; hibája nem bizonyít adatvesztést."
+        ],
+        [
+          "Új ügyfél / Ügyfél neve",
+          "A név legfeljebb 120 karakter. A létrehozás külön szervezetet hoz létre."
+        ],
+        [
+          "Szerkesztés / Aktív ügyfél",
+          "A név módosítható; megfelelő joggal az ügyfél felfüggeszthető. Ez nem törlés."
+        ],
+        [
+          "Felhasználók",
+          "A kiválasztott ügyfélhez tartozó munkaterület megnyitásához vezet."
+        ],
+        [
+          "API-dokumentáció",
+          "A Swagger technikai végpontleírás. Nem felhasználói kézikönyv és nem segítségkérés küldése."
+        ]
+      ]
+    },
+    {
+      "type": "heading",
+      "text": "Lépésről lépésre – ellenőrzött demópélda"
+    },
+    {
+      "type": "steps",
+      "items": [
+        "Nyisd meg az Áttekintést, ellenőrizd a kiválasztott munkaterületet és a szolgáltatások állapotát.",
+        "Tesztkörnyezetben nyisd meg az Ügyfelek oldalt, majd az Új ügyfél ablakot.",
+        "Adj meg egy egyedi demónevet, például Segédlet próbaügyfél, és kattints a Mentés gombra.",
+        "Az új kártyán ellenőrizd az Aktív állapotot. A Felhasználók gomb után a Munkaterület megnyitása gombbal válthatsz az ügyfélre.",
+        "Névváltoztatáshoz nyisd meg a Szerkesztést. Az Aktív ügyfél kapcsolót csak valóban szükséges felfüggesztéshez használd."
+      ]
+    },
+    {
+      "type": "note",
+      "title": "Várt eredmény",
+      "text": "Az ügyfélkártya megjelenik a listán. Az új ügyfél létrehozása önmagában nem tölt fel terméket és nem hív meg munkatársat."
+    },
+    {
+      "type": "image",
+      "src": "/help/images/attekintes.png",
+      "alt": "Áttekintés szolgáltatásjelzéssel",
+      "caption": "A kezdőoldal az aktuális munkaterülethez tartozik."
+    },
+    {
+      "type": "image",
+      "src": "/help/images/ugyfel-letrehozas.png",
+      "alt": "Új ügyfél neve a létrehozási ablakban",
+      "caption": "A név kitöltése után a Mentés hozza létre az ügyfelet."
+    },
+    {
+      "type": "heading",
+      "text": "Ha nem sikerül"
+    },
+    {
+      "type": "list",
+      "items": [
+        "403: a hiányzó létrehozási vagy felfüggesztési jogot az adminisztrátor rendezheti.",
+        "422: ellenőrizd az ügyfél nevét és hosszát; üres névvel ne ismételd meg a mentést.",
+        "Nem találod az ügyfelet: ellenőrizd a lapozást és a saját hozzáférésedet. Állapothiba esetén ne hozz létre azonos célú új ügyfeleket."
+      ]
+    },
+    {
+      "type": "heading",
+      "text": "Mi változik, és mi marad meg?"
+    },
+    {
+      "type": "paragraph",
+      "text": "A felfüggesztés hozzáférést korlátozhat, de nem törli az ügyfél üzleti adatait. A létrehozás után a szerepkörök és tagságok külön adminisztrációt igényelnek."
+    },
+    {
+      "type": "heading",
+      "text": "Következő lépés"
+    },
+    {
+      "type": "paragraph",
+      "text": "A kapcsolódó útmutatók az alábbi sorrendben segítenek folytatni a munkát. A látható gombok mindig az aktuális munkaterület és tényleges jogosultságok szerint használhatók."
+    }
+  ],
+  "related": [
+    "felhasznalok-tagsagok",
+    "cegek-webaruhazak",
+    "muveleti-naplo"
+  ]
+}

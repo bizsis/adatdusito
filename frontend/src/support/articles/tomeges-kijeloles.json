@@ -1,0 +1,122 @@
+{
+  "id": "tomeges-kijeloles",
+  "topic": "tomeges",
+  "title": "Oldalkijelölés és teljes szűrt termékkör",
+  "summary": "A látható oldal kijelölése és az összes szűrt találat nem azonos.",
+  "order": 22,
+  "blocks": [
+    {
+      "type": "heading",
+      "text": "Mire való, és mikor használd?"
+    },
+    {
+      "type": "paragraph",
+      "text": "A látható oldal kijelölése és az összes szűrt találat nem azonos. A szerveres rögzítés a kijelölt termékeket és revíziójukat pillanatképként őrzi, így az előnézet nem egy később elcsúszó keresésen dolgozik."
+    },
+    {
+      "type": "heading",
+      "text": "Hozzáférés és előfeltételek"
+    },
+    {
+      "type": "paragraph",
+      "text": "A Termékadatok → Paraméteres termékáttekintés és products.read szükséges. A kijelölés nem engedély alkalmazásra vagy jóváhagyásra; ezekhez további jog kell."
+    },
+    {
+      "type": "note",
+      "title": "Menüútvonal",
+      "text": "Termékadatok / Paraméterek / Rögzített termékkör"
+    },
+    {
+      "type": "heading",
+      "text": "Mezők, állapotok és gombok"
+    },
+    {
+      "type": "table",
+      "caption": "A képernyő elemeinek jelentése",
+      "headers": [
+        "Elem",
+        "Mit jelent és mire figyelj?"
+      ],
+      "rows": [
+        [
+          "Paraméterhely állapota / Donor készültsége / Kötelező hiány",
+          "A termékkört szűkíti, például hiányzó kötelező értékekre."
+        ],
+        [
+          "Kijelölt termékek rögzítése",
+          "A megjelölt, legfeljebb 100 explicit terméket rögzíti."
+        ],
+        [
+          "Teljes szűrt termékkör rögzítése",
+          "Az összes szerveren szűrt találatot, nem csak a látható 25 sort rögzíti."
+        ],
+        [
+          "250000 / 2 óra",
+          "A rögzíthető kiválasztás felső korlátja és használhatósági ideje."
+        ],
+        [
+          "Szűrőváltás vagy kilépés",
+          "A felületi kijelölést elengedi. Az addig elindult szerveres futás megmarad."
+        ]
+      ]
+    },
+    {
+      "type": "heading",
+      "text": "Lépésről lépésre – ellenőrzött demópélda"
+    },
+    {
+      "type": "steps",
+      "items": [
+        "Nyisd meg a Paraméteres termékáttekintést és szűrj a demótermékre.",
+        "Jelöld ki az adott sor jelölőnégyzetét, majd válaszd a Kijelölt termékek rögzítése gombot.",
+        "Ellenőrizd a Rögzített termékek számát és a lejáratot. A demóban pontosan a kiválasztott egy terméket várd.",
+        "Nagyobb munkához előbb pontosítsd a szűrőket, majd a Teljes szűrt termékkör rögzítése gombot használd.",
+        "Rögzítés után ugyanazon a nézeten indíts Tömeges paraméter-előnézetet vagy Előkészítési ellenőrzést; ez két külön cél."
+      ]
+    },
+    {
+      "type": "note",
+      "title": "Várt eredmény",
+      "text": "A szerver által visszaadott darabszám ismert; a következő művelet ehhez kötődik. A token a felület belső működésének része, nem kell bemásolnod."
+    },
+    {
+      "type": "image",
+      "src": "/help/images/tomeges-kijeloles.png",
+      "alt": "Egy kijelölt demótermék szerveres rögzítése",
+      "caption": "A kijelölt oldal és a teljes szűrt halmaz két külön gomb."
+    },
+    {
+      "type": "heading",
+      "text": "Ha nem sikerül"
+    },
+    {
+      "type": "list",
+      "items": [
+        "422: üres vagy 250000-nél nagyobb halmaz; pontosítsd a szűrést.",
+        "409: lejárt kijelölés; új rögzítés és új előnézet kell.",
+        "A lista lapozása után más sorok látszanak: ne a látható képernyőből következtess a korábban rögzített teljes halmazra."
+      ]
+    },
+    {
+      "type": "heading",
+      "text": "Mi változik, és mi marad meg?"
+    },
+    {
+      "type": "paragraph",
+      "text": "A rögzítés olvasási előkészítés, nem adatalkalmazás. A tokent ne tedd URL-be, naplóba vagy támogatási üzenetbe; más felhasználóval nem megosztható munkajegy."
+    },
+    {
+      "type": "heading",
+      "text": "Következő lépés"
+    },
+    {
+      "type": "paragraph",
+      "text": "A kapcsolódó útmutatók az alábbi sorrendben segítenek folytatni a munkát. A látható gombok mindig az aktuális munkaterület és tényleges jogosultságok szerint használhatók."
+    }
+  ],
+  "related": [
+    "tomeges-jovahagyas",
+    "elokeszitesi-jovahagyas",
+    "parameterallapotok"
+  ]
+}
