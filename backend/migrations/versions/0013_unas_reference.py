@@ -4,12 +4,9 @@ and an isolated product reference store.
 Additive only: eight new tables in the application database. No existing table, row or
 permission changes; pinfo_db (emag_*) and the owned catalog_* tables are not touched.
 
-Revision chain: assigned number 0013. Revision 0012 is developed in parallel on another
-branch and is not part of this branch, so 0013 sits on 0011 here. When both branches are
-integrated the chain must be 0011 -> 0012 -> 0013: set ``down_revision = "0012"`` below in
-the integration commit (test_unas_reference.py::test_single_alembic_head fails with two
-heads until then). 0013 must not be applied to a persistent database before that
-integration, otherwise Alembic would consider 0012 already applied.
+Revision chain: assigned number 0013, integrated in RELEASE-CANDIDATE-03 after TEMPLATE-01's
+0012 (0011 -> 0012 -> 0013, a single head). 0013 has no dependency on the 0012 tables; only
+the order is fixed. It was never applied to a persistent database on top of 0011.
 """
 
 from alembic import op
@@ -17,7 +14,7 @@ import sqlalchemy as sa
 from sqlalchemy.dialects import mysql
 
 revision = "0013"
-down_revision = "0011"
+down_revision = "0012"
 branch_labels = None
 depends_on = None
 
