@@ -123,6 +123,23 @@ formátumban.
 - Az elemzés után a futás `awaiting_approval` állapotú, mint eddig. A sablonkészítés innen
   indul.
 
+### Elemzésre korlátozott feltöltés (sablonkészítéshez)
+
+A sablonkészítés feltöltése **`purpose=template`** form-mezővel megy (a
+`multipart/form-data` kérés `supplier_id` és `file` mezője mellett). Alapértéke `import`,
+ami a régi működés, változatlanul. Más érték: 422.
+
+- A futás `config.analysis_only: true` jelzőt kap, és a futás válaszában
+  `"analysis_only": true` szerepel.
+- Csak elemzés történik: minden oszlop és minta elérhető a 3. pont szerint.
+- **Automatikus importprofil sem indít feldolgozást**, akkor sem, ha az oszlopszerkezet
+  egyezik.
+- A `POST /runs/{id}/approve` 409-et ad. Ebből a futásból termékimport nem indítható; importhoz
+  a fájlt újra kell tölteni `purpose=import`-tal.
+- Az újraelemzés (`PUT /runs/{id}/settings`) megtartja a jelzőt. A `settings` mezőn át a jelző
+  nem állítható és nem törölhető.
+- Sem a feltöltés, sem a sablonmentés nem hoz létre termékrekordot.
+
 ## 3. Előkészítési nézet – `GET /runs/{id}/template-preparation?engine=unas&currency=HUF&template_id=`
 
 A fájl **összes** oszlopa fájlsorrendben, oszloponként **1 valós mintaértékkel**, a
@@ -370,7 +387,9 @@ Válasz:
 ## A frontend teendői (Codex)
 
 - **1. lépés:** beszállító kiválasztása vagy létrehozása, webshopmotor (UNAS) és pénznem
-  (alapból HUF), majd fájlfeltöltés.
+  (alapból HUF), majd fájlfeltöltés **`purpose=template`** mezővel. Így az automatikus
+  importprofillal rendelkező beszállítók is használhatók; a frontend ideiglenes
+  feltöltés-tiltása elhagyható.
 - **2. lépés:** egyetlen táblázat, oszloponként:
   - forrásnév és mintaérték;
   - célmező-választó: a rögzített lista, a „Nem használjuk” és az „Új paraméter”;

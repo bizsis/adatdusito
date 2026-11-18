@@ -171,7 +171,10 @@ def advance(db, run_id):
                         analysis["drift"] = sorted(set(drift))
                         analysis["suggested_mapping"] = mapping
                         run.profile_id = p.id
-                        if p.config.get("automatic") and not drift:
+                        # TEMPLATE-PREP-01: an analysis-only upload (template preparation)
+                        # never processes products, whatever profile matches it.
+                        if p.config.get("automatic") and not drift and \
+                                not run.config.get("analysis_only"):
                             run.config = {
                                 **{
                                     k: v for k, v in p.config.items() if k != "analysis"

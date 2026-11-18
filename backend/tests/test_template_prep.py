@@ -349,3 +349,75 @@ def test_permissions_tenant_isolation_and_required_sku(imports):
     assert c.get(f"{BASE}/runs/{run_id}/template-preparation").status_code in (403, 404)
     assert c.get(f"{BASE}/import-templates/{tpl['id']}").status_code in (403, 404)
     assert c.get(f"{BASE}/suppliers/{s}/import-templates").status_code in (403, 404)
+
+
+# --- analysis-only upload (template preparation) ----------------------------------------------
+
+
+def upload_for_template(c, s, content, filename="data.csv"):
+    r = c.post(f"{BASE}/runs", data={"supplier_id": str(s), "purpose": "template"},
+               files={"file": (filename, content)})
+    assert r.status_code == 200, r.text
+    assert r.json()["analysis_only"] is True
+    return r.json()["id"]
+
+
+def automatic_profile(c, t, s):
+    """A legacy automatic import profile for the CSV structure."""
+    run_id = upload(c, s, CSV)
+    work(t, run_id)
+    approve(c, run_id, mapping={"0": "sku", "1": "name"}, automatic=True)
+    work(t, run_id)
+    assert c.get(f"{BASE}/runs/{run_id}").json()["state"] == "completed"
+    with Session(t) as db:
+        return db.scalar(select(func.count()).select_from(SupplierProduct))
+
+
+def test_analysis_only_upload_never_imports_even_with_an_automatic_profile(imports):
+    """Regression: a template upload used to be auto-processed by a matching automatic
+    profile, so template preparation could import products."""
+    c, t, s = imports
+    products = automatic_profile(c, t, s)
+    run_id = upload_for_template(c, s, CSV)
+    work(t, run_id)
+    run = c.get(f"{BASE}/runs/{run_id}").json()
+    assert run["state"] == "awaiting_approval" and run["analysis_only"] is True
+    with Session(t) as db:
+        assert db.scalar(select(func.count()).select_from(SupplierProduct)) == products
+        assert db.get(ImportRun, run_id).approved_by is None
+    # Every column and sample is available for the template.
+    view = c.get(f"{BASE}/runs/{run_id}/template-preparation").json()
+    assert len(view["columns"]) == 13 and view["columns"][0]["sample"] == "A-1"
+    # No product import can be started from it: approval and re-analysis stay blocked.
+    r = c.post(f"{BASE}/runs/{run_id}/approve", json={
+        "name": "x", "mapping": {"0": "sku", "1": "name"}, "identity_field": "sku"})
+    assert r.status_code == 409
+    r = c.put(f"{BASE}/runs/{run_id}/settings", json={"header_line": 1})
+    assert r.status_code == 200
+    work(t, run_id)
+    run = c.get(f"{BASE}/runs/{run_id}").json()
+    assert run["state"] == "awaiting_approval" and run["analysis_only"] is True
+    # Saving a template from it creates no product either.
+    assert save(c, run_id, full_body(view)).status_code == 200
+    with Session(t) as db:
+        assert db.scalar(select(func.count()).select_from(SupplierProduct)) == products
+        assert db.scalar(select(func.count()).select_from(ImportRun).where(
+            ImportRun.state == "processing")) == 0
+
+
+def test_regular_upload_keeps_legacy_automatic_processing(imports):
+    """The old behaviour for ordinary imports is unchanged."""
+    c, t, s = imports
+    automatic_profile(c, t, s)
+    run_id = upload(c, s, CSV)
+    work(t, run_id)
+    run = c.get(f"{BASE}/runs/{run_id}").json()
+    assert run["state"] == "completed" and run["analysis_only"] is False
+    r = c.post(f"{BASE}/runs", data={"supplier_id": str(s), "purpose": "other"},
+               files={"file": ("data.csv", CSV)})
+    assert r.status_code == 422
+    # analysis_only cannot be set or cleared through the file settings field.
+    r = c.post(f"{BASE}/runs", data={"supplier_id": str(s),
+                                     "settings": '{"analysis_only": true}'},
+               files={"file": ("data.csv", CSV)})
+    assert r.status_code == 422
