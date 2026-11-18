@@ -1,3 +1,7 @@
+import {
+  ImportMappingWizard,
+  type ImportMappingWizardProps,
+} from "./import-mapping/ImportMappingWizard";
 import { TemplatePanel } from "./templates/TemplatePanel";
 import type {
   ParameterJob,
@@ -142,12 +146,14 @@ export function ImportWorkspace({
   permissions,
   classificationSummary,
   parameterJob,
+  mappingPreparation,
 }: {
   api: Request;
   canManage: boolean;
   permissions?: string[];
   classificationSummary?: ImportClassificationSummaryProps;
   parameterJob?: ParameterServices & { initial: ParameterJob };
+  mappingPreparation?: ImportMappingWizardProps & { runId: number };
 }) {
   const canCreate = permissions
     ? permissions.includes("imports.create")
@@ -350,6 +356,10 @@ export function ImportWorkspace({
   }, [api, runId, runState, sourceOffset, previewSize, mapping]);
   const fieldLabel = (key: string) =>
     fields.find((f) => f.key === key)?.label || key;
+  const activeMappingPreparation =
+    canApprove && mappingPreparation?.runId === run?.id
+      ? mappingPreparation
+      : undefined;
   const mappedFields = Object.entries(mapping).filter(([, v]) => v);
   // Processed rows show the mapping that was actually approved for the run.
   const approvedFields = Object.entries(
@@ -695,7 +705,7 @@ export function ImportWorkspace({
               {run.analysis.empty_rows?.toLocaleString("hu-HU")}
             </p>
           )}
-          {run.analysis.headers && <TemplatePanel key={run.id} api={api} runId={run.id} headers={run.analysis.headers} canCreate={canCreate} canClassify={permissions?.includes("products.classify") ?? canManage} />}
+          {run.analysis.headers && !activeMappingPreparation && <TemplatePanel key={run.id} api={api} runId={run.id} headers={run.analysis.headers} canCreate={canCreate} canClassify={permissions?.includes("products.classify") ?? canManage} />}
           {!!Object.keys(run.counters).length && (
             <p>
               Eredmény:{" "}
@@ -769,7 +779,10 @@ export function ImportWorkspace({
               )}
             </div>
           )}
-          {run.state === "awaiting_approval" && (
+          {activeMappingPreparation && (
+            <ImportMappingWizard key={run.id} {...activeMappingPreparation} />
+          )}
+          {run.state === "awaiting_approval" && !activeMappingPreparation && (
             <>
               <nav aria-label="Import lépései" className="import-steps">
                 <ol>
