@@ -35,7 +35,9 @@ export type Catalog = {
   targets: Field[];
 };
 export type Assignment =
-  { state: "mapped"; target: Target } | { state: "unused" } | { state: null };
+  | { state: "mapped"; target: Target }
+  | { state: "unused" }
+  | { state: null };
 export type SourceColumn = {
   index: number;
   header: string;
@@ -192,3 +194,38 @@ export const saveTemplate = (
   });
 export const message = (error: unknown) =>
   error instanceof Error ? error.message : "A művelet nem sikerült.";
+
+export type ResultIssue = { code: string; target?: string };
+export type TemplateResultPage = {
+  template: TemplateVersion & { currency: string };
+  columns: { header: string; target: Target; source_columns: number[] }[];
+  rows: {
+    line: number;
+    values: string[];
+    status: "ok" | "warning" | "error";
+    errors: ResultIssue[];
+    warnings: ResultIssue[];
+  }[];
+  offset: number;
+  limit: number;
+  total: number;
+  summary: { rows: number; exportable: number; excluded: number };
+  excluded_columns: { header: string; code: string }[];
+  missing_source_columns: string[];
+};
+
+const resultPath = (id: number) => `/imports/import-templates/${id}/result`;
+export const loadResult = (
+  api: Request,
+  id: number,
+  run: number,
+  offset: number,
+) =>
+  api<TemplateResultPage>(
+    `${resultPath(id)}?run_id=${run}&offset=${offset}&limit=50`,
+  );
+export const resultDownload = (
+  id: number,
+  run: number,
+  format: "csv" | "xlsx",
+) => `/api/v1${resultPath(id)}.${format}?run_id=${run}`;

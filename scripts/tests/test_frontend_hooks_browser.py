@@ -201,12 +201,12 @@ def test_currency_refresh_preserves_mapping_without_fetch_loops(workspace_page):
     open_import(page)
     page.get_by_text("Korábban feltöltött fájlok", exact=True).click()
     page.get_by_role("button", name="#1 · sample.csv", exact=True).click()
-    mapping = page.get_by_role("list", name="Forrásoszlopok").get_by_role("combobox")
-    mapping.select_option(label="Termék megnevezés")
+    page.get_by_role("button", name="1. SKU hozzárendelés módosítása").click()
+    page.get_by_label("Célmező: 1. SKU").select_option(label="Termék megnevezés")
     page.get_by_label("Sablon neve", exact=True).fill("Saját szerkesztés")
     with page.expect_response("**/imports/runs/1/template-preparation?*"):
         page.get_by_label("Pénznem", exact=True).select_option("EUR")
-    expect(mapping.locator("option:checked")).to_have_text("Termék megnevezés")
+    expect(page.get_by_role("list", name="Termék megnevezés hozzárendelései")).to_contain_text("SKU")
     expect(page.get_by_label("Sablon neve", exact=True)).to_have_value("Saját szerkesztés")
     page.clock.run_for(6300)
     assert state["calls"]["/imports/template-targets"] == 1
@@ -239,7 +239,7 @@ def test_late_import_poll_cannot_restore_previous_selection(workspace_page):
         page.get_by_role("button", name="#1 · sample.csv", exact=True).click()
         page.clock.run_for(2100)
     page.get_by_role("button", name="#2 · second.csv", exact=True).click()
-    source = page.get_by_role("list", name="Forrásoszlopok").locator("samp")
+    source = page.get_by_role("list", name="Cikkszám hozzárendelései").locator("samp")
     expect(source).to_have_text("002")
     assert len(state["pending_runs"]) == 1
     route, old_run = state["pending_runs"].pop()

@@ -2,7 +2,7 @@
   "id": "import-sablonkeszites",
   "topic": "import",
   "title": "Import és sablonkészítés",
-  "summary": "Válaszd ki a webshopmotort, rendeld hozzá a forrásoszlopokat, és ments el egy új vagy módosított sablont.",
+  "summary": "Válaszd ki a webshopmotort, rendeld hozzá a forrásoszlopokat, és mentsd a sablont az UNAS előnézetéhez és letöltéséhez.",
   "order": 0,
   "related": ["csv-xlsx-feltoltes", "oszlopok-megfeleltetese"],
   "blocks": [
@@ -12,7 +12,7 @@
     },
     {
       "type": "paragraph",
-      "text": "Az Import menüben az UNAS célmezőihez rendelheted a beszállítói fájl oszlopait. A sablon mentésével az előkészítés befejeződik."
+      "text": "Az Import menüben az UNAS célmezőihez rendelheted a beszállítói fájl oszlopait. A sablon mentése után megnyílik az UNAS előnézete."
     },
     {
       "type": "heading",
@@ -36,7 +36,7 @@
       "rows": [
         [
           "Célmező és forrásoszlop",
-          "Húzd át a forrásoszlopot, vagy válaszd ki a sorában a célmezőt. A Törlés csak a hozzárendelést veszi le."
+          "Húzd át a forrásoszlopot, vagy válaszd ki a sorában a célmezőt. A hozzárendelt oszlop mintája balra kerül. A Törlés visszateszi az oszlopot a jobb oldali listába."
         ],
         [
           "Nem használjuk",
@@ -61,7 +61,7 @@
       "items": [
         "Nyisd meg az Import menüt, válaszd az UNAS motort és a pénznemet.",
         "Válassz beszállítót, majd tölts fel egy CSV, XLS, XLSX vagy XML fájlt, vagy nyiss meg egy korábbit.",
-        "Ellenőrizd a Cikkszám hozzárendelését és a jobb oldali értékmintákat.",
+        "Ellenőrizd a Cikkszám hozzárendelését és a mintáját balra. A szabad oszlopokat jobbra találod.",
         "A Color oszlophoz vedd át a Szín javaslatot, és fogadd el a paramétert. Több képoszlop sorrendje a Kép mező alatt módosítható.",
         "Adj nevet a sablonnak, majd kattints a Sablon mentése gombra. Új fájlnál a felismerés jelzi az eltérő fejléceket."
       ]
@@ -69,7 +69,7 @@
     {
       "type": "note",
       "title": "Várt eredmény",
-      "text": "A felület kiírja a mentett sablon nevét és verzióját."
+      "text": "Az előnézetben lapozhatsz, a Hiba jelzésre mutatva elolvashatod az okot, és letöltheted az UNAS CSV vagy XLSX fájlt. A Vissza a megfeleltetéshez gombbal javíthatod a hozzárendelést."
     },
     {
       "type": "heading",
