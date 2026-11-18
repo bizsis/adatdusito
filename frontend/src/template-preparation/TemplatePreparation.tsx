@@ -11,7 +11,6 @@ import {
   message,
   uploadRun,
   type Catalog,
-  type Defaults,
   type Preparation,
   type Request,
   type Run,
@@ -19,7 +18,7 @@ import {
   type TemplateList,
   type TemplateVersion,
 } from "./api";
-import { EmptyTemplateTargets, TemplateEditor } from "./TemplateEditor";
+import { TemplateEditor } from "./TemplateEditor";
 import "./template-preparation.css";
 
 const pageSize = 25;
@@ -40,7 +39,6 @@ export function TemplatePreparation({
   const [catalogRetry, setCatalogRetry] = useState(0);
   const [engine, setEngine] = useState("");
   const [currency, setCurrency] = useState("HUF");
-  const [pendingDefaults, setPendingDefaults] = useState<Partial<Defaults>>({});
   const [suppliers, setSuppliers] = useState<Supplier[]>([]);
   const [supplierId, setSupplierId] = useState(0);
   const [supplierName, setSupplierName] = useState("");
@@ -540,6 +538,7 @@ export function TemplatePreparation({
             </select>
           </label>
         </div>
+        {validEngine && sourceControls}
         {!catalog && !catalogError && (
           <p role="status">Webshopmotor betöltése…</p>
         )}
@@ -558,53 +557,24 @@ export function TemplatePreparation({
           </p>
         )}
       </section>
-      {catalog &&
-        validEngine &&
-        (preparation ? (
-          <TemplateEditor
-            key={viewKey}
-            api={api}
-            catalog={catalog}
-            view={preparation.initial}
-            initialDefaults={
-              preparation.initial.template
-                ? preparation.initial.defaults
-                : { ...preparation.initial.defaults, ...pendingDefaults }
-            }
-            currency={currency}
-            canSave={canSave}
-            sourceControls={sourceControls}
-            currencyWarnings={preparation.latest.warnings}
-            currencyBusy={preparation.currency !== currency}
-            onBusy={setSaving}
-            onSaved={() => {
-              setVersionGroup(0);
-              setTemplatesRetry((value) => value + 1);
-            }}
-          />
-        ) : (
-          <div className="prep-columns">
-            <EmptyTemplateTargets
-              catalog={catalog}
-              defaults={{ ...catalog.defaults, ...pendingDefaults }}
-              onDefault={
-                canSave && !working
-                  ? (field, value) =>
-                      setPendingDefaults((previous) => ({
-                        ...previous,
-                        [field]: value,
-                      }))
-                  : undefined
-              }
-            />
-            <section
-              className="card padded prep-sources"
-              aria-label="Beszállítói fájl"
-            >
-              {sourceControls}
-            </section>
-          </div>
-        ))}
+      {catalog && validEngine && preparation && (
+        <TemplateEditor
+          key={viewKey}
+          api={api}
+          catalog={catalog}
+          view={preparation.initial}
+          initialDefaults={preparation.initial.defaults}
+          currency={currency}
+          canSave={canSave}
+          currencyWarnings={preparation.latest.warnings}
+          currencyBusy={preparation.currency !== currency}
+          onBusy={setSaving}
+          onSaved={() => {
+            setVersionGroup(0);
+            setTemplatesRetry((value) => value + 1);
+          }}
+        />
+      )}
     </div>
   );
 }

@@ -73,7 +73,7 @@ def test_import_history_preserves_rc02_data_and_template_upload_is_analysis_only
         expect(p.get_by_role('button', name=f'#{first} · torlendo.csv', exact=True)).to_have_count(0)
         p.get_by_role('button', name=f'#{second} · megmarado.csv', exact=True).click()
         rows = p.get_by_role('list', name='Forrásoszlopok').locator(':scope > li')
-        expect(rows).to_have_count(27)
+        expect(rows.or_(p.locator(".prep-bindings li"))).to_have_count(27)
         expect(p.get_by_text('Feldolgozott sorok', exact=True)).to_have_count(0)
         with p.expect_response(lambda r: r.url.endswith(url) and r.request.method == 'POST') as upload:
             p.get_by_label('CSV, XLS, XLSX vagy XML fájl').set_input_files(
@@ -82,7 +82,7 @@ def test_import_history_preserves_rc02_data_and_template_upload_is_analysis_only
         created = upload.value.json()
         assert created['analysis_only'] and created['id'] not in {first, second}
         expect(p.get_by_text('3 termék · 27 oszlop')).to_be_visible()
-        expect(rows).to_have_count(27)
+        expect(rows.or_(p.locator(".prep-bindings li"))).to_have_count(27)
         assert p.evaluate('document.documentElement.scrollWidth <= innerWidth')
 
     with Session(f.engine) as db:

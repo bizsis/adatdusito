@@ -19,7 +19,9 @@ export const slotId = (target: Target) =>
         : target.key === "raktarkeszlet"
           ? 0
           : null),
-    target.parameter ? target.header ?? parameterHeader(target.parameter) : null,
+    target.parameter
+      ? (target.header ?? parameterHeader(target.parameter))
+      : null,
   ]);
 export const bindings = (assignments: Assignments, target: Target) =>
   Object.entries(assignments)
@@ -106,6 +108,7 @@ export function initialAssignments(
   fields: Field[],
 ): Assignments {
   const assignments: Assignments = {};
+  const occupied = new Map<string, SourceColumn>();
   let nextAlt = 1,
     nextStock = 0;
   for (const column of columns) {
@@ -133,6 +136,20 @@ export function initialAssignments(
         const instance = target.instance ?? nextStock;
         nextStock = Math.max(nextStock, instance + 1);
         target = { ...target, instance };
+      }
+      if (field.multiple !== "ordered") {
+        const slot = slotId(target);
+        const previous = occupied.get(slot);
+        if (previous) {
+          // An explicit saved mapping takes precedence over an auto-suggestion.
+          if (
+            column.assignment_source !== "template" ||
+            previous.assignment_source === "template"
+          )
+            continue;
+          delete assignments[previous.index];
+        }
+        occupied.set(slot, column);
       }
       assignments[column.index] = { state: "mapped", target };
     }

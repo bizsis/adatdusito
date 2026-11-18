@@ -85,7 +85,7 @@ def test_besz_minta_keeps_all_columns_and_does_not_map_purchase_to_sale(ui, widt
         )
         expect(page.get_by_text("3 termék · 27 oszlop")).to_be_visible(timeout=15000)
         rows = page.get_by_role("list", name="Forrásoszlopok").locator(":scope > li")
-        expect(rows).to_have_count(27)
+        expect(rows.or_(page.locator(".prep-bindings li"))).to_have_count(27)
         targets = page.get_by_role("region", name="UNAS-célmezők")
         expect(targets.get_by_role("list", name="Nettó ár hozzárendelései")).to_have_count(0)
         expect(targets.get_by_role("list", name="Bruttó ár hozzárendelései")).to_have_count(0)
@@ -116,14 +116,13 @@ def test_previous_files_remain_usable_including_a_processed_import(ui, width, he
             "href", f"/api/v1/imports/runs/{long_id}/file"
         )
         assert no_page_overflow(page)
-        page.get_by_text("Korábban feltöltött fájlok", exact=True).click()
         page.get_by_role("button", name="Korábbi fájlok betöltése").click()
         expect(history).to_have_count(26)
         page.get_by_role("button", name=f"#{processed} · besz_minta.csv", exact=True).click()
         expect(page.get_by_role("link", name="Eredeti fájl")).to_have_attribute(
             "href", f"/api/v1/imports/runs/{processed}/file"
         )
-        expect(page.get_by_role("list", name="Forrásoszlopok").locator("samp").first).to_have_text("000")
+        expect(page.get_by_role("list", name="Cikkszám hozzárendelései").locator("samp")).to_have_text("000")
         expect(page.get_by_text("Feldolgozott sorok", exact=True)).to_have_count(0)
         assert client.get(f"/api/v1/imports/runs/{processed}").json()["state"] == "completed"
         assert not page.errors
