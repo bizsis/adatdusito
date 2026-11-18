@@ -131,3 +131,49 @@
     grid-template-columns: minmax(0, 1fr);
   }
 }
+
+.mapping-options {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 12rem), 1fr));
+  gap: 0.75rem;
+  margin-block: 1rem;
+}
+
+.mapping-options label {
+  display: grid;
+  gap: 0.25rem;
+  min-width: 0;
+}
+
+.mapping-new {
+  min-width: 0;
+  margin: 0.5rem 0 0;
+  border: 1px solid #d3e1e3;
+  padding: 0.65rem;
+}
+
+.mapping-wizard .mapping-check {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  margin-block: 0.75rem;
+}
+
+.mapping-wizard .mapping-check input {
+  min-height: 0;
+  width: auto;
+  margin: 0.25rem 0 0;
+}
+
+.mapping-validation {
+  margin-block: 0.75rem;
+  padding: 0.5rem 0.75rem;
+  background: #f0f6f6;
+  border-radius: 0.5rem;
+  overflow-wrap: anywhere;
+}
+
+.mapping-covered {
+  color: #45616a;
+  background: #f4f7f7;
+}

@@ -1,7 +1,6 @@
-import {
-  ImportMappingWizard,
-  type ImportMappingWizardProps,
-} from "./import-mapping/ImportMappingWizard";
+import { ImportMappingWizard } from "./import-mapping/ImportMappingWizard";
+import { errorText, loadRegistry, type Registry } from "./import-mapping/importMappingApi";
+import { ApiHttpError } from "./apiResponse";
 import { TemplatePanel } from "./templates/TemplatePanel";
 import type {
   ParameterJob,
@@ -146,14 +145,12 @@ export function ImportWorkspace({
   permissions,
   classificationSummary,
   parameterJob,
-  mappingPreparation,
 }: {
   api: Request;
   canManage: boolean;
   permissions?: string[];
   classificationSummary?: ImportClassificationSummaryProps;
   parameterJob?: ParameterServices & { initial: ParameterJob };
-  mappingPreparation?: ImportMappingWizardProps & { runId: number };
 }) {
   const canCreate = permissions
     ? permissions.includes("imports.create")
@@ -296,6 +293,30 @@ export function ImportWorkspace({
   const runId = run?.id,
     runState = run?.state;
   const hasColumns = !!run?.analysis.columns;
+  const linkedMapping = typeof run?.config.engine_mapping_profile_id === "number";
+  const mappingEligible = linkedMapping || (canApprove && runState === "awaiting_approval");
+  const [registry, setRegistry] = useState<Registry | "legacy" | null>(null);
+  const [registryError, setRegistryError] = useState("");
+  const [registryRetry, retryRegistry] = useState(0);
+  useEffect(() => {
+    if (!mappingEligible) return;
+    let active = true;
+    loadRegistry(api).then((value) => {
+      if (!active) return;
+      if (value?.engine_key !== "unas" || !Array.isArray(value.fields))
+        throw new Error("A webshopmotor mezőlistája nem értelmezhető.");
+      setRegistry(value);
+    }).catch((error) => {
+      if (!active) return;
+      if (error instanceof ApiHttpError && error.status === 404) setRegistry("legacy");
+      else setRegistryError(errorText(error));
+    });
+    return () => { active = false; };
+  }, [api, mappingEligible, registryRetry]);
+  const activeMappingPreparation =
+    mappingEligible && registry && registry !== "legacy" ? registry : null;
+  const legacyMapping = !mappingEligible || registry === "legacy";
+
   useEffect(() => {
     act(async () => {
       await refresh();
@@ -338,14 +359,14 @@ export function ImportWorkspace({
         .catch((e) => E(String(e)));
   }, [api, runId, runState, offset]);
   useEffect(() => {
-    if (runId && hasColumns)
+    if (runId && hasColumns && legacyMapping)
       api<typeof joins>(`/imports/runs/${runId}/join-suggestions`)
         .then(J)
         .catch((e) => E(String(e)));
-  }, [api, runId, runState, hasColumns]);
+  }, [api, runId, runState, hasColumns, legacyMapping]);
   const columns = run?.analysis.columns || [];
   useEffect(() => {
-    if (runId && runState === "awaiting_approval")
+    if (runId && runState === "awaiting_approval" && legacyMapping)
       api<typeof sourcePreview>(`/imports/runs/${runId}/preview`, "POST", {
         mapping,
         offset: sourceOffset,
@@ -353,13 +374,9 @@ export function ImportWorkspace({
       })
         .then(SP)
         .catch((e) => E(String(e)));
-  }, [api, runId, runState, sourceOffset, previewSize, mapping]);
+  }, [api, runId, runState, sourceOffset, previewSize, mapping, legacyMapping]);
   const fieldLabel = (key: string) =>
     fields.find((f) => f.key === key)?.label || key;
-  const activeMappingPreparation =
-    canApprove && mappingPreparation?.runId === run?.id
-      ? mappingPreparation
-      : undefined;
   const mappedFields = Object.entries(mapping).filter(([, v]) => v);
   // Processed rows show the mapping that was actually approved for the run.
   const approvedFields = Object.entries(
@@ -705,7 +722,6 @@ export function ImportWorkspace({
               {run.analysis.empty_rows?.toLocaleString("hu-HU")}
             </p>
           )}
-          {run.analysis.headers && !activeMappingPreparation && <TemplatePanel key={run.id} api={api} runId={run.id} headers={run.analysis.headers} canCreate={canCreate} canClassify={permissions?.includes("products.classify") ?? canManage} />}
           {!!Object.keys(run.counters).length && (
             <p>
               Eredmény:{" "}
@@ -780,9 +796,32 @@ export function ImportWorkspace({
             </div>
           )}
           {activeMappingPreparation && (
-            <ImportMappingWizard key={run.id} {...activeMappingPreparation} />
+            <ImportMappingWizard
+              key={`mapping-${run.id}`}
+              api={api}
+              run={run}
+              registry={activeMappingPreparation}
+              canManage={canManage}
+              financialDefaults={financialDefaults}
+              onApproved={(next) => U((current) => current?.id === next.id ? next : current)}
+            />
           )}
-          {run.state === "awaiting_approval" && !activeMappingPreparation && (
+          {mappingEligible && !registry && (registryError ? (
+            <><p role="alert">{registryError}</p><button type="button" onClick={() => {
+              setRegistryError(""); retryRegistry(registryRetry + 1);
+            }}>Mezőlista újratöltése</button></>
+          ) : <p role="status">Webshopmotor mezőinek betöltése…</p>)}
+          {run.analysis.headers && (
+              <TemplatePanel
+                key={`template-${run.id}`}
+                api={api}
+                runId={run.id}
+                headers={run.analysis.headers}
+                canCreate={canCreate}
+                canClassify={permissions?.includes("products.classify") ?? canManage}
+              />
+            )}
+          {run.state === "awaiting_approval" && legacyMapping && (
             <>
               <nav aria-label="Import lépései" className="import-steps">
                 <ol>
