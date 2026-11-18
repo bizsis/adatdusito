@@ -161,9 +161,11 @@ def test_duplicate_targets_identity_conflict_and_financial_approval(imports):
         {0: FIELD("cikkszam"), 1: FIELD("termek_nev"), 2: FIELD("termek_nev"),
          3: FIELD("netto_ar")}, 4)).json()
     codes = {e["code"] for e in r["errors"]}
-    assert {"duplicate_target", "identity_conflict", "financial_approval_required"} <= codes
-    conflict = next(e for e in r["errors"] if e["code"] == "identity_conflict")
-    assert conflict["values"] == ["A"]
+    assert {"duplicate_target", "financial_approval_required"} <= codes
+    # Identity conflicts are reported, never blocking (rows are marked by the import).
+    assert "identity_conflict" not in codes
+    conflict = next(w for w in r["warnings"] if w["code"] == "identity_conflict_rows")
+    assert conflict["values"] == ["A"] and conflict["count"] == 1
     r = c.post(f"{BASE}/runs/{run_id}/column-mapping/validate",
                json=body({0: FIELD("cikkszam")}, 3)).json()
     assert {"code": "missing_columns", "columns": [3]} in r["errors"]
@@ -172,7 +174,8 @@ def test_duplicate_targets_identity_conflict_and_financial_approval(imports):
     assert any(e["code"] == "unknown_target" for e in r["errors"])
     assert any(e["code"] == "identity_missing" for e in r["errors"])
     bad = c.post(f"{BASE}/runs/{run_id}/column-mapping",
-                 json=body({0: FIELD("cikkszam")}, 4, name="x"))
+                 json=body({0: FIELD("cikkszam"), 1: FIELD("termek_nev"),
+                            2: FIELD("termek_nev")}, 4, name="x"))
     assert bad.status_code == 422 and isinstance(bad.json()["error"]["message"], str)
     assert bad.json()["error"]["validation"]["valid"] is False
 
@@ -327,3 +330,52 @@ def test_mapping_requires_completed_analysis_and_permissions(imports):
     work(t, run_id)
     login(c, "other@example.hu")
     assert c.get(f"{BASE}/runs/{run_id}/column-mapping").status_code in (403, 404)
+
+
+def test_duplicate_sku_rows_do_not_block_the_mapping(imports):
+    """Regression (#61 review): one repeated SKU used to block the whole mapping."""
+    c, t, s = imports
+    run_id = analysed(c, t, s, b"SKU;NAME;SIZE\nA;Polo;M\nA;Polo;L\nB;Ing;S\n")
+    cols = {0: FIELD("cikkszam"), 1: FIELD("termek_nev")}
+    r = c.post(f"{BASE}/runs/{run_id}/column-mapping/validate", json=body(cols, 3)).json()
+    assert r["valid"] and r["errors"] == []
+    assert {"code": "identity_conflict_rows", "count": 1, "values": ["A"]} in r["warnings"]
+    saved = c.post(f"{BASE}/runs/{run_id}/column-mapping", json=body(cols, 3, name="UNAS"))
+    assert saved.status_code == 200, saved.text
+    approve(c, run_id, mapping=saved.json()["import_mapping"],
+            engine_mapping_profile_id=saved.json()["profile_id"])
+    work(t, run_id)
+    rows = c.get(f"{BASE}/runs/{run_id}/rows?limit=10").json()["items"]
+    # Every row stays in the run; the engine marks the repeated key as before (its
+    # comparison covers the mapped fields only, so here it is a "duplicate").
+    assert [r["state"] for r in rows] == ["ready", "duplicate", "ready"]
+
+
+def test_short_and_long_description_and_both_sale_prices_together(imports):
+    """Regression (#61 review): two UNAS targets sharing one internal field were rejected."""
+    c, t, s = imports
+    run_id = analysed(c, t, s, ("SKU;NAME;SHORT;LONG;SALE_NET;SALE_GROSS\n"
+                                "A;X;rövid;hosszú;10;12,7\n").encode())
+    cols = {0: FIELD("cikkszam"), 1: FIELD("termek_nev"), 2: FIELD("rovid_leiras"),
+            3: FIELD("tulajdonsagok"), 4: FIELD("akcios_netto_ar"),
+            5: FIELD("akcios_brutto_ar")}
+    r = c.post(f"{BASE}/runs/{run_id}/column-mapping/validate",
+               json=body(cols, 6, financial_approved=True)).json()
+    assert r["valid"], r["errors"]
+    # Long description and net sale price feed the internal fields; the others are kept.
+    assert r["import_mapping"] == {"0": "sku", "1": "name", "3": "description",
+                                   "4": "sale_price"}
+    kept = {w["target"]: w["columns"] for w in r["warnings"]
+            if w["code"] == "kept_as_source_attribute"}
+    assert kept == {"description": [2], "sale_price": [5]}
+    saved = c.post(f"{BASE}/runs/{run_id}/column-mapping",
+                   json=body(cols, 6, name="UNAS", financial_approved=True))
+    assert saved.status_code == 200, saved.text
+    approve(c, run_id, mapping=saved.json()["import_mapping"], financial_approved=True,
+            engine_mapping_profile_id=saved.json()["profile_id"])
+    work(t, run_id)
+    with Session(t) as db:
+        product = db.scalars(select(SupplierProduct)).one()
+        assert product.data["description"] == "hosszú"
+        assert product.source_attributes["SHORT"]["raw"] == "rövid"  # not lost
+        assert product.source_attributes["SALE_GROSS"]["raw"] == "12,7"
