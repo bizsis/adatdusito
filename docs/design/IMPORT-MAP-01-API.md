@@ -65,13 +65,15 @@ alaplista jön (`source: "default"`), adatbázisírás nélkül.
 
 A két érték szándékosan külön mező. Alapból kötelező: `Cikkszám`, `Termék Név`, `Kategória`,
 `Nettó Ár`, `Bruttó Ár`, `Státusz`. A `type` értéke `text`, `number`, `date` vagy `boolean`,
-ugyanaz, mint az export-profiloknál. Az `internal_field` a belső importmező (`/fields`), amire
+ugyanaz, mint az export-profiloknál. A `kind: "auxiliary"` segédmező (alapból egy van:
+`afakulcs`, „Áfakulcs (segédmező)”). Csak a hiányzó ár kiszámításához használható, mert az UNAS
+nem tárol áfakulcsot, és nem exportálódik. Az `internal_field` a belső importmező (`/fields`), amire
 a megfeleltetés a meglévő importmotor felé lefordul.
 
 ### A2. Nyilvántartás szerkesztése – `PUT /engines/{key}` (meglévő)
 
 A meglévő végpont, amely ezeket az **opcionális** mezőket is elfogadja:
-`header`, `kind` (`standard`/`parameter`), `group`, `synonyms` (legfeljebb 30 szöveg),
+`header`, `kind` (`standard`/`parameter`/`auxiliary`), `group`, `synonyms` (legfeljebb 30 szöveg),
 `unas_required` (bool), `parameter` (`{name, group_name, param_type, unit}`).
 
 - A régi formátumú kérés változatlanul érvényes.
@@ -88,7 +90,7 @@ A fájl **összes** oszlopa, fájlsorrendben. Akkor érhető el, ha az elemzés 
 ```json
 {
   "run_id": 12, "engine_key": "unas", "engine_version": 3,
-  "rows": {"physical_rows": 4, "data_rows": 3, "empty_rows": 0},
+  "rows": {"physical_rows": 3, "data_rows": 3, "empty_rows": 0},
   "columns": [
     {"index": 0, "header": "SKU", "samples": ["A-1", "A-2", "A-3"], "filled": 3,
      "empty": 0, "warnings": [],
@@ -133,8 +135,8 @@ A fájl **összes** oszlopa, fájlsorrendben. Akkor érhető el, ha az elemzés 
   (`current_source: "saved_profile"`).
 - Ha a fájlban új vagy hiányzó fejléc van a mentetthez képest, a válaszban
   `saved_profile.requires_review: true` szerepel: célzott kezelői ellenőrzés kell.
-- A sorszámláló a meglévő `analysis` értékeiből jön. Egy 4 soros (fejléc + 3 termék) CSV
-  esetén `data_rows: 3`.
+- A sorszámláló a meglévő `analysis` értékeiből jön, és a fejléc alatti sorokat számolja. Egy
+  4 soros (fejléc + 3 termék) CSV esetén `physical_rows: 3`, `data_rows: 3`, `empty_rows: 0`.
 
 ### A4. Ellenőrzés mentés nélkül – `POST /runs/{id}/column-mapping/validate`
 
@@ -176,9 +178,13 @@ Válasz:
      "rule": null, "rows_missing": 3}
   ],
   "parameters_to_create": [{"name": "Szín", "header": "Paraméter: Szín||text|..."}],
-  "import_mapping": {"0": "sku", "1": "name", "2": "gtin"}
+  "import_mapping": {"0": "sku", "1": "name", "2": "gtin"},
+  "approval_defaults": {"tax_basis": "nettó"}
 }
 ```
+
+Az `approval_defaults` a `/approve` kéréshez javasolt kiegészítő értékeket tartalmazza (pl.
+`tax_basis`, ha ár is meg van feleltetve).
 
 **Hibák:**
 
@@ -193,6 +199,7 @@ Válasz:
 | `identity_target_not_mapped` | az `identity_target` mező nincs megfeleltetve |
 | `identity_conflict` | az azonosítóoszlopban ugyanaz az érték ismétlődik eltérő sorokban (`values`: legfeljebb 10 példa) |
 | `financial_approval_required` | ár, áfa vagy pénznem megfeleltetéséhez `financial_approved: true` kell |
+| `invalid_vat_rate` | a `vat_rate` nem 0, 5, 18 vagy 27 |
 
 **Figyelmeztetések:** `stock_zero_rows`, `invalid_vat_rows`,
 `scientific_identifier_rows`, `invalid_gtin_rows`.
@@ -224,14 +231,15 @@ forrásattribútumként megmarad, nem vész el.
 ### A5. Mentés – `POST /runs/{id}/column-mapping`
 
 A törzs A4-gyel azonos, és kötelező mellette a `name` (1–120 karakter). Csak `valid` mapping
-menthető; különben 422, a válaszban `error.validation` az A4 válasza.
+menthető; különben 422 a válasz: `{"error": {"code": "422", "message": "…",
+"validation": <A4 válasz>}}`.
 
 - Új `import_profiles` verzió jön létre beszállítónként és webshopmotoronként. A neve
   `"<name>"`, a `config.engine_mapping` pedig tartalmazza: `engine_key`, `engine_version`,
   `columns` (fejléc + cél), `parameters` (a jóváhagyott paraméterek `approved_by` és
   `approved_at` értékkel), `identity_target`, `vat_rate`.
 - A korábbi verziók megmaradnak.
-- Válasz: `{"profile_id", "version", "import_mapping", "validation"}`.
+- Válasz: `{"profile_id", "version", "import_mapping", "approval_defaults", "validation"}`.
 - Audit: `import.engine_mapping` és minden új paraméterre `import.parameter_approved`.
 
 A meglévő `POST /runs/{id}/approve` elfogad egy opcionális `engine_mapping_profile_id`
@@ -311,7 +319,9 @@ A donorkategória **összes** paramétere, AI-szűrés nélkül, egyszer
   - `set`: pontosan a megadottak;
   - `all`: összes kijelölése, vagyis minden `missing`;
   - `none`: kijelölés törlése.
-- `covered` vagy ismeretlen paraméter kijelölése: `422 not_selectable`.
+- `covered` vagy ismeretlen paraméter kijelölése: 422,
+  `{"error": {"code": "422", "message": "…", "reason": "not_selectable",
+  "emag_parameter_ids": [...]}}`.
 - Válasz: a B2 nézet frissítve.
 - Tárolás: `import_runs.config.donor_selection[<emag_category_id>]`
   `{parameter_ids, selected_by, selected_at}`. Audit: `import.donor_selection`.
