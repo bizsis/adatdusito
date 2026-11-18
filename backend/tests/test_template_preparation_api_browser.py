@@ -222,6 +222,16 @@ def test_save_and_reuse_with_real_template_api(environment, monkeypatch, width):
             reused = saved_payloads[-1]
             assert reused["columns"][1]["target"]["header"] == template["parameters"][0]["header"]
             assert [param["name"] for param in reused["new_parameters"]] == ["Egyedi jellemző"]
+            upload.set_input_files({
+                "name": "ismetelt-fejlec.csv",
+                "mimeType": "text/csv",
+                "buffer": "SKU;Szín;Szín\n0020;Fekete;Fehér\n".encode(),
+            })
+            expect(page.get_by_text("1 termék · 3 oszlop")).to_be_visible()
+            color = page.get_by_role("list", name="Paraméter: Szín hozzárendelései")
+            expect(color.get_by_role("listitem")).to_have_count(1)
+            expect(color.locator("samp")).to_have_text("Fekete")
+            expect(row("3. Szín").locator("samp")).to_have_text("Fehér")
             with Session(engine) as db:
                 products = db.scalars(select(SupplierProduct).order_by(SupplierProduct.id))
                 assert [(p.id, p.revision, p.last_run_id, p.data) for p in products] == snapshot
