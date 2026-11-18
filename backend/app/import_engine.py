@@ -476,6 +476,10 @@ def process_import(run_id):
 
             schedule(tenant_id=run.tenant_id)
         # The independent worktable must never change import/research outcomes.
+        if run is not None and (run.config or {}).get("analysis_only"):
+            # TEMPLATE-PREP-01: a template-preparation upload is never imported, so no
+            # TEMPLATE-01 worktable is built for it (#64 review, item 3).
+            return
         try:
             from app.template_engine import auto_template
             auto_template(db, run_id)
