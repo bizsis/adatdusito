@@ -137,7 +137,75 @@ TARGETS = [
     T("parameter", "Paraméter", "Paraméter: <név>|<csoport>|<típus>|…", "unas_schema",
       group="parameter", multiple="instances"),
 ]
+# TEMPLATE-FIX-02: every documented, importable UNAS column not yet in the list above. The
+# label is the technical UNAS header itself (no invented operator names); system-generated
+# columns, "Azonosító" (importability unproven) and customer-group prices stay out.
+ADDED = "template-fix-02"
+SCHEMA_TYPES = {"integer": "number", "decimal": "number", "date": "date",
+                "datetime": "date", "flag": "flag", "html": "html"}
+# Numbered families with the numbers seen in the real UNAS export (nothing beyond).
+NUMBERED_TARGETS = [
+    ("tartalmi_elemek", "Tartalmi elemek {n}", 1, 3, "content", "html"),
+    ("adat", "Adat {n}", 1, 3, "content", "text"),
+    ("statusz_n", "Státusz {n}", 1, 3, "visibility", "flag"),
+    ("crosssale", "CrossSale{n}", 1, 3, "related", "flag"),
+    ("upsale", "UpSale{n}", 1, 2, "related", "flag"),
+    ("valaszthato_tulajdonsag", "Választható Tulajdonság {n}", 1, 3, "variants", "text"),
+    ("tovabbi_lapful_cime", "További lapfül címe {n}", 1, 3, "tabs", "text"),
+]
+INSTANCE_RANGE = {"alternativ_kategoria": (1, 99), "raktarkeszlet": (0, 99)}
+
+
+def extra_targets():
+    have = {t["unas_header"] for t in TARGETS if t["unas_header"]}
+    out = []
+    for header, (group, data_type) in us.STANDARD.items():
+        if header in have or header in us.SYSTEM_GENERATED or header == "Azonosító":
+            continue
+        out.append(T(us.field_key(header), header, header, "unas_schema",
+                     SCHEMA_TYPES.get(data_type, "text"), group) | {"added_in": ADDED})
+    for key, header, low, high, group, type_ in NUMBERED_TARGETS:
+        out.append(T(key, header.replace("{n}", " n").replace("  ", " "), header,
+                     "unas_schema", type_, group, multiple="instances") | {"added_in": ADDED})
+        INSTANCE_RANGE[key] = (low, high)
+    return out
+
+
+TARGETS += extra_targets()
+for _t in TARGETS:
+    if _t["key"] in INSTANCE_RANGE:
+        _t["min_instance"], _t["max_instance"] = INSTANCE_RANGE[_t["key"]]
 BY_KEY = {t["key"]: t for t in TARGETS}
+PARAMETER_PREFIX = re.compile(r"^\s*param[eé]ter\s*:\s*", re.IGNORECASE)
+
+
+def clean_name(name):
+    """A parameter name without the "Paraméter:" prefix (never doubled) or a technical tail."""
+    text = (name or "").strip()
+    while PARAMETER_PREFIX.match(text):
+        text = PARAMETER_PREFIX.sub("", text, count=1).split("|", 1)[0].strip()
+    return text.strip()
+
+
+def parameter_label(name):
+    return f"Paraméter: {clean_name(name)}"
+
+
+def source_parameter(header):
+    """A source column whose header already declares a UNAS parameter."""
+    if not PARAMETER_PREFIX.match(header or ""):
+        return None
+    rest = PARAMETER_PREFIX.sub("", header, count=1)
+    if "|" in rest:
+        full = us.PARAMETER_PREFIX + rest
+        parsed = us.parse_parameter(full)
+        if parsed and parsed["name"] and parsed["known_type"]:
+            # A documented full header is kept exactly as the source wrote it.
+            return {"key": "parameter", "header": full, "parameter": {
+                "name": parsed["name"], "param_type": parsed["param_type"],
+                "group_name": parsed["group_name"], "unit": parsed["unit"]}}
+    name = clean_name(header)
+    return {"key": "parameter", "parameter": new_spec(name)} if name else None
 PURCHASE = re.compile(r"(cost|beszerz|purchase|lastinitialcost|initialcost|wholesale|"
                       r"nagyker|dealer|vetelar|bekerul)")
 TECHNICAL = re.compile(r"^(unknown|column|col|field|oszlop|id|code|kod)?[_\s-]*\d*$|"
@@ -162,12 +230,12 @@ def targets_payload():
 
 def unas_header(target, instance=None, parameter_head=None):
     key = target["key"]
-    if key == "alternativ_kategoria":
-        return f"Alternatív Kategória {instance}"
     if key == "raktarkeszlet":
         return "Raktárkészlet" if not instance else f"Raktárkészlet #{instance}"
     if key == "parameter":
         return parameter_head
+    if key in INSTANCE_RANGE:
+        return target["unas_header"].replace("{n}", str(instance))
     return target["unas_header"]
 
 
@@ -228,6 +296,16 @@ def suggest(header, values, approved):
     key = norm(header)
     if not key:
         return None
+    declared = source_parameter(header)
+    if declared:
+        return declared, 1.0, "source_parameter"
+    for t in TARGETS:  # TEMPLATE-FIX-02 numbered families: "Tartalmi elemek 2" -> instance 2
+        if t.get("added_in") and t["multiple"] == "instances":
+            pattern = re.escape(t["unas_header"]).replace(r"\{n\}", r"(\d+)")
+            match = re.fullmatch(pattern, header.strip())
+            low, high = INSTANCE_RANGE[t["key"]]
+            if match and low <= int(match.group(1)) <= high:
+                return {"key": t["key"], "instance": int(match.group(1))}, 1.0, "exact"
     purchase = bool(PURCHASE.search(key))
     for t in TARGETS:
         if t["key"] == "parameter" or (purchase and t["price"]):
@@ -271,7 +349,7 @@ def suggest(header, values, approved):
 
 
 def new_spec(name):
-    return {"name": name, "param_type": "text", "group_name": "", "unit": None}
+    return {"name": clean_name(name), "param_type": "text", "group_name": "", "unit": None}
 
 
 def spec_of(p):
@@ -365,7 +443,8 @@ def preparation(db, run, engine="unas", currency="HUF", template_id=None):
                  "sample_source": "file" if available else "analysis",
                  "empty": not values[i],
                  "warnings": column_warnings(values[i], cells[i], headers, i),
-                 "suggestion": {"target": s[0], "confidence": s[1], "method": s[2]} if s
+                 "suggestion": {"target": s[0], "confidence": s[1], "method": s[2],
+                                "label": target_label(s[0])} if s
                  else None,
                  "assignment": None, "assignment_source": None, "status": "unmapped"}
         saved = stored.get(idents[i])
@@ -401,7 +480,11 @@ def preparation(db, run, engine="unas", currency="HUF", template_id=None):
         "columns": columns, "template": None,
         "template_candidates": [{"id": p.id, "name": p.name, "version": p.version,
                                  "score": sc} for sc, p in candidates],
-        "approved_parameters": [{"name": p["name"], "header": p["header"]} for p in approved],
+        "approved_parameters": [{"name": p["name"], "header": p["header"],
+                                 "label": parameter_label(p["name"])} for p in approved],
+        "occupied": occupied([(c["index"], c["assignment"]["target"]) for c in columns
+                              if (c["assignment"] or {}).get("state") == "mapped"
+                              and c["assignment"].get("target")]),
         "defaults": dict(chosen.config["template"]["defaults"]) if chosen else dict(DEFAULTS),
         "warnings": currency_warnings(values, currency)}
     if chosen:
@@ -422,7 +505,7 @@ def slot(target):
     if key == "parameter":
         p = target.get("parameter") or {}
         return ("parameter", target.get("header") or p.get("name"))
-    if key in ("alternativ_kategoria", "raktarkeszlet"):
+    if key in INSTANCE_RANGE:
         return (key, target.get("instance"))
     if key == "kep":
         return (key, target.get("order"))
@@ -464,22 +547,24 @@ def validate(db, run, body):
     approved = {p["header"]: p for p in template_parameters(db, run.tenant_id)}
     new_params = {}
     for p in body.get("new_parameters", []):
+        # TEMPLATE-FIX-02: the name is enough; the "Paraméter:" prefix is never doubled.
+        p = {**p, "name": clean_name(p.get("name"))}
         try:
-            header = parameter_header(p["name"], p.get("param_type", "text"),
-                                      p.get("group_name", ""), p.get("unit"))
+            header = parameter_header(p["name"], p.get("param_type") or "text",
+                                      p.get("group_name") or "", p.get("unit"))
         except ValueError:
             errors.append({"code": "invalid_parameter", "name": p.get("name")})
             continue
         if p.get("approved") is True:
-            new_params[header] = {**spec_of({**p, "name": p["name"].strip()}),
-                                  "header": header}
+            new_params[header] = {**spec_of(p), "header": header}
+    declared = declared_parameters(headers)
     indexes = sorted(c["index"] for c in body["columns"])
     if indexes != list(range(len(headers))):
         errors.append({"code": "missing_columns",
                        "columns": sorted(set(range(len(headers))) - set(indexes))})
     resolved, seen, undecided = [], {}, []
-    next_instance = {"alternativ_kategoria": 1, "raktarkeszlet": 0}
-    used_instances = {"alternativ_kategoria": set(), "raktarkeszlet": set()}
+    next_instance = {k: low for k, (low, _) in INSTANCE_RANGE.items()}
+    used_instances = {k: set() for k in INSTANCE_RANGE}
     used_orders = set()
     mapped = sorted((c for c in body["columns"] if c.get("state") == "mapped"),
                     key=lambda c: c["index"])
@@ -508,12 +593,12 @@ def validate(db, run, body):
             spec = t.get("parameter") or {}
             try:
                 head = t.get("header") or parameter_header(
-                    spec.get("name"), spec.get("param_type", "text"),
-                    spec.get("group_name", ""), spec.get("unit"))
+                    clean_name(spec.get("name")), spec.get("param_type") or "text",
+                    spec.get("group_name") or "", spec.get("unit"))
             except ValueError:
                 errors.append({"code": "invalid_parameter", "columns": [c["index"]]})
                 continue
-            if head not in approved and head not in new_params:
+            if head not in approved and head not in new_params and head not in declared:
                 errors.append({"code": "parameter_not_approved", "columns": [c["index"]],
                                "target": head})
                 continue
@@ -529,8 +614,8 @@ def validate(db, run, body):
                 t["instance"] = n
                 used_instances[target["key"]].add(n)
                 next_instance[target["key"]] = n + 1
-            minimum = 1 if target["key"] == "alternativ_kategoria" else 0
-            if not isinstance(t["instance"], int) or not minimum <= t["instance"] <= 99:
+            minimum, maximum = INSTANCE_RANGE[target["key"]]
+            if not isinstance(t["instance"], int) or not minimum <= t["instance"] <= maximum:
                 errors.append({"code": "unknown_target", "columns": [c["index"]],
                                "target": target["key"]})
                 continue
@@ -549,7 +634,8 @@ def validate(db, run, body):
                                                   "parameter") and v is not None}
         seen.setdefault(slot(t), []).append(c["index"])
         resolved.append({"index": c["index"], "header": headers[c["index"]], "target": t,
-                         "unas_header": unas_header(target, t.get("instance"), head)})
+                         "unas_header": unas_header(target, t.get("instance"), head),
+                         "label": target_label(t, head)})
     for key, cols in seen.items():
         if len(cols) > 1:
             errors.append({"code": "duplicate_target", "columns": cols, "target": key[0]})
@@ -577,8 +663,61 @@ def validate(db, run, body):
             "parameters_to_create": [{"name": p["name"], "header": h}
                                      for h, p in new_params.items()
                                      if h not in approved and ("parameter", h) in seen],
-            "resolved": resolved, "_new_params": new_params, "_approved": approved,
+            "resolved": resolved,
+            "occupied": occupied([(r["index"], r["target"]) for r in resolved]),
+            "_new_params": new_params, "_approved": approved, "_declared": declared,
             "_defaults": defaults}
+
+
+def declared_parameters(headers):
+    """Parameters the source file itself declares ("Paraméter: …" headers): no approval."""
+    out = {}
+    for h in headers:
+        spec = source_parameter(h)
+        if spec:
+            p = spec["parameter"]
+            head = spec.get("header") or parameter_header(p["name"])
+            out[head] = {**spec_of(p), "header": head}
+    return out
+
+
+def target_label(target, head=None):
+    if target["key"] == "parameter":
+        name = (target.get("parameter") or {}).get("name") or (
+            (us.parse_parameter(head or target.get("header") or "") or {}).get("name"))
+        return parameter_label(name or "")
+    base = BY_KEY[target["key"]]
+    if target["key"] == "raktarkeszlet":
+        return f"Raktárkészlet #{target.get('instance') or 0}"
+    if target["key"] in INSTANCE_RANGE and target.get("instance") is not None:
+        return unas_header(base, target["instance"]) if base.get("added_in") \
+            else f"{base['label']} {target['instance']}"
+    return base["label"]
+
+
+def occupied(entries):
+    """Targets taken by the given (column, target) pairs; a cleared assignment frees one."""
+    slots = {}
+    for index, target in entries:
+        key = target["key"]
+        base = BY_KEY.get(key)
+        if base is None:
+            continue
+        if key == "parameter":
+            name = clean_name((target.get("parameter") or {}).get("name") or (
+                us.parse_parameter(target.get("header") or "") or {}).get("name") or "")
+            ident = f"parameter:{name}"
+        elif key in INSTANCE_RANGE and target.get("instance") is not None:
+            ident = f"{key}#{target['instance']}"
+        else:
+            ident = key
+        item = slots.setdefault(ident, {"slot": ident, "key": key, "columns": [],
+                                        "label": target_label(target),
+                                        "multiple": base["multiple"]})
+        if key in INSTANCE_RANGE and target.get("instance") is not None:
+            item["instance"] = target["instance"]
+        item["columns"].append(index)
+    return list(slots.values())
 
 
 def field_report(by_key, defaults):
@@ -708,6 +847,11 @@ def save(db, run, body, actor_id):
         head = r["target"]["header"]
         if head in report["_approved"]:
             parameters.append(report["_approved"][head])
+        elif head in report["_declared"] and head not in report["_new_params"]:
+            p = {**report["_declared"][head], "approved_by": actor_id, "approved_at": at,
+                 "origin": "source_header"}  # declared by the source file itself
+            parameters.append(p)
+            created.append(p)
         else:
             p = {**report["_new_params"][head], "approved_by": actor_id, "approved_at": at,
                  "origin": "operator_created"}

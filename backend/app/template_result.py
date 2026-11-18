@@ -347,8 +347,17 @@ def generate(db, template, run):
     return p, iterate()
 
 
+def export_header(column):
+    """The header written to the UNAS file. Parameters keep the documented full UNAS header
+    ("Paraméter: Név|csoport|típus|…"): the short "Paraméter: Név" form is not documented
+    for the UNAS import (TEMPLATE-FIX-02, owner decision pending). Single switch point."""
+    return column["header"]
+
+
 def public_columns(p):
-    return [{k: v for k, v in c.items() if not k.startswith("_")} for c in p["columns"]]
+    """API view; "label" is the display name ("Paraméter: Név" for parameters)."""
+    return [{k: v for k, v in c.items() if not k.startswith("_")}
+            | {"label": tp.target_label(c["target"], c["header"])} for c in p["columns"]]
 
 
 def preview(db, template, run, offset, limit):
@@ -390,7 +399,7 @@ def export_rows(db, template, run):
             counters["exported"] += 1
             yield row["values"]
 
-    return [c["header"] for c in p["columns"]], iterate(), counters
+    return [export_header(c) for c in p["columns"]], iterate(), counters
 
 
 def write_xlsx(path, headers, items):

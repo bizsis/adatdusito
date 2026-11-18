@@ -24,7 +24,7 @@ változatlanok; minden itt leírt változás kiegészítés.
 - **A forrásértékek változatlanok.**
 - **Megjelenítés:** minden válaszban, ahol paraméter szerepel, új **`label`** mező van, mindig
   `Paraméter: Név` alakban. A frontend ezt jeleníti meg:
-  - előkészítés: `suggestion.target.label`, `approved_parameters[].label`,
+  - előkészítés: `suggestion.label` (a `label` nem kerül a `target` objektumba, mert a kliens azt visszaküldi), `approved_parameters[].label`,
     `occupied[].label`;
   - validálás: `resolved[].label`;
   - eredmény: `columns[].label`.
