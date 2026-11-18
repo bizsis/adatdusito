@@ -37,6 +37,10 @@ def ui(environment, monkeypatch):
 
     def handle(route):
         u = urlparse(route.request.url)
+        if u.path == "/api/v1/imports/engines/unas/registry":
+            # These assertions cover the retained RC-04 import flow.
+            route.fulfill(status=404, json={"detail": "Not Found"})
+            return
         if u.path.startswith("/api/"):
             response = client.request(
                 route.request.method,

@@ -1,485 +1,696 @@
-import { useId, useRef, useState } from "react";
+import { useEffect, useId, useRef, useState } from "react";
+import { DonorSelection } from "./DonorSelection";
+import {
+  errorText,
+  loadMapping,
+  parameterHeader,
+  saveMapping,
+  validateMapping,
+  type MappingInput,
+  type MappingView,
+  type ParameterDraft,
+  type ParameterType,
+  type Registry,
+  type Request,
+  type SavedMapping,
+  type Target,
+  type Validation,
+} from "./importMappingApi";
 import "./import-mapping.css";
 
-// Presentation types only. The adapter maps the published backend contract to
-// these props and owns persistence, validation of source data and donor lookup.
-export type MappingChoice =
-  | { kind: "keep" }
-  | { kind: "field"; key: string }
-  | { kind: "newParameter"; name: string };
-
-export type MappingColumn = {
-  id: string;
-  name: string;
-  samples: readonly string[];
-  suggestion?: {
-    choice: Exclude<MappingChoice, { kind: "keep" }>;
-    confidence?: number;
-  };
-  savedChoice?: MappingChoice;
-  warnings?: readonly string[];
+type Choice = Target | { kind: "new"; draft: ParameterDraft };
+type Run = {
+  id: number;
+  filename: string;
+  state: string;
+  config: Record<string, unknown>;
 };
 
-export type MappingEngine = {
-  id: string;
-  name: string;
-  fields: readonly { key: string; label: string; required: boolean }[];
-  // Deterministic fallbacks already established by analysis, such as Státusz.
-  providedFields?: Readonly<Record<string, string>>;
+const types: Record<ParameterType, string> = {
+  text: "Szöveg",
+  num: "Szám",
+  enum: "Lista",
+  enummore: "Többértékű lista",
+  link_text: "Hivatkozás",
+};
+const columnWarnings: Record<string, string> = {
+  scientific_notation_identifier:
+    "Tudományos jelölésű azonosító. Kérj teljes számjegysort a forrásból.",
+  invalid_gtin_samples: "Érvénytelen EAN/GTIN található a mintákban.",
+  negative_values: "Negatív érték található a mintákban.",
+  duplicate_header: "Ez a fejléc több oszlopban is szerepel.",
+};
+const issueLabels: Record<string, string> = {
+  duplicate_target: "Több oszlop ugyanahhoz a célmezőhöz tartozik.",
+  unknown_target: "A kiválasztott célmező már nem érhető el.",
+  parameter_not_approved: "A paraméter létrehozását jóvá kell hagyni.",
+  invalid_parameter: "Hibás paraméternév, típus vagy mértékegység.",
+  missing_columns: "Hiányzik egy forrásoszlop a megfeleltetésből.",
+  identity_missing: "Rendelj hozzá nevet vagy azonosítót.",
+  identity_target_not_mapped: "A kiválasztott kulcsmező nincs megfeleltetve.",
+  identity_conflict: "Ugyanaz az azonosító eltérő sorokban szerepel.",
+  financial_approval_required:
+    "A pénzügyi megfeleltetés külön jóváhagyást igényel.",
+  invalid_vat_rate: "Érvénytelen áfakulcs.",
+  invalid_vat_rows: "Érvénytelen áfakulcs található a forrásban.",
+  scientific_identifier_rows:
+    "A tudományos jelölésű azonosítók teljes értéke nem állítható helyre.",
+  invalid_gtin_rows: "Érvénytelen EAN/GTIN található a forrásban.",
+};
+const fallbackLabels: Record<string, string> = {
+  default_1: "Alapértelmezett érték: 1",
+  from_availability: "Pótlás a rendelhetőségből",
+  net_from_gross_vat: "Számítás a bruttó árból és az ismert áfakulcsból",
+  gross_from_net_vat: "Számítás a nettó árból és az ismert áfakulcsból",
 };
 
-export type MissingParameter = {
-  key: string;
-  name: string;
-  category?: string;
-  required?: boolean;
-};
+const optionValue = (choice?: Choice) =>
+  !choice
+    ? ""
+    : choice.kind === "field"
+      ? `field:${choice.key}`
+      : choice.kind === "parameter"
+        ? `parameter:${choice.header}`
+        : "new";
+const identityValue = (target: Target) =>
+  target.kind === "field" ? target.key : target.header;
 
-export type MappingReview = {
-  engineId: string;
-  columns: readonly { columnId: string; choice: MappingChoice }[];
-};
-
-export type MissingReview = {
-  donorLabels: readonly string[];
-  parameters: readonly MissingParameter[];
-  canProceed: boolean;
-  message?: string;
-};
-
-export type ImportMappingWizardProps = {
-  fileName: string;
-  productCount: number;
-  columns: readonly MappingColumn[];
-  engines: readonly MappingEngine[];
-  initialEngineId?: string;
-  onApproveMapping: (review: MappingReview) => Promise<MissingReview>;
-  onSelectParameters: (keys: readonly string[]) => Promise<void>;
-};
-
-const keep: MappingChoice = { kind: "keep" };
-const targetValue = (choice: MappingChoice) =>
-  choice.kind === "field" ? `field:${choice.key}` : choice.kind;
-const normalize = (name: string) =>
-  name.trim().normalize("NFC").toLocaleLowerCase("hu");
-
-export function ImportMappingWizard({
-  fileName,
-  productCount,
-  columns,
-  engines,
-  initialEngineId,
-  onApproveMapping,
-  onSelectParameters,
-}: ImportMappingWizardProps) {
-  const id = useId();
-  const stepHeading = useRef<HTMLHeadingElement>(null);
-  const [engineId, setEngineId] = useState(
-    initialEngineId ?? engines[0]?.id ?? "",
+function ValidationReport({
+  report,
+  view,
+}: {
+  report: Validation;
+  view: MappingView;
+}) {
+  return (
+    <div className="mapping-validation">
+      <p role="status">
+        {report.valid
+          ? "A megfeleltetés menthető."
+          : "A megfeleltetés javításra szorul."}
+      </p>
+      {[...report.errors, ...report.warnings].map((issue, index) => (
+        <p
+          key={index}
+          role={index < report.errors.length ? "alert" : undefined}
+        >
+          {issueLabels[issue.code] ?? issue.code}
+          {issue.columns?.length
+            ? ` Oszlop: ${issue.columns.map((i) => view.columns.find((c) => c.index === i)?.header || i + 1).join(", ")}.`
+            : ""}
+          {issue.count !== undefined && ` Érintett: ${issue.count}.`}
+          {issue.values?.length ? ` Példák: ${issue.values.join(", ")}.` : ""}
+        </p>
+      ))}
+      <ul aria-label="Kötelező mezők ellenőrzése">
+        {report.required.map((field) => (
+          <li key={field.key}>
+            <strong>{field.header}</strong>
+            {" – "}
+            {field.status === "mapped"
+              ? "Megfeleltetve"
+              : field.status === "fallback"
+                ? (fallbackLabels[field.rule ?? ""] ?? "Pótolható")
+                : `Hiányzik ${field.rows_missing} sorból`}
+          </li>
+        ))}
+      </ul>
+    </div>
   );
+}
+
+function MappingForm<T extends Run>({
+  api,
+  run,
+  registry,
+  view,
+  financialDefaults,
+  onApproved,
+}: {
+  api: Request;
+  run: T;
+  registry: Registry;
+  view: MappingView;
+  financialDefaults: { currency: string; price_type: string };
+  onApproved: (run: T) => void;
+}) {
   const [choices, setChoices] = useState(
     () =>
-      new Map(
-        columns.flatMap((column) =>
-          column.savedChoice ? [[column.id, column.savedChoice] as const] : [],
+      new Map<number, Choice>(
+        view.columns.flatMap((column) =>
+          column.current ? [[column.index, column.current]] : [],
         ),
       ),
   );
-  const [review, setReview] = useState<MissingReview | null>(null);
-  const [selected, setSelected] = useState<Set<string>>(() => new Set());
-  const [complete, setComplete] = useState(false);
+  const [name, setName] = useState("UNAS oszlopmegfeleltetés");
+  const [identity, setIdentity] = useState("");
+  const [financial, setFinancial] = useState(false);
+  const [vat, setVat] = useState("");
+  const [feed, setFeed] = useState("partial");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
-
-  const engine = engines.find((entry) => entry.id === engineId);
-  const decisions = columns.map((column) => ({
-    columnId: column.id,
-    choice: choices.get(column.id) ?? keep,
-  }));
-  const fields = decisions.flatMap(({ choice }) =>
-    choice.kind === "field" ? [choice.key] : [],
-  );
-  const parameterNames = decisions.flatMap(({ choice }) =>
-    choice.kind === "newParameter" ? [normalize(choice.name)] : [],
-  );
-  const missingFields =
-    engine?.fields.filter(
-      (field) =>
-        field.required &&
-        !fields.includes(field.key) &&
-        !engine.providedFields?.[field.key],
-    ) ?? [];
-  const hasDuplicate =
-    new Set(fields).size !== fields.length ||
-    new Set(parameterNames).size !== parameterNames.length;
-  const invalidField = fields.some(
-    (key) => !engine?.fields.some((field) => field.key === key),
-  );
-  const parameters = [
-    ...new Map(review?.parameters.map((item) => [item.key, item])).values(),
-  ];
-  const canApproveMapping = Boolean(
-    engine &&
-    columns.length &&
-    !missingFields.length &&
-    !hasDuplicate &&
-    !parameterNames.includes("") &&
-    !invalidField,
-  );
-
-  function choose(columnId: string, choice: MappingChoice) {
-    setError("");
-    setChoices((previous) => new Map(previous).set(columnId, choice));
+  const [checked, setChecked] = useState<{ key: string; report: Validation }>();
+  const saved = useRef<{ key: string; profile: SavedMapping } | null>(null);
+  const [savedForRun, setSavedForRun] = useState(false);
+  const pending = useRef(false);
+  const id = useId();
+  const options = new Map<
+    string,
+    { label: string; target: Target; internal?: string | null }
+  >();
+  for (const field of registry.fields) {
+    const target: Target =
+      field.kind === "parameter"
+        ? { kind: "parameter", header: field.header }
+        : { kind: "field", key: field.key, header: field.header };
+    options.set(optionValue(target), {
+      label: field.label + (field.required ? " (kötelező)" : ""),
+      target,
+      internal: field.internal_field,
+    });
   }
-
-  function focusStep() {
-    requestAnimationFrame(() => stepHeading.current?.focus());
-  }
-
-  async function approve() {
-    if (busy || !canApproveMapping) return;
-    setError("");
-    setBusy(true);
-    try {
-      const result = await onApproveMapping({
-        engineId,
-        columns: decisions.map((decision) =>
-          decision.choice.kind === "newParameter"
-            ? {
-                ...decision,
-                choice: {
-                  ...decision.choice,
-                  name: decision.choice.name.trim(),
-                },
-              }
-            : decision,
-        ),
+  for (const parameter of view.approved_parameters) {
+    const target: Target = { kind: "parameter", header: parameter.header };
+    if (!options.has(optionValue(target)))
+      options.set(optionValue(target), {
+        label: `Paraméter: ${parameter.name}`,
+        target,
       });
-      setReview(result);
-      setSelected(new Set());
-      focusStep();
+  }
+  const identities = [
+    ...new Set([...choices.values()].map(optionValue)),
+  ].flatMap((key) => {
+    const option = options.get(key);
+    return option?.internal &&
+      ["sku", "gtin", "mpn", "model", "supplier_id"].includes(option.internal)
+      ? [option]
+      : [];
+  });
+  const effectiveIdentity =
+    identities.find((item) => identityValue(item.target) === identity) ??
+    identities.find((item) => item.internal === "sku") ??
+    identities[0];
+  const drafts = [...choices.values()].flatMap((choice) =>
+    choice.kind === "new" ? [choice.draft] : [],
+  );
+  const invalidDraft = drafts.some(
+    (draft) =>
+      !draft.name.trim() ||
+      draft.name.includes("|") ||
+      draft.unit?.includes("|") ||
+      !draft.approved,
+  );
+  const body: MappingInput = {
+    engine_key: registry.engine_key,
+    columns: view.columns.map(({ index }) => {
+      const choice = choices.get(index);
+      return {
+        index,
+        target:
+          choice?.kind === "new"
+            ? { kind: "parameter", header: parameterHeader(choice.draft) }
+            : choice
+              ? (options.get(optionValue(choice))?.target ?? choice)
+              : null,
+      };
+    }),
+    new_parameters: drafts.map((draft) => ({
+      ...draft,
+      name: draft.name.trim(),
+    })),
+    identity_target: effectiveIdentity
+      ? identityValue(effectiveIdentity.target)
+      : null,
+    financial_approved: financial,
+    vat_rate: vat === "" ? null : Number(vat),
+  };
+  const key = JSON.stringify(body);
+  const report = checked?.key === key ? checked.report : undefined;
+  const saveKey = JSON.stringify([key, name.trim()]);
+  const invalidTarget = [...choices.values()].some(
+    (choice) => choice.kind !== "new" && !options.has(optionValue(choice)),
+  );
+
+  function choose(index: number, choice?: Choice) {
+    setError("");
+    setChoices((previous) => {
+      const next = new Map(previous);
+      if (choice) next.set(index, choice);
+      else next.delete(index);
+      return next;
+    });
+  }
+
+  async function runAction(task: () => Promise<void>) {
+    if (pending.current) return;
+    pending.current = true;
+    setBusy(true);
+    setError("");
+    try {
+      await task();
     } catch (failure) {
-      setError(
-        failure instanceof Error ? failure.message : "A jóváhagyás sikertelen.",
-      );
+      setError(errorText(failure));
     } finally {
+      pending.current = false;
       setBusy(false);
     }
   }
 
-  async function finish() {
-    if (busy || !review?.canProceed) return;
-    setError("");
-    setBusy(true);
-    try {
-      await onSelectParameters(
-        parameters
-          .filter((item) => selected.has(item.key))
-          .map((item) => item.key),
+  function validate() {
+    if (invalidDraft || invalidTarget) return;
+    setChecked(undefined);
+    void runAction(async () =>
+      setChecked({ key, report: await validateMapping(api, run.id, body) }),
+    );
+  }
+
+  function approve() {
+    if (!report?.valid || invalidDraft || invalidTarget || !name.trim()) return;
+    void runAction(async () => {
+      // A retry of /approve must reuse a profile successfully created by A5.
+      const profile =
+        saved.current?.key === saveKey
+          ? saved.current.profile
+          : await saveMapping(api, run.id, body, name.trim());
+      saved.current = { key: saveKey, profile };
+      setSavedForRun(true);
+      const internalIdentity = body.columns.find(
+        ({ target }) =>
+          target && identityValue(target) === body.identity_target,
       );
-      setComplete(true);
-      focusStep();
-    } catch (failure) {
-      setError(
-        failure instanceof Error
-          ? failure.message
-          : "A kijelölés mentése sikertelen.",
-      );
-    } finally {
-      setBusy(false);
-    }
+      const approved = await api<T>(`/imports/runs/${run.id}/approve`, "POST", {
+        name: name.trim(),
+        mapping: profile.import_mapping,
+        engine_mapping_profile_id: profile.profile_id,
+        identity_field: internalIdentity
+          ? (profile.import_mapping[String(internalIdentity.index)] ?? null)
+          : null,
+        financial_approved: financial,
+        feed_type: feed,
+        ...profile.approval_defaults,
+        ...(financial && financialDefaults.currency
+          ? { currency: financialDefaults.currency }
+          : {}),
+        ...(financial && financialDefaults.price_type
+          ? { price_type: financialDefaults.price_type }
+          : {}),
+      });
+      onApproved(approved);
+    });
   }
 
   return (
-    <section className="mapping-wizard" aria-labelledby={`${id}-step`}>
+    <>
       <p className="mapping-file">
-        <strong>{fileName}</strong> · {productCount.toLocaleString("hu-HU")}{" "}
-        termék · {columns.length} forrásoszlop
+        {view.rows.data_rows === null
+          ? "A termékszám nem érhető el"
+          : `${view.rows.data_rows.toLocaleString("hu-HU")} termék`}
+        {" · "}
+        {view.columns.length} forrásoszlop
       </p>
-      <ol className="mapping-steps" aria-label="Előkészítés lépései">
-        <li aria-current={!review ? "step" : undefined}>Oszlopmegfeleltetés</li>
-        <li aria-current={review ? "step" : undefined}>eMAG-paraméterek</li>
-      </ol>
-      <h3 id={`${id}-step`} ref={stepHeading} tabIndex={-1}>
-        {complete
-          ? "Az előkészítés kész"
-          : review
-            ? "Hiányzó eMAG-paraméterek"
-            : "Oszlopmegfeleltetés"}
-      </h3>
-      {!review && (
-        <fieldset className="mapping-panel" disabled={busy}>
-          <label className="mapping-engine">
-            Webshopmotor
+      <fieldset className="mapping-panel" disabled={busy}>
+        <label className="mapping-engine">
+          Webshopmotor
+          <select value={registry.engine_key} disabled>
+            <option value={registry.engine_key}>{registry.name}</option>
+          </select>
+        </label>
+        {view.saved_profile && (
+          <p>
+            Korábbi megfeleltetés · {view.saved_profile.version}. verzió
+            {view.saved_profile.requires_review &&
+              " · Ellenőrizd a változásokat."}
+            {view.saved_profile.new_headers.length > 0 &&
+              ` Új oszlopok: ${view.saved_profile.new_headers.join(", ")}.`}
+            {view.saved_profile.missing_headers.length > 0 &&
+              ` Hiányzó oszlopok: ${view.saved_profile.missing_headers.join(", ")}.`}
+          </p>
+        )}
+        <ul className="mapping-columns" aria-label="Forrásoszlopok">
+          {view.columns.map((column) => {
+            const choice = choices.get(column.index);
+            const value = optionValue(choice);
+            const suggestion = column.suggestion?.target;
+            const suggestedOption =
+              suggestion && suggestion.kind !== "new_parameter"
+                ? options.get(optionValue(suggestion))
+                : undefined;
+            const caption =
+              suggestion?.kind === "new_parameter"
+                ? `Paraméter: ${suggestion.parameter.name}`
+                : suggestedOption?.label;
+            const label = column.header || "Névtelen oszlop";
+            return (
+              <li key={column.index} className="mapping-column">
+                <div className="mapping-source">
+                  <strong>
+                    {column.index + 1}. {label}
+                  </strong>
+                  <ul aria-label="Forrásértékek">
+                    {column.samples.length ? (
+                      column.samples.map((value, index) => (
+                        <li key={index}>{value}</li>
+                      ))
+                    ) : (
+                      <li>Nincs mintaérték</li>
+                    )}
+                  </ul>
+                  {column.warnings.map((warning) => (
+                    <p key={warning}>{columnWarnings[warning] ?? warning}</p>
+                  ))}
+                </div>
+                <div className="mapping-suggestion">
+                  {caption && suggestion && column.suggestion ? (
+                    <>
+                      <span>
+                        Javaslat: {caption} (
+                        {Math.round(column.suggestion.confidence * 100)}%)
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() =>
+                          choose(
+                            column.index,
+                            suggestion.kind === "new_parameter"
+                              ? {
+                                  kind: "new",
+                                  draft: {
+                                    ...suggestion.parameter,
+                                    approved: false,
+                                  },
+                                }
+                              : suggestedOption?.target,
+                          )
+                        }
+                      >
+                        Javaslat átvétele
+                      </button>
+                    </>
+                  ) : (
+                    <span>Nincs javaslat</span>
+                  )}
+                </div>
+                <div className="mapping-target">
+                  <label>
+                    Célmező
+                    <select
+                      aria-label={`Célmező: ${label}, ${column.index + 1}. oszlop`}
+                      value={value}
+                      onChange={(event) =>
+                        choose(
+                          column.index,
+                          event.target.value === "new"
+                            ? {
+                                kind: "new",
+                                draft: {
+                                  name: "",
+                                  param_type: "text",
+                                  group_name: "",
+                                  unit: null,
+                                  approved: false,
+                                },
+                              }
+                            : options.get(event.target.value)?.target,
+                        )
+                      }
+                    >
+                      <option value="">Eredeti oszlop megőrzése</option>
+                      {value && value !== "new" && !options.has(value) && (
+                        <option value={value} disabled>
+                          Korábbi célmező · ellenőrizendő
+                        </option>
+                      )}
+                      {[...options].map(([key, option]) => (
+                        <option key={key} value={key}>
+                          {option.label}
+                        </option>
+                      ))}
+                      <option value="new">Új paraméter létrehozása</option>
+                    </select>
+                  </label>
+                  {choice && choice === column.current && (
+                    <small>Korábbi megfeleltetés</small>
+                  )}
+                  {choice?.kind === "new" && (
+                    <ParameterEditor
+                      draft={choice.draft}
+                      onChange={(draft) =>
+                        choose(column.index, { kind: "new", draft })
+                      }
+                    />
+                  )}
+                </div>
+              </li>
+            );
+          })}
+        </ul>
+        <div className="mapping-options">
+          <label>
+            Profil neve
+            <input
+              value={name}
+              maxLength={120}
+              onChange={(event) => setName(event.target.value)}
+            />
+          </label>
+          <label>
+            Kulcsmező
             <select
-              value={engineId}
-              onChange={(event) => {
-                setEngineId(event.target.value);
-                setChoices(new Map());
-                setError("");
-              }}
+              value={
+                effectiveIdentity ? identityValue(effectiveIdentity.target) : ""
+              }
+              onChange={(event) => setIdentity(event.target.value)}
             >
-              {!engine && <option value="">Válassz webshopmotort</option>}
-              {engines.map((item) => (
-                <option key={item.id} value={item.id}>
-                  {item.name}
+              {!effectiveIdentity && (
+                <option value="">Automatikus azonosítás</option>
+              )}
+              {identities.map((item) => (
+                <option
+                  key={identityValue(item.target)}
+                  value={identityValue(item.target)}
+                >
+                  {item.label}
                 </option>
               ))}
             </select>
           </label>
-          <p>
-            Válaszd ki a célmezőt, vagy tartsd meg az oszlopot eredeti mezőként.
-            A javaslatokat egyenként veheted át.
-          </p>
-          <ul className="mapping-columns" aria-label="Forrásoszlopok">
-            {columns.map((column, index) => {
-              const choice = choices.get(column.id) ?? keep;
-              const suggestion = column.suggestion;
-              const suggestionChoice = suggestion?.choice;
-              const suggestedField =
-                suggestionChoice?.kind === "field"
-                  ? engine?.fields.find(
-                      (field) => field.key === suggestionChoice.key,
-                    )
-                  : undefined;
-              const caption =
-                suggestionChoice?.kind === "newParameter"
-                  ? `Paraméter: ${suggestionChoice.name}`
-                  : suggestedField?.label;
-              const label = column.name || `Névtelen oszlop (${index + 1}.)`;
-              const chosenField = choice.kind === "field" ? choice.key : null;
-              return (
-                <li key={column.id} className="mapping-column">
-                  <div className="mapping-source">
-                    <strong>
-                      {index + 1}. {label}
-                    </strong>
-                    <ul aria-label="Forrásértékek">
-                      {column.samples.length ? (
-                        column.samples.map((sample, i) => (
-                          <li key={i}>{sample || "Üres"}</li>
-                        ))
-                      ) : (
-                        <li>Nincs mintaérték</li>
-                      )}
-                    </ul>
-                    {column.warnings?.map((warning) => (
-                      <p key={warning}>{warning}</p>
-                    ))}
-                  </div>
-                  <div className="mapping-suggestion">
-                    {caption && suggestion && suggestionChoice ? (
-                      <>
-                        <span>
-                          Javaslat: {caption}
-                          {suggestion.confidence !== undefined &&
-                            ` (${Math.round(suggestion.confidence * 100)}%)`}
-                        </span>
-                        <button
-                          type="button"
-                          className="link"
-                          onClick={() => choose(column.id, suggestionChoice)}
-                        >
-                          Javaslat átvétele
-                        </button>
-                      </>
-                    ) : (
-                      <span>Nincs javaslat</span>
-                    )}
-                  </div>
-                  <div className="mapping-target">
-                    <label>
-                      Célmező
-                      <select
-                        aria-label={`Célmező: ${label}, ${index + 1}. oszlop`}
-                        value={targetValue(choice)}
-                        onChange={(event) => {
-                          const value = event.target.value;
-                          choose(
-                            column.id,
-                            value === "keep"
-                              ? keep
-                              : value === "newParameter"
-                                ? { kind: "newParameter", name: "" }
-                                : {
-                                    kind: "field",
-                                    key: value.slice("field:".length),
-                                  },
-                          );
-                        }}
-                      >
-                        <option value="keep">Eredeti oszlop megőrzése</option>
-                        {chosenField &&
-                          !engine?.fields.some(
-                            (field) => field.key === chosenField,
-                          ) && (
-                            <option value={targetValue(choice)} disabled>
-                              Korábbi célmező – ellenőrizendő
-                            </option>
-                          )}
-                        {engine?.fields.map((field) => (
-                          <option key={field.key} value={`field:${field.key}`}>
-                            {field.label}
-                            {field.required ? " (kötelező)" : ""}
-                          </option>
-                        ))}
-                        <option value="newParameter">
-                          Új paraméter létrehozása
-                        </option>
-                      </select>
-                    </label>
-                    {column.savedChoice === choice && (
-                      <small>Korábbi megfeleltetés</small>
-                    )}
-                    {choice.kind === "newParameter" && (
-                      <label>
-                        Paraméternév
-                        <input
-                          value={choice.name}
-                          maxLength={255}
-                          onChange={(event) =>
-                            choose(column.id, {
-                              kind: "newParameter",
-                              name: event.target.value,
-                            })
-                          }
-                        />
-                      </label>
-                    )}
-                  </div>
-                </li>
-              );
-            })}
-          </ul>
-          {engine &&
-            Object.entries(engine.providedFields ?? {})
-              .filter(([key]) => !fields.includes(key))
-              .map(([key, note]) => (
-                <p key={key}>
-                  {engine.fields.find((field) => field.key === key)?.label ??
-                    key}
-                  : {note}
-                </p>
+          <label>
+            Feed típusa
+            <select
+              value={feed}
+              onChange={(event) => setFeed(event.target.value)}
+            >
+              <option value="partial">Részlista</option>
+              <option value="full">Teljes lista</option>
+              <option value="price">Árfrissítés</option>
+              <option value="stock">Készletfrissítés</option>
+              <option value="technical">Műszaki frissítés</option>
+            </select>
+          </label>
+          <label>
+            Ismert egységes áfakulcs
+            <select
+              value={vat}
+              onChange={(event) => setVat(event.target.value)}
+            >
+              <option value="">Nincs megadva</option>
+              {[0, 5, 18, 27].map((rate) => (
+                <option key={rate} value={rate}>
+                  {rate}%
+                </option>
               ))}
-          {missingFields.length > 0 && (
-            <p>
-              Hiányzó kötelező mezők:{" "}
-              {missingFields.map((field) => field.label).join(", ")}.
-            </p>
-          )}
-          {hasDuplicate && (
-            <p role="alert">
-              Egy célmező vagy új paraméternév csak egyszer szerepelhet.
-            </p>
-          )}
-          {invalidField && (
-            <p role="alert">
-              Ellenőrizd a már nem elérhető korábbi célmezőket.
-            </p>
-          )}
-          {parameterNames.includes("") && (
-            <p>Add meg minden új paraméter nevét.</p>
-          )}
+            </select>
+          </label>
+        </div>
+        <label className="mapping-check" htmlFor={`${id}-financial`}>
+          <input
+            id={`${id}-financial`}
+            type="checkbox"
+            checked={financial}
+            onChange={(event) => setFinancial(event.target.checked)}
+          />
+          Jóváhagyom a pénzügyi megfeleltetést
+        </label>
+        {invalidDraft && (
+          <p>
+            Adj érvényes nevet minden új paraméternek, és hagyd jóvá a
+            létrehozását. A név és a mértékegység nem tartalmazhat | jelet.
+          </p>
+        )}
+        {invalidTarget && (
+          <p role="alert">Ellenőrizd a már nem elérhető korábbi célmezőket.</p>
+        )}
+        <button
+          type="button"
+          disabled={invalidDraft || invalidTarget}
+          onClick={validate}
+        >
+          Megfeleltetés ellenőrzése
+        </button>
+        {report && <ValidationReport report={report} view={view} />}
+        <button
+          type="button"
+          className="primary"
+          disabled={
+            !report?.valid || invalidDraft || invalidTarget || !name.trim()
+          }
+          onClick={approve}
+        >
+          {savedForRun && saved.current?.key === saveKey
+            ? "Import jóváhagyásának újrapróbálása"
+            : "Megfeleltetés jóváhagyása és mentése"}
+        </button>
+      </fieldset>
+      {busy && <p role="status">Kérés feldolgozása…</p>}
+      {error && <p role="alert">{error}</p>}
+    </>
+  );
+}
+
+function ParameterEditor({
+  draft,
+  onChange,
+}: {
+  draft: ParameterDraft;
+  onChange: (draft: ParameterDraft) => void;
+}) {
+  const update = (fields: Partial<ParameterDraft>) =>
+    onChange({ ...draft, ...fields, approved: false });
+  return (
+    <fieldset className="mapping-new">
+      <legend>Új paraméter</legend>
+      <label>
+        Paraméternév
+        <input
+          value={draft.name}
+          maxLength={120}
+          onChange={(event) => update({ name: event.target.value })}
+        />
+      </label>
+      <label>
+        Típus
+        <select
+          value={draft.param_type}
+          onChange={(event) =>
+            update({ param_type: event.target.value as ParameterType })
+          }
+        >
+          {Object.entries(types).map(([value, label]) => (
+            <option key={value} value={value}>
+              {label}
+            </option>
+          ))}
+        </select>
+      </label>
+      <label>
+        Mértékegység
+        <input
+          value={draft.unit ?? ""}
+          maxLength={32}
+          onChange={(event) => update({ unit: event.target.value || null })}
+        />
+      </label>
+      <label className="mapping-check">
+        <input
+          type="checkbox"
+          checked={draft.approved}
+          disabled={!draft.name.trim()}
+          onChange={(event) =>
+            onChange({ ...draft, approved: event.target.checked })
+          }
+        />
+        Jóváhagyom a paraméter létrehozását
+      </label>
+    </fieldset>
+  );
+}
+
+export function ImportMappingWizard<T extends Run>({
+  api,
+  run,
+  registry,
+  canManage,
+  financialDefaults,
+  onApproved,
+}: {
+  api: Request;
+  run: T;
+  registry: Registry;
+  canManage: boolean;
+  financialDefaults: { currency: string; price_type: string };
+  onApproved: (run: T) => void;
+}) {
+  const id = useId();
+  const heading = useRef<HTMLHeadingElement>(null);
+  const [view, setView] = useState<MappingView>();
+  const [error, setError] = useState("");
+  const [retry, setRetry] = useState(0);
+  const [approvedLocally, setApprovedLocally] = useState(false);
+  const linked =
+    approvedLocally || typeof run.config.engine_mapping_profile_id === "number";
+  const { id: runId } = run;
+  const engine = registry.engine_key;
+
+  useEffect(() => {
+    if (linked) return;
+    let active = true;
+    loadMapping(api, runId, engine)
+      .then((next) => {
+        if (active) setView(next);
+      })
+      .catch((failure) => {
+        if (active) setError(errorText(failure));
+      });
+    return () => {
+      active = false;
+    };
+  }, [api, runId, engine, linked, retry]);
+
+  return (
+    <section className="mapping-wizard" aria-labelledby={id}>
+      <ol className="mapping-steps" aria-label="Előkészítés lépései">
+        <li aria-current={!linked ? "step" : undefined}>Oszlopmegfeleltetés</li>
+        <li aria-current={linked ? "step" : undefined}>eMAG-paraméterek</li>
+      </ol>
+      <h3 id={id} ref={heading} tabIndex={-1}>
+        {linked ? "Hiányzó eMAG-paraméterek" : "Oszlopmegfeleltetés"}
+      </h3>
+      {linked ? (
+        <DonorSelection
+          api={api}
+          runId={run.id}
+          state={run.state}
+          canManage={canManage}
+        />
+      ) : view ? (
+        <MappingForm
+          api={api}
+          run={run}
+          registry={registry}
+          view={view}
+          financialDefaults={financialDefaults}
+          onApproved={(next) => {
+            setApprovedLocally(true);
+            onApproved(next);
+            requestAnimationFrame(() => heading.current?.focus());
+          }}
+        />
+      ) : error ? (
+        <>
+          <p role="alert">{error}</p>
           <button
             type="button"
-            className="primary"
-            disabled={!canApproveMapping}
-            onClick={() => void approve()}
+            onClick={() => {
+              setError("");
+              setRetry(retry + 1);
+            }}
           >
-            {busy ? "Jóváhagyás folyamatban…" : "Megfeleltetés jóváhagyása"}
+            Újrapróbálás
           </button>
-        </fieldset>
+        </>
+      ) : (
+        <p role="status">Forrásoszlopok betöltése…</p>
       )}
-      {review && !complete && (
-        <fieldset className="mapping-panel" disabled={busy}>
-          <p>
-            {review.donorLabels.length
-              ? `eMAG-donor: ${review.donorLabels.join(", ")}`
-              : "Nincs elérhető eMAG-donor."}
-          </p>
-          <p>A beszállítói kategória és az eredeti értékek megmaradnak.</p>
-          {review.message && <p>{review.message}</p>}
-          {parameters.length > 0 ? (
-            <>
-              <div className="mapping-actions">
-                <button
-                  type="button"
-                  onClick={() =>
-                    setSelected(new Set(parameters.map((item) => item.key)))
-                  }
-                >
-                  Összes kijelölése
-                </button>
-                <button type="button" onClick={() => setSelected(new Set())}>
-                  Kijelölés törlése
-                </button>
-                <span role="status">
-                  {selected.size} / {parameters.length} kijelölve
-                </span>
-              </div>
-              <ul
-                className="mapping-parameters"
-                aria-label="Hiányzó paraméterek"
-              >
-                {parameters.map((item) => (
-                  <li key={item.key}>
-                    <label>
-                      <input
-                        type="checkbox"
-                        checked={selected.has(item.key)}
-                        onChange={(event) => {
-                          const checked = event.target.checked;
-                          setSelected((previous) => {
-                            const next = new Set(previous);
-                            if (checked) next.add(item.key);
-                            else next.delete(item.key);
-                            return next;
-                          });
-                        }}
-                      />
-                      <span>
-                        {item.name}
-                        {item.category && <small>{item.category}</small>}
-                        {item.required && (
-                          <small>Kötelező a donor kategóriában</small>
-                        )}
-                      </span>
-                    </label>
-                  </li>
-                ))}
-              </ul>
-            </>
-          ) : (
-            <p>Nincs kiválasztható hiányzó paraméter.</p>
-          )}
-          <div className="mapping-actions">
-            <button
-              type="button"
-              onClick={() => {
-                setReview(null);
-                setError("");
-                focusStep();
-              }}
-            >
-              Vissza a megfeleltetéshez
-            </button>
-            <button
-              type="button"
-              className="primary"
-              disabled={!review.canProceed}
-              onClick={() => void finish()}
-            >
-              {busy ? "Mentés…" : "Kijelölés mentése"}
-            </button>
-          </div>
-        </fieldset>
-      )}
-      {complete && (
-        <p role="status">
-          {selected.size} hiányzó paraméter került az előkészítésbe.
-        </p>
-      )}
-      {error && <p role="alert">{error}</p>}
     </section>
   );
 }
