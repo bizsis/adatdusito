@@ -1,0 +1,176 @@
+.template-preparation {
+  display: grid;
+  gap: 1rem;
+  min-width: 0;
+}
+
+.template-preparation .card {
+  margin: 0;
+}
+
+.prep-start,
+.prep-columns {
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  align-items: start;
+}
+
+.prep-start {
+  max-width: 34rem;
+}
+.prep-targets,
+.prep-sources,
+.prep-save {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.prep-controls,
+.prep-controls form,
+.prep-dialog form {
+  display: grid;
+  gap: 0.65rem;
+}
+
+.prep-controls details form {
+  margin-top: 0.5rem;
+}
+.prep-controls summary {
+  cursor: pointer;
+}
+.prep-controls h3,
+.prep-controls p {
+  margin: 0;
+}
+
+.prep-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.prep-targets > .prep-list,
+.prep-sources > .prep-list {
+  max-height: 66vh;
+  overflow: auto;
+  scrollbar-gutter: stable;
+  padding: 0.15rem 0.3rem 0.15rem 0.15rem;
+}
+
+.prep-field,
+.prep-source {
+  border: 1px solid #d4e1e4;
+  border-radius: 0.55rem;
+  padding: 0.65rem 0.75rem;
+  margin-bottom: 0.45rem;
+  min-width: 0;
+  background: #fff;
+}
+
+.prep-field-title,
+.prep-actions {
+  display: flex;
+  gap: 0.35rem;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.prep-field-title {
+  justify-content: space-between;
+}
+.prep-field small,
+.prep-source samp,
+.prep-source-handle small {
+  display: block;
+}
+.prep-source samp {
+  margin: 0.25rem 0 0.4rem;
+  white-space: pre-wrap;
+}
+.prep-source-handle[draggable="true"],
+.prep-binding-handle[draggable="true"] {
+  cursor: grab;
+}
+
+.prep-bindings {
+  list-style-position: inside;
+  margin: 0.35rem 0 0;
+  padding: 0;
+}
+.prep-bindings li {
+  background: #eaf5f2;
+  border-radius: 0.35rem;
+  padding: 0.35rem;
+  margin-bottom: 0.25rem;
+}
+.prep-bindings button,
+.prep-field-title button {
+  padding: 0.2rem 0.5rem;
+}
+.prep-add {
+  margin: 0 0 0.45rem 0.2rem;
+}
+.prep-default {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: center;
+  gap: 0.45rem;
+  margin: 0.35rem 0;
+}
+.prep-default select {
+  min-width: 4rem;
+}
+
+.prep-history button {
+  max-width: 100%;
+  text-align: start;
+  overflow-wrap: anywhere;
+}
+.prep-template-item > * {
+  margin: 0.25rem 0.3rem 0 0;
+}
+
+.template-preparation input,
+.template-preparation select,
+.prep-dialog input,
+.prep-dialog select {
+  box-sizing: border-box;
+  max-width: 100%;
+}
+.template-preparation label:not(.prep-default),
+.prep-dialog label {
+  display: grid;
+  gap: 0.25rem;
+  min-width: 0;
+}
+.prep-save form {
+  max-width: 35rem;
+}
+.prep-save button {
+  margin-top: 0.5rem;
+}
+.prep-match,
+.prep-warning {
+  color: #774719;
+}
+.prep-dialog {
+  width: min(30rem, calc(100% - 2.5rem));
+  border: 1px solid #bcced1;
+  border-radius: 0.7rem;
+}
+.prep-dialog::backdrop {
+  background: rgb(13 39 43 / 45%);
+}
+
+@media (max-width: 720px) {
+  .prep-columns {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .prep-targets > .prep-list {
+    max-height: 18rem;
+  }
+  .prep-sources > .prep-list {
+    max-height: none;
+  }
+}
