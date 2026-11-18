@@ -54,7 +54,7 @@ def shot(p,locator,name,width):
 @pytest.mark.parametrize('width',[390,1440])
 def test_complete_import_delete_refresh_reupload_and_financial_guards(release_import,width):
     f=release_import;c=f.client
-    with app_browser(f,width=width) as ui:
+    with app_browser(f,width=width,legacy_import=True) as ui:
         p=ui.page
         p.locator('.sidebar nav').get_by_role('button',name='Beszállítói import',exact=True).click()
         p.get_by_label('Új beszállító neve',exact=True).fill('RC02 szintetikus beszállító')

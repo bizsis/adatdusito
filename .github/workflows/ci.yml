@@ -10,7 +10,7 @@ name: Adatdúsító CI
 
 on:
   push:
-    branches: [main, codex/category-03d-full-integration, codex/release-candidate-01, codex/help-01, codex/help-02-complete-manual, codex/release-candidate-02, codex/template-01, codex/knowledge-ui-01, codex/release-candidate-04]
+    branches: [main, codex/category-03d-full-integration, codex/release-candidate-01, codex/help-01, codex/help-02-complete-manual, codex/release-candidate-02, codex/template-01, codex/knowledge-ui-01, codex/release-candidate-04, codex/rc04-import-map-integration]
   pull_request:
   workflow_dispatch:
 
@@ -20,7 +20,7 @@ permissions:
 concurrency:
   group: ci-${{ github.event.pull_request.number || github.ref }}
   # Superseded PR and these integration branches cancel old runs; main keeps every run.
-  cancel-in-progress: ${{ github.event_name == 'pull_request' || (github.event_name == 'push' && (github.ref == 'refs/heads/codex/help-02-complete-manual' || github.ref == 'refs/heads/codex/release-candidate-02' || github.ref == 'refs/heads/codex/template-01' || github.ref == 'refs/heads/codex/knowledge-ui-01' || github.ref == 'refs/heads/codex/release-candidate-04')) }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' || (github.event_name == 'push' && (github.ref == 'refs/heads/codex/help-02-complete-manual' || github.ref == 'refs/heads/codex/release-candidate-02' || github.ref == 'refs/heads/codex/template-01' || github.ref == 'refs/heads/codex/knowledge-ui-01' || github.ref == 'refs/heads/codex/release-candidate-04' || github.ref == 'refs/heads/codex/rc04-import-map-integration')) }}
 
 env:
   PYTHON_VERSION: "3.12" # matches backend/Dockerfile
@@ -105,7 +105,8 @@ jobs:
   browser:
     name: Browser tests (Playwright, Chromium)
     runs-on: ubuntu-24.04
-    timeout-minutes: 25
+    # A cold Chromium install can add several minutes before the full suite starts.
+    timeout-minutes: 35
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
