@@ -360,6 +360,8 @@ class Approval(BaseModel):
     price_type: str | None = None
     tax_basis: str | None = None
     currency: str | None = None
+    # IMPORT-MAP-01: the saved engine mapping this approval follows (optional).
+    engine_mapping_profile_id: int | None = None
 
 
 @router.post("/runs/{id}/approve")
@@ -378,6 +380,12 @@ def approve(
     if data_rows is not None and data_rows > run_product_limit():
         # CATEGORY-02A: at most 50 000 products per run, rejected up front.
         raise HTTPException(422, run_limit_message(data_rows, run_product_limit()))
+    if body.engine_mapping_profile_id is not None:
+        linked = db.get(ImportProfile, body.engine_mapping_profile_id)
+        if (linked is None or linked.tenant_id != run.tenant_id
+                or linked.supplier_id != run.supplier_id
+                or not linked.config.get("engine_mapping")):
+            raise HTTPException(404, "A mentett megfeleltetés nem található.")
     if body.feed_type not in ("full", "partial", "price", "stock", "technical"):
         raise HTTPException(422, "Hibás feedtípus.")
     headers = run.analysis["headers"]
@@ -593,18 +601,13 @@ class EngineInput(Named):
 
 
 def validate_fields(fields):
+    from app.import_mapping import FIELD_KEYS, validate_registry_extras
+
     seen = set()
     for f in fields:
-        if set(f) - {
-            "key",
-            "label",
-            "type",
-            "required",
-            "default",
-            "allowed",
-            "validation",
-            "internal_field",
-        }:
+        # IMPORT-MAP-01 adds optional registry keys (header, kind, group, synonyms,
+        # unas_required, parameter); older payloads stay valid unchanged.
+        if set(f) - FIELD_KEYS:
             raise HTTPException(422, "Ismeretlen meződefiníció.")
         key = f.get("key", "")
         if (
@@ -635,7 +638,7 @@ def validate_fields(fields):
             raise HTTPException(422, "Hibás kötelezőség.")
         if f.get("validation") not in (None, "", "url", "email", "gtin", "nonnegative"):
             raise HTTPException(422, "Ismeretlen validáció.")
-    return fields
+    return validate_registry_extras(fields)
 
 
 @router.get("/engines")
