@@ -144,6 +144,7 @@ def test_tenant_manual_parameters_bulk_and_approval_evidence(help_catalog):
         shot(p.locator('main'),'termeklista')
         p.get_by_role('tab',name='Saját kategóriatérkép és profilok',exact=True).click()
         shot(p.locator('main'),'kategoriameterkep')
+        p.get_by_role('tab',name='Terméklista',exact=True).click()
         open_product(ui);apply_preview(p)
         shot(p.locator('.parameter-table'),'parameterallapotok')
         p.get_by_text('Tenant- és globális aliasszabályok',exact=True).click()
