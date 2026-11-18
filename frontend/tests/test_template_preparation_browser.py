@@ -370,6 +370,23 @@ def open_application():
                         "price_missing": True,
                     },
                 }
+            elif path.endswith("/result") and method == "GET":
+                template_id = int(path.split("/")[3])
+                run_id = int(query["run_id"][0])
+                entry = next(item for item in saved if item["version"]["id"] == template_id)
+                response = {
+                    "template": {**entry["version"], "currency": entry["body"]["currency"]},
+                    "run_id": run_id,
+                    "columns": [
+                        {"header": "Cikkszám", "target": {"key": "cikkszam"}, "source_columns": [0]},
+                        {"header": "Kép link", "target": {"key": "kep"}, "source_columns": [5]},
+                    ],
+                    "rows": [{"line": 2, "values": ["0001", "hibas-url"], "status": "warning",
+                              "errors": [], "warnings": [{"code": "missing_price"}]}],
+                    "offset": 0, "limit": 50, "total": 1,
+                    "summary": {"rows": 1, "exportable": 1, "excluded": 0},
+                    "excluded_columns": [], "missing_source_columns": [],
+                }
             elif path.startswith("/imports/runs/") and method == "GET":
                 run = next(run for run in runs if run["id"] == int(path.split("/")[-1]))
                 response = {**run, "state": "awaiting_approval"}
@@ -422,18 +439,10 @@ def test_full_template_preparation(open_application, chromium, width):
     expect(currency.locator("option")).to_have_text(CURRENCIES)
     motor.select_option("unas")
     targets_panel = page.get_by_role("region", name="UNAS-célmezők")
-    expect(targets_panel.locator(".prep-list strong")).to_have_text(
-        [
-            label + (" *" if index == 0 else "")
-            for index, (_, label) in enumerate(FIELDS)
-        ]
-    )
+    expect(targets_panel).to_have_count(0)
     expect(page.get_by_role("heading", name="Beszállító és fájl")).to_be_visible()
     expect(page.get_by_text("Feldolgozott sorok", exact=True)).to_have_count(0)
     expect(page.get_by_text("Hiányzó eMAG-paraméterek", exact=True)).to_have_count(0)
-    expect(page.get_by_label("Státusz alapértéke")).to_have_value("1")
-    expect(page.get_by_label("ÁFA alapértéke")).to_have_value("27")
-    page.get_by_label("ÁFA alapértéke").select_option("5")
     supplier = page.get_by_label("Beszállító", exact=True)
     supplier.select_option("1")
     page.get_by_text("Új beszállító", exact=True).click()
@@ -452,11 +461,22 @@ def test_full_template_preparation(open_application, chromium, width):
     upload.set_input_files(payload)
     sources = page.get_by_role("list", name="Forrásoszlopok")
     rows = sources.locator(":scope > li")
-    expect(rows).to_have_count(len(VALUES))
+    def row(index, header=None):
+        return rows.filter(has=page.get_by_label(
+            f"Célmező: {index + 1}. {header or VALUES[index][0]}", exact=True
+        ))
+
+    expect(rows).to_have_count(len(VALUES) - 3)
+    expect(targets_panel.locator(".prep-field-title strong")).to_have_text([
+        label + (" *" if index == 0 else "") for index, (_, label) in enumerate(FIELDS)
+    ])
+    expect(page.get_by_label("ÁFA alapértéke")).to_have_value("27")
+    page.get_by_label("ÁFA alapértéke").select_option("5")
     expect(page.get_by_text("3 termék · 13 oszlop")).to_be_visible()
-    expect(rows.nth(0).locator("samp")).to_have_text("0001")
-    expect(rows.nth(10).locator("samp")).to_have_text("8,71999E+12")
-    expect(rows.nth(10)).to_contain_text("hiányzó számjegyek")
+    expect(row(0)).to_have_count(0)
+    expect(targets_panel.get_by_role("list", name="Cikkszám hozzárendelései").locator("samp")).to_have_text("0001")
+    expect(row(10).locator("samp")).to_have_text("8,71999E+12")
+    expect(row(10)).to_contain_text("hiányzó számjegyek")
     expect(page.get_by_text("Az értékek átváltás nélkül", exact=False)).to_be_visible()
     currency.select_option("EUR")
     expect(page.get_by_text("Az értékek átváltás nélkül", exact=False)).to_have_count(0)
@@ -465,13 +485,13 @@ def test_full_template_preparation(open_application, chromium, width):
         targets_panel.get_by_role("list", name="Cikkszám hozzárendelései")
     ).to_contain_text("SKU")
     targets_panel.get_by_role("button", name="1. SKU hozzárendelés törlése").click()
-    expect(rows.nth(0).get_by_role("combobox")).to_have_value("")
+    expect(row(0).get_by_role("combobox")).to_have_value("")
     if width == 1440:
-        rows.nth(0).locator(".prep-source-handle").drag_to(
+        row(0).locator(".prep-source-handle").drag_to(
             targets_panel.locator('[data-target="cikkszam"]')
         )
     else:
-        rows.nth(0).get_by_role("combobox").select_option(label="Cikkszám")
+        row(0).get_by_role("combobox").select_option(label="Cikkszám")
     expect(
         targets_panel.get_by_role("list", name="Cikkszám hozzárendelései")
     ).to_contain_text("SKU")
@@ -481,7 +501,8 @@ def test_full_template_preparation(open_application, chromium, width):
             "list", name="Termék megnevezés hozzárendelései"
         )
         source_handle = name_bindings.locator(".prep-binding-handle")
-        target_handle = rows.nth(2).locator(".prep-source-handle")
+        targets_panel.get_by_role("button", name="3. CATEGORY hozzárendelés törlése").click()
+        target_handle = row(2).locator(".prep-source-handle")
         target_handle.scroll_into_view_if_needed()
         source_handle.hover()
         box = source_handle.bounding_box()
@@ -494,11 +515,12 @@ def test_full_template_preparation(open_application, chromium, width):
         target_handle.hover()  # Chromium fires dragover after a second pointer move.
         page.mouse.up()
         expect(name_bindings).to_contain_text("CATEGORY")
-        expect(rows.nth(1).get_by_role("combobox")).to_have_value("")
-        rows.nth(1).get_by_role("combobox").select_option(label="Termék megnevezés")
-        rows.nth(2).get_by_role("combobox").select_option(label="Kategória")
+        expect(row(1).get_by_role("combobox")).to_have_value("")
+        row(1).get_by_role("combobox").select_option(label="Termék megnevezés")
+        row(2).get_by_role("combobox").select_option(label="Kategória")
+    expect(row(0)).to_have_count(0)
 
-    rows.nth(3).get_by_role(
+    row(3).get_by_role(
         "button", name="Javaslat átvétele: Paraméter: Szín", exact=False
     ).click()
     dialog = page.get_by_role("dialog")
@@ -522,7 +544,7 @@ def test_full_template_preparation(open_application, chromium, width):
         (8, "Raktárkészlet #0"),
         (9, "Raktárkészlet #1"),
     ]:
-        rows.nth(index).get_by_role("combobox").select_option(label=field)
+        row(index).get_by_role("combobox").select_option(label=field)
     targets_panel.get_by_role("button", name="6. Image2 előrébb").click()
     expect(
         targets_panel.get_by_role("list", name="Kép hozzárendelései")
@@ -541,9 +563,9 @@ def test_full_template_preparation(open_application, chromium, width):
     targets_panel.get_by_role(
         "button", name="12. Unknown_01 hozzárendelés törlése"
     ).click()
-    expect(rows.nth(11).get_by_role("combobox")).to_have_value("")
-    rows.nth(11).get_by_role("combobox").select_option("unused")
-    expect(rows.nth(11).locator("samp")).to_have_text("Megmarad")
+    expect(row(11).get_by_role("combobox")).to_have_value("")
+    row(11).get_by_role("combobox").select_option("unused")
+    expect(row(11).locator("samp")).to_have_text("Megmarad")
     expect(page.get_by_label("Státusz alapértéke")).to_have_value("1")
     expect(page.get_by_label("ÁFA alapértéke")).to_have_value("5")
     page.get_by_label("Státusz alapértéke").select_option("0")
@@ -552,7 +574,18 @@ def test_full_template_preparation(open_application, chromium, width):
     page.get_by_label("Sablon neve").fill("UNAS sablon")
     page.get_by_role("button", name="Sablon mentése", exact=True).click()
     expect(page.get_by_text("Sablon mentve: UNAS sablon · v1")).to_be_visible()
-    expect(page.get_by_text("Hiányzik az eladási ár.", exact=False)).to_be_visible()
+    result = page.get_by_role("region", name="UNAS eredmény", exact=True)
+    expect(result.get_by_role("cell", name="0001")).to_be_visible()
+    issue = result.get_by_role("button", name="Hiba: Kép link, 2. sor")
+    issue.focus()
+    expect(page.get_by_role("tooltip")).to_contain_text("HTTP vagy HTTPS")
+    expect(result.get_by_role("link", name="UNAS CSV letöltése")).to_have_attribute(
+        "href", "/api/v1/imports/import-templates/41/result.csv?run_id=21"
+    )
+    expect(result.get_by_role("button", name="Dúsítás indítása", exact=False)).to_be_disabled()
+    result.get_by_role("button", name="Vissza a megfeleltetéshez").click()
+    expect(page.get_by_label("Sablon neve")).to_have_value("UNAS sablon")
+    expect(row(0)).to_have_count(0)
     first = state["saves"][0]
     assert len(first["columns"]) == len(VALUES)
     assert (
@@ -573,7 +606,7 @@ def test_full_template_preparation(open_application, chromium, width):
     ).to_contain_text("UNAS sablon · v1")
     expect(page.get_by_text("Hiányzó oszlopok: Unknown_01")).to_be_visible()
     expect(page.get_by_text("Új oszlopok: Unknown_02")).to_be_visible()
-    expect(rows.nth(11).get_by_role("combobox")).to_have_value("")
+    expect(row(11, "Unknown_02").get_by_role("combobox")).to_have_value("")
     expect(
         targets_panel.get_by_role("list", name="Paraméter: Termékszín hozzárendelései")
     ).to_contain_text("Color")
@@ -611,7 +644,8 @@ def test_read_only_and_unavailable_backend(open_application, chromium):
     expect(page.get_by_text("Új beszállító", exact=True)).to_have_count(0)
     page.get_by_text("Korábban feltöltött fájlok", exact=True).click()
     page.get_by_role("button", name="#11 · korabbi.csv").click()
-    expect(page.get_by_label("Célmező: 1. SKU")).to_be_disabled()
+    expect(page.get_by_role("list", name="Cikkszám hozzárendelései")).to_contain_text("SKU")
+    expect(page.get_by_label("Célmező: 4. Color")).to_be_disabled()
     expect(page.get_by_role("button", name="Sablon mentése", exact=True)).to_have_count(
         0
     )
