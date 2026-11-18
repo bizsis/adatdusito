@@ -70,9 +70,9 @@ def run_limit_message(count, maximum):
 
 @contextmanager
 def materialize(db, run):
-    with tempfile.NamedTemporaryFile(
-        suffix=".xlsx" if run.filename.lower().endswith(".xlsx") else ".csv"
-    ) as f:
+    lower = run.filename.lower()
+    suffix = next((s for s in (".xlsx", ".xls", ".xml") if lower.endswith(s)), ".csv")
+    with tempfile.NamedTemporaryFile(suffix=suffix) as f:
         wrote = False
         for chunk in db.scalars(
             select(ImportChunk)
@@ -171,7 +171,10 @@ def advance(db, run_id):
                         analysis["drift"] = sorted(set(drift))
                         analysis["suggested_mapping"] = mapping
                         run.profile_id = p.id
-                        if p.config.get("automatic") and not drift:
+                        # TEMPLATE-PREP-01: an analysis-only upload (template preparation)
+                        # never processes products, whatever profile matches it.
+                        if p.config.get("automatic") and not drift and \
+                                not run.config.get("analysis_only"):
                             run.config = {
                                 **{
                                     k: v for k, v in p.config.items() if k != "analysis"

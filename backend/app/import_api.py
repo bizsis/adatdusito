@@ -149,6 +149,8 @@ def public(run):
         },
         # IMPORT-UX-01: UI hint only (no reference counts); DELETE re-checks everything.
         "deletable": run.approved_by is None and run.state in DELETABLE_STATES,
+        # TEMPLATE-PREP-01: uploaded for template preparation only (never imported).
+        "analysis_only": bool((run.config or {}).get("analysis_only")),
     }
 
 
@@ -235,6 +237,7 @@ def runs(
 async def upload(
     supplier_id: int = Form(...),
     profile_id: int | None = Form(None),
+    purpose: str = Form("import"),
     settings: str = Form("{}"),
     file: UploadFile = File(...),
     who=Depends(require("imports.create")),
@@ -251,8 +254,10 @@ async def upload(
     ):
         raise HTTPException(404, "A profil nem található ennél a beszállítónál.")
     filename = (file.filename or "").replace("\\", "/").split("/")[-1][:255]
-    if not filename.lower().endswith((".csv", ".xlsx")):
-        raise HTTPException(422, "CSV vagy XLSX szükséges.")
+    from app.import_parser import SUPPORTED_EXTENSIONS
+
+    if not filename.lower().endswith(SUPPORTED_EXTENSIONS):
+        raise HTTPException(422, "CSV, XLS, XLSX vagy XML fájl szükséges.")
     try:
         config = json.loads(settings)
     except ValueError:
@@ -264,6 +269,11 @@ async def upload(
         "delimiter",
     }:
         raise HTTPException(422, "Hibás fájlbeállítások.")
+    if purpose not in ("import", "template"):
+        raise HTTPException(422, "Ismeretlen feltöltési cél.")
+    if purpose == "template":
+        # Analysis only: no automatic profile, no approval, no product import.
+        config["analysis_only"] = True
     run = ImportRun(
         tenant_id=s.tenant_id,
         supplier_id=s.id,
@@ -374,6 +384,12 @@ def approve(
     run = get_run(db, who, id)
     if run.state != "awaiting_approval":
         raise HTTPException(409, "Az import nem vár jóváhagyásra.")
+    if (run.config or {}).get("analysis_only"):
+        raise HTTPException(
+            409,
+            "Ez a fájl csak sablonkészítéshez lett feltöltve; termékimport nem indítható "
+            "belőle. Importhoz töltsd fel újra.",
+        )
     from app.import_engine import run_limit_message, run_product_limit
 
     data_rows = (run.analysis or {}).get("data_rows")
@@ -811,7 +827,10 @@ def parser_settings(
     run = get_run(db, who, id)
     if run.state not in ("awaiting_approval", "failed") or run.approved_by:
         raise HTTPException(409, "Már jóváhagyott import nem elemezhető újra.")
+    analysis_only = (run.config or {}).get("analysis_only")
     run.config = body.model_dump(exclude_none=True)
+    if analysis_only:
+        run.config["analysis_only"] = True  # re-analysis keeps the template-only purpose
     run.state = "uploaded"
     run.error = None
     db.commit()
