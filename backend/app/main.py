@@ -271,3 +271,7 @@ app.include_router(knowledge_admin_router)
 from app.import_mapping_views import router as import_mapping_router  # noqa: E402
 
 app.include_router(import_mapping_router)
+
+from app.template_prep_views import router as template_prep_router  # noqa: E402
+
+app.include_router(template_prep_router)
