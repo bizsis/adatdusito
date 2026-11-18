@@ -35,7 +35,6 @@ import {
   Settings2,
   ScrollText,
   FileUp,
-  FileDown,
   PackageSearch,
   Network,
   Database,
@@ -52,7 +51,6 @@ function NavIcon({ name }: { name: string }) {
     settings: Settings2,
     audit: ScrollText,
     imports: FileUp,
-    "export-fields": FileDown,
     products: PackageSearch,
     categories: Network,
     parameters: ListFilter,
@@ -63,7 +61,7 @@ function NavIcon({ name }: { name: string }) {
   return <Icon size={19} aria-hidden />;
 }
 import { AccessWorkspace, AcceptInvitation } from "./AccessWorkspace";
-import { ImportWorkspace, ExportAdmin } from "./ImportWorkspace";
+import { TemplatePreparation } from "./template-preparation/TemplatePreparation";
 
 type User = {
   id: number;
@@ -1852,10 +1850,7 @@ function App() {
         ]
       : []),
     ...(me.tenant_id && can("imports.read")
-      ? [["imports", "", "Beszállítói import"]]
-      : []),
-    ...(can("exports.fields.manage") || can("exports.read")
-      ? [["export-fields", "", "Export"]]
+      ? [["imports", "", "Import"]]
       : []),
     ...(can("system.users.read") || can("system.roles.read")
       ? [["access-system", "", "Rendszerhozzáférések"]]
@@ -2118,21 +2113,8 @@ function App() {
             />
           )}
           {page === "tenants" && <Tenants me={me} onSwitch={switchWorkspace} />}{" "}
-          {page === "imports" && can("imports.read") && (
-            <ImportWorkspace
-              key={me.tenant_id}
-              api={api}
-              canManage={can("imports.manage")}
-              permissions={me.permissions}
-            />
-          )}
-          {page === "export-fields" && (
-            <ExportAdmin
-              key={me.tenant_id}
-              api={api}
-              central={can("exports.fields.manage")}
-              canProfile={Boolean(me.tenant_id && can("exports.profile"))}
-            />
+          {page === "imports" && me.tenant_id && can("imports.read") && (
+            <TemplatePreparation key={me.tenant_id} api={api} permissions={me.permissions} />
           )}
           {page === "reference-databases" && !me.tenant_id && can("reference.manage") && <Suspense fallback={<p role="status">Referenciaforrások betöltése…</p>}><ReferenceDatabases api={api} /></Suspense>}
           {page === "categories" && can("reference.read") && <Categories />}

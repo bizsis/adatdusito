@@ -6,6 +6,11 @@
   "order": 9,
   "blocks": [
     {
+      "type": "note",
+      "title": "Korábbi felület",
+      "text": "Ez a cikk egy korábbi kiadás vezérlőit ismerteti. Az aktuális folyamat leírását az Import és sablonkészítés cikkben találod."
+    },
+    {
       "type": "heading",
       "text": "Mire való, és mikor használd?"
     },
