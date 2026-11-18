@@ -254,15 +254,41 @@ def test_upload_review_save_and_prepare_donor_parameters(
                 {
                     "name": "masodik.csv",
                     "mimeType": "text/csv",
-                    "buffer": "SKU;NAME;CATEGORY;NetPrice;EAN;Color;Unknown_02;Width\n0004;Mosógép D;Gépek;400;5201137061819;Fekete;Új;55\n".encode(),
+                    "buffer": (
+                        "SKU;NAME;CATEGORY;NetPrice;EAN;Color;Unknown_02;Width;SHORT;LONG\n"
+                        "0004;Mosógép D;Gépek;400;5201137061819;Fekete;Új;55;Rövid;Hosszú\n"
+                        "0004;Mosógép D;Gépek;400;5201137061819;Fehér;Új;55;Rövid;Hosszú\n"
+                    ).encode(),
                 }
             )
             expect(
-                wizard.get_by_text("Új oszlopok: Unknown_02", exact=False)
+                wizard.get_by_text("Új oszlopok: LONG, SHORT, Unknown_02", exact=False)
             ).to_be_visible(timeout=15000)
             expect(
                 wizard.get_by_role(
                     "combobox", name="Célmező: Color, 6. oszlop", exact=True
                 )
             ).to_have_value("parameter:Paraméter: Szín||text|1|0|1|0|0|0|||0|1|1")
+            wizard.get_by_role(
+                "combobox", name="Célmező: SHORT, 9. oszlop", exact=True
+            ).select_option("field:rovid_leiras")
+            wizard.get_by_role(
+                "combobox", name="Célmező: LONG, 10. oszlop", exact=True
+            ).select_option("field:tulajdonsagok")
+            wizard.get_by_label("Jóváhagyom a pénzügyi megfeleltetést").check()
+            check.click()
+            expect(wizard.get_by_text("A megfeleltetés menthető.")).to_be_visible()
+            expect(
+                wizard.get_by_text(
+                    "Az import soronként jelzi az ismétlődéseket.", exact=False
+                )
+            ).to_contain_text("0004")
+            expect(
+                wizard.get_by_text("eredeti forrásadatként megmaradnak", exact=False)
+            ).to_contain_text("Oszlop: SHORT")
+            expect(
+                wizard.get_by_role(
+                    "button", name="Megfeleltetés jóváhagyása és mentése"
+                )
+            ).to_be_enabled()
             assert not errors

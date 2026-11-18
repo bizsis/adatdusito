@@ -49,6 +49,10 @@ const issueLabels: Record<string, string> = {
   identity_missing: "Rendelj hozzá nevet vagy azonosítót.",
   identity_target_not_mapped: "A kiválasztott kulcsmező nincs megfeleltetve.",
   identity_conflict: "Ugyanaz az azonosító eltérő sorokban szerepel.",
+  identity_conflict_rows:
+    "Ugyanaz az azonosító eltérő sorokban szerepel. Az import soronként jelzi az ismétlődéseket.",
+  kept_as_source_attribute:
+    "A jelzett oszlopok eredeti forrásadatként megmaradnak. A közös belső mezőt egy másik oszlop tölti ki.",
   financial_approval_required:
     "A pénzügyi megfeleltetés külön jóváhagyást igényel.",
   invalid_vat_rate: "Érvénytelen áfakulcs.",
