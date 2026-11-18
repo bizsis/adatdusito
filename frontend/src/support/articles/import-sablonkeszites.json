@@ -1,0 +1,91 @@
+{
+  "id": "import-sablonkeszites",
+  "topic": "import",
+  "title": "Import és sablonkészítés",
+  "summary": "Válaszd ki a webshopmotort, rendeld hozzá a forrásoszlopokat, és ments el egy új vagy módosított sablont.",
+  "order": 0,
+  "related": ["csv-xlsx-feltoltes", "oszlopok-megfeleltetese"],
+  "blocks": [
+    {
+      "type": "heading",
+      "text": "Mire való, és mikor használd?"
+    },
+    {
+      "type": "paragraph",
+      "text": "Az Import menüben az UNAS célmezőihez rendelheted a beszállítói fájl oszlopait. A sablon mentésével az előkészítés befejeződik."
+    },
+    {
+      "type": "heading",
+      "text": "Hozzáférés és előfeltételek"
+    },
+    {
+      "type": "paragraph",
+      "text": "Ügyfél-munkaterület és importolvasási jog szükséges. Feltölteni az importlétrehozási, sablont menteni a jóváhagyási joggal lehet. Új beszállítóhoz importkezelési jog kell."
+    },
+    {
+      "type": "heading",
+      "text": "Mezők, állapotok és gombok"
+    },
+    {
+      "type": "table",
+      "caption": "A sablonkészítés vezérlői",
+      "headers": [
+        "Elem",
+        "Használat"
+      ],
+      "rows": [
+        [
+          "Célmező és forrásoszlop",
+          "Húzd át a forrásoszlopot, vagy válaszd ki a sorában a célmezőt. A Törlés csak a hozzárendelést veszi le."
+        ],
+        [
+          "Nem használjuk",
+          "Kézi döntés. Az oszlop és a minta továbbra is látható."
+        ],
+        [
+          "Státusz és ÁFA",
+          "Az alapérték 1 és 27%. Mindkettőt módosíthatod."
+        ],
+        [
+          "Mentett sablonok és verziók",
+          "Egy korábbi verzió a kiválasztott fájlhoz tölthető be. A mentés új verziót készít."
+        ]
+      ]
+    },
+    {
+      "type": "heading",
+      "text": "Lépésről lépésre – ellenőrzött demópélda"
+    },
+    {
+      "type": "steps",
+      "items": [
+        "Nyisd meg az Import menüt, válaszd az UNAS motort és a pénznemet.",
+        "Válassz beszállítót, majd tölts fel egy CSV, XLS, XLSX vagy XML fájlt, vagy nyiss meg egy korábbit.",
+        "Ellenőrizd a Cikkszám hozzárendelését és a jobb oldali értékmintákat.",
+        "A Color oszlophoz vedd át a Szín javaslatot, és fogadd el a paramétert. Több képoszlop sorrendje a Kép mező alatt módosítható.",
+        "Adj nevet a sablonnak, majd kattints a Sablon mentése gombra. Új fájlnál a felismerés jelzi az eltérő fejléceket."
+      ]
+    },
+    {
+      "type": "note",
+      "title": "Várt eredmény",
+      "text": "A felület kiírja a mentett sablon nevét és verzióját."
+    },
+    {
+      "type": "heading",
+      "text": "Ha nem sikerül"
+    },
+    {
+      "type": "paragraph",
+      "text": "A Cikkszám hozzárendelése kötelező. Hiányzó eladási ár mellett a sablon menthető. A tudományos jelölésben elveszett EAN-számjegyekhez kérj javított forrásfájlt. A pénznemeltérés figyelmeztetés, átváltás nélkül."
+    },
+    {
+      "type": "heading",
+      "text": "Mi változik, és mi marad meg?"
+    },
+    {
+      "type": "paragraph",
+      "text": "A mentés csak a sablont verziózza. Megőrzi az eredeti fájlt, a forráskategóriát és a korábbi sablonverziókat. A termékfeldolgozás külön művelet."
+    }
+  ]
+}
