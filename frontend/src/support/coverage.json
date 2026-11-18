@@ -1,5 +1,15 @@
 [
   {
+    "article": "import-sablonkeszites",
+    "screen": "Import / Előkészítés és Sablonkészítés",
+    "access": "imports.read; feltöltés imports.create; mentés imports.approve",
+    "source": "template-preparation/TemplatePreparation.tsx",
+    "api": "TEMPLATE-PREP-01 API",
+    "actions": "Beszállító; forrásoszlopok; megfeleltetés; alapértékek; sablonverziók",
+    "status": "documented",
+    "browser_evidence": "frontend/tests/test_template_preparation_browser.py; backend/tests/test_template_preparation_api_browser.py"
+  },
+  {
     "article": "belepes-munkaterulet",
     "screen": "Fejléc / Munkaterület",
     "access": "bejelentkezett; engedélyezett ügyfél",

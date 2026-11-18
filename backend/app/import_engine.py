@@ -70,9 +70,9 @@ def run_limit_message(count, maximum):
 
 @contextmanager
 def materialize(db, run):
-    with tempfile.NamedTemporaryFile(
-        suffix=".xlsx" if run.filename.lower().endswith(".xlsx") else ".csv"
-    ) as f:
+    lower = run.filename.lower()
+    suffix = next((s for s in (".xlsx", ".xls", ".xml") if lower.endswith(s)), ".csv")
+    with tempfile.NamedTemporaryFile(suffix=suffix) as f:
         wrote = False
         for chunk in db.scalars(
             select(ImportChunk)
@@ -171,7 +171,10 @@ def advance(db, run_id):
                         analysis["drift"] = sorted(set(drift))
                         analysis["suggested_mapping"] = mapping
                         run.profile_id = p.id
-                        if p.config.get("automatic") and not drift:
+                        # TEMPLATE-PREP-01: an analysis-only upload (template preparation)
+                        # never processes products, whatever profile matches it.
+                        if p.config.get("automatic") and not drift and \
+                                not run.config.get("analysis_only"):
                             run.config = {
                                 **{
                                     k: v for k, v in p.config.items() if k != "analysis"
@@ -473,6 +476,10 @@ def process_import(run_id):
 
             schedule(tenant_id=run.tenant_id)
         # The independent worktable must never change import/research outcomes.
+        if run is not None and (run.config or {}).get("analysis_only"):
+            # TEMPLATE-PREP-01: a template-preparation upload is never imported, so no
+            # TEMPLATE-01 worktable is built for it (#64 review, item 3).
+            return
         try:
             from app.template_engine import auto_template
             auto_template(db, run_id)

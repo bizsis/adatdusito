@@ -135,3 +135,5 @@ wcwidth==0.9.4
     # via prompt-toolkit
 webauthn==2.7.0
     # via -r requirements.txt
+xlrd==2.0.1
+    # via -r requirements.txt

@@ -19,7 +19,9 @@ def test_runtime_lock_has_no_test_tools_and_test_lock_has_patched_pytest():
     assert not check.TEST_ONLY & set(runtime)
     major, minor, patch = (int(x) for x in test["pytest"].split(".")[:3])
     assert (major, minor, patch) >= (9, 0, 3)  # PYSEC-2026-1845 / CVE-2025-71176
-    assert len(runtime) + len(test) == 53
+    # TEMPLATE-PREP-01 added xlrd (legacy XLS intake), no transitive dependencies.
+    assert runtime["xlrd"] == "2.0.1"
+    assert len(runtime) + len(test) == 54
 
 
 def test_requirements_txt_pins_match_lock_including_cryptography():

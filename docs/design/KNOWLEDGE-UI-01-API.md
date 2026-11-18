@@ -90,7 +90,7 @@ PYTHONPATH=backend .venv/bin/pytest -q backend/tests scripts/tests --ignore-glob
 npm --prefix frontend run build
 npm --prefix frontend run lint
 npm --prefix frontend test
-PYTHONPATH=backend .venv/bin/pytest -q backend/tests/test_knowledge_admin_browser.py backend/tests/test_template_browser.py scripts/tests/test_help_browser.py
+PYTHONPATH=backend .venv/bin/pytest -q backend/tests/test_knowledge_admin_browser.py backend/tests/test_template_preparation_api_browser.py scripts/tests/test_help_browser.py
 ```
 
 Az integrált futásban nincs `-k` szűrés vagy migrációs tesztkihagyás. A közös tesztfixture a KNOWLEDGE-01 ütemező hálózati küldését leválasztja; a motor tényleges újraépítését a tesztek a saját SQLite/MySQL adatbázison hajtják végre. Ezzel a szintetikus rekordok nem kerülnek egy fejlesztő esetleg futó brokerébe.
