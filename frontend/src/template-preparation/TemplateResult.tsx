@@ -27,6 +27,8 @@ const explanations: Record<string, string> = {
     "A vonalkódot a pontos forrásértékből állította helyre a rendszer.",
   invalid_gtin: "A vonalkód hossza vagy ellenőrzőszáma érvénytelen.",
   negative_stock: "A forráskészlet negatív.",
+  image_missing_in_sequence: "Az üres képhelyek kimaradnak a képek listájából.",
+  images_over_unas_limit: "Tíznél több kép van a sorban. Az export mindegyiket tartalmazza.",
   additional_images_not_exported:
     "Az UNAS-fájl csak az első képet tartalmazza.",
   duplicate_sku: "A cikkszám többször szerepel a forrásban.",
@@ -43,6 +45,8 @@ const defaultFields: Record<string, string> = {
   invalid_status: "statusz",
   invalid_image: "kep",
   invalid_image_url: "kep",
+  image_missing_in_sequence: "kep",
+  images_over_unas_limit: "kep",
 };
 
 const identifierIssues = new Set([
@@ -57,14 +61,15 @@ const warningOnly = new Set([
   "price_vat_mismatch",
   "currency_mismatch",
   "additional_images_not_exported",
+  "image_missing_in_sequence",
+  "images_over_unas_limit",
 ]);
 
 function issueText(issue: ResultIssue) {
   return explanations[issue.code] ?? "Ellenőrizd a forrásban megadott értéket.";
 }
 
-function invalidImage(value: string) {
-  if (!value) return false;
+function invalidImageUrl(value: string) {
   try {
     const url = new URL(value);
     return (
@@ -253,7 +258,8 @@ export function TemplateResult({
                     result.columns.some(
                       (column, index) =>
                         column.target.key === "kep" &&
-                        invalidImage(row.values[index]),
+                        Boolean(row.values[index]) &&
+                        row.values[index].split("|").some(invalidImageUrl),
                     ) &&
                     !issues.some((issue) =>
                       ["invalid_image", "invalid_image_url"].includes(
