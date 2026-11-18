@@ -48,7 +48,7 @@ változatlanok.
 | Státusz | `Státusz` | Forrásérték 0/1, vagy egyértelmű igen/nem jellegű szöveg (1/0). Üres vagy nincs oszlop: a sablon alapértéke (1). Más érték: üres, `invalid_status`. A készletnek nincs köze a Státuszhoz. |
 | Termék összevonás alapja | `Alap Típus` | Szöveg. |
 | Export tiltás | `Export Tiltás` | Szöveg. |
-| Kép | `Kép link` | Az **1. sorszámú** kép. A további képoszlopok UNAS-fejléce nem dokumentált, ezért nem kerülnek a fájlba; `additional_images_not_exported` jelzi, a forrás megmarad. |
+| Kép | `Kép link` | **Minden** hozzárendelt kép, a kezelő által megadott sorszám szerint, `\|` jellel elválasztva egyetlen cellában; az első a főkép. Ha egy forráscella már `\|`-vel tagolt több linket tartalmaz, azok a helyükön megmaradnak. Üres képoszlop nem hagy rést (az UNAS-ban nincs üres hely), a többi kép relatív sorrendje nem változik, és a hiányt `image_missing_in_sequence` jelzi (`orders`). 10-nél több kép: mind megmarad, `images_over_unas_limit` jelzéssel. |
 | További lapfül 1–3 | `További lapfül tartalma 1–3` | Szöveg/HTML. |
 | Kiegészítő / Hasonló termékek | `Kiegészítő Termékek` / `Hasonló Termékek` | Szöveg. |
 | Paraméter | a sablon `Paraméter: …` fejléce | Szöveg, változatlanul. |
@@ -159,8 +159,18 @@ régi verzió azonosítójával a régi eredmény továbbra is előáll. Termék
 
 ## Nyitott kérdések (Tulajdonos/Vezér)
 
-1. **Több kép:** az UNAS több képének fejléce vagy összefűzési szabálya nincs dokumentálva;
-   most csak az első kép kerül exportra.
+1. **Több kép (rendezve):** a formátum `|` elválasztó egyetlen `Kép link` cellában, a
+   főkép elöl. Két, egymástól független forrás igazolja:
+   - a valós UNAS-export, ahol egy termék értéke `…/shop_pic/1000842.jpg|…/shop_altpic/1000842_altpic_1.jpg|…/shop_altpic/1000842_altpic_2.jpg`;
+   - az UNAS súgójának (Termék adatbázis, Termék képek) keresőkivonata.
+
+   Az `unas.hu` oldalt a fejlesztői környezetből közvetlenül nem lehetett letölteni. Nyitott
+   technikai kérdések:
+   - a 10 képes korlát csak a kivonatból ismert;
+   - a kivonat szerint a `Kép link` csak kép nélküli terméknél tölt fel képet, ütemezve;
+   - üres képoszlopnál a rést nem lehet jelölni.
+
+   Mindhármat a valós UAT-import igazolja.
 2. **Raktárkészlet #1…:** a többraktáras fejléc nem igazolt, ezért kimarad.
 3. **CSV-formátum:** UTF-8 BOM és `;` elválasztó; az UNAS CSV-importjának pontos elvárását a
    valós importteszt igazolja (UAT).
