@@ -516,12 +516,11 @@ def row_checks(db, run, fields, column_of, identity_column, vat_rate, errors, wa
     missing = {f["header"]: 0 for f in required}
     fallback_ok = {f["header"]: 0 for f in required}
     status_words = 0
-    stock_zero = invalid_vat = scientific = invalid_gtin = 0
+    invalid_vat = scientific = invalid_gtin = 0
     identities, conflicts = {}, []
     net_col, gross_col = column_of.get("Nettó Ár"), column_of.get("Bruttó Ár")
     vat_col = next((i for h, i in column_of.items()
                     if h.startswith("Áfakulcs")), None)
-    stock_col, status_col = column_of.get("Raktárkészlet"), column_of.get("Státusz")
     gtin_cols = [i for h, i in column_of.items()
                  if any(f["header"] == h and f.get("internal_field") == "gtin" for f in fields)]
 
@@ -554,10 +553,6 @@ def row_checks(db, run, fields, column_of, identity_column, vat_rate, errors, wa
                 fallback_ok[f["header"]] += 1
             else:
                 missing[f["header"]] += 1
-        if stock_col is not None:
-            stock = amount(cell(raw, stock_col))
-            if stock is not None and stock == 0:
-                stock_zero += 1
         for i in gtin_cols:
             issues = normalize("gtin", cell(raw, i))[1]
             scientific += "scientific_identifier_requires_review" in issues
@@ -573,7 +568,9 @@ def row_checks(db, run, fields, column_of, identity_column, vat_rate, errors, wa
     if conflicts:
         errors.append({"code": "identity_conflict", "count": len(conflicts),
                        "values": conflicts[:10]})
-    for code, count in (("stock_zero_rows", stock_zero), ("invalid_vat_rows", invalid_vat),
+    # Owner decision (#58, 2026-11-18): stock and status are unrelated; a zero stock
+    # neither changes nor flags the status.
+    for code, count in (("invalid_vat_rows", invalid_vat),
                         ("scientific_identifier_rows", scientific),
                         ("invalid_gtin_rows", invalid_gtin)):
         if count:

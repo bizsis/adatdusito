@@ -191,7 +191,8 @@ def test_required_fields_fallbacks_and_missing_price(imports):
     # Gross from net only with a known VAT rate; row C has no net price -> real gap.
     assert req["Bruttó Ár"]["status"] == "missing" and req["Bruttó Ár"]["rows_missing"] == 1
     assert req["Nettó Ár"]["status"] == "partial" and req["Nettó Ár"]["rows_missing"] == 1
-    assert {"code": "stock_zero_rows", "count": 1} in r["warnings"]
+    # Stock and status are unrelated (owner decision): stock 0 keeps status 1, no warning.
+    assert not any("stock" in w["code"] for w in r["warnings"])
     assert r["approval_defaults"] == {"tax_basis": "nettó"}
     # Status from a mapped availability column (igen/nem -> 1/0).
     r = c.post(f"{BASE}/runs/{run_id}/column-mapping/validate",

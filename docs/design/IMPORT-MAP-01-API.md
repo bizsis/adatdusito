@@ -130,6 +130,8 @@ A fájl **összes** oszlopa, fájlsorrendben. Akkor érhető el, ha az elemzés 
   - `synonym`: szinonima (0.95);
   - `approved_parameter`: korábban jóváhagyott paraméter (0.9);
   - `translation`: rögzített szótár, pl. `Color` → `Szín` (0.7);
+    a szótár a kódban van (`backend/app/import_mapping.py`, `TRANSLATIONS`); admin felületről
+    egyelőre nem szerkeszthető (tulajdonosi döntés, 2026-11-18);
   - `content`: adatminta, pl. 8/12/13/14 számjegyű kód → EAN (0.65).
 - A `current` a beszállító legutóbbi mentett megfeleltetéséből jön, fejlécazonosság alapján
   (`current_source: "saved_profile"`).
@@ -170,7 +172,7 @@ Válasz:
 {
   "valid": false,
   "errors": [{"code": "duplicate_target", "columns": [0, 2], "target": "cikkszam"}],
-  "warnings": [{"code": "stock_zero_rows", "count": 1}],
+  "warnings": [{"code": "invalid_vat_rows", "count": 1}],
   "required": [
     {"key": "statusz", "header": "Státusz", "status": "fallback", "rule": "default_1",
      "rows_missing": 0},
@@ -201,7 +203,7 @@ Az `approval_defaults` a `/approve` kéréshez javasolt kiegészítő értékeke
 | `financial_approval_required` | ár, áfa vagy pénznem megfeleltetéséhez `financial_approved: true` kell |
 | `invalid_vat_rate` | a `vat_rate` nem 0, 5, 18 vagy 27 |
 
-**Figyelmeztetések:** `stock_zero_rows`, `invalid_vat_rows`,
+**Figyelmeztetések:** `invalid_vat_rows`,
 `scientific_identifier_rows`, `invalid_gtin_rows`.
 
 **Kötelező mezők** (`required[].status`):
@@ -215,7 +217,7 @@ Az `approval_defaults` a `/approve` kéréshez javasolt kiegészítő értékeke
 
 | `rule` | Mező | Szabály |
 |---|---|---|
-| `default_1` | Státusz | Ha nincs oszlop: 1. A készlet nem írja felül; a 0 készletű sorokat a `stock_zero_rows` figyelmeztetés jelzi kézi ellenőrzésre. |
+| `default_1` | Státusz | Ha nincs oszlop: 1. A készletnek nincs köze a Státuszhoz (tulajdonosi döntés, 2026-11-18): 0 készletnél is 1, figyelmeztetés nélkül. |
 | `from_availability` | Státusz | Ha van megfeleltetett elérhetőség/rendelhetőség oszlop, annak értékét kell figyelembe venni: az értelmezhető igen/nem érték 1/0 lesz, a többi sor `partial`. |
 | `net_from_gross_vat` | Nettó Ár | Bruttó / (1 + áfa), csak ismert áfakulcsból (`vat_rate` vagy soronkénti áfaoszlop 0/5/18/27). |
 | `gross_from_net_vat` | Bruttó Ár | Nettó × (1 + áfa), ugyanezzel a feltétellel. |
