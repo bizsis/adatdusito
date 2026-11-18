@@ -137,19 +137,19 @@ def test_tenant_manual_parameters_bulk_and_approval_evidence(help_catalog):
         p.get_by_role('button',name='Cégek és webáruházak',exact=True).click()
         expect(p.get_by_role('heading',name='Cégek',exact=True)).to_be_visible()
         shot(p.locator('main'),'cegek-webaruhazak')
-        nav(p,'Beszállítói import')
-        p.get_by_text('Haladó fájlbeállítások',exact=True).click()
-        shot(p.locator('main > section.card').first,'fajlbeallitasok')
+        nav(p,'Import')
+        p.get_by_label('Webshopmotor',exact=True).select_option('unas')
+        expect(p.get_by_role('region',name='UNAS-célmezők')).to_be_visible()
         nav(p,'Termékadatok');expect(p.get_by_role('button',name='Mosógép A részletei',exact=True)).to_be_visible()
         shot(p.locator('main'),'termeklista')
         p.get_by_role('tab',name='Saját kategóriatérkép és profilok',exact=True).click()
         shot(p.locator('main'),'kategoriameterkep')
-        nav(p,'Beszállítói import');open_product(ui);apply_preview(p)
+        open_product(ui);apply_preview(p)
         shot(p.locator('.parameter-table'),'parameterallapotok')
         p.get_by_text('Tenant- és globális aliasszabályok',exact=True).click()
         shot(p.get_by_role('region',name='Aliasszabályok',exact=True),'aliasok')
         shot(p.get_by_role('region',name='Valódi paraméterfutások',exact=True),'parameter-futas')
-        nav(p,'Beszállítói import');overview(ui);snapshot(p,page=True)
+        overview(ui);snapshot(p,page=True)
         shot(p.get_by_role('region',name='Rögzített termékkör és előkészítési jóváhagyás',exact=True),'tomeges-kijeloles')
         preview(f,p)
         p.get_by_role('button',name='Előkészítési ellenőrzés',exact=True).click()
@@ -194,30 +194,23 @@ def test_follow_written_demo_supplier_import_classification_missing_and_grants(h
     """Execute the documented path, using UI writes and real worker functions."""
     from app.import_engine import advance
     f=help_catalog
-    with app_browser(f,legacy_import=True) as ui:
-        p=ui.page;nav(p,'Beszállítói import')
-        p.get_by_label('Új beszállító neve',exact=True).fill('Segédlet demóbeszállító')
-        with p.expect_response(lambda r:r.url.endswith('/imports/suppliers') and r.request.method=='POST') as created:
-            p.get_by_role('button',name='Beszállító létrehozása',exact=True).click()
-        expect(p.locator('main > section.card').first.locator('select').first).to_have_value(str(created.value.json()['id']))
-        p.get_by_text('Haladó fájlbeállítások',exact=True).click()
-        p.get_by_label('Fejléc sora (0: felismerés)',exact=True).fill('1')
-        p.locator('label:has-text("CSV elválasztó") select').select_option(';')
-        p.locator('label:has-text("Kódolás") select').select_option('utf-8-sig')
-        with p.expect_response(lambda r:r.url.endswith('/imports/runs') and r.request.method=='POST') as uploaded:
-            p.get_by_label('CSV/XLSX fájl',exact=True).set_input_files({'name':'segedlet-demo.csv','mimeType':'text/csv','buffer':'Cikkszám;Terméknév;Kategória;EAN\nDEMO-001;Demó mosógép;Háztartás / Mosógépek;5901234123457\n'.encode()})
-        run=uploaded.value.json()['id']
-        with Session(f.engine) as db:advance(db,run)
-        expect(p.get_by_role('button',name='Megfeleltetés jóváhagyása és feldolgozás',exact=True)).to_be_visible(timeout=15000)
-        expect(p.locator('table').filter(has_text='Eredeti oszlop')).to_contain_text('Cikkszám')
-        p.get_by_label('Profil neve',exact=True).fill('Segédlet CSV v1')
-        p.locator('label:has-text("Jóváhagyott összekapcsolási kulcs") select').select_option('sku')
-        p.locator('label:has-text("Feed típusa") select').select_option('partial')
-        with p.expect_response(lambda r:r.url.endswith(f'/imports/runs/{run}/approve')) as approved:
-            p.get_by_role('button',name='Megfeleltetés jóváhagyása és feldolgozás',exact=True).click()
-        assert approved.value.status==200
-        with Session(f.engine) as db:advance(db,run)
-        assert f.client.get(f'/api/v1/imports/runs/{run}').json()['state']=='completed'
+    # Classification starts with an existing product. The Import UI now ends at
+    # template save, so create the guide's demo product through the retained API.
+    source = 'Cikkszám;Terméknév;Kategória;EAN\nDEMO-001;Demó mosógép;Háztartás / Mosógépek;5901234123457\n'.encode()
+    created = f.client.post('/api/v1/imports/runs', data={'supplier_id': f.supplier},
+                            files={'file': ('segedlet-demo.csv', source)})
+    assert created.status_code == 200
+    run = created.json()['id']
+    with Session(f.engine) as db:advance(db,run)
+    approved = f.client.post(f'/api/v1/imports/runs/{run}/approve', json={
+        'name':'Segédlet CSV v1', 'identity_field':'sku',
+        'mapping':{'0':'sku','1':'name','2':'category','3':'gtin'},
+    })
+    assert approved.status_code==200, approved.text
+    with Session(f.engine) as db:advance(db,run)
+    assert f.client.get(f'/api/v1/imports/runs/{run}').json()['state']=='completed'
+    with app_browser(f) as ui:
+        p=ui.page
         nav(p,'Termékadatok')
         p.get_by_label('Termék keresése',exact=True).fill('DEMO-001')
         p.get_by_role('button',name='Demó mosógép részletei',exact=True).click()
@@ -229,7 +222,7 @@ def test_follow_written_demo_supplier_import_classification_missing_and_grants(h
         p.get_by_role('button',name='Módosítás mentése',exact=True).click()
         expect(p.get_by_text('A kézi besorolás mentve és zárolva.',exact=True)).to_be_visible()
         # Reopen after refreshed product list, as the manual instructs.
-        nav(p,'Beszállítói import');open_product(ui,name='Demó mosógép')
+        open_product(ui,name='Demó mosógép')
         apply_preview(p)
         expect(p.locator('.parameter-table')).to_contain_text('Hiányzó hely')
         shot(p.locator('.parameter-table'),'hianyzo-parameterek')

@@ -7,7 +7,7 @@
     "api": "TEMPLATE-PREP-01 API",
     "actions": "Beszállító; forrásoszlopok; megfeleltetés; alapértékek; sablonverziók",
     "status": "documented",
-    "browser_evidence": "frontend/tests/test_template_preparation_browser.py; frontend/tests/test_template_preparation_api_browser.py"
+    "browser_evidence": "frontend/tests/test_template_preparation_browser.py; backend/tests/test_template_preparation_api_browser.py"
   },
   {
     "article": "belepes-munkaterulet",

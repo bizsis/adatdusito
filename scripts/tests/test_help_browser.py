@@ -118,33 +118,33 @@ def test_help_available_to_readonly_user_and_preserves_auth_boundary(help_catalo
 
 
 def test_record_current_ui_screenshots_and_existing_workflows(help_catalog):
-    """Also a regression smoke: import/classification/parameters/bulk/export still open."""
+    """Also a regression smoke: template preparation, classification, parameters and bulk operations."""
     f=help_catalog
     def shot(locator,name):
         expect(locator).to_be_visible()
         if os.environ.get('HELP_SCREENSHOTS')=='1':
             locator.screenshot(path=str(ROOT/f'frontend/public/help/images/{name}.png'),animations='disabled')
-    with app_browser(f,width=1440,legacy_import=True) as ui:
+    with app_browser(f,width=1440) as ui:
         p=ui.page
         expect(p.get_by_label('Munkaterület',exact=True)).to_contain_text('Segédlet demó')
         shot(p.locator('.workspace'),'munkaterulet')
-        p.locator('.sidebar nav').get_by_role('button',name='Beszállítói import',exact=True).click()
+        nav=p.locator('.sidebar nav')
+        nav.get_by_role('button',name='Import',exact=True).click()
+        expect(nav.get_by_role('button',name='Beszállítói import',exact=True)).to_have_count(0)
+        expect(nav.get_by_role('button',name='Export',exact=True)).to_have_count(0)
+        p.get_by_label('Webshopmotor',exact=True).select_option('unas')
+        p.get_by_text('Új beszállító',exact=True).click()
         p.get_by_label('Új beszállító neve',exact=True).fill('Segédlet demóbeszállító')
-        shot(p.locator('main > section.card').first,'beszallito')
         with p.expect_response(lambda r: r.url.endswith('/api/v1/imports/suppliers') and r.request.method == 'POST') as created:
             p.get_by_role('button',name='Beszállító létrehozása',exact=True).click()
-        expect(p.locator('main > section.card').first.locator('select').first).to_have_value(str(created.value.json()['id']))
-        shot(p.locator('main > section.card').first,'feltoltes')
+        expect(p.get_by_label('Beszállító',exact=True)).to_have_value(str(created.value.json()['id']))
         with p.expect_response(lambda r: r.url.endswith('/api/v1/imports/runs') and r.request.method == 'POST') as uploaded:
-            p.get_by_label('CSV/XLSX fájl',exact=True).set_input_files({'name':'segedlet-demo.csv','mimeType':'text/csv','buffer':'Cikkszám;Terméknév;Kategória;EAN\nDEMO-001;Demó mosógép;Háztartás / Mosógépek;5901234123457\n'.encode()})
-        # Actual worker function on isolated synthetic rows, with the real UI polling it.
+            p.get_by_label('CSV, XLS, XLSX vagy XML fájl',exact=True).set_input_files({'name':'segedlet-demo.csv','mimeType':'text/csv','buffer':'Cikkszám;Terméknév;Kategória;EAN\nDEMO-001;Demó mosógép;Háztartás / Mosógépek;5901234123457\n'.encode()})
         run=uploaded.value.json()['id']
+        assert uploaded.value.json()['analysis_only']
         with Session(f.engine) as db:advance(db,run)
-        expect(p.get_by_role('button',name='Megfeleltetés jóváhagyása és feldolgozás',exact=True)).to_be_visible(timeout=15000)
-        table=p.locator('table').filter(has_text='Eredeti oszlop')
-        shot(table,'oszlopok')
-        approval=p.locator('form').filter(has=p.get_by_role('button',name='Megfeleltetés jóváhagyása és feldolgozás',exact=True))
-        shot(approval,'import-jovahagyas')
+        expect(p.get_by_role('list',name='Forrásoszlopok')).to_contain_text('Cikkszám')
+        expect(p.get_by_role('button',name='Sablon mentése',exact=True)).to_be_visible()
         p.locator('.sidebar nav').get_by_role('button',name='Termékadatok',exact=True).click()
         p.get_by_role('button',name='Mosógép A részletei',exact=True).click()
         p.get_by_role('button',name='Besorolás szerkesztése',exact=True).click()
@@ -156,21 +156,11 @@ def test_record_current_ui_screenshots_and_existing_workflows(help_catalog):
         panel=p.locator('section.card').filter(has=p.get_by_role('heading',name='Belső besorolás módosítása',exact=True))
         shot(panel,'kategorizalas')
         # Leave unsaved category edit; navigate using the already implemented parameter flow.
-        p.locator('.sidebar nav').get_by_role('button',name='Beszállítói import',exact=True).click()
         open_product(ui);apply_preview(p)
         p.get_by_role('button',name='Paraméterrészlet: Teljesítmény (kW)',exact=True).click()
         shot(p.get_by_role('region',name='Valódi paraméterhely szerkesztése',exact=True),'kezi-parameter')
-        p.locator('.sidebar nav').get_by_role('button',name='Beszállítói import',exact=True).click()
         overview(ui);snapshot(p);preview(f,p)
         shot(p.get_by_role('region',name='Rögzített termékkör és előkészítési jóváhagyás',exact=True),'tomeges')
-        p.locator('.sidebar nav').get_by_role('button',name='Export',exact=True).click()
-        expect(p.get_by_role('heading',name='Webáruházmotorok → Exportmezők',exact=True)).to_be_visible()
-        for i,(key,label,internal) in enumerate([('cikkszam','Cikkszám','sku'),('nev','Terméknév','name')]):
-            p.get_by_role('button',name='Mező hozzáadása',exact=True).click()
-            p.get_by_label(f'key {i}',exact=True).fill(key)
-            p.get_by_label(f'label {i}',exact=True).fill(label)
-            p.get_by_label(f'internal_field {i}',exact=True).fill(internal)
-        shot(p.locator('main > section.card').first,'exportprofil')
 
 
 def test_mobile_topic_and_search_use_current_url_when_hashchange_is_delayed(help_catalog):

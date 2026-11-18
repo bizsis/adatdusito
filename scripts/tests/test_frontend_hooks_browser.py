@@ -82,11 +82,16 @@ def workspace_page():
             response = {"status": "ok", "checks": {}}
         elif path == "/imports/suppliers":
             response = [{"id": 1, "name": "Teszt beszállító"}]
-        elif path == "/imports/engines/unas/registry":
-            route.fulfill(status=404, json={"detail": "Not Found"})
-            return
-        elif path == "/imports/fields":
-            response = [{"key": "sku", "label": "Cikkszám"}, {"key": "name", "label": "Terméknév"}]
+        elif path == "/imports/template-targets":
+            engine = {"key": "unas", "name": "UNAS"}
+            response = {
+                "engine": engine, "engines": [engine], "currencies": ["HUF", "EUR"],
+                "default_currency": "HUF", "defaults": {"statusz": "1", "afa": "27"},
+                "targets": [
+                    {"key": "cikkszam", "label": "Cikkszám", "required": True, "multiple": None, "type": "text"},
+                    {"key": "termek_nev", "label": "Termék megnevezés", "required": False, "multiple": None, "type": "text"},
+                ],
+            }
         elif path == "/imports/runs" and request.method == "POST":
             route.fulfill(status=413, body="<html>Request Entity Too Large</html>", content_type="text/html")
             return
@@ -97,8 +102,20 @@ def workspace_page():
             if state["hold_run"] == response["id"]:
                 state["pending_runs"].append((route, deepcopy(response)))
                 return
-        elif path.endswith("/rows") or path.endswith("/preview"):
-            response = {"items": [], "has_more": False}
+        elif path.endswith("/template-preparation"):
+            selected = state["runs"][int(path.split("/")[3]) - 1]
+            response = {
+                "run_id": selected["id"], "supplier_id": 1, "engine": "unas",
+                "currency": parse_qs(url.query)["currency"][0],
+                "file": {"format": "csv", "data_rows": 1, "source_available": True},
+                "columns": [{"index": 0, "header": "SKU", "occurrence": 1,
+                             "sample": "001" if selected["id"] == 1 else "002",
+                             "sample_source": "file", "warnings": [], "suggestion": None,
+                             "assignment": {"state": "mapped", "target": {"key": "cikkszam"}},
+                             "assignment_source": "auto", "status": "suggested"}],
+                "template": None, "defaults": {"statusz": "1", "afa": "27"},
+                "warnings": [], "errors": [], "parameters": [],
+            }
         else:
             response = []
         route.fulfill(json=response)
@@ -173,50 +190,60 @@ def test_late_session_refresh_cannot_restore_logged_out_user(workspace_page):
     expect(page.get_by_label("Munkaterület", exact=True)).to_have_count(0)
 
 
-def test_import_polling_preserves_mapping_without_fetch_loops(workspace_page):
+def open_import(page):
+    page.get_by_role("navigation").get_by_role("button", name="Import", exact=True).click()
+    page.get_by_label("Webshopmotor", exact=True).select_option("unas")
+    page.get_by_label("Beszállító", exact=True).select_option("1")
+
+
+def test_currency_refresh_preserves_mapping_without_fetch_loops(workspace_page):
     page, state = workspace_page
-    page.get_by_role("navigation").get_by_role("button", name="Beszállítói import", exact=True).click()
-    page.get_by_role("button", name="#1 sample.csv megnyitása", exact=True).click()
-    mapping = page.get_by_label("Megfeleltetés: SKU", exact=True)
-    mapping.select_option("name")
-    page.get_by_label("Profil neve", exact=True).fill("Saját szerkesztés")
-    for _ in range(3):
-        with page.expect_response("**/imports/runs/1"):
-            page.clock.run_for(2100)
-    expect(mapping).to_have_value("name")
-    expect(page.get_by_label("Profil neve", exact=True)).to_have_value("Saját szerkesztés")
-    assert state["calls"]["/imports/fields"] == 1
-    assert state["calls"]["/imports/runs/1/rows"] == 1
-    assert state["calls"]["/imports/runs/1/join-suggestions"] == 1
-    assert state["calls"]["/imports/runs/1/preview"] == 2
+    open_import(page)
+    page.get_by_text("Korábban feltöltött fájlok", exact=True).click()
+    page.get_by_role("button", name="#1 · sample.csv", exact=True).click()
+    mapping = page.get_by_role("list", name="Forrásoszlopok").get_by_role("combobox")
+    mapping.select_option(label="Termék megnevezés")
+    page.get_by_label("Sablon neve", exact=True).fill("Saját szerkesztés")
+    with page.expect_response("**/imports/runs/1/template-preparation?*"):
+        page.get_by_label("Pénznem", exact=True).select_option("EUR")
+    expect(mapping.locator("option:checked")).to_have_text("Termék megnevezés")
+    expect(page.get_by_label("Sablon neve", exact=True)).to_have_value("Saját szerkesztés")
+    page.clock.run_for(6300)
+    assert state["calls"]["/imports/template-targets"] == 1
+    assert state["calls"]["/imports/runs/1/template-preparation"] == 2
+    assert state["calls"]["/imports/runs/1"] == 0
 
 
 def test_upload_proxy_413_preserves_supplier_and_csrf(workspace_page):
     page, state = workspace_page
-    page.get_by_role("navigation").get_by_role("button", name="Beszállítói import", exact=True).click()
-    page.get_by_role("combobox", name="Beszállító", exact=False).select_option("1")
-    page.get_by_label("CSV/XLSX fájl", exact=True).set_input_files({
+    open_import(page)
+    file_input = page.get_by_label("CSV, XLS, XLSX vagy XML fájl", exact=True)
+    file_input.set_input_files({
         "name": "sample.csv", "mimeType": "text/csv", "buffer": b"SKU\n001\n"})
     expect(page.get_by_role("alert")).to_contain_text("Túl nagy fájl, legfeljebb 50 MB tölthető fel.")
-    expect(page.get_by_role("combobox", name="Beszállító", exact=False)).to_have_value("1")
-    expect(page.get_by_label("CSV/XLSX fájl", exact=True)).to_be_enabled()
+    expect(page.get_by_label("Beszállító", exact=True)).to_have_value("1")
+    expect(file_input).to_be_enabled()
     upload = next(w for w in state["writes"] if w["path"] == "/imports/runs")
     assert upload["headers"]["x-csrf-token"] == "csrf-1"
     assert upload["headers"]["content-type"].startswith("multipart/form-data; boundary=")
+    assert 'name="purpose"\r\n\r\ntemplate\r\n' in upload["body"]
 
 
 def test_late_import_poll_cannot_restore_previous_selection(workspace_page):
     page, state = workspace_page
-    page.get_by_role("navigation").get_by_role("button", name="Beszállítói import", exact=True).click()
-    page.get_by_role("button", name="#1 sample.csv megnyitása", exact=True).click()
-    expect(page.get_by_role("heading", name="#1 – Jóváhagyásra vár", exact=True)).to_be_visible()
+    state["runs"][0]["state"] = "uploaded"
+    open_import(page)
+    page.get_by_text("Korábban feltöltött fájlok", exact=True).click()
     state["hold_run"] = 1
     with page.expect_request("**/imports/runs/1"):
+        page.get_by_role("button", name="#1 · sample.csv", exact=True).click()
         page.clock.run_for(2100)
-    page.get_by_role("button", name="#2 second.csv megnyitása", exact=True).click()
-    expect(page.get_by_role("heading", name="#2 – Jóváhagyásra vár", exact=True)).to_be_visible()
+    page.get_by_role("button", name="#2 · second.csv", exact=True).click()
+    source = page.get_by_role("list", name="Forrásoszlopok").locator("samp")
+    expect(source).to_have_text("002")
     assert len(state["pending_runs"]) == 1
     route, old_run = state["pending_runs"].pop()
-    route.fulfill(json=old_run)
+    route.fulfill(json={**old_run, "state": "awaiting_approval"})
     page.evaluate("() => new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)))")
-    expect(page.get_by_role("heading", name="#2 – Jóváhagyásra vár", exact=True)).to_be_visible()
+    expect(source).to_have_text("002")
+    assert state["calls"]["/imports/runs/1/template-preparation"] == 0

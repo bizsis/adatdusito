@@ -104,12 +104,9 @@ Fájlgazda-kivétel: a Vezér #41 és #42 alatti döntése alapján a `frontend/
   - megszakítás `awaiting_approval` állapotban, majd törlés;
   - feldolgozott import, futó és hivatkozott import (409);
   - másik tenant (404), reviewer (403), hiányzó CSRF (403), idegen Origin (403), kijelentkezve (401).
-- `backend/tests/test_import_ux_browser.py` (valódi UI a FastAPI ellen, Chromium, 1440 px és 390 px):
-  - kompakt előnézet és döntésjelzések, megszakítás, a jóváhagyás elérhető, nincs vízszintes oldaltúlcsordulás;
-  - hosszú fájlnév, 25-ös lapozás;
-  - törlés megerősítéssel, és az új feltöltés után sem tér vissza;
-  - elutasított törlés a szerver indoklásával.
-- `backend/tests/test_import_browser.py`: a JSON-szöveg helyett a kompakt táblázat cellájára ellenőriz.
+- `backend/tests/test_import_ux_browser.py` (FastAPI és Chromium, 1440 és 390 px): az Import → Előkészítés / Sablonkészítés megőrzi az összes forrásoszlopot, a korábban feltöltött fájlokat és azok lapozását. A beszerzési ár nem kerül automatikusan eladási árhoz.
+- A korábbi jóváhagyás, feldolgozás és törlés regresszióit az API-tesztek ellenőrzik. Ezek a műveletek a sablonkészítő képernyőről nem indíthatók.
+
 
 ## Tulajdonosi döntések (2026-11-17)
 

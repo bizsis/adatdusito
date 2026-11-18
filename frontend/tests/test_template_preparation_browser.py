@@ -98,7 +98,7 @@ def targets():
 
 @pytest.fixture
 def open_application():
-    def open_page(browser, width, write=True, catalog_available=True, automatic=False):
+    def open_page(browser, width, write=True, catalog_available=True):
         page = browser.new_page(viewport={"width": width, "height": 900})
         state = {"requests": [], "saves": [], "reports": [], "errors": [], "uploads": 0}
         page.on("pageerror", lambda error: state["errors"].append(str(error)))
@@ -176,15 +176,12 @@ def open_application():
                     suppliers.append(response)
                 else:
                     response = suppliers
-            elif path == "/imports/profiles":
-                assert query["supplier_id"] == ["1"]
-                response = (
-                    [{"id": 30, "config": {"automatic": True}}] if automatic else []
-                )
             elif path == "/imports/runs":
                 if method == "POST":
                     assert (
                         'name="supplier_id"' in request.post_data
+                        and 'name="purpose"' in request.post_data
+                        and "\r\n\r\ntemplate\r\n" in request.post_data
                         and "friss.csv" in request.post_data
                     )
                     state["uploads"] += 1
@@ -625,24 +622,3 @@ def test_read_only_and_unavailable_backend(open_application, chromium):
     )
     expect(unavailable.get_by_label("Webshopmotor")).to_be_disabled()
     expect(unavailable.get_by_text("Feldolgozott sorok", exact=True)).to_have_count(0)
-
-
-def test_legacy_automatic_profile_does_not_start_upload(open_application, chromium):
-    page, state = open_application(chromium, 1440, automatic=True)
-    page.get_by_label("Webshopmotor").select_option("unas")
-    page.get_by_label("Beszállító", exact=True).select_option("1")
-    page.get_by_label("CSV, XLS, XLSX vagy XML fájl").set_input_files(
-        {
-            "name": "friss.csv",
-            "mimeType": "text/csv",
-            "buffer": b"SKU;NAME\n1;Teszt\n",
-        }
-    )
-    expect(page.get_by_role("alert")).to_contain_text("automatikus importprofil")
-    assert not any(
-        method == "POST" and path == "/imports/runs"
-        for method, path, _ in state["requests"]
-    )
-    page.get_by_text("Korábban feltöltött fájlok", exact=True).click()
-    page.get_by_role("button", name="#11 · korabbi.csv").click()
-    expect(page.get_by_role("list", name="Forrásoszlopok")).to_be_visible()

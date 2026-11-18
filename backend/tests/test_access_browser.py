@@ -183,7 +183,7 @@ def test_invitation_owner_sets_password_and_logs_in(
         expect(page.get_by_label("Munkaterület", exact=True)).to_have_value("1")
         expect(
             page.get_by_role("navigation").get_by_role(
-                "button", name="Beszállítói import", exact=True
+                "button", name="Import", exact=True
             )
         ).to_be_visible()
         assert not errors and not any(sent[0] in path for path in paths)

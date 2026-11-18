@@ -131,18 +131,9 @@ export const loadRuns = (api: Request, offset = 0) =>
 export const loadRun = (api: Request, id: number) =>
   api<Run>(`/imports/runs/${id}`);
 export async function uploadRun(api: Request, supplier: number, file: File) {
-  // Existing upload still supports legacy automatic processing. Without a
-  // server-side analysis-only mode, refuse uploads for those suppliers.
-  const profiles = await api<{ config: { automatic?: boolean } }[]>(
-    `/imports/profiles?supplier_id=${supplier}`,
-  );
-  if (profiles.some(({ config }) => config.automatic)) {
-    throw new Error(
-      "Ehhez a beszállítóhoz automatikus importprofil tartozik. Az új fájlhoz elemzésre korlátozott feltöltés szükséges. Korábbi fájlból továbbra is készíthetsz sablont.",
-    );
-  }
   const data = new FormData();
   data.append("supplier_id", String(supplier));
+  data.append("purpose", "template");
   data.append("file", file);
   return api<Run>("/imports/runs", "POST", data);
 }
