@@ -57,6 +57,7 @@ def test_save_and_reuse_with_real_template_api(environment, monkeypatch, width):
         ]
         assert len(snapshot) == 3
     requests = []
+    saved_payloads = []
 
     def forward(route):
         request = route.request
@@ -69,6 +70,8 @@ def test_save_and_reuse_with_real_template_api(environment, monkeypatch, width):
             )
             return
         requests.append((request.method, url.path))
+        if request.method == "POST" and url.path == PREFIX + "/import-templates":
+            saved_payloads.append(request.post_data_json)
         headers = {
             "Content-Type": request.headers.get("content-type", "application/json")
         }
@@ -132,9 +135,9 @@ def test_save_and_reuse_with_real_template_api(environment, monkeypatch, width):
             rows.nth(3).get_by_role(
                 "button", name="Javaslat átvétele: Paraméter: Szín", exact=False
             ).click()
-            page.get_by_role("dialog").get_by_role(
-                "button", name="Paraméter elfogadása"
-            ).click()
+            parameter_dialog = page.get_by_role("dialog")
+            parameter_dialog.get_by_label("Paraméter típusa").select_option("enum")
+            parameter_dialog.get_by_role("button", name="Paraméter elfogadása").click()
             rows.nth(5).get_by_role("combobox").select_option(label="Kép")
             rows.nth(6).get_by_role("combobox").select_option(label="Kép")
             page.get_by_role("button", name="7. Image2 előrébb").click()
@@ -190,6 +193,31 @@ def test_save_and_reuse_with_real_template_api(environment, monkeypatch, width):
             expect(page.get_by_text("Felismert vagy betöltött sablon:", exact=False)).to_contain_text(
                 "Valódi próbasablon · v1"
             )
+            # A different file layout with no recognized parameter name or matching template.
+            upload.set_input_files({
+                "name": "masik-szerkezet.csv",
+                "mimeType": "text/csv",
+                "buffer": b"SKU;Finish;Custom\n0009;Matt;Minta\n",
+            })
+            expect(rows).to_have_count(3)
+            expect(page.get_by_text("Felismert vagy betöltött sablon:", exact=False)).to_have_count(0)
+            finish = rows.nth(1).get_by_role("combobox")
+            expect(finish).to_have_value("")
+            approved = finish.locator('optgroup[label="Meglévő paraméterek"] option')
+            expect(approved).to_have_text(["Paraméter: Szín · Lista"])
+            finish.select_option(label="Paraméter: Szín · Lista")
+            expect(parameter_dialog).to_have_count(0)
+            expect(page.get_by_role("list", name="Paraméter: Szín hozzárendelései")).to_contain_text("Finish")
+
+            rows.nth(2).get_by_role("combobox").select_option(label="Új paraméter…")
+            parameter_dialog.get_by_label("Paraméter neve").fill("Egyedi jellemző")
+            parameter_dialog.get_by_role("button", name="Paraméter elfogadása").click()
+            page.get_by_label("Sablon neve").fill("Meglévő paraméterrel")
+            page.get_by_role("button", name="Sablon mentése", exact=True).click()
+            expect(page.get_by_text("Sablon mentve: Meglévő paraméterrel · v1")).to_be_visible()
+            reused = saved_payloads[-1]
+            assert reused["columns"][1]["target"]["header"] == template["parameters"][0]["header"]
+            assert [param["name"] for param in reused["new_parameters"]] == ["Egyedi jellemző"]
             with Session(engine) as db:
                 products = db.scalars(select(SupplierProduct).order_by(SupplierProduct.id))
                 assert [(p.id, p.revision, p.last_run_id, p.data) for p in products] == snapshot

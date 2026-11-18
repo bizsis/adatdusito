@@ -163,8 +163,22 @@ const settings: Record<ParameterType, string> = {
   link_text: "2|0|0|0|0|1",
 };
 
-export function parameterHeader(draft: ParameterDraft) {
+export function parameterHeader(draft: Omit<ParameterDraft, "approved">) {
   return `Paraméter: ${draft.name.trim()}|${draft.group_name}|${draft.param_type}|${settings[draft.param_type]}||${draft.unit ?? ""}|0|1|1`;
+}
+
+export function parseParameterHeader(header: string) {
+  const prefix = "Paraméter: ";
+  if (!header.startsWith(prefix)) return;
+  const parts = header.slice(prefix.length).split("|");
+  const [name, group = "", type = ""] = parts;
+  if (!name.trim() || !Object.hasOwn(settings, type.trim())) return;
+  return {
+    name: name.trim(),
+    group_name: group.trim(),
+    param_type: type.trim() as ParameterType,
+    unit: parts[10]?.trim() || null, // UNAS header position used by unas_schema.py.
+  };
 }
 
 export const errorText = (error: unknown) =>

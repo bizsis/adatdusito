@@ -1,10 +1,11 @@
+import { parameterHeader } from "../import-mapping/importMappingApi";
 import type { Assignment, Field, Parameter, SourceColumn, Target } from "./api";
 
 export type Assignments = Record<number, Assignment>;
 
 export const normalized = (value: string) =>
   value.trim().normalize("NFC").toLocaleLowerCase("hu");
-export const parameterId = (parameter: Parameter) =>
+export const parameterNameKey = (parameter: Parameter) =>
   JSON.stringify([
     normalized(parameter.group_name),
     normalized(parameter.name),
@@ -18,7 +19,7 @@ export const slotId = (target: Target) =>
         : target.key === "raktarkeszlet"
           ? 0
           : null),
-    target.parameter ? parameterId(target.parameter) : null,
+    target.parameter ? target.header ?? parameterHeader(target.parameter) : null,
   ]);
 export const bindings = (assignments: Assignments, target: Target) =>
   Object.entries(assignments)

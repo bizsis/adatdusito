@@ -114,7 +114,7 @@ def workspace_page():
                              "assignment": {"state": "mapped", "target": {"key": "cikkszam"}},
                              "assignment_source": "auto", "status": "suggested"}],
                 "template": None, "defaults": {"statusz": "1", "afa": "27"},
-                "warnings": [], "errors": [], "parameters": [],
+                "warnings": [], "approved_parameters": [],
             }
         else:
             response = []

@@ -1,10 +1,12 @@
 import {
   useEffect,
+  useMemo,
   useRef,
   useState,
   type DragEvent,
   type ReactNode,
 } from "react";
+import { parseParameterHeader } from "../import-mapping/importMappingApi";
 import {
   message,
   saveTemplate,
@@ -25,7 +27,7 @@ import {
   bindings,
   initialAssignments,
   moveImage,
-  parameterId,
+  parameterNameKey,
   replaceBinding,
   slotId,
 } from "./mapping";
@@ -70,7 +72,7 @@ const issueLabels: Record<string, string> = {
 type ParameterEdit = {
   parameter: Parameter;
   index?: number;
-  previous?: Parameter;
+  previous?: Target;
 };
 const blankParameter: Parameter = {
   name: "",
@@ -370,10 +372,27 @@ export function TemplateEditor({
       return `Alternatív kategória ${target.instance}`;
     return field?.label ?? target.key;
   }
-  const options = groups.flatMap(({ slots }) =>
-    slots.filter((slot) => slot.key !== "parameter" || slot.parameter),
+  const approvedTargets = useMemo(
+    () =>
+      view.approved_parameters.flatMap(({ header }) => {
+        const parameter = parseParameterHeader(header);
+        return parameter ? [{ key: "parameter", header, parameter }] : [];
+      }),
+    [view.approved_parameters],
   );
-  const optionMap = new Map(options.map((option) => [slotId(option), option]));
+  const approvedById = new Map(
+    approvedTargets.map((target) => [slotId(target), target]),
+  );
+  const options = groups.flatMap(({ slots }) =>
+    slots.filter(
+      (slot) =>
+        (slot.key !== "parameter" || slot.parameter) &&
+        !approvedById.has(slotId(slot)),
+    ),
+  );
+  const optionMap = new Map(
+    [...options, ...approvedTargets].map((target) => [slotId(target), target]),
+  );
   const mapColumn = (index: number, choice: Assignment) => {
     if (!editable) return;
     setReport(undefined);
@@ -382,10 +401,11 @@ export function TemplateEditor({
   };
 
   function applySuggestion(index: number, target: Target) {
-    if (target.key === "parameter") {
+    const approved = approvedById.get(slotId(target));
+    if (target.key === "parameter" && !approved) {
       setEditing({ parameter: target.parameter ?? blankParameter, index });
     } else {
-      mapColumn(index, { state: "mapped", target });
+      mapColumn(index, { state: "mapped", target: approved ?? target });
     }
   }
 
@@ -409,13 +429,19 @@ export function TemplateEditor({
   function acceptParameter(parameter: Parameter, index?: number) {
     if (!editing) return;
     const previous = editing.previous;
-    const oldId = previous ? parameterId(previous) : undefined;
-    const id = parameterId(parameter);
-    const target = { key: "parameter", parameter };
+    const oldId = previous ? slotId(previous) : undefined;
+    let target: Target = { key: "parameter", parameter };
+    if (previous && slotId({ ...previous, header: undefined }) === slotId(target))
+      target = previous;
+    const id = slotId(target);
+    const existing = approvedById.get(id);
     if (
-      dynamic.some(
+      !existing &&
+      [...approvedTargets, ...dynamic].some(
         (slot) =>
-          slot.parameter && parameterId(slot.parameter) === id && id !== oldId,
+          slot.parameter &&
+          slotId(slot) !== oldId &&
+          parameterNameKey(slot.parameter) === parameterNameKey(parameter),
       )
     ) {
       setError("Ezzel a névvel már van paraméter. Válaszd ki a meglévőt.");
@@ -425,27 +451,24 @@ export function TemplateEditor({
     setReport(undefined);
     setError("");
     setExtraSlots((old) => [
-      ...old.filter(
-        (slot) => !slot.parameter || parameterId(slot.parameter) !== oldId,
-      ),
-      target,
+      ...old.filter((slot) => slotId(slot) !== oldId && slotId(slot) !== id),
+      existing ?? target,
     ]);
     setCreated((old) => [
-      ...old.filter(
-        (item) => parameterId(item) !== oldId && parameterId(item) !== id,
-      ),
-      parameter,
+      ...old.filter((item) => {
+        const itemId = slotId({ key: "parameter", parameter: item });
+        return itemId !== oldId && itemId !== id;
+      }),
+      ...(existing ? [] : [parameter]),
     ]);
     setAssignments((old) => {
-      const assigned = previous
-        ? bindings(old, { key: "parameter", parameter: previous })
-        : [];
+      const assigned = previous ? bindings(old, previous) : [];
       let next = old;
       for (const item of assigned)
         next = assign(next, item.index, { state: null });
       return index === undefined
         ? next
-        : assign(next, index, { state: "mapped", target });
+        : assign(next, index, { state: "mapped", target: existing ?? target });
     });
     setEditing(undefined);
   }
@@ -464,7 +487,7 @@ export function TemplateEditor({
     const used = new Set(
       columns.flatMap((column) =>
         column.state === "mapped" && column.target.parameter
-          ? [parameterId(column.target.parameter)]
+          ? [slotId(column.target)]
           : [],
       ),
     );
@@ -474,7 +497,9 @@ export function TemplateEditor({
       columns,
       defaults,
       new_parameters: created
-        .filter((parameter) => used.has(parameterId(parameter)))
+        .filter((parameter) =>
+          used.has(slotId({ key: "parameter", parameter })),
+        )
         .map((parameter) => ({ ...parameter, approved: true as const })),
     };
     try {
@@ -551,7 +576,7 @@ export function TemplateEditor({
                             onClick={() =>
                               setEditing({
                                 parameter: target.parameter!,
-                                previous: target.parameter,
+                                previous: target,
                                 index: linked[0]?.index,
                               })
                             }
@@ -792,6 +817,22 @@ export function TemplateEditor({
                           {targetLabel(target)}
                         </option>
                       ))}
+                      {approvedTargets.length > 0 && (
+                        <optgroup label="Meglévő paraméterek">
+                          {approvedTargets.map((target) => (
+                            <option key={slotId(target)} value={slotId(target)}>
+                              {[
+                                targetLabel(target),
+                                target.parameter.group_name,
+                                typeLabels[target.parameter.param_type],
+                                target.parameter.unit,
+                              ]
+                                .filter(Boolean)
+                                .join(" · ")}
+                            </option>
+                          ))}
+                        </optgroup>
+                      )}
                       <option value="new">Új paraméter…</option>
                     </select>
                   </label>

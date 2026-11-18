@@ -16,6 +16,7 @@ export type Target = {
   key: string;
   instance?: number;
   order?: number;
+  header?: string;
   parameter?: Parameter;
 };
 export type Field = {
