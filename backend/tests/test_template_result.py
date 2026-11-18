@@ -77,9 +77,11 @@ def test_three_products_columns_values_defaults_and_warnings(imports):
             for row in r["rows"]}
     a1 = rows["A-1"]
     assert (a1["Nettó Ár"], a1["Bruttó Ár"], a1["Státusz"]) == ("1000", "1270", "1")
-    assert a1[EAN] == "5901234123457" and a1["Kép link"] == "https://k.hu/1.jpg"
+    # Every image, in order, "|"-separated in the one UNAS image cell.
+    assert a1[EAN] == "5901234123457"
+    assert a1["Kép link"] == "https://k.hu/1.jpg|https://k.hu/2.jpg"
     assert a1[parameter_header("Szín")] == "Fekete" and a1["Raktárkészlet"] == "5"
-    assert "additional_images_not_exported" in codes(a1["_row"]["warnings"])
+    assert not any("image" in w for w in codes(a1["_row"]["warnings"]))
     a2 = rows["A-2"]
     assert a2[EAN] == "0012345678905"  # leading zeros kept
     assert a2["Státusz"] == "0" and a2["Nettó Ár"] == a2["Bruttó Ár"] == ""
@@ -296,3 +298,92 @@ def test_read_only_permissions_and_expired_source(imports):
         db.commit()
     assert c.get(f"{BASE}/import-templates/{tpl['id']}/result").status_code == 409
 
+
+
+# --- several product images (UNAS "Kép link": "|"-separated, main image first) -----------------
+
+IMAGES = ("SKU;Name;Category;Img A;Img B;Img C\n"
+          "A;Egy;K;https://k.hu/a1.jpg;https://k.hu/a2.jpg;https://k.hu/a3.jpg\n"
+          "B;Kettő;K;;https://k.hu/b2.jpg;https://k.hu/b3.jpg\n"
+          "C;Három;K;https://k.hu/c1.jpg|https://k.hu/c1b.jpg;;https://k.hu/c3.jpg\n"
+          "D;Négy;K;;;\n").encode()
+
+
+def image_template(c, t, s, orders):
+    def body(view):
+        return {"engine": "unas", "currency": "HUF", "columns": columns_of(view, {
+            3 + i: mapped("kep", order=o) for i, o in enumerate(orders)})}
+
+    return template_for(c, t, s, IMAGES, body=body, name=f"Képek {orders}")
+
+
+def images_by_sku(r):
+    head = [col["header"] for col in r["columns"]]
+    assert head.count("Kép link") == 1
+    i = head.index("Kép link")
+    return {row["values"][0]: (row["values"][i], row["warnings"]) for row in r["rows"]}
+
+
+def test_all_images_exported_in_operator_order(imports):
+    """Regression: only the image with order 1 was exported, the others were dropped."""
+    c, t, s = imports
+    _, tpl = image_template(c, t, s, [1, 2, 3])
+    r = result(c, tpl["id"])
+    images = images_by_sku(r)
+    assert images["A"][0] == "https://k.hu/a1.jpg|https://k.hu/a2.jpg|https://k.hu/a3.jpg"
+    # A cell already holding several links keeps them in place; an empty column leaves
+    # no gap, the remaining images keep their relative order, the gap is reported.
+    assert images["C"][0] == "https://k.hu/c1.jpg|https://k.hu/c1b.jpg|https://k.hu/c3.jpg"
+    assert {"code": "image_missing_in_sequence", "orders": [2]} in images["C"][1]
+    assert images["B"][0] == "https://k.hu/b2.jpg|https://k.hu/b3.jpg"
+    assert {"code": "image_missing_in_sequence", "orders": [1]} in images["B"][1]
+    assert images["D"][0] == "" and not any("image" in w["code"] for w in images["D"][1])
+    column = next(col for col in r["columns"] if col["header"] == "Kép link")
+    assert column["source_columns"] == [3, 4, 5]
+    # The operator's order wins over the column order of the file.
+    _, tpl = image_template(c, t, s, [3, 1, 2])
+    images = images_by_sku(result(c, tpl["id"]))
+    assert images["A"][0] == "https://k.hu/a2.jpg|https://k.hu/a3.jpg|https://k.hu/a1.jpg"
+
+
+def test_more_than_ten_images_are_all_kept_and_reported(imports):
+    c, t, s = imports
+    head = "SKU;Name;Category;" + ";".join(f"Kép {i}" for i in range(1, 13))
+    row = "A;X;K;" + ";".join(f"https://k.hu/{i}.jpg" for i in range(1, 13))
+
+    def body(view):
+        return {"engine": "unas", "currency": "HUF", "columns": columns_of(view, {
+            3 + i: mapped("kep", order=i + 1) for i in range(12)})}
+
+    _, tpl = template_for(c, t, s, f"{head}\n{row}\n".encode(), body=body)
+    value, warnings = images_by_sku(result(c, tpl["id"]))["A"]
+    assert value.split("|") == [f"https://k.hu/{i}.jpg" for i in range(1, 13)]
+    assert {"code": "images_over_unas_limit", "count": 12, "limit": 10} in warnings
+
+
+def test_multi_image_csv_and_xlsx_read_back(imports, tmp_path):
+    from app.reference_products import import_export
+    from app.unas_models import ReferenceProduct
+
+    c, t, s = imports
+    _, tpl = image_template(c, t, s, [1, 2, 3])
+    expected = {"A": "https://k.hu/a1.jpg|https://k.hu/a2.jpg|https://k.hu/a3.jpg",
+                "B": "https://k.hu/b2.jpg|https://k.hu/b3.jpg",
+                "C": "https://k.hu/c1.jpg|https://k.hu/c1b.jpg|https://k.hu/c3.jpg",
+                "D": None}
+    r = c.get(f"{BASE}/import-templates/{tpl['id']}/result.csv")
+    table = list(csv.reader(io.StringIO(r.content.decode("utf-8-sig")), delimiter=";"))
+    i = table[0].index("Kép link")
+    assert {row[0]: row[i] or None for row in table[1:]} == expected
+    r = c.get(f"{BASE}/import-templates/{tpl['id']}/result.xlsx")
+    path = tmp_path / "UnasShop_kepek-unas-hu_20261118-120000.xlsx"
+    path.write_bytes(r.content)
+    rows = list(load_workbook(path).active.iter_rows(values_only=True))
+    i = rows[0].index("Kép link")
+    assert {row[0]: row[i] or None for row in rows[1:]} == expected
+    # The UNAS export reader gets the very same cell back.
+    with Session(t) as db:
+        import_export(db, path, store_key="kepek-unas-hu", version="20261118-120000")
+        stored = {p.source_sku: p.raw.get("Kép link") for p in db.scalars(
+            select(ReferenceProduct))}
+        assert {k: v or None for k, v in stored.items()} == expected

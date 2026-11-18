@@ -33,6 +33,11 @@ DATE_FORMATS = ("%Y-%m-%dT%H:%M:%S", "%Y-%m-%d %H:%M:%S", "%Y-%m-%d", "%Y.%m.%d"
                 "%Y.%m.%d.", "%d.%m.%Y", "%d/%m/%Y")
 SCIENTIFIC = re.compile(r"^\+?(\d+)(?:[.,](\d+))?[eE]\+?(\d+)$")
 MAX_LIMIT = 200
+# UNAS "Kép link": several image URLs in one cell, "|" separated, main image first
+# (UNAS help "Termék adatbázis" excerpt + the real UNAS export, where a product carries
+# "…/shop_pic/x.jpg|…/shop_altpic/x_altpic_1.jpg|…/shop_altpic/x_altpic_2.jpg").
+IMAGE_SEPARATOR = "|"
+UNAS_IMAGE_LIMIT = 10  # help excerpt; exceeding it is reported, nothing is dropped
 
 
 # --- value rules -----------------------------------------------------------------------------
@@ -120,19 +125,24 @@ def plan(template, headers):
             continue
         t = c["target"]
         sources.setdefault(tp.slot(t), []).append((index, t, c.get("unas_header")))
-    columns, excluded, extra_images = [], [], []
+    columns, excluded = [], []
     vat_source = None
+    images = sorted((target.get("order") or 1, index) for (key, *_), entries in sources.items()
+                    if key == "kep" for index, target, _ in entries)
+    if images:
+        # Every image column, in the operator's order, into the one UNAS image cell.
+        columns.append({"header": "Kép link", "target": {"key": "kep"},
+                        "source_columns": [i for _, i in images],
+                        "image_orders": [o for o, _ in images],
+                        "_rank": (0, ORDER["kep"], 0, 0, images[0][1])})
     for slot_key, entries in sources.items():
         index, target, head = entries[0]
         key = target["key"]
         if key == "afa":
             vat_source = index
             continue
-        if key == "kep" and (target.get("order") or 1) != 1:
-            extra_images.append(index)
-            continue
         if key == "kep":
-            head = "Kép link"
+            continue
         if not documented(head):
             excluded.append({"header": head, "source_columns": [index],
                              "code": "undocumented_header_excluded"})
@@ -153,11 +163,35 @@ def plan(template, headers):
                         "_rank": (0, ORDER["statusz"], 0, 0, -1)})
     columns.sort(key=lambda c: c["_rank"])
     return {"columns": columns, "excluded": excluded, "missing": sorted(set(missing)),
-            "vat_source": vat_source, "extra_images": sorted(extra_images),
+            "vat_source": vat_source,
             "defaults": tpl["defaults"], "currency": tpl["currency"]}
 
 
 # --- rows ------------------------------------------------------------------------------------
+
+
+def image_links(col, cell):
+    """All images of a row in order: source columns by their image order; a cell that
+    already holds several "|"-separated links keeps them in place. Empty cells leave no
+    gap (UNAS has no empty slot); an empty order before a filled one is reported."""
+    links, empty, last_filled = [], [], None
+    for order, index in zip(col["image_orders"], col["source_columns"]):
+        value = cell(index)
+        parts = [] if blank(value) else [
+            p.strip() for p in re.split(r"[|\r\n]+", str(value)) if p.strip()]
+        if parts:
+            links += parts
+            last_filled = order
+        else:
+            empty.append(order)
+    codes = []
+    gaps = [o for o in empty if last_filled is not None and o < last_filled]
+    if gaps:
+        codes.append({"code": "image_missing_in_sequence", "orders": gaps})
+    if len(links) > UNAS_IMAGE_LIMIT:
+        codes.append({"code": "images_over_unas_limit", "count": len(links),
+                      "limit": UNAS_IMAGE_LIMIT})
+    return IMAGE_SEPARATOR.join(links), codes
 
 
 def computed_price(known, rate, side):
@@ -185,6 +219,11 @@ def convert(p, raw, cells, duplicates, currency_columns):
             continue
         source = cell(col["source_columns"][0])
         text = "" if blank(source) else str(source).strip()
+        if key == "kep":
+            text, codes = image_links(col, cell)
+            warnings += codes
+            values[id(col)] = text
+            continue
         if key == "ean":
             text, codes = identifier(source, source)
             warnings += [{"code": c} for c in codes]
@@ -244,8 +283,6 @@ def convert(p, raw, cells, duplicates, currency_columns):
             warnings.append({"code": "missing_required", "target": key})
     if not by_key.get("netto_ar") and not by_key.get("brutto_ar"):
         warnings.append({"code": "missing_price"})
-    if any(not blank(cell(i)) for i in p["extra_images"]):
-        warnings.append({"code": "additional_images_not_exported"})
     for i in currency_columns:
         code = str(cell(i)).strip().upper()
         if code and code != p["currency"]:
