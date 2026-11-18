@@ -91,6 +91,10 @@ YES = {"1", "igen", "yes", "true", "van", "raktaron", "rendelheto", "instock", "
        "elerheto", "aktiv", "active"}
 NO = {"0", "nem", "no", "false", "nincs", "nemrendelheto", "outofstock", "unavailable",
       "nemelerheto", "inaktiv", "inactive"}
+# Several UNAS targets share one internal import field. The preferred one feeds the internal
+# field; the others stay source attributes under their original header (kept, not lost).
+INTERNAL_PREFERENCE = {"price": "Nettó Ár", "sale_price": "Akciós Nettó Ár",
+                       "description": "Tulajdonságok"}
 FIELD_KEYS = {"key", "label", "type", "required", "default", "allowed", "validation",
               "internal_field", "header", "kind", "group", "synonyms", "unas_required",
               "parameter"}
@@ -467,16 +471,16 @@ def validate(db, run, body):
     for index, (tid, f, _) in sorted(resolved.items()):
         if f and f.get("internal_field") and len(seen[tid]) == 1:
             internal.setdefault(f["internal_field"], []).append((index, f))
-    # Net and gross price both map to the internal "price": net wins, gross stays a source
-    # attribute (kept, not lost).
+    # Different UNAS targets sharing one internal field (net/gross price, short/long
+    # description, ...) are all valid: the preferred one feeds the internal field, the
+    # others stay source attributes. Only the same target twice is an error (above).
     import_mapping, tax_basis = {}, None
     for field, entries in internal.items():
-        if field == "price" and len(entries) > 1:
-            entries = [e for e in entries if e[1]["header"] == "Nettó Ár"] or entries[:1]
+        preferred = INTERNAL_PREFERENCE.get(field)
+        entries = sorted(entries, key=lambda e: (e[1]["header"] != preferred, e[0]))
         if len(entries) > 1:
-            errors.append({"code": "duplicate_target", "columns": [e[0] for e in entries],
-                           "target": field})
-            continue
+            warnings.append({"code": "kept_as_source_attribute", "target": field,
+                             "columns": [e[0] for e in entries[1:]]})
         index, f = entries[0]
         import_mapping[str(index)] = field
         if field == "price":
@@ -566,8 +570,10 @@ def row_checks(db, run, fields, column_of, identity_column, vat_rate, errors, wa
                 if previous != digest and key not in conflicts:
                     conflicts.append(key)
     if conflicts:
-        errors.append({"code": "identity_conflict", "count": len(conflicts),
-                       "values": conflicts[:10]})
+        # Not blocking (as in the import engine before IMPORT-MAP-01): the import keeps
+        # every row and marks the conflicting ones for review row by row.
+        warnings.append({"code": "identity_conflict_rows", "count": len(conflicts),
+                         "values": conflicts[:10]})
     # Owner decision (#58, 2026-11-18): stock and status are unrelated; a zero stock
     # neither changes nor flags the status.
     for code, count in (("invalid_vat_rows", invalid_vat),

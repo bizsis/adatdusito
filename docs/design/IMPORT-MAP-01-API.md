@@ -199,11 +199,17 @@ Az `approval_defaults` a `/approve` kéréshez javasolt kiegészítő értékeke
 | `missing_columns` | nincs minden oszlop a kérésben |
 | `identity_missing` | sem azonosító (Cikkszám/EAN), sem név nincs megfeleltetve |
 | `identity_target_not_mapped` | az `identity_target` mező nincs megfeleltetve |
-| `identity_conflict` | az azonosítóoszlopban ugyanaz az érték ismétlődik eltérő sorokban (`values`: legfeljebb 10 példa) |
 | `financial_approval_required` | ár, áfa vagy pénznem megfeleltetéséhez `financial_approved: true` kell |
 | `invalid_vat_rate` | a `vat_rate` nem 0, 5, 18 vagy 27 |
 
-**Figyelmeztetések:** `invalid_vat_rows`,
+**Figyelmeztetések** (nem akadályozzák a mentést):
+
+| `code` | Jelentés |
+|---|---|
+| `identity_conflict_rows` | az azonosítóoszlopban ugyanaz az érték ismétlődik eltérő sorokban (`count`, `values`: legfeljebb 10 példa). Nem blokkoló, mert az import minden sort megtart, és az ütközőket soronként jelöli (`duplicate`/`conflict`), mint eddig (#61 review). |
+| `kept_as_source_attribute` | több UNAS-cél ugyanarra a belső mezőre fordul (`target`); a felsorolt `columns` forrásattribútumként megmarad |
+
+Továbbiak: `invalid_vat_rows`,
 `scientific_identifier_rows`, `invalid_gtin_rows`.
 
 **Kötelező mezők** (`required[].status`):
@@ -227,8 +233,18 @@ ha nincs, `missing`, és a B1 referenciajavaslatot ad, de a forráskategóriát 
 
 Az `import_mapping` a meglévő `POST /runs/{id}/approve` `mapping` mezőjének megfelelő belső
 megfeleltetés: `{oszlopindex: belső mező}`, a nyilvántartás `internal_field` értékéből. Ha
-Nettó és Bruttó Ár is van, a Nettó lesz a belső `price` (`tax_basis: nettó`), a Bruttó pedig
-forrásattribútumként megmarad, nem vész el.
+több különböző UNAS-cél ugyanarra a belső mezőre fordul, ez érvényes, nem hiba. Az előnyben
+részesített cél tölti a belső mezőt, a többi forrásattribútumként megmarad, nem vész el
+(`kept_as_source_attribute` figyelmeztetés):
+
+| Belső mező | Előnyben részesített | Forrásattribútum marad |
+|---|---|---|
+| `price` | Nettó Ár (`tax_basis: nettó`) | Bruttó Ár |
+| `sale_price` | Akciós Nettó Ár | Akciós Bruttó Ár |
+| `description` | Tulajdonságok (hosszú leírás) | Rövid Leírás |
+
+Egyéb ütközésnél a kisebb oszlopsorszám nyer. A `duplicate_target` hiba csak akkor jár, ha
+**ugyanaz** a cél szerepel több oszlopon.
 
 ### A5. Mentés – `POST /runs/{id}/column-mapping`
 
