@@ -421,3 +421,30 @@ def test_regular_upload_keeps_legacy_automatic_processing(imports):
                                      "settings": '{"analysis_only": true}'},
                files={"file": ("data.csv", CSV)})
     assert r.status_code == 422
+
+
+def test_analysis_only_upload_builds_no_worktable_but_imports_still_do(imports, monkeypatch):
+    """Regression (#64 review, item 3): process_import scheduled a TEMPLATE-01 worktable
+    for template-preparation uploads too, a background job with no consumer."""
+    from app import import_engine, template_engine
+    from app.template_models import ImportTemplate
+
+    c, t, s = imports
+    monkeypatch.setattr(import_engine, "engine", lambda: t)
+    built = []
+    monkeypatch.setattr(template_engine, "enqueue", lambda template_id: built.append(
+        template_id))
+    template_run = upload_for_template(c, s, CSV)
+    import_engine.process_import(template_run)
+    assert c.get(f"{BASE}/runs/{template_run}").json()["state"] == "awaiting_approval"
+    with Session(t) as db:
+        assert not db.scalar(select(func.count()).select_from(ImportTemplate).where(
+            ImportTemplate.run_id == template_run))
+    assert built == []
+    # An ordinary upload keeps the TEMPLATE-01 behaviour (worktable after analysis).
+    regular = upload(c, s, CSV)
+    import_engine.process_import(regular)
+    with Session(t) as db:
+        assert db.scalar(select(func.count()).select_from(ImportTemplate).where(
+            ImportTemplate.run_id == regular)) == 1
+    assert len(built) == 1
