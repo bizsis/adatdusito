@@ -124,7 +124,7 @@ def test_record_current_ui_screenshots_and_existing_workflows(help_catalog):
         expect(locator).to_be_visible()
         if os.environ.get('HELP_SCREENSHOTS')=='1':
             locator.screenshot(path=str(ROOT/f'frontend/public/help/images/{name}.png'),animations='disabled')
-    with app_browser(f,width=1440) as ui:
+    with app_browser(f,width=1440,legacy_import=True) as ui:
         p=ui.page
         expect(p.get_by_label('Munkaterület',exact=True)).to_contain_text('Segédlet demó')
         shot(p.locator('.workspace'),'munkaterulet')

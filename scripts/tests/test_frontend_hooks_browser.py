@@ -82,6 +82,9 @@ def workspace_page():
             response = {"status": "ok", "checks": {}}
         elif path == "/imports/suppliers":
             response = [{"id": 1, "name": "Teszt beszállító"}]
+        elif path == "/imports/engines/unas/registry":
+            route.fulfill(status=404, json={"detail": "Not Found"})
+            return
         elif path == "/imports/fields":
             response = [{"key": "sku", "label": "Cikkszám"}, {"key": "name", "label": "Terméknév"}]
         elif path == "/imports/runs" and request.method == "POST":

@@ -52,7 +52,7 @@ def catalog(environment, monkeypatch):
 
 
 @contextmanager
-def app_browser(catalog, width=1440, fault=None):
+def app_browser(catalog, width=1440, fault=None, *, legacy_import=False):
     with sync_playwright() as p:
         browser = p.chromium.launch(executable_path='/usr/bin/chromium' if Path('/usr/bin/chromium').exists() else None, args=['--no-sandbox'])
         page = browser.new_page(viewport={'width': width, 'height': 1000})
@@ -64,6 +64,9 @@ def app_browser(catalog, width=1440, fault=None):
                 f = (ROOT / 'frontend/dist' / (u.path.lstrip('/') or 'index.html')).resolve()
                 assert f.is_relative_to((ROOT / 'frontend/dist').resolve())
                 request.fulfill(body=f.read_bytes(), content_type=mimetypes.guess_type(f.name)[0] or 'text/plain')
+                return
+            if legacy_import and u.path == '/api/v1/imports/engines/unas/registry':
+                request.fulfill(status=404, json={'detail': 'Not Found'})
                 return
             headers = {'Content-Type': request.request.headers.get('content-type', 'application/json')}
             if 'x-csrf-token' in request.request.headers:
