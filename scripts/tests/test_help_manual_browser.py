@@ -194,7 +194,7 @@ def test_follow_written_demo_supplier_import_classification_missing_and_grants(h
     """Execute the documented path, using UI writes and real worker functions."""
     from app.import_engine import advance
     f=help_catalog
-    with app_browser(f) as ui:
+    with app_browser(f,legacy_import=True) as ui:
         p=ui.page;nav(p,'Beszállítói import')
         p.get_by_label('Új beszállító neve',exact=True).fill('Segédlet demóbeszállító')
         with p.expect_response(lambda r:r.url.endswith('/imports/suppliers') and r.request.method=='POST') as created:

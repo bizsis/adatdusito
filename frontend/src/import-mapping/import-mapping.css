@@ -1,0 +1,179 @@
+.mapping-wizard {
+  min-width: 0;
+  max-width: 72rem;
+  margin-inline: auto;
+  padding: clamp(0.75rem, 2vw, 1.5rem);
+  color: #143038;
+}
+
+.mapping-file {
+  overflow-wrap: anywhere;
+}
+
+.mapping-steps {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem 1.25rem;
+  padding-inline-start: 1.5rem;
+}
+
+.mapping-steps li[aria-current="step"] {
+  color: #086959;
+  font-weight: 700;
+}
+
+.mapping-panel {
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.mapping-columns,
+.mapping-parameters,
+.mapping-source ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.mapping-columns,
+.mapping-parameters {
+  border: 1px solid #d3e1e3;
+  background: #fff;
+  border-radius: 0.65rem;
+  margin-block: 1rem;
+}
+
+.mapping-column {
+  display: grid;
+  grid-template-columns: minmax(0, 1.2fr) minmax(0, 0.9fr) minmax(0, 1fr);
+  gap: 0.75rem 1.25rem;
+  padding: 0.85rem;
+  overflow-wrap: anywhere;
+}
+
+.mapping-columns li + li.mapping-column,
+.mapping-parameters li + li {
+  border-top: 1px solid #e5edef;
+}
+
+.mapping-source ul,
+.mapping-suggestion,
+.mapping-parameters small {
+  color: #45616a;
+  font-size: 0.9rem;
+}
+
+.mapping-source p {
+  color: #8a4a12;
+  font-size: 0.9rem;
+  margin-block: 0.4rem 0;
+}
+
+.mapping-engine,
+.mapping-target label {
+  display: grid;
+  gap: 0.25rem;
+  min-width: 0;
+}
+
+.mapping-engine {
+  max-width: 20rem;
+}
+.mapping-target label + label {
+  margin-top: 0.5rem;
+}
+
+.mapping-wizard select,
+.mapping-target input {
+  width: 100%;
+  min-width: 0;
+  min-height: 2.5rem;
+  box-sizing: border-box;
+}
+
+.mapping-suggestion button {
+  display: block;
+  margin-top: 0.25rem;
+}
+
+.mapping-actions {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.mapping-parameters label {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.65rem;
+  padding: 0.65rem 0.85rem;
+  min-height: 2.75rem;
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+
+.mapping-parameters input[type="checkbox"] {
+  width: auto;
+  margin: 0.2rem 0 0;
+}
+.mapping-parameters span {
+  min-width: 0;
+}
+.mapping-parameters small {
+  display: block;
+}
+
+@media (max-width: 850px) {
+  .mapping-column {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+.mapping-options {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 12rem), 1fr));
+  gap: 0.75rem;
+  margin-block: 1rem;
+}
+
+.mapping-options label {
+  display: grid;
+  gap: 0.25rem;
+  min-width: 0;
+}
+
+.mapping-new {
+  min-width: 0;
+  margin: 0.5rem 0 0;
+  border: 1px solid #d3e1e3;
+  padding: 0.65rem;
+}
+
+.mapping-wizard .mapping-check {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  margin-block: 0.75rem;
+}
+
+.mapping-wizard .mapping-check input {
+  min-height: 0;
+  width: auto;
+  margin: 0.25rem 0 0;
+}
+
+.mapping-validation {
+  margin-block: 0.75rem;
+  padding: 0.5rem 0.75rem;
+  background: #f0f6f6;
+  border-radius: 0.5rem;
+  overflow-wrap: anywhere;
+}
+
+.mapping-covered {
+  color: #45616a;
+  background: #f4f7f7;
+}
