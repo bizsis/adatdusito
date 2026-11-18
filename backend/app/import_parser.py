@@ -179,15 +179,55 @@ def normalize(field, value):
     return raw, issues
 
 
+SUPPORTED_EXTENSIONS = (".csv", ".xlsx", ".xls", ".xml")
+
+
+def first_sheet_with_data(names, sample_rows):
+    """TEMPLATE-PREP-01: the first sheet with a header and at least one data row."""
+    for name in names:
+        filled = 0
+        for _, row in sample_rows(name):
+            filled += not blank_row(row)
+            if filled >= 2:
+                return name
+    return names[0]
+
+
 def settings(path, filename, config):
-    if filename.lower().endswith(".xlsx"):
+    lower = filename.lower()
+    if lower.endswith(".xml"):
+        from app.import_formats import xml_settings
+
+        return xml_settings(path, config)
+    if lower.endswith(".xls"):
+        from app.import_formats import xls_rows, xls_sheets
+
+        names = xls_sheets(path)
+
+        def head(name):
+            for i, row in xls_rows(path, name):
+                if i > 50:
+                    return
+                yield i, row
+
+        sheet = config.get("sheet") or first_sheet_with_data(names, head)
+        if sheet not in names:
+            raise ValueError("Ismeretlen munkalap")
+        return {**config, "format": "xls", "sheet": sheet, "sheets": names}
+    if lower.endswith(".xlsx"):
         with zipfile.ZipFile(path) as z:
             if sum(i.file_size for i in z.infolist()) > 200_000_000:
                 raise ValueError("Túl nagy XLSX kibontási méret")
         w = load_workbook(path, read_only=True, data_only=False)
         names = w.sheetnames
-        w.close()
-        sheet = config.get("sheet") or names[0]
+        try:
+            def head(name):
+                for i, row in enumerate(w[name].iter_rows(max_row=50, values_only=True), 1):
+                    yield i, [text(v) for v in row]
+
+            sheet = config.get("sheet") or first_sheet_with_data(names, head)
+        finally:
+            w.close()
         if sheet not in names:
             raise ValueError("Ismeretlen munkalap")
         return {**config, "format": "xlsx", "sheet": sheet, "sheets": names}
@@ -239,6 +279,16 @@ class CellText(str):
 
 def rows(path, config):
     max_columns = 512
+    if config["format"] == "xls":
+        from app.import_formats import xls_rows
+
+        yield from xls_rows(path, config["sheet"])
+        return
+    if config["format"] == "xml":
+        from app.import_formats import xml_rows
+
+        yield from xml_rows(path, config)
+        return
     if config["format"] == "xlsx":
         book = load_workbook(path, read_only=True, data_only=False)
         try:

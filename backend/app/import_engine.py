@@ -70,9 +70,9 @@ def run_limit_message(count, maximum):
 
 @contextmanager
 def materialize(db, run):
-    with tempfile.NamedTemporaryFile(
-        suffix=".xlsx" if run.filename.lower().endswith(".xlsx") else ".csv"
-    ) as f:
+    lower = run.filename.lower()
+    suffix = next((s for s in (".xlsx", ".xls", ".xml") if lower.endswith(s)), ".csv")
+    with tempfile.NamedTemporaryFile(suffix=suffix) as f:
         wrote = False
         for chunk in db.scalars(
             select(ImportChunk)

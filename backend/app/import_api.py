@@ -251,8 +251,10 @@ async def upload(
     ):
         raise HTTPException(404, "A profil nem található ennél a beszállítónál.")
     filename = (file.filename or "").replace("\\", "/").split("/")[-1][:255]
-    if not filename.lower().endswith((".csv", ".xlsx")):
-        raise HTTPException(422, "CSV vagy XLSX szükséges.")
+    from app.import_parser import SUPPORTED_EXTENSIONS
+
+    if not filename.lower().endswith(SUPPORTED_EXTENSIONS):
+        raise HTTPException(422, "CSV, XLS, XLSX vagy XML fájl szükséges.")
     try:
         config = json.loads(settings)
     except ValueError:
