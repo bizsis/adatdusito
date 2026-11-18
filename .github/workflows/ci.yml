@@ -105,7 +105,8 @@ jobs:
   browser:
     name: Browser tests (Playwright, Chromium)
     runs-on: ubuntu-24.04
-    timeout-minutes: 25
+    # A cold Chromium install can add several minutes before the full suite starts.
+    timeout-minutes: 35
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
