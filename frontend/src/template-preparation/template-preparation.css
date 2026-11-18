@@ -6,6 +6,8 @@
 
 .template-preparation .card {
   margin: 0;
+  min-width: 0;
+  overflow-wrap: anywhere;
 }
 
 .prep-start,
@@ -173,4 +175,87 @@
   .prep-sources > .prep-list {
     max-height: none;
   }
+}
+
+.prep-controls {
+  margin-top: 0.8rem;
+}
+
+.prep-sample {
+  display: flex;
+  align-items: baseline;
+  gap: 0.65rem;
+  justify-content: space-between;
+  min-width: 0;
+}
+.prep-sample > strong,
+.prep-sample > samp {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.prep-sample samp {
+  margin: 0;
+}
+.prep-source {
+  padding: 0.45rem 0.55rem;
+}
+.prep-source select {
+  width: 100%;
+  margin-top: 0.25rem;
+}
+.prep-source p,
+.prep-bindings p {
+  margin: 0.2rem 0;
+  font-size: 0.88rem;
+}
+.prep-result {
+  min-width: 0;
+}
+.prep-result-table {
+  overflow: auto;
+  margin: 0.75rem 0;
+}
+.prep-result-table table {
+  min-width: 100%;
+  border-collapse: collapse;
+}
+.prep-result-table :is(th, td) {
+  padding: 0.45rem 0.6rem;
+  border-bottom: 1px solid #d4e1e4;
+  text-align: start;
+  vertical-align: top;
+  min-width: 6rem;
+  max-width: 20rem;
+  overflow-wrap: anywhere;
+}
+.prep-result-issue {
+  padding: 0.12rem 0.45rem;
+  margin-inline-start: 0.25rem;
+  color: #9a311e;
+}
+.prep-result-downloads a {
+  padding: 0.35rem 0.5rem;
+}
+.prep-result-tooltip {
+  position: fixed;
+  transform: translateY(calc(-100% - 0.35rem));
+  z-index: 100;
+  pointer-events: none;
+  width: min(300px, calc(100vw - 16px));
+  padding: 0.55rem 0.7rem;
+  box-sizing: border-box;
+  border-radius: 0.4rem;
+  background: #102c31;
+  color: white;
+  box-shadow: 0 0.25rem 0.8rem #102c3140;
+  overflow-wrap: anywhere;
+}
+.prep-result-tooltip p {
+  margin: 0.15rem 0;
+}
+
+.prep-result-tooltip.below {
+  transform: translateY(0.35rem);
 }

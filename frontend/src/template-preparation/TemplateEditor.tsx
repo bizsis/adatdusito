@@ -1,11 +1,5 @@
-import {
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-  type DragEvent,
-  type ReactNode,
-} from "react";
+import { useEffect, useMemo, useRef, useState, type DragEvent } from "react";
+import { TemplateResult } from "./TemplateResult";
 import { parseParameterHeader } from "../import-mapping/importMappingApi";
 import {
   message,
@@ -259,44 +253,6 @@ function DefaultField({
   );
 }
 
-export function EmptyTemplateTargets({
-  catalog,
-  defaults,
-  onDefault,
-}: {
-  catalog: Catalog;
-  defaults: Defaults;
-  onDefault?: (field: keyof Defaults, value: string) => void;
-}) {
-  return (
-    <section className="card padded prep-targets" aria-label="UNAS-célmezők">
-      <h3>UNAS-célmezők</h3>
-      <ul className="prep-list">
-        {catalog.targets.map((field) => (
-          <li className="prep-field" key={field.key}>
-            <strong>
-              {field.label}
-              {field.required ? " *" : ""}
-            </strong>
-            {(field.key === "statusz" || field.key === "afa") && (
-              <DefaultField
-                field={field.key}
-                label={field.label}
-                value={defaults[field.key]}
-                onChange={
-                  onDefault
-                    ? (value) => onDefault(field.key as keyof Defaults, value)
-                    : undefined
-                }
-              />
-            )}
-          </li>
-        ))}
-      </ul>
-    </section>
-  );
-}
-
 export function TemplateEditor({
   api,
   catalog,
@@ -304,7 +260,6 @@ export function TemplateEditor({
   initialDefaults,
   currency,
   canSave,
-  sourceControls,
   currencyWarnings,
   currencyBusy,
   onSaved,
@@ -316,7 +271,6 @@ export function TemplateEditor({
   initialDefaults: Defaults;
   currency: string;
   canSave: boolean;
-  sourceControls: ReactNode;
   currencyWarnings: Issue[];
   currencyBusy: boolean;
   onSaved: (result: Saved) => void;
@@ -332,11 +286,19 @@ export function TemplateEditor({
   const [created, setCreated] = useState<Parameter[]>([]);
   const [editing, setEditing] = useState<ParameterEdit>();
   const [report, setReport] = useState<Validation>();
+  const [editingBinding, setEditingBinding] = useState<number>();
   const [saved, setSaved] = useState<Saved>();
+  const [showResult, setShowResult] = useState(false);
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
   const pending = useRef(false);
-  const editable = canSave && !busy && !saved;
+  const editable = canSave && !busy;
+  const columnsByIndex = new Map(
+    view.columns.map((column) => [column.index, column]),
+  );
+  const remaining = view.columns.filter(
+    ({ index }) => assignments[index]?.state !== "mapped",
+  );
   const sourceNames = new Map(
     view.columns.map((column) => [
       column.index,
@@ -431,7 +393,10 @@ export function TemplateEditor({
     const previous = editing.previous;
     const oldId = previous ? slotId(previous) : undefined;
     let target: Target = { key: "parameter", parameter };
-    if (previous && slotId({ ...previous, header: undefined }) === slotId(target))
+    if (
+      previous &&
+      slotId({ ...previous, header: undefined }) === slotId(target)
+    )
       target = previous;
     const id = slotId(target);
     const existing = approvedById.get(id);
@@ -514,7 +479,9 @@ export function TemplateEditor({
         templateId,
       );
       setSaved(response);
-      setReport(response.validation);
+      setTemplateId(response.id);
+      setShowResult(true);
+      setReport(undefined);
       onSaved(response);
     } catch (failure) {
       setError(message(failure));
@@ -527,7 +494,7 @@ export function TemplateEditor({
 
   const renderIssue = (issue: Issue, key: number, blocking = false) => (
     <p key={key} role={blocking ? "alert" : undefined} className="prep-warning">
-      {issueLabels[issue.code] ?? issue.code}
+      {issueLabels[issue.code] ?? "Ellenőrizd a hozzárendelést."}
       {issue.columns?.length
         ? ` Oszlopok: ${issue.columns.map((index) => sourceNames.get(index) ?? index + 1).join(", ")}.`
         : ""}
@@ -535,6 +502,63 @@ export function TemplateEditor({
       {issue.values?.length ? ` ${issue.values.join(", ")}.` : ""}
     </p>
   );
+
+  function targetSelect(index: number, current: string) {
+    return (
+      <select
+        aria-label={`Célmező: ${sourceNames.get(index)}`}
+        disabled={!editable}
+        value={current}
+        onChange={(event) => {
+          const value = event.target.value;
+          const target = optionMap.get(value);
+          setEditingBinding(undefined);
+          if (value === "new") setEditing({ parameter: blankParameter, index });
+          else if (value === "unused") mapColumn(index, { state: "unused" });
+          else if (target) mapColumn(index, { state: "mapped", target });
+          else mapColumn(index, { state: null });
+        }}
+      >
+        <option value="">Nincs hozzárendelve</option>
+        <option value="unused">Nem használjuk</option>
+        {options.map((target) => (
+          <option key={slotId(target)} value={slotId(target)}>
+            {targetLabel(target)}
+          </option>
+        ))}
+        {approvedTargets.length > 0 && (
+          <optgroup label="Meglévő paraméterek">
+            {approvedTargets.map((target) => (
+              <option key={slotId(target)} value={slotId(target)}>
+                {[
+                  targetLabel(target),
+                  target.parameter.group_name,
+                  typeLabels[target.parameter.param_type],
+                  target.parameter.unit,
+                ]
+                  .filter(Boolean)
+                  .join(" · ")}
+              </option>
+            ))}
+          </optgroup>
+        )}
+        <option value="new">Új paraméter…</option>
+      </select>
+    );
+  }
+
+  const resultTemplate = saved ?? view.template;
+  if (showResult && resultTemplate) {
+    return (
+      <TemplateResult
+        key={resultTemplate.id}
+        api={api}
+        template={resultTemplate}
+        run={view.run_id}
+        onBack={() => setShowResult(false)}
+      />
+    );
+  }
 
   return (
     <>
@@ -610,15 +634,31 @@ export function TemplateEditor({
                         >
                           {linked.map(({ index }, position) => (
                             <li key={index}>
-                              <span
-                                className="prep-binding-handle"
+                              <div
+                                className="prep-binding-handle prep-sample"
                                 draggable={editable}
                                 onDragStart={(event) =>
                                   dragPayload(event, index, true)
                                 }
                               >
-                                {sourceNames.get(index)}
-                              </span>
+                                <strong title={sourceNames.get(index)}>
+                                  {sourceNames.get(index)}
+                                </strong>
+                                <samp
+                                  title={
+                                    columnsByIndex.get(index)?.sample ??
+                                    undefined
+                                  }
+                                >
+                                  {columnsByIndex.get(index)?.sample ??
+                                    "Üres oszlop"}
+                                </samp>
+                              </div>
+                              {columnsByIndex
+                                .get(index)
+                                ?.warnings.map((code, i) =>
+                                  renderIssue({ code }, i),
+                                )}
                               {editable && (
                                 <div className="prep-actions">
                                   {target.key === "kep" && (
@@ -654,6 +694,20 @@ export function TemplateEditor({
                                   )}
                                   <button
                                     type="button"
+                                    aria-expanded={editingBinding === index}
+                                    aria-label={`${sourceNames.get(index)} hozzárendelés módosítása`}
+                                    onClick={() =>
+                                      setEditingBinding(
+                                        editingBinding === index
+                                          ? undefined
+                                          : index,
+                                      )
+                                    }
+                                  >
+                                    Módosítás
+                                  </button>
+                                  <button
+                                    type="button"
                                     aria-label={`${sourceNames.get(index)} hozzárendelés törlése`}
                                     onClick={() =>
                                       mapColumn(index, { state: null })
@@ -663,6 +717,8 @@ export function TemplateEditor({
                                   </button>
                                 </div>
                               )}
+                              {editingBinding === index &&
+                                targetSelect(index, slotId(target))}
                             </li>
                           ))}
                         </ol>
@@ -707,7 +763,6 @@ export function TemplateEditor({
           className="card padded prep-sources"
           aria-label="Beszállítói fájl és forrásoszlopok"
         >
-          {sourceControls}
           <h3>Forrásoszlopok</h3>
           <p>
             {view.file.data_rows === null
@@ -739,7 +794,7 @@ export function TemplateEditor({
           )}
           {currencyWarnings.map((issue, index) => renderIssue(issue, index))}
           <ul className="prep-list" aria-label="Forrásoszlopok">
-            {view.columns.map((column) => {
+            {remaining.map((column) => {
               const choice = assignments[column.index];
               const label = sourceNames.get(column.index);
               const suggestion = column.suggestion;
@@ -770,72 +825,20 @@ export function TemplateEditor({
                     onDragStart={(event) =>
                       dragPayload(event, column.index, false)
                     }
-                    className="prep-source-handle"
+                    className="prep-source-handle prep-sample"
                   >
-                    <strong>{label}</strong>
-                    <samp>{column.sample ?? "Üres oszlop"}</samp>
-                    {column.status === "new" && (
-                      <small className="prep-warning">Új oszlop</small>
-                    )}
+                    <strong title={label}>{label}</strong>
+                    <samp title={column.sample ?? undefined}>
+                      {column.sample ?? "Üres oszlop"}
+                    </samp>
                   </div>
                   {column.warnings.map((code, index) =>
                     renderIssue({ code }, index),
                   )}
-                  <label>
-                    Célmező
-                    <select
-                      aria-label={`Célmező: ${label}`}
-                      disabled={!editable}
-                      value={
-                        choice?.state === "mapped"
-                          ? slotId(choice.target)
-                          : choice?.state === "unused"
-                            ? "unused"
-                            : ""
-                      }
-                      onChange={(event) => {
-                        const value = event.target.value;
-                        if (value === "new")
-                          setEditing({
-                            parameter: blankParameter,
-                            index: column.index,
-                          });
-                        else if (value === "unused")
-                          mapColumn(column.index, { state: "unused" });
-                        else if (optionMap.has(value))
-                          mapColumn(column.index, {
-                            state: "mapped",
-                            target: optionMap.get(value)!,
-                          });
-                        else mapColumn(column.index, { state: null });
-                      }}
-                    >
-                      <option value="">Nincs hozzárendelve</option>
-                      <option value="unused">Nem használjuk</option>
-                      {options.map((target) => (
-                        <option key={slotId(target)} value={slotId(target)}>
-                          {targetLabel(target)}
-                        </option>
-                      ))}
-                      {approvedTargets.length > 0 && (
-                        <optgroup label="Meglévő paraméterek">
-                          {approvedTargets.map((target) => (
-                            <option key={slotId(target)} value={slotId(target)}>
-                              {[
-                                targetLabel(target),
-                                target.parameter.group_name,
-                                typeLabels[target.parameter.param_type],
-                                target.parameter.unit,
-                              ]
-                                .filter(Boolean)
-                                .join(" · ")}
-                            </option>
-                          ))}
-                        </optgroup>
-                      )}
-                      <option value="new">Új paraméter…</option>
-                    </select>
-                  </label>
+                  {targetSelect(
+                    column.index,
+                    choice?.state === "unused" ? "unused" : "",
+                  )}
                   {suggestion && !choice?.state && editable && (
                     <button
                       type="button"
@@ -851,6 +854,7 @@ export function TemplateEditor({
               );
             })}
           </ul>
+          {!remaining.length && <p>Minden forrásoszlop hozzá van rendelve.</p>}
         </section>
       </div>
       <section className="card padded prep-save" aria-label="Sablon mentése">
@@ -870,7 +874,12 @@ export function TemplateEditor({
               onChange={(event) => setName(event.target.value)}
             />
           </label>
-          {view.template && templateId && editable && (
+          {resultTemplate && (
+            <button type="button" onClick={() => setShowResult(true)}>
+              Mentett verzió előnézete
+            </button>
+          )}
+          {templateId && editable && (
             <button
               type="button"
               onClick={() => {
@@ -884,21 +893,8 @@ export function TemplateEditor({
           {report?.errors.map((issue, index) =>
             renderIssue(issue, index, true),
           )}
-          {report?.warnings.map((issue, index) => renderIssue(issue, index))}
-          {report?.fields
-            .filter((field) => field.status === "computed")
-            .map((field) => (
-              <p key={field.key}>
-                {targetLabel({ key: field.key })}: ismert ÁFA alapján
-                számítható.
-              </p>
-            ))}
           {error && <p role="alert">{error}</p>}
-          {saved ? (
-            <p role="status">
-              Sablon mentve: {saved.name} · v{saved.version}
-            </p>
-          ) : canSave ? (
+          {canSave ? (
             <button
               className="primary"
               type="submit"

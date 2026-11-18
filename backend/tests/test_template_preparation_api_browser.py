@@ -119,36 +119,40 @@ def test_save_and_reuse_with_real_template_api(environment, monkeypatch, width):
             rows = page.get_by_role("list", name="Forrásoszlopok").locator(
                 ":scope > li"
             )
-            expect(rows).to_have_count(8)
+            def row(label):
+                return rows.filter(has=page.get_by_label(f"Célmező: {label}", exact=True))
+
+            expect(row("1. SKU")).to_have_count(0)
             page.get_by_role("button", name="1. SKU hozzárendelés törlése").click()
-            source_select = rows.nth(0).get_by_role("combobox")
+            source_select = row("1. SKU").get_by_role("combobox")
             expect(source_select).to_have_value("")
             if width == 1440:
-                rows.nth(0).locator(".prep-source-handle").drag_to(
+                row("1. SKU").locator(".prep-source-handle").drag_to(
                     page.locator('[data-target="cikkszam"]')
                 )
             else:
                 source_select.select_option(label="Cikkszám")
             expect(page.get_by_role("list", name="Cikkszám hozzárendelései")).to_contain_text("SKU")
-            expect(rows.nth(4).locator("samp")).to_have_text("5201137061819")
-            expect(rows.nth(4)).to_contain_text("Tudományos jelölésű")
-            rows.nth(3).get_by_role(
+            ean = page.get_by_role("list", name="EAN hozzárendelései")
+            expect(ean.locator("samp")).to_have_text("5201137061819")
+            expect(ean).to_contain_text("Tudományos jelölésű")
+            row("4. Color").get_by_role(
                 "button", name="Javaslat átvétele: Paraméter: Szín", exact=False
             ).click()
             parameter_dialog = page.get_by_role("dialog")
             parameter_dialog.get_by_label("Paraméter típusa").select_option("enum")
             parameter_dialog.get_by_role("button", name="Paraméter elfogadása").click()
-            rows.nth(5).get_by_role("combobox").select_option(label="Kép")
-            rows.nth(6).get_by_role("combobox").select_option(label="Kép")
+            for label in ("6. Image1", "7. Image2"):
+                remove = page.get_by_role("button", name=f"{label} hozzárendelés törlése")
+                if remove.count():
+                    remove.click()
+                row(label).get_by_role("combobox").select_option(label="Kép")
             page.get_by_role("button", name="7. Image2 előrébb").click()
             page.get_by_label("ÁFA alapértéke").select_option("5")
             page.get_by_label("Sablon neve").fill("Valódi próbasablon")
             page.get_by_role("button", name="Sablon mentése", exact=True).click()
             expect(
                 page.get_by_text("Sablon mentve: Valódi próbasablon · v1")
-            ).to_be_visible()
-            expect(
-                page.get_by_text("Hiányzik az eladási ár.", exact=False)
             ).to_be_visible()
             templates = client.get(
                 f"{PREFIX}/suppliers/{supplier['id']}/import-templates"
@@ -199,9 +203,9 @@ def test_save_and_reuse_with_real_template_api(environment, monkeypatch, width):
                 "mimeType": "text/csv",
                 "buffer": b"SKU;Finish;Custom\n0009;Matt;Minta\n",
             })
-            expect(rows).to_have_count(3)
+            expect(rows).to_have_count(2)
             expect(page.get_by_text("Felismert vagy betöltött sablon:", exact=False)).to_have_count(0)
-            finish = rows.nth(1).get_by_role("combobox")
+            finish = row("2. Finish").get_by_role("combobox")
             expect(finish).to_have_value("")
             approved = finish.locator('optgroup[label="Meglévő paraméterek"] option')
             expect(approved).to_have_text(["Paraméter: Szín · Lista"])
@@ -209,7 +213,7 @@ def test_save_and_reuse_with_real_template_api(environment, monkeypatch, width):
             expect(parameter_dialog).to_have_count(0)
             expect(page.get_by_role("list", name="Paraméter: Szín hozzárendelései")).to_contain_text("Finish")
 
-            rows.nth(2).get_by_role("combobox").select_option(label="Új paraméter…")
+            row("3. Custom").get_by_role("combobox").select_option(label="Új paraméter…")
             parameter_dialog.get_by_label("Paraméter neve").fill("Egyedi jellemző")
             parameter_dialog.get_by_role("button", name="Paraméter elfogadása").click()
             page.get_by_label("Sablon neve").fill("Meglévő paraméterrel")
@@ -218,6 +222,16 @@ def test_save_and_reuse_with_real_template_api(environment, monkeypatch, width):
             reused = saved_payloads[-1]
             assert reused["columns"][1]["target"]["header"] == template["parameters"][0]["header"]
             assert [param["name"] for param in reused["new_parameters"]] == ["Egyedi jellemző"]
+            upload.set_input_files({
+                "name": "ismetelt-fejlec.csv",
+                "mimeType": "text/csv",
+                "buffer": "SKU;Szín;Szín\n0020;Fekete;Fehér\n".encode(),
+            })
+            expect(page.get_by_text("1 termék · 3 oszlop")).to_be_visible()
+            color = page.get_by_role("list", name="Paraméter: Szín hozzárendelései")
+            expect(color.get_by_role("listitem")).to_have_count(1)
+            expect(color.locator("samp")).to_have_text("Fekete")
+            expect(row("3. Szín").locator("samp")).to_have_text("Fehér")
             with Session(engine) as db:
                 products = db.scalars(select(SupplierProduct).order_by(SupplierProduct.id))
                 assert [(p.id, p.revision, p.last_run_id, p.data) for p in products] == snapshot

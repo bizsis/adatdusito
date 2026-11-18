@@ -143,7 +143,7 @@ def test_record_current_ui_screenshots_and_existing_workflows(help_catalog):
         run=uploaded.value.json()['id']
         assert uploaded.value.json()['analysis_only']
         with Session(f.engine) as db:advance(db,run)
-        expect(p.get_by_role('list',name='Forrásoszlopok')).to_contain_text('Cikkszám')
+        expect(p.get_by_role('list',name='Cikkszám hozzárendelései')).to_contain_text('Cikkszám')
         expect(p.get_by_role('button',name='Sablon mentése',exact=True)).to_be_visible()
         p.locator('.sidebar nav').get_by_role('button',name='Termékadatok',exact=True).click()
         p.get_by_role('button',name='Mosógép A részletei',exact=True).click()
