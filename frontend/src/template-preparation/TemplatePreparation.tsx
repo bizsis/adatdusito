@@ -71,6 +71,7 @@ export function TemplatePreparation({
   const [templatesRetry, setTemplatesRetry] = useState(0);
   const [busy, setBusy] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [showResult, setShowResult] = useState(false);
   const [error, setError] = useState("");
   const task = useRef(false);
 
@@ -497,7 +498,7 @@ export function TemplatePreparation({
 
   return (
     <div className="template-preparation">
-      <section className="card padded">
+      <section className="card padded prep-setup" hidden={showResult}>
         <h2>Előkészítés / Sablonkészítés</h2>
         <div className="prep-start">
           <label>
@@ -568,6 +569,8 @@ export function TemplatePreparation({
           canSave={canSave}
           currencyWarnings={preparation.latest.warnings}
           currencyBusy={preparation.currency !== currency}
+          showResult={showResult}
+          setShowResult={setShowResult}
           onBusy={setSaving}
           onSaved={() => {
             setVersionGroup(0);

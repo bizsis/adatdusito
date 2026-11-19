@@ -14,6 +14,7 @@ export type Parameter = {
 };
 export type Target = {
   key: string;
+  label?: string;
   instance?: number;
   order?: number;
   header?: string;
@@ -25,6 +26,10 @@ export type Field = {
   required: boolean;
   multiple: "instances" | "ordered" | null;
   type: string;
+  unas_header?: string | null;
+  min_instance?: number | null;
+  max_instance?: number | null;
+  added_in?: string;
 };
 export type Catalog = {
   engine: Engine;
@@ -45,7 +50,12 @@ export type SourceColumn = {
   sample: string | null;
   sample_source: "file" | "analysis";
   warnings: string[];
-  suggestion: { target: Target; confidence: number; method: string } | null;
+  suggestion: {
+    target: Target;
+    confidence: number;
+    method: string;
+    label?: string;
+  } | null;
   assignment: Assignment | null;
   assignment_source: "template" | "auto" | null;
   status: "from_template" | "new" | "suggested" | "unmapped";
@@ -83,15 +93,23 @@ export type Preparation = {
     | (TemplateVersion & { missing_headers: string[]; new_headers: string[] })
     | null;
   template_candidates: TemplateVersion[];
-  approved_parameters: { name: string; header: string }[];
+  approved_parameters: { name: string; header: string; label?: string }[];
   defaults: Defaults;
   warnings: Issue[];
+};
+type ParameterInput = Pick<Parameter, "name"> &
+  Partial<Omit<Parameter, "name">>;
+type TargetInput = Omit<Target, "label" | "parameter"> & {
+  parameter?: ParameterInput;
 };
 export type TemplateBody = {
   engine: string;
   currency: string;
-  columns: ({ index: number } & Assignment)[];
-  new_parameters: (Parameter & { approved: true })[];
+  columns: ({ index: number } & (
+    | Exclude<Assignment, { state: "mapped" }>
+    | { state: "mapped"; target: TargetInput }
+  ))[];
+  new_parameters: (ParameterInput & { approved: true })[];
   defaults: Defaults;
 };
 export type Validation = {
@@ -198,7 +216,12 @@ export const message = (error: unknown) =>
 export type ResultIssue = { code: string; target?: string };
 export type TemplateResultPage = {
   template: TemplateVersion & { currency: string };
-  columns: { header: string; target: Target; source_columns: number[] }[];
+  columns: {
+    header: string;
+    label?: string;
+    target: Target;
+    source_columns: number[];
+  }[];
   rows: {
     line: number;
     values: string[];

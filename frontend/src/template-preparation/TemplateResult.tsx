@@ -1,4 +1,4 @@
-import { useEffect, useId, useState, type ReactNode } from "react";
+import { useEffect, useId, useRef, useState, type ReactNode } from "react";
 import { createPortal } from "react-dom";
 import {
   loadResult,
@@ -9,6 +9,7 @@ import {
   type TemplateResultPage,
   type TemplateVersion,
 } from "./api";
+import { displayHeader } from "./mapping";
 
 const explanations: Record<string, string> = {
   missing_sku: "Hiányzik a cikkszám, ezért ez a sor kimarad a letöltésből.",
@@ -28,7 +29,8 @@ const explanations: Record<string, string> = {
   invalid_gtin: "A vonalkód hossza vagy ellenőrzőszáma érvénytelen.",
   negative_stock: "A forráskészlet negatív.",
   image_missing_in_sequence: "Az üres képhelyek kimaradnak a képek listájából.",
-  images_over_unas_limit: "Tíznél több kép van a sorban. Az export mindegyiket tartalmazza.",
+  images_over_unas_limit:
+    "Tíznél több kép van a sorban. Az export mindegyiket tartalmazza.",
   additional_images_not_exported:
     "Az UNAS-fájl csak az első képet tartalmazza.",
   duplicate_sku: "A cikkszám többször szerepel a forrásban.",
@@ -140,6 +142,44 @@ function IssueDetails({
   );
 }
 
+function columnLabel(column: TemplateResultPage["columns"][number]) {
+  const header = displayHeader(column.header);
+  return header.startsWith("Paraméter: ") &&
+    column.label?.startsWith("Paraméter: ")
+    ? displayHeader(column.label)
+    : header;
+}
+
+function ResultValueDialog({
+  header,
+  value,
+  onClose,
+}: {
+  header: string;
+  value: string;
+  onClose: () => void;
+}) {
+  const dialog = useRef<HTMLDialogElement>(null);
+  const title = useId();
+  useEffect(() => {
+    dialog.current?.showModal();
+  }, []);
+  return (
+    <dialog
+      ref={dialog}
+      className="prep-dialog prep-result-value-dialog"
+      aria-labelledby={title}
+      onClose={onClose}
+    >
+      <h3 id={title}>{header}</h3>
+      <p>{value}</p>
+      <form method="dialog">
+        <button type="submit">Bezárás</button>
+      </form>
+    </dialog>
+  );
+}
+
 export function TemplateResult({
   api,
   template,
@@ -151,6 +191,10 @@ export function TemplateResult({
   run: number;
   onBack: () => void;
 }) {
+  const [fullValue, setFullValue] = useState<{
+    header: string;
+    value: string;
+  }>();
   const [offset, setOffset] = useState(0);
   const [revision, setRevision] = useState(0);
   const key = `${offset}:${revision}`;
@@ -217,12 +261,15 @@ export function TemplateResult({
           {result.excluded_columns.length > 0 && (
             <p className="prep-warning">
               Kimaradó UNAS-oszlopok:{" "}
-              {result.excluded_columns.map(({ header }) => header).join(", ")}
+              {result.excluded_columns
+                .map(({ header }) => displayHeader(header))
+                .join(", ")}
             </p>
           )}
           {result.missing_source_columns.length > 0 && (
             <p className="prep-warning">
-              Hiányzó forrásoszlopok: {result.missing_source_columns.join(", ")}
+              Hiányzó forrásoszlopok:{" "}
+              {result.missing_source_columns.map(displayHeader).join(", ")}
             </p>
           )}
           <div className="prep-actions prep-result-downloads">
@@ -239,13 +286,20 @@ export function TemplateResult({
             role="region"
             aria-label="UNAS előnézet görgetése"
           >
-            <table>
+            <table style={{ width: `${result.columns.length * 13 + 15}rem` }}>
+              <colgroup>
+                <col className="prep-result-line" />
+                {result.columns.map((_, index) => (
+                  <col key={index} />
+                ))}
+                <col className="prep-result-status" />
+              </colgroup>
               <thead>
                 <tr>
                   <th scope="col">Forrássor</th>
                   {result.columns.map((column, index) => (
-                    <th scope="col" key={index}>
-                      {column.header}
+                    <th scope="col" key={index} title={columnLabel(column)}>
+                      {columnLabel(column)}
                     </th>
                   ))}
                   <th scope="col">Ellenőrzés</th>
@@ -283,17 +337,32 @@ export function TemplateResult({
                         const warning = cellIssues.every((issue) =>
                           warningOnly.has(issue.code),
                         );
+                        const header = columnLabel(column);
+                        const value = row.values[index];
                         return (
                           <td key={index}>
-                            {row.values[index]}
-                            {cellIssues.length > 0 && (
-                              <IssueDetails
-                                warning={warning}
-                                label={`${warning ? "Figyelmeztetés" : "Hiba"}: ${column.header}, ${row.line}. sor`}
-                              >
-                                {cellIssues.map(issueText).join(" ")}
-                              </IssueDetails>
-                            )}
+                            <div className="prep-result-cell">
+                              {value && (
+                                <button
+                                  type="button"
+                                  className="prep-result-value"
+                                  onClick={() =>
+                                    setFullValue({ header, value })
+                                  }
+                                  title={value}
+                                >
+                                  {value}
+                                </button>
+                              )}
+                              {cellIssues.length > 0 && (
+                                <IssueDetails
+                                  warning={warning}
+                                  label={`${warning ? "Figyelmeztetés" : "Hiba"}: ${header}, ${row.line}. sor`}
+                                >
+                                  {cellIssues.map(issueText).join(" ")}
+                                </IssueDetails>
+                              )}
+                            </div>
                           </td>
                         );
                       })}
@@ -345,6 +414,12 @@ export function TemplateResult({
             </nav>
           )}
         </>
+      )}
+      {fullValue && (
+        <ResultValueDialog
+          {...fullValue}
+          onClose={() => setFullValue(undefined)}
+        />
       )}
     </section>
   );
