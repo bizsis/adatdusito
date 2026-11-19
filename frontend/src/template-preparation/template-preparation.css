@@ -217,20 +217,58 @@
   overflow: auto;
   margin: 0.75rem 0;
 }
+.prep-setup[hidden] {
+  display: none;
+}
 .prep-result-table table {
   min-width: 100%;
   border-collapse: collapse;
+  table-layout: fixed;
+}
+.prep-result-line {
+  width: 6rem;
+}
+.prep-result-status {
+  width: 9rem;
 }
 .prep-result-table :is(th, td) {
-  padding: 0.45rem 0.6rem;
+  padding: 0.4rem 0.6rem;
   border-bottom: 1px solid #d4e1e4;
   text-align: start;
-  vertical-align: top;
-  min-width: 6rem;
-  max-width: 20rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  vertical-align: middle;
+  height: 2.25rem;
+}
+.prep-result-cell {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+.prep-result-value {
+  text-align: start;
+  border: 0;
+  padding: 0;
+  color: inherit;
+  background: transparent;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  flex: 0 1 auto;
+}
+.prep-result-value:is(:hover, :focus-visible) {
+  text-decoration: underline;
+}
+.prep-result-value-dialog p {
+  max-height: 60vh;
+  overflow: auto;
   overflow-wrap: anywhere;
+  white-space: pre-wrap;
 }
 .prep-result-issue {
+  flex: 0 0 auto;
   padding: 0.12rem 0.45rem;
   margin-inline-start: 0.25rem;
   color: #9a311e;

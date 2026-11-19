@@ -5,11 +5,30 @@ export type Assignments = Record<number, Assignment>;
 
 export const normalized = (value: string) =>
   value.trim().normalize("NFC").toLocaleLowerCase("hu");
+export const parameterName = (value: string) =>
+  value
+    .trim()
+    .replace(/^(?:param[eé]ter\s*:\s*)+/iu, "")
+    .trim();
+
+export const parameterLabel = (name: string) =>
+  `Paraméter: ${parameterName(name)}`;
+
+export const displayHeader = (header: string) =>
+  /^\s*param[eé]ter\s*:/iu.test(header)
+    ? parameterLabel(header.split("|", 1)[0])
+    : header;
+
 export const parameterNameKey = (parameter: Parameter) =>
   JSON.stringify([
     normalized(parameter.group_name),
-    normalized(parameter.name),
+    normalized(parameterName(parameter.name)),
   ]);
+export const firstInstance = (field: Field) =>
+  field.min_instance ?? (field.key === "raktarkeszlet" ? 0 : 1);
+
+export const lastInstance = (field: Field) => field.max_instance ?? 99;
+
 export const slotId = (target: Target) =>
   JSON.stringify([
     target.key,
@@ -109,8 +128,7 @@ export function initialAssignments(
 ): Assignments {
   const assignments: Assignments = {};
   const occupied = new Map<string, SourceColumn>();
-  let nextAlt = 1,
-    nextStock = 0;
+  const nextInstance = new Map<string, number>();
   for (const column of columns) {
     const choice = column.assignment;
     // Only a stored operator decision can preselect "unused".
@@ -123,18 +141,18 @@ export function initialAssignments(
         (column.assignment_source !== "template" &&
           (field.type === "price" ||
             (field.key === "parameter" &&
-              column.suggestion?.method !== "approved_parameter")))
+              !["approved_parameter", "source_parameter"].includes(
+                column.suggestion?.method ?? "",
+              ))))
       )
         continue;
       let target = choice.target;
-      if (target.key === "alternativ_kategoria") {
-        const instance = target.instance ?? nextAlt;
-        nextAlt = Math.max(nextAlt, instance + 1);
-        target = { ...target, instance };
-      }
-      if (target.key === "raktarkeszlet") {
-        const instance = target.instance ?? nextStock;
-        nextStock = Math.max(nextStock, instance + 1);
+      if (field.multiple === "instances" && field.key !== "parameter") {
+        const next = nextInstance.get(field.key) ?? firstInstance(field);
+        const instance = target.instance ?? next;
+        if (instance < firstInstance(field) || instance > lastInstance(field))
+          continue;
+        nextInstance.set(field.key, Math.max(next, instance + 1));
         target = { ...target, instance };
       }
       if (field.multiple !== "ordered") {
