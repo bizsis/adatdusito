@@ -92,6 +92,12 @@ def targets():
                 ),
             }
             for key, label in FIELDS
+        ] + [
+            {"key": "seo_title", "label": "SEO Title", "required": False,
+             "type": "text", "multiple": None, "added_in": "template-fix-02"},
+            {"key": "upsale", "label": "UpSale", "unas_header": "UpSale{n}",
+             "required": False, "type": "text", "multiple": "instances",
+             "min_instance": 1, "max_instance": 2, "added_in": "template-fix-02"},
         ],
     }
 
@@ -267,6 +273,11 @@ def open_application():
                             for k, v in matched["body"]["columns"][index].items()
                             if k != "index"
                         }
+                        if (assignment.get("target") or {}).get("parameter"):
+                            target = assignment["target"]
+                            assignment["target"] = {**target, "parameter": {
+                                **PARAMETER, **target["parameter"],
+                            }}
                         source = "template"
                     columns.append(
                         {
@@ -308,7 +319,11 @@ def open_application():
                     },
                     "columns": columns,
                     "template_candidates": [],
-                    "approved_parameters": [],
+                    "approved_parameters": [{
+                        "name": "Szélesség",
+                        "label": "Paraméter: Szélesség",
+                        "header": "Paraméter: Szélesség||num|1|0|0|0|0|0||cm|0|1|1",
+                    }],
                     "template": (
                         {
                             **matched["version"],
@@ -469,7 +484,16 @@ def test_full_template_preparation(open_application, chromium, width):
     expect(rows).to_have_count(len(VALUES) - 3)
     expect(targets_panel.locator(".prep-field-title strong")).to_have_text([
         label + (" *" if index == 0 else "") for index, (_, label) in enumerate(FIELDS)
-    ])
+    ] + ["SEO Title", "UpSale1", "UpSale2"])
+    expect(row(11).get_by_role("option", name="Cikkszám", exact=True)).to_have_count(0)
+    expect(row(11).get_by_role("option", name="UpSale2", exact=True)).to_have_count(1)
+    approved = row(11).get_by_role("option", name="Paraméter: Szélesség", exact=True)
+    expect(approved).to_have_count(1)
+    row(11).get_by_role("combobox").select_option(label="Paraméter: Szélesség")
+    expect(targets_panel.get_by_role("list", name="Paraméter: Szélesség hozzárendelései")).to_contain_text("Unknown_01")
+    expect(row(12).get_by_role("option", name="Paraméter: Szélesség", exact=True)).to_have_count(0)
+    targets_panel.get_by_role("button", name="12. Unknown_01 hozzárendelés törlése").click()
+    expect(approved).to_have_count(1)
     expect(page.get_by_label("ÁFA alapértéke")).to_have_value("27")
     page.get_by_label("ÁFA alapértéke").select_option("5")
     expect(page.get_by_text("3 termék · 13 oszlop")).to_be_visible()
@@ -486,6 +510,7 @@ def test_full_template_preparation(open_application, chromium, width):
     ).to_contain_text("SKU")
     targets_panel.get_by_role("button", name="1. SKU hozzárendelés törlése").click()
     expect(row(0).get_by_role("combobox")).to_have_value("")
+    expect(row(11).get_by_role("option", name="Cikkszám", exact=True)).to_have_count(1)
     if width == 1440:
         row(0).locator(".prep-source-handle").drag_to(
             targets_panel.locator('[data-target="cikkszam"]')
@@ -516,6 +541,8 @@ def test_full_template_preparation(open_application, chromium, width):
         page.mouse.up()
         expect(name_bindings).to_contain_text("CATEGORY")
         expect(row(1).get_by_role("combobox")).to_have_value("")
+        expect(row(1).get_by_role("option", name="Termék megnevezés", exact=True)).to_have_count(0)
+        targets_panel.get_by_role("button", name="3. CATEGORY hozzárendelés törlése").click()
         row(1).get_by_role("combobox").select_option(label="Termék megnevezés")
         row(2).get_by_role("combobox").select_option(label="Kategória")
     expect(row(0)).to_have_count(0)
@@ -525,8 +552,8 @@ def test_full_template_preparation(open_application, chromium, width):
     ).click()
     dialog = page.get_by_role("dialog")
     expect(dialog.get_by_label("Paraméter neve")).to_have_value("Szín")
-    dialog.get_by_label("Paraméter neve").fill("Termékszín")
-    dialog.get_by_label("Paraméter típusa").select_option("enum")
+    expect(dialog.locator("input, select")).to_have_count(1)
+    dialog.get_by_label("Paraméter neve").fill("Paraméter: Paraméter: Termékszín")
     dialog.get_by_role("button", name="Paraméter elfogadása").click()
     expect(
         targets_panel.get_by_role("list", name="Paraméter: Termékszín hozzárendelései")
@@ -553,8 +580,8 @@ def test_full_template_preparation(open_application, chromium, width):
     ).to_contain_text("Image2")
     targets_panel.get_by_role("button", name="+ Paraméter", exact=True).click()
     dialog.get_by_label("Paraméter neve").fill("Ellenőrző mező")
-    dialog.get_by_label("Forrásoszlop").select_option("11")
     dialog.get_by_role("button", name="Paraméter elfogadása").click()
+    row(11).get_by_role("combobox").select_option(label="Paraméter: Ellenőrző mező")
     expect(
         targets_panel.get_by_role(
             "list", name="Paraméter: Ellenőrző mező hozzárendelései"
@@ -576,6 +603,8 @@ def test_full_template_preparation(open_application, chromium, width):
     expect(page.get_by_text("Sablon mentve: UNAS sablon · v1")).to_be_visible()
     result = page.get_by_role("region", name="UNAS eredmény", exact=True)
     expect(result.get_by_role("cell", name="0001")).to_be_visible()
+    expect(upload).to_be_hidden()
+    expect(targets_panel).to_have_count(0)
     issue = result.get_by_role("button", name="Hiba: Kép link, 2. sor")
     issue.focus()
     expect(page.get_by_role("tooltip")).to_contain_text("HTTP vagy HTTPS")
@@ -597,7 +626,7 @@ def test_full_template_preparation(open_application, chromium, width):
     assert first["columns"][4]["target"] == {"key": "kep", "order": 2}
     assert first["columns"][5]["target"] == {"key": "kep", "order": 1}
     assert first["new_parameters"] == [
-        {**PARAMETER, "name": "Termékszín", "param_type": "enum", "approved": True}
+        {"name": "Termékszín", "approved": True}
     ]
 
     upload.set_input_files(payload)
@@ -614,6 +643,8 @@ def test_full_template_preparation(open_application, chromium, width):
     expect(page.get_by_text("Sablon mentve: UNAS sablon · v2")).to_be_visible()
     assert state["saves"][-1]["template_id"] == 41
     assert state["saves"][-1]["new_parameters"] == []
+    result.get_by_role("button", name="Vissza a megfeleltetéshez").click()
+    expect(upload).to_be_visible()
     page.get_by_text("Korábban feltöltött fájlok", exact=True).click()
     page.get_by_role("button", name="#11 · korabbi.csv").click()
     expect(

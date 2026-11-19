@@ -87,8 +87,12 @@ def test_unas_result_after_save_paging_download_and_revision(result_site, width,
     main = "https://example.invalid/main.png"
     second = "https://example.invalid/second.png"
     third = "https://example.invalid/third.png"
-    source = "SKU;NAME;CATEGORY;Nettó ár;PHOTO;EAN;Color;Image3;Image2\n"
-    source += f"0001;Első termék;Kertek;1000;{main};0012345678905;Fekete;{third};{second}\n"
+    long_value = "Fekete termék részletes műszaki adatokkal " * 20 + "vége."
+    fields = client.get(PREFIX + "/template-targets?engine=unas").json()["targets"]
+    expanded = any(field.get("added_in") == "template-fix-02" for field in fields)
+    color_header = "Paraméter: Szín" if expanded else "Color"
+    source = f"SKU;NAME;CATEGORY;Nettó ár;PHOTO;EAN;{color_header};Image3;Image2\n"
+    source += f"0001;Első termék;Kertek;1000;{main};0012345678905;{long_value};{third};{second}\n"
     source += f"0002;Üres képhely;Kertek;1000;{main};;;{third};\n"
     source += f"0003;Hibás második kép;Kertek;1000;{main};;;;nem-kep-url\n"
     source += "".join(
@@ -96,6 +100,13 @@ def test_unas_result_after_save_paging_download_and_revision(result_site, width,
         for i in range(4, 52)
     )
     source += ";Hiányos termék;Kertek;1000;;;;;\n"
+    if expanded:
+        header, *rows = source.splitlines()
+        source = (
+            header + ";SupplierMeta;SupplierFlag\n"
+            + rows[0] + ";Keresőcím;1\n"
+            + "\n".join(f"{row};;" for row in rows[1:]) + "\n"
+        )
     with sync_playwright() as p:
         chromium = Path("/usr/bin/chromium")
         with p.chromium.launch(executable_path=str(chromium) if chromium.exists() else None,
@@ -112,7 +123,17 @@ def test_unas_result_after_save_paging_download_and_revision(result_site, width,
             page.get_by_label("CSV, XLS, XLSX vagy XML fájl").set_input_files(
                 {"name": "nagy.csv", "mimeType": "text/csv", "buffer": source.encode()}
             )
-            expect(page.get_by_text("52 termék · 9 oszlop")).to_be_visible()
+            expect(page.get_by_text(f"52 termék · {11 if expanded else 9} oszlop")).to_be_visible()
+            displayed_keys = page.locator(".prep-targets [data-target]").evaluate_all(
+                "nodes => nodes.map(node => node.dataset.target)"
+            )
+            assert set(displayed_keys) == {field["key"] for field in fields}
+            if expanded:
+                titles = page.locator(".prep-targets .prep-field-title strong")
+                for label in ("SEO Title", "CrossSale1", "CrossSale3", "UpSale2", "További lapfül címe 3"):
+                    expect(titles.get_by_text(label, exact=True)).to_have_count(1)
+                page.get_by_label("Célmező: 10. SupplierMeta", exact=True).select_option(label="SEO Title")
+                page.get_by_label("Célmező: 11. SupplierFlag", exact=True).select_option(label="UpSale2")
             page.get_by_label("Célmező: 4. Nettó ár", exact=True).select_option(label="Nettó ár")
             image_labels = ("5. PHOTO", "9. Image2", "8. Image3")
             for label in image_labels:
@@ -121,8 +142,12 @@ def test_unas_result_after_save_paging_download_and_revision(result_site, width,
                     remove.click()
             for label in image_labels:
                 page.get_by_label(f"Célmező: {label}", exact=True).select_option(label="Kép")
-            page.get_by_role("button", name="Javaslat átvétele: Paraméter: Szín").click()
-            page.get_by_role("dialog").get_by_role("button", name="Paraméter elfogadása").click()
+            if expanded:
+                expect(page.get_by_role("list", name="Paraméter: Szín hozzárendelései")).to_be_visible()
+                expect(page.get_by_role("dialog")).to_have_count(0)
+            else:
+                page.get_by_role("button", name="Javaslat átvétele: Paraméter: Szín").click()
+                page.get_by_role("dialog").get_by_role("button", name="Paraméter elfogadása").click()
             expect(page.get_by_role("list", name="Kép hozzárendelései").locator("samp")).to_have_text(
                 [main, second, third]
             )
@@ -131,6 +156,18 @@ def test_unas_result_after_save_paging_download_and_revision(result_site, width,
             result = page.get_by_role("region", name="UNAS eredmény", exact=True)
             table = result.get_by_role("table")
             expect(result.get_by_text("52 sor · 51 letölthető · 1 kizárt", exact=False)).to_be_visible()
+            expect(page.get_by_label("CSV, XLS, XLSX vagy XML fájl")).to_be_hidden()
+            expect(page.get_by_role("heading", name="Előkészítés / Sablonkészítés")).to_have_count(0)
+            expect(table.get_by_role("columnheader", name="Paraméter: Szín", exact=True)).to_be_visible()
+            value = table.get_by_role("button", name=long_value, exact=True)
+            expect(value).to_be_visible()
+            assert value.evaluate("node => node.scrollWidth > node.clientWidth && getComputedStyle(node).textOverflow === 'ellipsis'")
+            assert table.get_by_role("row").nth(1).evaluate("node => node.offsetHeight === node.nextElementSibling.offsetHeight")
+            value.click()
+            dialog = page.get_by_role("dialog", name="Paraméter: Szín")
+            expect(dialog).to_contain_text(long_value)
+            dialog.get_by_role("button", name="Bezárás").click()
+            expect(dialog).to_have_count(0)
             expect(table.get_by_role("columnheader", name="Bruttó Ár", exact=True)).to_be_visible()
             expect(table.get_by_role("row").nth(1)).to_contain_text("1270")
             expect(table.get_by_role("cell", name=f"{main}|{second}|{third}")).to_be_visible()
@@ -170,7 +207,10 @@ def test_unas_result_after_save_paging_download_and_revision(result_site, width,
                 assert first["Nettó Ár"] == "1000" and first["Bruttó Ár"] == "1270"
                 assert first["Státusz"] == "1" and first["Kép link"] == f"{main}|{second}|{third}"
                 assert next(value for header, value in first.items() if header.startswith("Paraméter: EAN|")) == "0012345678905"
-                assert next(value for header, value in first.items() if header.startswith("Paraméter: Szín|")) == "Fekete"
+                assert next(value for header, value in first.items() if header.startswith("Paraméter: Szín|")) == long_value
+                if expanded:
+                    assert first["SEO Title"] == "Keresőcím"
+                    assert first["UpSale2"] == "1"
                 image_col = rows[0].index("Kép link")
                 assert rows[2][image_col] == f"{main}|{third}"
                 assert rows[3][image_col] == f"{main}|nem-kep-url"
@@ -178,6 +218,7 @@ def test_unas_result_after_save_paging_download_and_revision(result_site, width,
 
             result.get_by_role("button", name="Vissza a megfeleltetéshez").click()
             expect(page.get_by_label("Sablon neve")).to_have_value("UNAS minta")
+            expect(page.get_by_label("CSV, XLS, XLSX vagy XML fájl")).to_be_visible()
             for label in image_labels:
                 page.get_by_role("button", name=f"{label} hozzárendelés törlése").click()
                 expect(page.get_by_label(f"Célmező: {label}", exact=True)).to_be_visible()
