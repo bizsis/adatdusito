@@ -8,32 +8,33 @@ import {
   type Assignment,
   type Catalog,
   type Defaults,
+  type TemplateBody,
   type Issue,
   type Parameter,
   type Preparation,
   type Request,
   type Saved,
+  type SourceColumn,
   type Target,
   type Validation,
 } from "./api";
 import {
   assign,
   bindings,
+  displayHeader,
+  firstInstance,
+  lastInstance,
   initialAssignments,
   moveImage,
+  normalized,
+  parameterLabel,
+  parameterName,
   parameterNameKey,
   replaceBinding,
   slotId,
 } from "./mapping";
 
 const dragType = "application/x-adatdusito-template-column";
-const typeLabels = {
-  text: "Szöveg",
-  num: "Szám",
-  enum: "Lista",
-  enummore: "Többértékű lista",
-  link_text: "Hivatkozás",
-};
 const issueLabels: Record<string, string> = {
   scientific_notation_identifier:
     "Tudományos jelölésű azonosító. A hiányzó számjegyek nem állíthatók helyre.",
@@ -56,7 +57,7 @@ const issueLabels: Record<string, string> = {
   unknown_target: "Ismeretlen célmező.",
   duplicate_target: "Egy célmezőhöz több azonos hozzárendelés tartozik.",
   parameter_not_approved: "Fogadd el a paramétert a mentéshez.",
-  invalid_parameter: "Ellenőrizd a paraméter nevét, típusát és mértékegységét.",
+  invalid_parameter: "Ellenőrizd a paraméter nevét.",
   cikkszam_required: "Rendelj forrásoszlopot a Cikkszám mezőhöz.",
   invalid_default: "Ellenőrizd a Státusz és az ÁFA alapértékét.",
   unsupported_currency: "A pénznem nem támogatott.",
@@ -74,12 +75,13 @@ const blankParameter: Parameter = {
   group_name: "",
   unit: null,
 };
-const baseTarget = (key: string): Target =>
-  key === "alternativ_kategoria"
-    ? { key, instance: 1 }
-    : key === "raktarkeszlet"
-      ? { key, instance: 0 }
-      : { key };
+function parameterInput(parameter: Parameter) {
+  return parameter.param_type === "text" &&
+    !parameter.group_name &&
+    !parameter.unit
+    ? { name: parameter.name }
+    : parameter;
+}
 
 function dragPayload(event: DragEvent, index: number, binding: boolean) {
   event.dataTransfer.setData(dragType, JSON.stringify({ index, binding }));
@@ -107,28 +109,20 @@ function allowDrop(event: DragEvent) {
 
 function ParameterDialog({
   edit,
-  view,
   onClose,
   onAccept,
 }: {
   edit: ParameterEdit;
-  view: Preparation;
   onClose: () => void;
-  onAccept: (parameter: Parameter, index?: number) => void;
+  onAccept: (name: string) => void;
 }) {
   const dialog = useRef<HTMLDialogElement>(null);
-  const [draft, setDraft] = useState(edit.parameter);
-  const [source, setSource] = useState(
-    edit.index === undefined ? "" : String(edit.index),
-  );
+  const [draft, setDraft] = useState(() => parameterName(edit.parameter.name));
   useEffect(() => {
     dialog.current?.showModal();
   }, []);
-  const valid =
-    draft.name.trim() &&
-    ![draft.name, draft.group_name, draft.unit ?? ""].some((v) =>
-      v.includes("|"),
-    );
+  const name = parameterName(draft);
+  const valid = name.length > 0 && name.length <= 120 && !name.includes("|");
   return (
     <dialog
       ref={dialog}
@@ -139,15 +133,7 @@ function ParameterDialog({
       <form
         onSubmit={(event) => {
           event.preventDefault();
-          if (valid)
-            onAccept(
-              {
-                ...draft,
-                name: draft.name.trim(),
-                unit: draft.unit?.trim() || null,
-              },
-              source === "" ? undefined : Number(source),
-            );
+          if (valid) onAccept(name);
         }}
       >
         <h3>{edit.previous ? "Paraméter módosítása" : "Új paraméter"}</h3>
@@ -155,56 +141,9 @@ function ParameterDialog({
           Paraméter neve
           <input
             required
-            maxLength={120}
-            value={draft.name}
-            onChange={(event) =>
-              setDraft({ ...draft, name: event.target.value })
-            }
+            value={draft}
+            onChange={(event) => setDraft(event.target.value)}
           />
-        </label>
-        <label>
-          Paraméter típusa
-          <select
-            aria-label="Paraméter típusa"
-            value={draft.param_type}
-            onChange={(event) =>
-              setDraft({
-                ...draft,
-                param_type: event.target.value as Parameter["param_type"],
-              })
-            }
-          >
-            {Object.entries(typeLabels).map(([key, label]) => (
-              <option key={key} value={key}>
-                {label}
-              </option>
-            ))}
-          </select>
-        </label>
-        <label>
-          Mértékegység
-          <input
-            maxLength={32}
-            value={draft.unit ?? ""}
-            onChange={(event) =>
-              setDraft({ ...draft, unit: event.target.value || null })
-            }
-          />
-        </label>
-        <label>
-          Forrásoszlop
-          <select
-            aria-label="Forrásoszlop"
-            value={source}
-            onChange={(event) => setSource(event.target.value)}
-          >
-            <option value="">Később rendelem hozzá</option>
-            {view.columns.map((column) => (
-              <option key={column.index} value={column.index}>
-                {column.index + 1}. {column.header || "Névtelen oszlop"}
-              </option>
-            ))}
-          </select>
         </label>
         <div className="prep-actions">
           <button type="button" onClick={onClose}>
@@ -262,6 +201,8 @@ export function TemplateEditor({
   canSave,
   currencyWarnings,
   currencyBusy,
+  showResult,
+  setShowResult,
   onSaved,
   onBusy,
 }: {
@@ -273,6 +214,8 @@ export function TemplateEditor({
   canSave: boolean;
   currencyWarnings: Issue[];
   currencyBusy: boolean;
+  showResult: boolean;
+  setShowResult: (visible: boolean) => void;
   onSaved: (result: Saved) => void;
   onBusy: (busy: boolean) => void;
 }) {
@@ -288,7 +231,6 @@ export function TemplateEditor({
   const [report, setReport] = useState<Validation>();
   const [editingBinding, setEditingBinding] = useState<number>();
   const [saved, setSaved] = useState<Saved>();
-  const [showResult, setShowResult] = useState(false);
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
   const pending = useRef(false);
@@ -302,9 +244,28 @@ export function TemplateEditor({
   const sourceNames = new Map(
     view.columns.map((column) => [
       column.index,
-      `${column.index + 1}. ${column.header || "Névtelen oszlop"}`,
+      `${column.index + 1}. ${displayHeader(column.header) || "Névtelen oszlop"}`,
     ]),
   );
+  const occupied = new Map(
+    Object.entries(assignments).flatMap(([index, choice]) =>
+      choice.state === "mapped"
+        ? [[slotId(choice.target), Number(index)] as const]
+        : [],
+    ),
+  );
+  const orderedFields = new Set(
+    catalog.targets
+      .filter((field) => field.multiple === "ordered")
+      .map(({ key }) => key),
+  );
+  function canAssign(index: number, target: Target) {
+    const owner = occupied.get(slotId(target));
+    return (
+      orderedFields.has(target.key) || owner === undefined || owner === index
+    );
+  }
+
   const dynamic = [
     ...extraSlots,
     ...Object.values(assignments).flatMap((choice) =>
@@ -312,8 +273,24 @@ export function TemplateEditor({
     ),
   ];
   const groups = catalog.targets.map((field) => {
-    const base = baseTarget(field.key);
+    const base: Target =
+      field.multiple === "instances" && field.key !== "parameter"
+        ? { key: field.key, instance: firstInstance(field) }
+        : { key: field.key };
     const slots = new Map([[slotId(base), base]]);
+    if (
+      field.multiple === "instances" &&
+      field.added_in === "template-fix-02"
+    ) {
+      for (
+        let instance = firstInstance(field) + 1;
+        instance <= lastInstance(field);
+        instance++
+      ) {
+        const target = { key: field.key, instance };
+        slots.set(slotId(target), target);
+      }
+    }
     if (field.multiple === "instances")
       for (const target of dynamic) {
         if (target.key === field.key) slots.set(slotId(target), target);
@@ -327,7 +304,15 @@ export function TemplateEditor({
   });
   function targetLabel(target: Target) {
     const field = catalog.targets.find((item) => item.key === target.key);
-    if (target.parameter) return `Paraméter: ${target.parameter.name}`;
+    if (target.parameter)
+      return target.label
+        ? displayHeader(target.label)
+        : parameterLabel(target.parameter.name);
+    if (field?.added_in === "template-fix-02" && target.instance !== undefined)
+      return (
+        field.unas_header?.replace("{n}", String(target.instance)) ??
+        `${field.label} ${target.instance}`
+      );
     if (target.key === "raktarkeszlet")
       return `Raktárkészlet #${target.instance ?? 0}`;
     if (target.key === "alternativ_kategoria" && (target.instance ?? 1) > 1)
@@ -336,38 +321,77 @@ export function TemplateEditor({
   }
   const approvedTargets = useMemo(
     () =>
-      view.approved_parameters.flatMap(({ header }) => {
+      view.approved_parameters.flatMap(({ header, label }) => {
         const parameter = parseParameterHeader(header);
-        return parameter ? [{ key: "parameter", header, parameter }] : [];
+        return parameter
+          ? [{ key: "parameter", header, parameter, label }]
+          : [];
       }),
     [view.approved_parameters],
   );
   const approvedById = new Map(
     approvedTargets.map((target) => [slotId(target), target]),
   );
-  const options = groups.flatMap(({ slots }) =>
-    slots.filter(
+  const options = groups.flatMap(({ field, slots }) => {
+    const available = slots.filter(
       (slot) =>
         (slot.key !== "parameter" || slot.parameter) &&
         !approvedById.has(slotId(slot)),
-    ),
-  );
+    );
+    if (
+      field.multiple === "instances" &&
+      field.key !== "parameter" &&
+      slots.every((slot) => occupied.has(slotId(slot)))
+    ) {
+      const instance = Math.max(...slots.map((slot) => slot.instance ?? 0)) + 1;
+      if (instance <= lastInstance(field))
+        available.push({ key: field.key, instance });
+    }
+    return available;
+  });
   const optionMap = new Map(
     [...options, ...approvedTargets].map((target) => [slotId(target), target]),
   );
   const mapColumn = (index: number, choice: Assignment) => {
-    if (!editable) return;
+    if (
+      !editable ||
+      (choice.state === "mapped" && !canAssign(index, choice.target))
+    )
+      return;
     setReport(undefined);
     setError("");
     setAssignments((previous) => assign(previous, index, choice));
   };
 
-  function applySuggestion(index: number, target: Target) {
+  function suggestionTarget(index: number, target: Target) {
+    const field = catalog.targets.find(({ key }) => key === target.key);
+    if (
+      field?.multiple === "instances" &&
+      field.key !== "parameter" &&
+      target.instance === undefined
+    )
+      return options.find(
+        (option) => option.key === target.key && canAssign(index, option),
+      );
+    return canAssign(index, target) ? target : undefined;
+  }
+
+  function applySuggestion(
+    index: number,
+    suggestion: NonNullable<SourceColumn["suggestion"]>,
+  ) {
+    const { target, method } = suggestion;
     const approved = approvedById.get(slotId(target));
-    if (target.key === "parameter" && !approved) {
-      setEditing({ parameter: target.parameter ?? blankParameter, index });
+    const available = suggestionTarget(index, approved ?? target);
+    if (!available) return;
+    if (
+      available.key === "parameter" &&
+      !approved &&
+      method !== "source_parameter"
+    ) {
+      setEditing({ parameter: available.parameter ?? blankParameter, index });
     } else {
-      mapColumn(index, { state: "mapped", target: approved ?? target });
+      mapColumn(index, { state: "mapped", target: available });
     }
   }
 
@@ -375,31 +399,41 @@ export function TemplateEditor({
     const payload = readDrop(event);
     if (!payload || !editable || !sourceNames.has(payload.index)) return;
     if (target.key === "parameter" && !target.parameter) {
-      setEditing({
-        parameter: view.columns.find((column) => column.index === payload.index)
-          ?.suggestion?.target.parameter ?? {
-          ...blankParameter,
-          name:
-            view.columns.find((column) => column.index === payload.index)
-              ?.header ?? "",
-        },
-        index: payload.index,
-      });
+      const column = columnsByIndex.get(payload.index);
+      if (column?.suggestion?.target.key === "parameter") {
+        applySuggestion(payload.index, column.suggestion);
+      } else {
+        setEditing({
+          parameter: { ...blankParameter, name: column?.header ?? "" },
+          index: payload.index,
+        });
+      }
     } else mapColumn(payload.index, { state: "mapped", target });
   }
 
-  function acceptParameter(parameter: Parameter, index?: number) {
+  function acceptParameter(name: string) {
     if (!editing) return;
-    const previous = editing.previous;
+    const { index, previous } = editing;
+    const parameter = { ...editing.parameter, name };
     const oldId = previous ? slotId(previous) : undefined;
-    let target: Target = { key: "parameter", parameter };
-    if (
-      previous &&
-      slotId({ ...previous, header: undefined }) === slotId(target)
-    )
-      target = previous;
-    const id = slotId(target);
-    const existing = approvedById.get(id);
+    const target =
+      previous && parameterName(editing.parameter.name) === name
+        ? previous
+        : { key: "parameter", parameter };
+    const matchingApproved = approvedTargets.filter(
+      (item) =>
+        normalized(parameterName(item.parameter.name)) === normalized(name),
+    );
+    const existing =
+      approvedById.get(slotId(target)) ??
+      (matchingApproved.length === 1 ? matchingApproved[0] : undefined);
+    const selected = existing ?? target;
+    const id = slotId(selected);
+    if (index !== undefined && !canAssign(index, selected)) {
+      setError("Ehhez a paraméterhez már tartozik forrásoszlop.");
+      setEditing(undefined);
+      return;
+    }
     if (
       !existing &&
       [...approvedTargets, ...dynamic].some(
@@ -417,14 +451,14 @@ export function TemplateEditor({
     setError("");
     setExtraSlots((old) => [
       ...old.filter((slot) => slotId(slot) !== oldId && slotId(slot) !== id),
-      existing ?? target,
+      selected,
     ]);
     setCreated((old) => [
       ...old.filter((item) => {
         const itemId = slotId({ key: "parameter", parameter: item });
         return itemId !== oldId && itemId !== id;
       }),
-      ...(existing ? [] : [parameter]),
+      ...(existing ? [] : [selected.parameter ?? parameter]),
     ]);
     setAssignments((old) => {
       const assigned = previous ? bindings(old, previous) : [];
@@ -433,7 +467,7 @@ export function TemplateEditor({
         next = assign(next, item.index, { state: null });
       return index === undefined
         ? next
-        : assign(next, index, { state: "mapped", target: existing ?? target });
+        : assign(next, index, { state: "mapped", target: selected });
     });
     setEditing(undefined);
   }
@@ -456,16 +490,29 @@ export function TemplateEditor({
           : [],
       ),
     );
-    const body = {
+    const body: TemplateBody = {
       engine: catalog.engine.key,
       currency,
-      columns,
+      columns: columns.map((column) =>
+        column.state === "mapped"
+          ? {
+              ...column,
+              target: {
+                ...column.target,
+                label: undefined,
+                parameter:
+                  column.target.parameter &&
+                  parameterInput(column.target.parameter),
+              },
+            }
+          : column,
+      ),
       defaults,
       new_parameters: created
         .filter((parameter) =>
           used.has(slotId({ key: "parameter", parameter })),
         )
-        .map((parameter) => ({ ...parameter, approved: true as const })),
+        .map((parameter) => ({ ...parameterInput(parameter), approved: true })),
     };
     try {
       const result = await validateTemplate(api, view.run_id, body);
@@ -504,6 +551,9 @@ export function TemplateEditor({
   );
 
   function targetSelect(index: number, current: string) {
+    const availableApproved = approvedTargets.filter((target) =>
+      canAssign(index, target),
+    );
     return (
       <select
         aria-label={`Célmező: ${sourceNames.get(index)}`}
@@ -521,23 +571,18 @@ export function TemplateEditor({
       >
         <option value="">Nincs hozzárendelve</option>
         <option value="unused">Nem használjuk</option>
-        {options.map((target) => (
-          <option key={slotId(target)} value={slotId(target)}>
-            {targetLabel(target)}
-          </option>
-        ))}
-        {approvedTargets.length > 0 && (
+        {options
+          .filter((target) => canAssign(index, target))
+          .map((target) => (
+            <option key={slotId(target)} value={slotId(target)}>
+              {targetLabel(target)}
+            </option>
+          ))}
+        {availableApproved.length > 0 && (
           <optgroup label="Meglévő paraméterek">
-            {approvedTargets.map((target) => (
+            {availableApproved.map((target) => (
               <option key={slotId(target)} value={slotId(target)}>
-                {[
-                  targetLabel(target),
-                  target.parameter.group_name,
-                  typeLabels[target.parameter.param_type],
-                  target.parameter.unit,
-                ]
-                  .filter(Boolean)
-                  .join(" · ")}
+                {targetLabel(target)}
               </option>
             ))}
           </optgroup>
@@ -728,32 +773,37 @@ export function TemplateEditor({
                     </div>
                   );
                 })}
-                {field.multiple === "instances" && editable && (
-                  <button
-                    className="prep-add"
-                    type="button"
-                    onClick={() => {
-                      if (field.key === "parameter")
-                        setEditing({ parameter: blankParameter });
-                      else
-                        setExtraSlots((old) => [
-                          ...old,
-                          {
-                            key: field.key,
-                            instance:
-                              Math.max(
-                                ...slots.map((slot) => slot.instance ?? 0),
-                              ) + 1,
-                          },
-                        ]);
-                    }}
-                  >
-                    +{" "}
-                    {field.key === "raktarkeszlet"
-                      ? "Raktárkészlet"
-                      : field.label}
-                  </button>
-                )}
+                {field.multiple === "instances" &&
+                  editable &&
+                  (field.key === "parameter" ||
+                    slots.some((slot) => slot.instance === undefined) ||
+                    Math.max(...slots.map((slot) => slot.instance ?? 0)) <
+                      lastInstance(field)) && (
+                    <button
+                      className="prep-add"
+                      type="button"
+                      onClick={() => {
+                        if (field.key === "parameter")
+                          setEditing({ parameter: blankParameter });
+                        else
+                          setExtraSlots((old) => [
+                            ...old,
+                            {
+                              key: field.key,
+                              instance:
+                                Math.max(
+                                  ...slots.map((slot) => slot.instance ?? 0),
+                                ) + 1,
+                            },
+                          ]);
+                      }}
+                    >
+                      +{" "}
+                      {field.key === "raktarkeszlet"
+                        ? "Raktárkészlet"
+                        : field.label}
+                    </button>
+                  )}
               </li>
             ))}
           </ul>
@@ -784,11 +834,15 @@ export function TemplateEditor({
               </p>
               {view.template.missing_headers.length > 0 && (
                 <p>
-                  Hiányzó oszlopok: {view.template.missing_headers.join(", ")}
+                  Hiányzó oszlopok:{" "}
+                  {view.template.missing_headers.map(displayHeader).join(", ")}
                 </p>
               )}
               {view.template.new_headers.length > 0 && (
-                <p>Új oszlopok: {view.template.new_headers.join(", ")}</p>
+                <p>
+                  Új oszlopok:{" "}
+                  {view.template.new_headers.map(displayHeader).join(", ")}
+                </p>
               )}
             </div>
           )}
@@ -839,17 +893,24 @@ export function TemplateEditor({
                     column.index,
                     choice?.state === "unused" ? "unused" : "",
                   )}
-                  {suggestion && !choice?.state && editable && (
-                    <button
-                      type="button"
-                      onClick={() =>
-                        applySuggestion(column.index, suggestion.target)
-                      }
-                    >
-                      Javaslat átvétele: {targetLabel(suggestion.target)} (
-                      {Math.round(suggestion.confidence * 100)}%)
-                    </button>
-                  )}
+                  {suggestion &&
+                    !choice?.state &&
+                    editable &&
+                    suggestionTarget(column.index, suggestion.target) && (
+                      <button
+                        type="button"
+                        onClick={() =>
+                          applySuggestion(column.index, suggestion)
+                        }
+                      >
+                        Javaslat átvétele:{" "}
+                        {suggestion.target.key === "parameter" &&
+                        suggestion.label
+                          ? displayHeader(suggestion.label)
+                          : targetLabel(suggestion.target)}{" "}
+                        ({Math.round(suggestion.confidence * 100)}%)
+                      </button>
+                    )}
                 </li>
               );
             })}
@@ -910,7 +971,6 @@ export function TemplateEditor({
       {editing && (
         <ParameterDialog
           edit={editing}
-          view={view}
           onClose={() => setEditing(undefined)}
           onAccept={acceptParameter}
         />

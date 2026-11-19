@@ -140,7 +140,8 @@ def test_save_and_reuse_with_real_template_api(environment, monkeypatch, width):
                 "button", name="Javaslat átvétele: Paraméter: Szín", exact=False
             ).click()
             parameter_dialog = page.get_by_role("dialog")
-            parameter_dialog.get_by_label("Paraméter típusa").select_option("enum")
+            expect(parameter_dialog.locator("input, select")).to_have_count(1)
+            parameter_dialog.get_by_label("Paraméter neve").fill("Paraméter: Szín")
             parameter_dialog.get_by_role("button", name="Paraméter elfogadása").click()
             for label in ("6. Image1", "7. Image2"):
                 remove = page.get_by_role("button", name=f"{label} hozzárendelés törlése")
@@ -154,6 +155,8 @@ def test_save_and_reuse_with_real_template_api(environment, monkeypatch, width):
             expect(
                 page.get_by_text("Sablon mentve: Valódi próbasablon · v1")
             ).to_be_visible()
+            expect(upload).to_be_hidden()
+            page.get_by_role("button", name="Vissza a megfeleltetéshez").click()
             templates = client.get(
                 f"{PREFIX}/suppliers/{supplier['id']}/import-templates"
             ).json()["templates"]
@@ -185,6 +188,7 @@ def test_save_and_reuse_with_real_template_api(environment, monkeypatch, width):
             expect(
                 page.get_by_text("Sablon mentve: Valódi próbasablon · v2")
             ).to_be_visible()
+            page.get_by_role("button", name="Vissza a megfeleltetéshez").click()
             versions = client.get(
                 f"{PREFIX}/import-templates/{first_id}/versions"
             ).json()
@@ -208,8 +212,8 @@ def test_save_and_reuse_with_real_template_api(environment, monkeypatch, width):
             finish = row("2. Finish").get_by_role("combobox")
             expect(finish).to_have_value("")
             approved = finish.locator('optgroup[label="Meglévő paraméterek"] option')
-            expect(approved).to_have_text(["Paraméter: Szín · Lista"])
-            finish.select_option(label="Paraméter: Szín · Lista")
+            expect(approved).to_have_text(["Paraméter: Szín"])
+            finish.select_option(label="Paraméter: Szín")
             expect(parameter_dialog).to_have_count(0)
             expect(page.get_by_role("list", name="Paraméter: Szín hozzárendelései")).to_contain_text("Finish")
 
@@ -221,7 +225,8 @@ def test_save_and_reuse_with_real_template_api(environment, monkeypatch, width):
             expect(page.get_by_text("Sablon mentve: Meglévő paraméterrel · v1")).to_be_visible()
             reused = saved_payloads[-1]
             assert reused["columns"][1]["target"]["header"] == template["parameters"][0]["header"]
-            assert [param["name"] for param in reused["new_parameters"]] == ["Egyedi jellemző"]
+            assert reused["new_parameters"] == [{"name": "Egyedi jellemző", "approved": True}]
+            page.get_by_role("button", name="Vissza a megfeleltetéshez").click()
             upload.set_input_files({
                 "name": "ismetelt-fejlec.csv",
                 "mimeType": "text/csv",
