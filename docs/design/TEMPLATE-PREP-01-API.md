@@ -100,8 +100,20 @@ A `type` értéke `text`, `number`, `price`, `percent`, `date`, `integer`, `flag
 | `hasonlo_termekek` | Hasonló termékek | – | `Hasonló Termékek` | unas_schema |
 | `parameter` | Paraméter | instances (paraméterenként) | `Paraméter: <név>\|<csoport>\|<típus>\|…` | unas_schema (formátum) |
 
-Más célmező nincs. A Paraméter fejlécét a szerver állítja elő az UNAS paraméterfejléc-
-formátumban.
+A Paraméter fejlécét a szerver állítja elő az UNAS paraméterfejléc-formátumban.
+
+> **TEMPLATE-FIX-02 (végleges szabály):**
+> - A fenti 33 célmező változatlanul az első 33 helyen marad. Utánuk következik minden
+>   dokumentált, importálható UNAS-oszlop: 44 egyszerű és 7 számozott családos, összesen 84.
+>   A számozott családok sorszáma csak a valós exportban látott tartományban
+>   (`min_instance`…`max_instance`) választható.
+> - Paraméterhez **csak név** kell. A `Paraméter:` előtag nem duplázódik, és az előtagos
+>   forrásoszlop automatikusan paraméter.
+> - A megjelenített név `Paraméter: Név` (`label`). Az exportfejléc a dokumentált teljes UNAS-
+>   formátum marad.
+> - Új mező: `occupied`.
+>
+> Részletek: `docs/design/TEMPLATE-FIX-02-API.md`.
 
 ## 2. Fájlfeltöltés – `POST /runs` (meglévő, bővítve)
 

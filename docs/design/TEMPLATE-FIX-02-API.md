@@ -5,6 +5,10 @@ Alapág: `codex/template-result-integration` (`2045b3a`), ág: `claude/template-
 A szerződés a backend előtt készült, a Codex számára. A meglévő végpontok, mezők és sablonok
 változatlanok; minden itt leírt változás kiegészítés.
 
+**Állapot: végleges, a megvalósítás (`0256604`) szerint.** A teljes backend-csomag zöld
+(593 passed). Egyetlen nyitott pont a rövid paraméterfejléc exportja; ehhez tulajdonosi
+döntés kell (lásd lent).
+
 ## 1. Paraméterek: elég a név
 
 - Új paraméterhez a kezelőnek **csak a nevet** kell megadnia:
