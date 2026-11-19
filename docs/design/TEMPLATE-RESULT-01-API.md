@@ -51,7 +51,7 @@ változatlanok.
 | Kép | `Kép link` | **Minden** hozzárendelt kép, a kezelő által megadott sorszám szerint, `\|` jellel elválasztva egyetlen cellában; az első a főkép. Ha egy forráscella már `\|`-vel tagolt több linket tartalmaz, azok a helyükön megmaradnak. Üres képoszlop nem hagy rést (az UNAS-ban nincs üres hely), a többi kép relatív sorrendje nem változik, és a hiányt `image_missing_in_sequence` jelzi (`orders`). 10-nél több kép: mind megmarad, `images_over_unas_limit` jelzéssel. |
 | További lapfül 1–3 | `További lapfül tartalma 1–3` | Szöveg/HTML. |
 | Kiegészítő / Hasonló termékek | `Kiegészítő Termékek` / `Hasonló Termékek` | Szöveg. |
-| Paraméter | a sablon `Paraméter: …` fejléce | Szöveg, változatlanul. |
+| Paraméter | a sablon `Paraméter: …` fejléce, a dokumentált teljes formátumban (TEMPLATE-FIX-02) | Szöveg, változatlanul. Az előnézetben a `columns[].label` `Paraméter: Név`. |
 
 - **Oszlopsorrend:** a célmezőlista sorrendje. Többszörös célnál példány, illetve sorszám
   szerint; a paraméterek a végén, oszlopsorrendben.

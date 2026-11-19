@@ -70,7 +70,8 @@ def save(c, run_id, body, name="Alap", **extra):
 
 
 def test_target_list_is_exactly_the_operator_list():
-    labels = [t["label"] for t in tp.targets_payload()["targets"]]
+    # The accepted 33 operator targets stay first and unchanged (TEMPLATE-FIX-02 appends).
+    labels = [t["label"] for t in tp.targets_payload()["targets"]][:33]
     assert labels == [
         "Cikkszám", "Termék megnevezés", "Kategória", "Alternatív kategória", "Gyártó",
         "Raktárkészlet #0", "Nettó ár", "Bruttó ár", "Nettó akciós ár", "Bruttó akciós ár",
@@ -88,7 +89,8 @@ def test_target_list_is_exactly_the_operator_list():
     targets = {t["key"]: t for t in payload["targets"]}
     assert [k for k, t in targets.items() if t["required"]] == ["cikkszam"]
     assert targets["termek_megnevezes"]["unas_header"] == "Termék Név"
-    assert {k: t["multiple"] for k, t in targets.items() if t["multiple"]} == {
+    assert {k: t["multiple"] for k, t in targets.items()
+            if t["multiple"] and not t.get("added_in")} == {
         "alternativ_kategoria": "instances", "raktarkeszlet": "instances", "kep": "ordered",
         "parameter": "instances"}
 
@@ -131,7 +133,8 @@ def test_new_parameter_requires_operator_approval(imports):
     assert saved.status_code == 200, saved.text
     # The approved parameter is reused later without a new approval.
     run2, view2 = prepared(c, t, s)
-    assert {"name": "Szín", "header": parameter_header("Szín")} in view2["approved_parameters"]
+    assert {"name": "Szín", "header": parameter_header("Szín"), "label": "Paraméter: Szín"} \
+        in view2["approved_parameters"]
     with Session(t) as db:
         actions = list(db.scalars(select(Audit.action)))
         assert actions.count("import.parameter_approved") == 1
