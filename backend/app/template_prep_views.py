@@ -6,12 +6,13 @@ from typing import Literal
 from fastapi import APIRouter, Depends, HTTPException, Query
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel, ConfigDict, Field
+from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from app import template_prep as tp
 from app.import_api import get_run, tenant
-from app.import_models import Supplier
+from app.import_models import ImportProfile, ImportRun, Supplier
 from app.security import audit, database, require
 
 router = APIRouter(prefix="/api/v1/imports", tags=["Beszállítói import – sablonkészítés"])
@@ -155,3 +156,161 @@ def template_versions(id: int, who=Depends(require("imports.read")),
     t = tp.get_template(db, tenant(who), id)
     return tp.versions(db, t.tenant_id, t)
 
+
+
+# --- IMPORT-DELETE-01: saved template and template version deletion -------------
+
+TEMPLATE_REFUSALS = {
+    "active_version": "Az aktív (legújabb) sablonverzió nem törölhető, mert ezt használja a "
+                      "sablon. Ments új verziót, vagy töröld a teljes sablont.",
+    "only_version": "A sablon egyetlen verziója nem törölhető külön; töröld a teljes sablont.",
+    "referenced": "A sablont (vagy ezt a verzióját) jóváhagyott vagy feldolgozott import "
+                  "hivatkozza, ezért nem törölhető.",
+}
+
+
+def family(db, template, lock=False):
+    """All versions of one saved template (same template_key), newest first."""
+    query = select(ImportProfile).where(ImportProfile.tenant_id == template.tenant_id,
+                                        ImportProfile.supplier_id == template.supplier_id)
+    if lock:
+        query = query.with_for_update()
+    key = template.config["template"]["template_key"]
+    return [p for p in db.scalars(query.order_by(ImportProfile.id.desc()))
+            if (p.config.get("template") or {}).get("template_key") == key]
+
+
+def run_references(db, profiles, lock=False):
+    """Imports pointing at these versions: (hard references, soft upload matches).
+
+    Hard: an approved/processed import used the version (profile_id) or a settings
+    link (engine_mapping_profile_id) -> deletion is refused. Soft: an unapproved
+    upload whose analysis merely matched the version's header structure -> the
+    link is detached (profile_id cleared) so the foreign key stays valid.
+    """
+    ids = {p.id for p in profiles}
+    if not ids:
+        return [], []
+    template = profiles[0]
+    query = select(ImportRun).where(ImportRun.tenant_id == template.tenant_id,
+                                    ImportRun.supplier_id == template.supplier_id)
+    hard, soft = [], []
+    for r in db.scalars(query.with_for_update() if lock else query):
+        if (r.config or {}).get("engine_mapping_profile_id") in ids:
+            hard.append(r)
+        elif r.profile_id in ids:
+            (soft if r.approved_by is None else hard).append(r)
+    return hard, soft
+
+
+def detach(soft):
+    for r in soft:
+        r.profile_id = None
+        if (r.analysis or {}).get("matched_profile_id") is not None:
+            r.analysis = {**r.analysis, "matched_profile_id": None}
+
+
+def template_plan(db, template, version=None, lock=False):
+    versions = family(db, template, lock=lock)
+    target = [version] if version is not None else versions
+    hard, soft = run_references(db, target, lock=lock)
+    references = {"import_runs": len(hard), "import_run_ids": [r.id for r in hard]}
+    if version is not None and version.id == versions[0].id:
+        reason = "only_version" if len(versions) == 1 else "active_version"
+    elif references["import_runs"]:
+        reason = "referenced"
+    else:
+        reason = None
+    return {
+        "template_id": versions[0].id,
+        "template_key": template.config["template"]["template_key"],
+        "name": versions[0].name,
+        "active_version_id": versions[0].id,
+        "active_version": versions[0].version,
+        "version_id": version.id if version is not None else None,
+        "deletable": reason is None,
+        "reason": reason,
+        "deletes": {"template_versions": len(target),
+                    "version_ids": [p.id for p in target],
+                    "approved_parameters_in_deleted_versions": sum(
+                        len(p.config["template"].get("parameters", [])) for p in target)},
+        "detaches": {"matched_uploads": len(soft), "run_ids": [r.id for r in soft]},
+        "_soft": soft,
+        "references": references,
+        "keeps": ["import_runs", "source_files", "supplier_products", "import_suppliers",
+                  "other_templates", "audit_log"],
+    }
+
+
+def version_of(db, who, id, version_id):
+    template = tp.get_template(db, tenant(who), id)
+    version = tp.get_template(db, tenant(who), version_id)
+    if version.supplier_id != template.supplier_id or \
+            version.config["template"]["template_key"] != template.config["template"]["template_key"]:
+        raise HTTPException(404, "A sablonverzió nem található.")
+    return template, version
+
+
+@router.get("/import-templates/{id}/deletion")
+def template_deletion_preview(id: int, who=Depends(require("imports.approve")),
+                              db: Session = Depends(database)):
+    """Dry run for the confirmation dialog: nothing is changed."""
+    return public_plan(template_plan(db, tp.get_template(db, tenant(who), id)))
+
+
+def public_plan(plan):
+    return {k: v for k, v in plan.items() if not k.startswith("_")}
+
+
+@router.delete("/import-templates/{id}")
+def delete_template(id: int, who=Depends(require("imports.approve")),
+                    db: Session = Depends(database)):
+    """Delete one saved template with all of its versions (and nothing else)."""
+    template = tp.get_template(db, tenant(who), id)
+    plan = template_plan(db, template, lock=True)
+    if not plan["deletable"]:
+        raise HTTPException(409, TEMPLATE_REFUSALS[plan["reason"]])
+    detach(plan["_soft"])
+    db.flush()
+    for p in family(db, template):
+        db.delete(p)
+    audit(db, who, "import.template_delete", plan["template_id"], tenant_id=template.tenant_id,
+          supplier=template.supplier_id, name=plan["name"], template_key=plan["template_key"],
+          versions=plan["deletes"]["version_ids"], detached_runs=plan["detaches"]["run_ids"])
+    try:
+        db.commit()
+    except IntegrityError:
+        db.rollback()
+        raise HTTPException(409, TEMPLATE_REFUSALS["referenced"])
+    return {"deleted": True, "template_key": plan["template_key"],
+            "version_ids": plan["deletes"]["version_ids"]}
+
+
+@router.get("/import-templates/{id}/versions/{version_id}/deletion")
+def version_deletion_preview(id: int, version_id: int, who=Depends(require("imports.approve")),
+                             db: Session = Depends(database)):
+    template, version = version_of(db, who, id, version_id)
+    return public_plan(template_plan(db, template, version))
+
+
+@router.delete("/import-templates/{id}/versions/{version_id}")
+def delete_version(id: int, version_id: int, who=Depends(require("imports.approve")),
+                   db: Session = Depends(database)):
+    """Delete one older version; the active (newest) version is never touched."""
+    template, version = version_of(db, who, id, version_id)
+    plan = template_plan(db, template, version, lock=True)
+    if not plan["deletable"]:
+        raise HTTPException(409, TEMPLATE_REFUSALS[plan["reason"]])
+    detach(plan["_soft"])
+    db.flush()
+    db.delete(version)
+    audit(db, who, "import.template_version_delete", version.id, tenant_id=version.tenant_id,
+          supplier=version.supplier_id, name=version.name, version=version.version,
+          template_key=plan["template_key"], active_version_id=plan["active_version_id"],
+          detached_runs=plan["detaches"]["run_ids"])
+    try:
+        db.commit()
+    except IntegrityError:
+        db.rollback()
+        raise HTTPException(409, TEMPLATE_REFUSALS["referenced"])
+    return {"deleted": True, "version_id": version_id, "active_version_id": plan["active_version_id"]}
