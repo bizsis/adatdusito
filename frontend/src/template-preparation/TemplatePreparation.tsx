@@ -11,6 +11,8 @@ import {
   message,
   uploadRun,
   type Catalog,
+  type Deleted,
+  type DeletionTarget,
   type Preparation,
   type Request,
   type Run,
@@ -18,6 +20,7 @@ import {
   type TemplateList,
   type TemplateVersion,
 } from "./api";
+import { ImportDeleteButton, ImportDeletionDialog } from "./ImportDeletionDialog";
 import { TemplateEditor } from "./TemplateEditor";
 import "./template-preparation.css";
 
@@ -72,6 +75,9 @@ export function TemplatePreparation({
   const [busy, setBusy] = useState(false);
   const [saving, setSaving] = useState(false);
   const [showResult, setShowResult] = useState(false);
+  const [savedTemplate, setSavedTemplate] = useState<{ key: string; id: number }>();
+  const [deletion, setDeletion] = useState<DeletionTarget>();
+  const [deletedName, setDeletedName] = useState("");
   const [error, setError] = useState("");
   const task = useRef(false);
 
@@ -137,7 +143,7 @@ export function TemplatePreparation({
     return () => {
       active = false;
     };
-  }, [api, versionGroup]);
+  }, [api, versionGroup, templatesRetry]);
 
   const runId = run?.id;
   const analysing = run?.state === "uploaded";
@@ -250,6 +256,65 @@ export function TemplatePreparation({
     versions?.id === versionGroup ? (versions?.list ?? []) : [];
   const validEngine = catalog?.engine.key === engine;
 
+  function deleteButton(target: DeletionTarget) {
+    const permitted = target.kind === "supplier" || target.kind === "run" ? canManage : canSave;
+    return permitted && (
+      <ImportDeleteButton
+        target={target}
+        disabled={working}
+        onOpen={(item) => {
+          setDeletedName("");
+          setDeletion(item);
+        }}
+      />
+    );
+  }
+
+  function afterDeletion(target: DeletionTarget, result: Deleted) {
+    setDeletion(undefined);
+    setDeletedName(target.name);
+    if (target.kind === "supplier") {
+      setSuppliers((previous) => previous.filter((item) => item.id !== target.id));
+      if (supplierId === target.id) changeSupplier(0);
+      setSourcesRetry((value) => value + 1);
+      return;
+    }
+    if (target.kind === "run") {
+      setRuns((previous) => previous.filter((item) => item.id !== target.id));
+      if (runId === target.id) {
+        setRun(undefined);
+        setDetailsError("");
+      }
+      setSourcesRetry((value) => value + 1);
+      return;
+    }
+
+    const removedIds = result.version_ids ?? [target.id];
+    if (target.kind === "template") {
+      setTemplates((previous) => previous && ({
+        ...previous,
+        data: {
+          ...previous.data,
+          templates: previous.data.templates.filter((item) => item.id !== target.id),
+        },
+      }));
+      if (versionGroup === target.id) setVersionGroup(0);
+    }
+    setVersions((previous) => previous && ({
+      ...previous,
+      list: previous.list.filter((item) => !removedIds.includes(item.id)),
+    }));
+    const currentId =
+      savedTemplate?.key === viewKey
+        ? savedTemplate.id
+        : context.template ?? preparation?.initial.template?.id;
+    if (currentId !== undefined && removedIds.includes(currentId)) {
+      openTemplate(0);
+    }
+    setTemplateError("");
+    setTemplatesRetry((value) => value + 1);
+  }
+
   const sourceControls = (
     <div className="prep-controls">
       <h3>Beszállító és fájl</h3>
@@ -269,6 +334,19 @@ export function TemplatePreparation({
           ))}
         </select>
       </label>
+      {canManage && suppliers.length > 0 && (
+        <details>
+          <summary>Beszállítók kezelése</summary>
+          <ul className="prep-list">
+            {suppliers.map((supplier) => (
+              <li key={supplier.id} className="prep-actions">
+                <span>{supplier.name}</span>
+                {deleteButton({ kind: "supplier", ...supplier })}
+              </li>
+            ))}
+          </ul>
+        </details>
+      )}
       {canManage && (
         <details>
           <summary>Új beszállító</summary>
@@ -329,7 +407,7 @@ export function TemplatePreparation({
             {runs
               .filter((item) => item.supplier_id === supplierId)
               .map((item) => (
-                <li key={item.id}>
+                <li key={item.id} className="prep-actions">
                   <button
                     type="button"
                     disabled={working}
@@ -337,6 +415,7 @@ export function TemplatePreparation({
                   >
                     #{item.id} · {item.filename}
                   </button>
+                  {deleteButton({ kind: "run", id: item.id, name: item.filename })}
                 </li>
               ))}
           </ul>
@@ -403,11 +482,12 @@ export function TemplatePreparation({
                 >
                   Verziók
                 </button>
+                {deleteButton({ kind: "template", id: template.id, name: template.name })}
                 {versionGroup === template.id &&
                   (versions?.id === versionGroup ? (
                     <ul aria-label={`${template.name} verziói`}>
                       {versionsForGroup.map((version) => (
-                        <li key={version.id}>
+                        <li key={version.id} className="prep-actions">
                           <button
                             type="button"
                             disabled={!run || analysing || unusable || working}
@@ -417,6 +497,12 @@ export function TemplatePreparation({
                           >
                             {version.name} · v{version.version} betöltése
                           </button>
+                          {deleteButton({
+                            kind: "version",
+                            templateId: template.id,
+                            id: version.id,
+                            name: `${version.name} · v${version.version}`,
+                          })}
                         </li>
                       ))}
                     </ul>
@@ -450,6 +536,7 @@ export function TemplatePreparation({
         </details>
       )}
       {templateError && <p role="alert">{templateError}</p>}
+      {deletedName && <p role="status">Törölve: {deletedName}</p>}
       {busy && <p role="status">Művelet folyamatban…</p>}
       {error && (
         <p role="alert">
@@ -572,10 +659,19 @@ export function TemplatePreparation({
           showResult={showResult}
           setShowResult={setShowResult}
           onBusy={setSaving}
-          onSaved={() => {
+          onSaved={(saved) => {
+            setSavedTemplate({ key: viewKey, id: saved.id });
             setVersionGroup(0);
             setTemplatesRetry((value) => value + 1);
           }}
+        />
+      )}
+      {deletion && (
+        <ImportDeletionDialog
+          api={api}
+          target={deletion}
+          onCancel={() => setDeletion(undefined)}
+          onDeleted={(result) => afterDeletion(deletion, result)}
         />
       )}
     </div>

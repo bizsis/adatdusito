@@ -25,6 +25,8 @@ from app.import_parser import FIELDS, FINANCIAL, analyze
 from app.import_engine import enqueue, limit
 from app.models import now
 from app.access_control import need
+from app.template_models import ImportTemplate, TemplateChunk
+from sqlalchemy.exc import IntegrityError
 
 router = APIRouter(prefix="/api/v1/imports", tags=["Beszállítói import"])
 
@@ -77,6 +79,20 @@ def row_envelope(run, row):
 DELETABLE_STATES = ("uploaded", "awaiting_approval", "failed", "cancelled")
 
 
+def template_source_ids(db, run):
+    """Saved templates (all versions) whose source file is this import run."""
+    return [
+        p.id
+        for p in db.scalars(
+            select(ImportProfile).where(
+                ImportProfile.tenant_id == run.tenant_id,
+                ImportProfile.supplier_id == run.supplier_id,
+            )
+        )
+        if ((p.config or {}).get("template") or {}).get("source", {}).get("run_id") == run.id
+    ]
+
+
 def deletion_plan(db, run):
     """What DELETE /runs/{id} would remove and keep, and why it may be refused."""
     from app.product_models import ProductEvent
@@ -92,14 +108,20 @@ def deletion_plan(db, run):
         ),
         "product_events": count(ProductEvent, ProductEvent.run_id == run.id),
     }
+    # IMPORT-DELETE-01: a saved template whose source file is this import would lose
+    # its default result preview; the template has to be deleted first.
+    template_sources = template_source_ids(db, run)
     if run.approved_by is not None or run.state not in DELETABLE_STATES:
         reason = "approved_or_processed"
     elif run.lease_until and run.lease_until > now():
         reason = "running"
     elif any(references.values()):
         reason = "referenced"
+    elif template_sources:
+        reason = "template_source"
     else:
         reason = None
+    generated = count(ImportTemplate, ImportTemplate.run_id == run.id)
     chunks = db.execute(
         select(func.count(), func.coalesce(func.sum(func.length(ImportChunk.data)), 0)).where(
             ImportChunk.run_id == run.id
@@ -116,8 +138,10 @@ def deletion_plan(db, run):
             "analysis_and_settings": True,
             "source_file_chunks": chunks[0],
             "source_file_bytes": int(chunks[1]),
+            "generated_templates": generated,
         },
-        "references": references,
+        "references": {**references, "template_sources": len(template_sources)},
+        "template_source_ids": template_sources,
         "keeps": [
             "supplier_products",
             "import_profiles",
@@ -181,6 +205,95 @@ def supplier(
     audit(db, who, "import.supplier", s.id, tenant_id=s.tenant_id)
     db.commit()
     return {"id": s.id, "name": s.name}
+
+
+def supplier_deletion_plan(db, supplier):
+    """IMPORT-DELETE-01: what DELETE /suppliers/{id} would remove; never cascades."""
+    from app.product_models import ProductSourceCategory
+
+    def count(model, *where):
+        return db.scalar(select(func.count()).select_from(model).where(*where)) or 0
+
+    profiles = list(
+        db.scalars(select(ImportProfile).where(ImportProfile.supplier_id == supplier.id))
+    )
+    references = {
+        "import_runs": count(ImportRun, ImportRun.supplier_id == supplier.id),
+        "templates": len({p.config["template"]["template_key"] for p in profiles
+                          if (p.config or {}).get("template")}),
+        "template_versions": sum(1 for p in profiles if (p.config or {}).get("template")),
+        "other_profiles": sum(1 for p in profiles if not (p.config or {}).get("template")),
+        "supplier_products": count(SupplierProduct, SupplierProduct.supplier_id == supplier.id),
+        "source_categories": count(
+            ProductSourceCategory, ProductSourceCategory.supplier_id == supplier.id
+        ),
+    }
+    return {
+        "supplier_id": supplier.id,
+        "name": supplier.name,
+        "deletable": not any(references.values()),
+        "reason": None if not any(references.values()) else "has_related_data",
+        "references": references,
+        "deletes": {"supplier": 1},
+    }
+
+
+def get_supplier(db, who, id, lock=False):
+    query = select(Supplier).where(Supplier.id == id)
+    s = db.scalar(query.with_for_update() if lock else query)
+    if s is None or s.tenant_id != tenant(who):
+        raise HTTPException(404, "Beszállító nem található.")
+    return s
+
+
+SUPPLIER_REFUSAL = {
+    "import_runs": "import",
+    "templates": "mentett sablon",
+    "other_profiles": "importprofil",
+    "supplier_products": "termék",
+    "source_categories": "saját kategória",
+}
+
+
+@router.get("/suppliers/{id}/deletion")
+def supplier_deletion_preview(
+    id: int, who=Depends(require("imports.manage")), db: Session = Depends(database)
+):
+    """Dry run for the confirmation dialog: nothing is changed."""
+    return supplier_deletion_plan(db, get_supplier(db, who, id))
+
+
+@router.delete("/suppliers/{id}")
+def delete_supplier(
+    id: int, who=Depends(require("imports.manage")), db: Session = Depends(database)
+):
+    """IMPORT-DELETE-01: delete one supplier that has no related data at all.
+
+    No cascade: imports, templates, profiles, products and own categories must be
+    removed (or kept) first; otherwise 409 with the counts. Tenant-scoped (404).
+    """
+    supplier = get_supplier(db, who, id, lock=True)
+    plan = supplier_deletion_plan(db, supplier)
+    if not plan["deletable"]:
+        parts = [f"{n} {SUPPLIER_REFUSAL[k]}" for k, n in plan["references"].items()
+                 if n and k in SUPPLIER_REFUSAL]
+        raise HTTPException(
+            409,
+            "A beszállító nem törölhető, mert kapcsolódó adatai vannak ("
+            + ", ".join(parts)
+            + "). Automatikus kaszkád törlés nincs; előbb ezeket kell kezelni.",
+        )
+    db.delete(supplier)
+    audit(db, who, "import.supplier_delete", id, tenant_id=supplier.tenant_id,
+          name=supplier.name)
+    try:
+        db.commit()
+    except IntegrityError:  # a concurrent upload or template won the race
+        db.rollback()
+        raise HTTPException(
+            409, "A beszállítóhoz időközben kapcsolódó adat került; nem törölhető."
+        )
+    return {"deleted": True, "supplier_id": id}
 
 
 @router.get("/profiles")
@@ -905,6 +1018,7 @@ DELETE_REFUSALS = {
     "a termékek és a napló megőrzése miatt csak későbbi archiválás lesz lehetséges.",
     "running": "Az import elemzése éppen fut; várd meg a végét, vagy szakítsd meg.",
     "referenced": "Az importra termék vagy változásnapló hivatkozik, ezért nem törölhető.",
+    "template_source": "A fájl egy mentett sablon forrása; előbb a sablont töröld.",
 }
 
 
@@ -922,6 +1036,11 @@ def delete_run(
     plan = deletion_plan(db, run)
     if not plan["deletable"]:
         raise HTTPException(409, DELETE_REFUSALS[plan["reason"]])
+    # Stored artefacts of this file only: source chunks and the work templates
+    # generated from it (explicitly, not relying on the database cascade).
+    generated = select(ImportTemplate.id).where(ImportTemplate.run_id == id)
+    db.execute(delete(TemplateChunk).where(TemplateChunk.template_id.in_(generated)))
+    db.execute(delete(ImportTemplate).where(ImportTemplate.run_id == id))
     db.execute(delete(ImportChunk).where(ImportChunk.run_id == id))
     db.delete(run)
     audit(
@@ -932,8 +1051,13 @@ def delete_run(
         tenant_id=run.tenant_id,
         state=plan["state"],
         source_bytes=plan["deletes"]["source_file_bytes"],
+        generated_templates=plan["deletes"]["generated_templates"],
     )
-    db.commit()
+    try:
+        db.commit()
+    except IntegrityError:
+        db.rollback()
+        raise HTTPException(409, DELETE_REFUSALS["referenced"])
     return {"deleted": True, "run_id": id}
 
 

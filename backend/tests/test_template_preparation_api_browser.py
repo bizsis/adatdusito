@@ -196,7 +196,7 @@ def test_save_and_reuse_with_real_template_api(environment, monkeypatch, width):
             page.get_by_text("Mentett sablonok és verziók", exact=True).click()
             page.get_by_role("button", name="Verziók", exact=True).click()
             version_list = page.get_by_role("list", name="Valódi próbasablon verziói")
-            expect(version_list.get_by_role("button")).to_have_count(2)
+            expect(version_list.get_by_role("button", name="betöltése")).to_have_count(2)
             version_list.get_by_role("button", name="Valódi próbasablon · v1 betöltése").click()
             expect(page.get_by_text("Felismert vagy betöltött sablon:", exact=False)).to_contain_text(
                 "Valódi próbasablon · v1"
