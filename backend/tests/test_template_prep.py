@@ -118,6 +118,27 @@ def test_full_column_list_one_sample_and_recognition(imports):
     assert by["Color"]["assignment"] is None  # a new parameter needs the operator
 
 
+def test_supplier_header_variants_map_to_standard_unas_fields(imports):
+    c, t, s = imports
+    content = (
+        "Megnevezés (Eredeti);Cikkszám / Modellkód;Gyártó;Kategória;"
+        "Méret / Formátum;Akciós nettó árak!\n"
+        "G Canon MF651Cw Színes MFP;5158C009AA;Canon;Multifunkciós nyomtató;A4;89999\n"
+    ).encode()
+    _, view = prepared(c, t, s, content)
+    by = {col["header"]: col for col in view["columns"]}
+    for header, key in {
+        "Megnevezés (Eredeti)": "termek_megnevezes",
+        "Cikkszám / Modellkód": "cikkszam",
+        "Gyártó": "gyarto",
+        "Kategória": "kategoria",
+    }.items():
+        assert by[header]["assignment"] == mapped(key)
+    assert by["Akciós nettó árak!"]["assignment"] is None
+    assert by["Akciós nettó árak!"]["suggestion"]["target"] == {"key": "netto_akcios_ar"}
+    assert by["Méret / Formátum"]["assignment"] is None
+
+
 def test_new_parameter_requires_operator_approval(imports):
     c, t, s = imports
     run_id, view = prepared(c, t, s)
