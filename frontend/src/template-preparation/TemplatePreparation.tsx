@@ -75,6 +75,7 @@ export function TemplatePreparation({
   const [busy, setBusy] = useState(false);
   const [saving, setSaving] = useState(false);
   const [showResult, setShowResult] = useState(false);
+  const [setupKey, setSetupKey] = useState<string>();
   const [savedTemplate, setSavedTemplate] = useState<{ key: string; id: number }>();
   const [deletion, setDeletion] = useState<DeletionTarget>();
   const [deletedName, setDeletedName] = useState("");
@@ -583,9 +584,11 @@ export function TemplatePreparation({
     </div>
   );
 
+  const showSetup = !preparation || setupKey === viewKey;
+
   return (
     <div className="template-preparation">
-      <section className="card padded prep-setup" hidden={showResult}>
+      <section className="card padded prep-setup" hidden={!showSetup}>
         <h2>Előkészítés / Sablonkészítés</h2>
         <div className="prep-start">
           <label>
@@ -645,26 +648,38 @@ export function TemplatePreparation({
           </p>
         )}
       </section>
+      {catalog && validEngine && preparation && showSetup && (
+        <button type="button" disabled={working} onClick={() => setSetupKey(undefined)}>
+          Tovább az összerendeléshez
+        </button>
+      )}
       {catalog && validEngine && preparation && (
-        <TemplateEditor
-          key={viewKey}
-          api={api}
-          catalog={catalog}
-          view={preparation.initial}
-          initialDefaults={preparation.initial.defaults}
-          currency={currency}
-          canSave={canSave}
-          currencyWarnings={preparation.latest.warnings}
-          currencyBusy={preparation.currency !== currency}
-          showResult={showResult}
-          setShowResult={setShowResult}
-          onBusy={setSaving}
-          onSaved={(saved) => {
-            setSavedTemplate({ key: viewKey, id: saved.id });
-            setVersionGroup(0);
-            setTemplatesRetry((value) => value + 1);
-          }}
-        />
+        <div className="template-preparation prep-editor-stage" hidden={showSetup}>
+          {!showResult && (
+            <button type="button" disabled={working} onClick={() => setSetupKey(viewKey)}>
+              Vissza az előkészítéshez
+            </button>
+          )}
+          <TemplateEditor
+            key={viewKey}
+            api={api}
+            catalog={catalog}
+            view={preparation.initial}
+            initialDefaults={preparation.initial.defaults}
+            currency={currency}
+            canSave={canSave}
+            currencyWarnings={preparation.latest.warnings}
+            currencyBusy={preparation.currency !== currency}
+            showResult={showResult}
+            setShowResult={setShowResult}
+            onBusy={setSaving}
+            onSaved={(saved) => {
+              setSavedTemplate({ key: viewKey, id: saved.id });
+              setVersionGroup(0);
+              setTemplatesRetry((value) => value + 1);
+            }}
+          />
+        </div>
       )}
       {deletion && (
         <ImportDeletionDialog

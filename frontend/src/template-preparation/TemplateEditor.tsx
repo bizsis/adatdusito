@@ -231,6 +231,7 @@ export function TemplateEditor({
   const [report, setReport] = useState<Validation>();
   const [editingBinding, setEditingBinding] = useState<number>();
   const [saved, setSaved] = useState<Saved>();
+  const [draft, setDraft] = useState<TemplateBody>();
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
   const pending = useRef(false);
@@ -472,8 +473,8 @@ export function TemplateEditor({
     setEditing(undefined);
   }
 
-  async function save() {
-    if (pending.current || !editable || currencyBusy || !name.trim()) return;
+  async function proceed(saveChanges: boolean) {
+    if (pending.current || currencyBusy || (saveChanges && (!editable || !name.trim()))) return;
     setError("");
     setReport(undefined);
     pending.current = true;
@@ -518,6 +519,12 @@ export function TemplateEditor({
       const result = await validateTemplate(api, view.run_id, body);
       setReport(result);
       if (!result.valid) return;
+      if (!saveChanges) {
+        setDraft(body);
+        setShowResult(true);
+        return;
+      }
+      setDraft(undefined);
       const response = await saveTemplate(
         api,
         view.run_id,
@@ -593,12 +600,13 @@ export function TemplateEditor({
   }
 
   const resultTemplate = saved ?? view.template;
-  if (showResult && resultTemplate) {
+  if (showResult && (draft || resultTemplate)) {
     return (
       <TemplateResult
-        key={resultTemplate.id}
+        key={draft ? "draft" : resultTemplate?.id}
         api={api}
-        template={resultTemplate}
+        template={draft ? undefined : resultTemplate ?? undefined}
+        draft={draft}
         run={view.run_id}
         onBack={() => setShowResult(false)}
       />
@@ -922,7 +930,7 @@ export function TemplateEditor({
         <form
           onSubmit={(event) => {
             event.preventDefault();
-            void save();
+            void proceed(true);
           }}
         >
           <label>
@@ -935,8 +943,15 @@ export function TemplateEditor({
               onChange={(event) => setName(event.target.value)}
             />
           </label>
+          <button type="button" className="primary" disabled={busy || currencyBusy}
+            onClick={() => void proceed(false)}>
+            Tovább mentés nélkül
+          </button>
           {resultTemplate && (
-            <button type="button" onClick={() => setShowResult(true)}>
+            <button type="button" onClick={() => {
+              setDraft(undefined);
+              setShowResult(true);
+            }}>
               Mentett verzió előnézete
             </button>
           )}

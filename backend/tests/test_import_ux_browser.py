@@ -112,6 +112,8 @@ def test_previous_files_remain_usable_including_a_processed_import(ui, width, he
         history = page.locator(".prep-history li")
         expect(history).to_have_count(25)
         page.get_by_role("button", name=f"#{long_id} · {long_name}", exact=True).click()
+        back = page.get_by_role("button", name="Vissza az előkészítéshez")
+        back.click()
         expect(page.get_by_role("link", name="Eredeti fájl")).to_have_attribute(
             "href", f"/api/v1/imports/runs/{long_id}/file"
         )
@@ -119,9 +121,11 @@ def test_previous_files_remain_usable_including_a_processed_import(ui, width, he
         page.get_by_role("button", name="Korábbi fájlok betöltése").click()
         expect(history).to_have_count(26)
         page.get_by_role("button", name=f"#{processed} · besz_minta.csv", exact=True).click()
+        back.click()
         expect(page.get_by_role("link", name="Eredeti fájl")).to_have_attribute(
             "href", f"/api/v1/imports/runs/{processed}/file"
         )
+        page.get_by_role("button", name="Tovább az összerendeléshez").click()
         expect(page.get_by_role("list", name="Cikkszám hozzárendelései").locator("samp")).to_have_text("000")
         expect(page.get_by_text("Feldolgozott sorok", exact=True)).to_have_count(0)
         assert client.get(f"/api/v1/imports/runs/{processed}").json()["state"] == "completed"

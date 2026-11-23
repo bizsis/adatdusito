@@ -218,7 +218,7 @@ def test_unas_result_after_save_paging_download_and_revision(result_site, width,
 
             result.get_by_role("button", name="Vissza a megfeleltetéshez").click()
             expect(page.get_by_label("Sablon neve")).to_have_value("UNAS minta")
-            expect(page.get_by_label("CSV, XLS, XLSX vagy XML fájl")).to_be_visible()
+            expect(page.get_by_label("CSV, XLS, XLSX vagy XML fájl")).to_be_hidden()
             for label in image_labels:
                 page.get_by_role("button", name=f"{label} hozzárendelés törlése").click()
                 expect(page.get_by_label(f"Célmező: {label}", exact=True)).to_be_visible()

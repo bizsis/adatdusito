@@ -118,6 +118,24 @@ def test_full_column_list_one_sample_and_recognition(imports):
     assert by["Color"]["assignment"] is None  # a new parameter needs the operator
 
 
+def test_unsaved_mapping_preview_does_not_create_a_template(imports):
+    c, t, s = imports
+    run_id, view = prepared(c, t, s)
+    body = full_body(view)
+    url = f"{BASE}/runs/{run_id}/template-preparation/result"
+    with Session(t) as db:
+        count = db.scalar(select(func.count()).select_from(ImportProfile))
+    response = c.post(url, json=body)
+    assert response.status_code == 200, response.text
+    result = response.json()
+    assert result["template"]["id"] is None
+    assert result["summary"]["rows"] == 3
+    assert result["rows"][0]["values"][0] == "A-1"
+    assert c.post(url, json={**body, "columns": body["columns"][1:]}).status_code == 422
+    with Session(t) as db:
+        assert db.scalar(select(func.count()).select_from(ImportProfile)) == count
+
+
 def test_new_parameter_requires_operator_approval(imports):
     c, t, s = imports
     run_id, view = prepared(c, t, s)

@@ -222,7 +222,8 @@
   overflow: auto;
   margin: 0.75rem 0;
 }
-.prep-setup[hidden] {
+.prep-setup[hidden],
+.prep-editor-stage[hidden] {
   display: none;
 }
 .prep-result-table table {

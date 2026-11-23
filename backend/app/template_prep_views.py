@@ -1,6 +1,7 @@
 """TEMPLATE-PREP-01 endpoints under /api/v1/imports; contract:
 docs/design/TEMPLATE-PREP-01-API.md. Existing import endpoints are unchanged."""
 
+from types import SimpleNamespace
 from typing import Literal
 
 from fastapi import APIRouter, Depends, HTTPException, Query
@@ -11,6 +12,7 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from app import template_prep as tp
+from app import template_result as tr
 from app.import_api import get_run, tenant
 from app.import_models import ImportProfile, ImportRun, Supplier
 from app.security import audit, database, require
@@ -106,6 +108,27 @@ def validate(id: int, body: PreparationInput, who=Depends(require("imports.read"
              db: Session = Depends(database)):
     try:
         return tp.public_report(tp.validate(db, get_run(db, who, id), plain(body)))
+    except tp.TemplateError as exc:
+        return failure(exc)
+
+
+@router.post("/runs/{id}/template-preparation/result")
+def draft_result(id: int, body: PreparationInput, offset: int = Query(0, ge=0),
+                 who=Depends(require("imports.read")), db: Session = Depends(database)):
+    run = get_run(db, who, id)
+    data = plain(body)
+    try:
+        report = tp.validate(db, run, data)
+        if not report["valid"]:
+            return failure(tp.TemplateError(422, "Ellenőrizd a megfeleltetést.",
+                                            validation=tp.public_report(report)))
+        headers = tp.occurrences(run.analysis["headers"])
+        columns = [{**entry, "state": "mapped", "occurrence": headers[entry["index"]][1]}
+                   for entry in report["resolved"]]
+        draft = SimpleNamespace(id=None, name="", version=None, config={"template": {
+            "engine": data["engine"], "currency": data["currency"], "columns": columns,
+            "defaults": report["_defaults"]}})
+        return tr.preview(db, draft, run, offset, 50)
     except tp.TemplateError as exc:
         return failure(exc)
 
