@@ -104,13 +104,32 @@ def targets():
 
 @pytest.fixture
 def open_application():
-    def open_page(browser, width, write=True, catalog_available=True):
+    def open_page(browser, width, write=True, catalog_available=True, deletion=False):
         page = browser.new_page(viewport={"width": width, "height": 900})
         state = {"requests": [], "saves": [], "reports": [], "errors": [], "uploads": 0}
         page.on("pageerror", lambda error: state["errors"].append(str(error)))
         suppliers = [{"id": 1, "name": "Minta beszállító"}]
         runs = [OLD_RUN]
         saved = []
+        plans = {}
+        if deletion:
+            suppliers.append({"id": 2, "name": "Üres beszállító"})
+            runs.append({**OLD_RUN, "id": 12, "filename": "törölhető.csv",
+                         "state": "awaiting_approval"})
+            plans = {
+                "/imports/suppliers/1": {"reason": "has_related_data",
+                                          "references": {"import_runs": 2}},
+                "/imports/suppliers/2": {},
+                "/imports/runs/11": {"reason": "approved_or_processed"},
+                "/imports/runs/12": {"deletes": {"source_file_bytes": 120,
+                                                 "generated_templates": 1}},
+                "/imports/import-templates/42": {"deletes": {"template_versions": 1}},
+                "/imports/import-templates/42/versions/41": {
+                    "deletes": {"template_versions": 1},
+                    "detaches": {"matched_uploads": 1, "run_ids": [12]},
+                },
+                "/imports/import-templates/42/versions/42": {"reason": "active_version"},
+            }
 
         def handle(route):
             request = route.request
@@ -130,7 +149,37 @@ def open_application():
             state["requests"].append((method, path, query))
             if method != "GET":
                 assert request.headers["x-csrf-token"] == "csrf-prep"
-            if path == "/auth/me":
+            deletion_path = path.removesuffix("/deletion")
+            if deletion_path in plans and (
+                path.endswith("/deletion") or method == "DELETE"
+            ):
+                plan = plans[deletion_path]
+                if method == "GET":
+                    response = {
+                        "deletable": not plan.get("reason"), "reason": None,
+                        "deletes": {}, "references": {}, **plan,
+                    }
+                else:
+                    assert not plan.get("reason")
+                    if state.get("reject_delete") == path:
+                        route.fulfill(status=409, json={
+                            "error": {"message": "Időközben megváltoztak a kapcsolatok."},
+                        })
+                        return
+                    response = {"deleted": True}
+                    parts = path.split("/")
+                    entity_id = int(parts[-1])
+                    if parts[2] == "suppliers":
+                        suppliers[:] = [item for item in suppliers if item["id"] != entity_id]
+                    elif parts[2] == "runs":
+                        runs[:] = [item for item in runs if item["id"] != entity_id]
+                    elif parts[2] == "import-templates":
+                        if len(parts) == 6:
+                            saved[:] = [item for item in saved if item["version"]["id"] != entity_id]
+                        else:
+                            response["version_ids"] = [item["version"]["id"] for item in saved]
+                            saved.clear()
+            elif path == "/auth/me":
                 response = {
                     "user": {
                         "id": 1,
@@ -674,6 +723,8 @@ def test_read_only_and_unavailable_backend(open_application, chromium):
     expect(page.get_by_label("CSV, XLS, XLSX vagy XML fájl")).to_have_count(0)
     expect(page.get_by_text("Új beszállító", exact=True)).to_have_count(0)
     page.get_by_text("Korábban feltöltött fájlok", exact=True).click()
+    expect(page.get_by_role("button", name="Beszállító törlése:", exact=False)).to_have_count(0)
+    expect(page.get_by_role("button", name="Feltöltött fájl törlése:", exact=False)).to_have_count(0)
     page.get_by_role("button", name="#11 · korabbi.csv").click()
     expect(page.get_by_role("list", name="Cikkszám hozzárendelései")).to_contain_text("SKU")
     expect(page.get_by_label("Célmező: 4. Color")).to_be_disabled()
@@ -687,3 +738,94 @@ def test_read_only_and_unavailable_backend(open_application, chromium):
     )
     expect(unavailable.get_by_label("Webshopmotor")).to_be_disabled()
     expect(unavailable.get_by_text("Feldolgozott sorok", exact=True)).to_have_count(0)
+
+
+@pytest.mark.parametrize("width", [390, 1440])
+def test_import_deletions(open_application, chromium, width):
+    page, state = open_application(chromium, width, deletion=True)
+    page.get_by_label("Webshopmotor").select_option("unas")
+    suppliers = page.get_by_label("Beszállító", exact=True)
+    suppliers.select_option("1")
+    page.get_by_text("Beszállítók kezelése", exact=True).click()
+    dialog = page.get_by_role("dialog")
+    confirm = dialog.get_by_role("button", name="Törlés", exact=True)
+    cancel = dialog.get_by_role("button", name="Mégse", exact=True)
+
+    page.get_by_role("button", name="Beszállító törlése: Minta beszállító").click()
+    expect(dialog.get_by_role("alert")).to_contain_text("kapcsolódó adatok")
+    expect(dialog).to_contain_text("Kapcsolódó importok: 2")
+    expect(confirm).to_be_disabled()
+    cancel.click()
+
+    suppliers.select_option("2")
+    page.get_by_role("button", name="Beszállító törlése: Üres beszállító").click()
+    expect(dialog).to_contain_text("Üres beszállító")
+    confirm.click()
+    expect(suppliers).to_have_value("")
+    expect(suppliers.get_by_role("option", name="Üres beszállító")).to_have_count(0)
+    suppliers.select_option("1")
+
+    page.get_by_text("Korábban feltöltött fájlok", exact=True).click()
+    page.get_by_role("button", name="Feltöltött fájl törlése: korabbi.csv").click()
+    expect(dialog.get_by_role("alert")).to_contain_text("jóváhagyott vagy feldolgozott")
+    expect(confirm).to_be_disabled()
+    page.keyboard.press("Escape")
+    expect(dialog).to_have_count(0)
+
+    page.get_by_role("button", name="#12 · törölhető.csv").click()
+    page.get_by_label("Sablon neve").fill("UNAS sablon")
+    for version in (1, 2):
+        page.get_by_role("button", name="Sablon mentése", exact=True).click()
+        expect(page.get_by_text(f"Sablon mentve: UNAS sablon · v{version}")).to_be_visible()
+        page.get_by_role("button", name="Vissza a megfeleltetéshez").click()
+    page.get_by_text("Mentett sablonok és verziók", exact=True).click()
+    page.get_by_role("button", name="Verziók", exact=True).click()
+    page.get_by_role("button", name="Sablonverzió törlése: UNAS sablon · v2").click()
+    expect(dialog.get_by_role("alert")).to_contain_text("legújabb")
+    expect(confirm).to_be_disabled()
+    cancel.click()
+
+    v1 = page.get_by_role("button", name="UNAS sablon · v1 betöltése")
+    v1.click()
+    expect(page.get_by_label("Sablon neve")).to_have_value("UNAS sablon")
+    page.get_by_role("button", name="Sablonverzió törlése: UNAS sablon · v1").click()
+    expect(dialog).to_contain_text("1 jóvá nem hagyott feltöltés sablonkapcsolata megszűnik")
+    assert not any(method == "DELETE" and "/versions/" in path
+                   for method, path, _ in state["requests"])
+    confirm.click()
+    expect(v1).to_have_count(0)
+    expect(page.get_by_role("button", name="UNAS sablon · v2 betöltése")).to_be_visible()
+    expect(page.get_by_label("Sablon neve")).to_have_value("")
+    expect(page.get_by_role("button", name="#12 · törölhető.csv")).to_be_visible()
+
+    page.get_by_role("button", name="Mentett sablon törlése: UNAS sablon").click()
+    expect(dialog).to_contain_text("a sablon összes verziója törlődik (1)")
+    confirm.click()
+    expect(page.get_by_role("button", name="Sablon betöltése")).to_have_count(0)
+    expect(page.get_by_text("Korábbi profil · v2")).to_be_visible()
+
+    delete_file = page.get_by_role("button", name="Feltöltött fájl törlése: törölhető.csv")
+    state["reject_delete"] = "/imports/runs/12"
+    delete_file.click()
+    expect(dialog).to_contain_text("A fájlból generált munkatáblák száma: 1")
+    confirm.click()
+    expect(dialog.get_by_role("alert")).to_contain_text("Időközben megváltoztak")
+    expect(confirm).to_be_disabled()
+    cancel.click()
+    expect(page.get_by_role("button", name="#12 · törölhető.csv")).to_be_visible()
+    state.pop("reject_delete")
+    delete_file.click()
+    confirm.click()
+    expect(page.get_by_role("button", name="#12 · törölhető.csv")).to_have_count(0)
+    expect(page.get_by_label("Sablon neve")).to_have_count(0)
+    expect(page.get_by_role("button", name="#11 · korabbi.csv")).to_be_visible()
+    expect(suppliers).to_have_value("1")
+    assert page.evaluate("document.documentElement.scrollWidth <= innerWidth")
+    assert [(method, path) for method, path, _ in state["requests"] if method == "DELETE"] == [
+        ("DELETE", "/imports/suppliers/2"),
+        ("DELETE", "/imports/import-templates/42/versions/41"),
+        ("DELETE", "/imports/import-templates/42"),
+        ("DELETE", "/imports/runs/12"),
+        ("DELETE", "/imports/runs/12"),
+    ]
+    assert not state["errors"]
