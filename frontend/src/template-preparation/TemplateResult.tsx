@@ -7,6 +7,7 @@ import {
   type Request,
   type ResultIssue,
   type TemplateResultPage,
+  type TemplateBody,
   type TemplateVersion,
 } from "./api";
 import { displayHeader } from "./mapping";
@@ -183,11 +184,13 @@ function ResultValueDialog({
 export function TemplateResult({
   api,
   template,
+  draft,
   run,
   onBack,
 }: {
   api: Request;
-  template: TemplateVersion;
+  template?: TemplateVersion;
+  draft?: TemplateBody;
   run: number;
   onBack: () => void;
 }) {
@@ -207,7 +210,13 @@ export function TemplateResult({
   const result = current?.data;
   useEffect(() => {
     let active = true;
-    loadResult(api, template.id, run, offset).then(
+    const request = draft
+      ? api<TemplateResultPage>(
+          `/imports/runs/${run}/template-preparation/result?offset=${offset}`,
+          "POST", draft,
+        )
+      : loadResult(api, template!.id, run, offset);
+    request.then(
       (data) => {
         if (active) setLoaded({ key, data });
       },
@@ -218,7 +227,7 @@ export function TemplateResult({
     return () => {
       active = false;
     };
-  }, [api, template.id, run, offset, key]);
+  }, [api, template, draft, run, offset, key]);
 
   const identifiers = result?.columns.filter(
     ({ target }) => target.key === "ean" || target.key === "gyartoi_cikkszam",
@@ -230,7 +239,7 @@ export function TemplateResult({
     <section className="card padded prep-result" aria-label="UNAS eredmény">
       <h3>UNAS eredmény</h3>
       <p role="status">
-        Sablon mentve: {template.name} · v{template.version}
+        {template ? `Sablon mentve: ${template.name} · v${template.version}` : "Előnézet sablonmentés nélkül"}
       </p>
       <div className="prep-actions">
         <button type="button" onClick={onBack}>
@@ -272,14 +281,16 @@ export function TemplateResult({
               {result.missing_source_columns.map(displayHeader).join(", ")}
             </p>
           )}
-          <div className="prep-actions prep-result-downloads">
-            <a href={resultDownload(template.id, run, "csv")}>
-              UNAS CSV letöltése
-            </a>
-            <a href={resultDownload(template.id, run, "xlsx")}>
-              UNAS XLSX letöltése
-            </a>
-          </div>
+          {template && (
+            <div className="prep-actions prep-result-downloads">
+              <a href={resultDownload(template.id, run, "csv")}>
+                UNAS CSV letöltése
+              </a>
+              <a href={resultDownload(template.id, run, "xlsx")}>
+                UNAS XLSX letöltése
+              </a>
+            </div>
+          )}
           <div
             className="prep-result-table"
             tabIndex={0}

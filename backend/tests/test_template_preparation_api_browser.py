@@ -150,6 +150,16 @@ def test_save_and_reuse_with_real_template_api(environment, monkeypatch, width):
                 row(label).get_by_role("combobox").select_option(label="Kép")
             page.get_by_role("button", name="7. Image2 előrébb").click()
             page.get_by_label("ÁFA alapértéke").select_option("5")
+            expect(upload).to_be_hidden()
+            page.get_by_role("button", name="Vissza az előkészítéshez").click()
+            expect(upload).to_be_visible()
+            page.get_by_role("button", name="Tovább az összerendeléshez").click()
+            expect(page.get_by_label("ÁFA alapértéke")).to_have_value("5")
+            page.get_by_role("button", name="Tovább mentés nélkül").click()
+            expect(page.get_by_text("Előnézet sablonmentés nélkül")).to_be_visible()
+            expect(page.get_by_role("table")).to_be_visible()
+            assert not saved_payloads
+            page.get_by_role("button", name="Vissza a megfeleltetéshez").click()
             page.get_by_label("Sablon neve").fill("Valódi próbasablon")
             page.get_by_role("button", name="Sablon mentése", exact=True).click()
             expect(
@@ -172,6 +182,7 @@ def test_save_and_reuse_with_real_template_api(environment, monkeypatch, width):
             assert run["analysis_only"] is True
             assert run["state"] == "awaiting_approval"
 
+            page.get_by_role("button", name="Vissza az előkészítéshez").click()
             upload.set_input_files(
                 {
                     "name": "forras2.csv",
@@ -193,6 +204,7 @@ def test_save_and_reuse_with_real_template_api(environment, monkeypatch, width):
                 f"{PREFIX}/import-templates/{first_id}/versions"
             ).json()
             assert {version["version"] for version in versions} == {1, 2}
+            page.get_by_role("button", name="Vissza az előkészítéshez").click()
             page.get_by_text("Mentett sablonok és verziók", exact=True).click()
             page.get_by_role("button", name="Verziók", exact=True).click()
             version_list = page.get_by_role("list", name="Valódi próbasablon verziói")
@@ -202,6 +214,7 @@ def test_save_and_reuse_with_real_template_api(environment, monkeypatch, width):
                 "Valódi próbasablon · v1"
             )
             # A different file layout with no recognized parameter name or matching template.
+            page.get_by_role("button", name="Vissza az előkészítéshez").click()
             upload.set_input_files({
                 "name": "masik-szerkezet.csv",
                 "mimeType": "text/csv",

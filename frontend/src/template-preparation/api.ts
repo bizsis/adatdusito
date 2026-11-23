@@ -250,7 +250,7 @@ export const message = (error: unknown) =>
 
 export type ResultIssue = { code: string; target?: string };
 export type TemplateResultPage = {
-  template: TemplateVersion & { currency: string };
+  template: { id: number | null; name: string; version: number | null; currency: string };
   columns: {
     header: string;
     label?: string;
