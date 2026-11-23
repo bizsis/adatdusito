@@ -133,6 +133,11 @@
   margin: 0.25rem 0.3rem 0 0;
 }
 
+.prep-delete-button {
+  display: inline-grid;
+  place-items: center;
+}
+
 .template-preparation input,
 .template-preparation select,
 .prep-dialog input,

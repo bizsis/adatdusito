@@ -139,6 +139,41 @@ export type TemplateList = {
   templates: TemplateEntry[];
   legacy: LegacyProfile[];
 };
+export type DeletionTarget =
+  | { kind: "supplier" | "run" | "template"; id: number; name: string }
+  | { kind: "version"; id: number; templateId: number; name: string };
+export type DeletionPlan = {
+  deletable: boolean;
+  reason: string | null;
+  references: Record<string, number | number[]>;
+  deletes: {
+    source_file_bytes?: number;
+    generated_templates?: number;
+    template_versions?: number;
+    approved_parameters_in_deleted_versions?: number;
+  };
+  detaches?: { matched_uploads: number; run_ids: number[] };
+};
+export type Deleted = { deleted: true; version_ids?: number[] };
+
+function deletionPath(target: DeletionTarget) {
+  switch (target.kind) {
+    case "supplier":
+      return `/imports/suppliers/${target.id}`;
+    case "run":
+      return `/imports/runs/${target.id}`;
+    case "template":
+      return `/imports/import-templates/${target.id}`;
+    case "version":
+      return `/imports/import-templates/${target.templateId}/versions/${target.id}`;
+  }
+}
+
+export const previewDeletion = (api: Request, target: DeletionTarget) =>
+  api<DeletionPlan>(`${deletionPath(target)}/deletion`);
+export const deleteImportItem = (api: Request, target: DeletionTarget) =>
+  api<Deleted>(deletionPath(target), "DELETE");
+
 export const loadCatalog = (api: Request, engine = "unas") =>
   api<Catalog>(
     `/imports/template-targets?engine=${encodeURIComponent(engine)}`,
